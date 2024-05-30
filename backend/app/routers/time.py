@@ -1,28 +1,33 @@
 from fastapi import APIRouter
-from app.models.time_model import RegisterTime
+from app.models.time_model import TimeIn
+from datetime import datetime
+import pytz
 
 router = APIRouter()
 
-today_situation = {"target": 0, "study": 0}
+now = format(datetime.now(pytz.timezone('Asia/Tokyo')), "%Y-%m-%d")
+today_situation = {"target": 0, "study": 0, "date": now}
 
 
-@router.get("/today")
+@router.get("/today", status_code=200)
 async def show_today_situation():
     if today_situation["target"] == 0:
-        return {"目標勉強時間": "未登録"}
+        return {"date": today_situation["date"], "目標勉強時間": "未登録"}
     elif today_situation["study"] == 0:
-        return {"target": today_situation["target"], "study time": "未登録"}
+        return {"date": today_situation["date"],
+                "target": today_situation["target"],
+                "study time": "未登録"}
     else:
         return {"today situation": today_situation}
 
 
-@router.post("/today_target", status_code=201, response_model=RegisterTime)
-async def register_today_target(hour: RegisterTime):
+@router.post("/today_target", status_code=201, response_model=TimeIn)
+async def register_today_target(hour: TimeIn):
     today_situation["target"] = hour
-    return today_situation
+    return hour
 
 
-@router.post("/study_time", status_code=201, response_model=RegisterTime)
-async def register_study_time(hour: RegisterTime):
+@ router.post("/study_time", status_code=201, response_model=TimeIn)
+async def register_study_time(hour: TimeIn):
     today_situation["study"] = hour
     return hour
