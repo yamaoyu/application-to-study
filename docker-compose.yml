@@ -7,4 +7,16 @@ services:
       - "8000:8000"
     volumes:
       - ./backend/app:/app
+
+  db:
+    image: mysql:8.0
+    platform: linux/arm64
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TIMEZONE: ${TIMEZONE}
+    ports:
+      - "3306:3306"
     
