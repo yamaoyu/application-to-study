@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter
-from app.routers.time import router as today_router
+from routers.time import router as today_router
 # from app.routers.money import router as money_router
 
 app = FastAPI()
