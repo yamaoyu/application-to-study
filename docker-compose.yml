@@ -6,7 +6,9 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./backend/app:/app
+      - ./backend:/backend
+    depends_on:
+      - db
 
   db:
     image: mysql:8.0

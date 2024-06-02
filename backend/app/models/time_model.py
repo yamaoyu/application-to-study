@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from datetime import date
 
 
 class TimeIn(BaseModel):
@@ -7,3 +8,10 @@ class TimeIn(BaseModel):
 
 class RegisterSalary(BaseModel):
     salary: int
+
+
+class Sample(BaseModel):
+    date: date
+    target: int
+    study: int
+    is_achieved: bool

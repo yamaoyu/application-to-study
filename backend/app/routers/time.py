@@ -1,7 +1,10 @@
-from fastapi import APIRouter, HTTPException
-from models.time_model import TimeIn, RegisterSalary
+from fastapi import APIRouter, HTTPException, Depends
+from app.models.time_model import TimeIn, RegisterSalary, Sample
 from datetime import datetime
 import pytz
+from db import db_model
+from db.database import get_db
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
@@ -67,3 +70,27 @@ async def finish_today_work():
 async def register_salary(salary: RegisterSalary):
     current_salary["base"] = salary
     return salary
+
+
+@router.post("/sample", status_code=201, response_model=Sample)
+async def sample(sample: Sample, db: Session = Depends(get_db)):
+    try:
+        target = sample.target
+        study = sample.study
+        if study >= target:
+            is_achieved = True
+        else:
+            is_achieved = False
+        data = db_model.Activity(date=now, target=target,
+                                 study=study, is_achieved=is_achieved)
+        db.add(data)
+        db.commit()
+        db.refresh(data)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"データ登録に失敗\n{e}")
+
+
+@router.get("/sample")
+async def get_sample(db: Session = Depends(get_db)):
+    return db.query(db_model.Activity).all()
