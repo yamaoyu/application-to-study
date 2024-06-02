@@ -87,8 +87,8 @@ async def sample(sample: Sample, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(data)
         return data
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"データ登録に失敗\n{e}")
+    except Exception:
+        raise HTTPException(status_code=400, detail="データ登録に失敗")
 
 
 @router.get("/sample")
