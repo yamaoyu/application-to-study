@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
-from app.models.time_model import TimeIn, RegisterSalary, Sample
+from app.models.time_model import TimeIn, Sample
 from datetime import datetime
 import pytz
 from db import db_model
@@ -64,12 +64,6 @@ async def finish_today_work():
     else:
         diff = target - achievement
         return {"message": f"{diff}時間足りませんでした。"}
-
-
-@router.post("/register_salary")
-async def register_salary(salary: RegisterSalary):
-    current_salary["base"] = salary
-    return salary
 
 
 @router.post("/sample", status_code=201, response_model=Sample)
