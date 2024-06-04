@@ -1,5 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
-from app.models.time_model import TimeIn, Sample
+from app.models.time_model import (
+    Sample, ResponseTargetTime, TargetTimeIn,
+    StudyTimeIn, ResponseStudyTime
+)
 from datetime import datetime
 import pytz
 from db import db_model
@@ -34,18 +37,47 @@ async def show_today_situation():
         }
 
 
-@router.post("/today_target", status_code=201, response_model=TimeIn)
-async def register_today_target(hour: TimeIn):
-    today_situation["target"] = hour
-    return hour
+@router.post("/target_time",
+             status_code=201,
+             response_model=ResponseTargetTime)
+async def register_today_target(target: TargetTimeIn,
+                                db: Session = Depends(get_db)):
+    """ 目標勉強時間を登録、登録済みなら更新する """
+    target_hour = target.target_hour
+    date = target.date
+    data = db_model.Activity(date=date, target=target_hour)
+    try:
+        db.add(data)
+        db.commit()
+        db.refresh(data)
+    except Exception:
+        raise HTTPException(status_code=400,
+                            detail=f"{data.date}の目標時間は既に登録済みです")
+    message = f"本日の目標時間を{target_hour}時間に設定しました"
+    return {"target_hour": target_hour, "date": date, "message": message}
 
 
-@router.post("/study_time", status_code=201, response_model=TimeIn)
-async def register_study_time(hour: TimeIn):
-    if today_situation["target"] == "未登録":
+@router.post("/study_time",
+             status_code=201,
+             response_model=ResponseStudyTime)
+async def register_study_time(study: StudyTimeIn,
+                              db: Session = Depends(get_db)):
+    """ 目標時間が登録済みの場合、勉強時間を入力 """
+    date = study.date
+    study_time = study.study_time
+    try:
+        activity = db.query(db_model.Activity).filter(
+            db_model.Activity.date == date).one()
+    except Exception:
         raise HTTPException(status_code=400, detail="先に本日の目標を入力して下さい")
-    today_situation["study"] = hour
-    return hour
+    target_time = activity.target
+    activity.study = study_time
+    db.commit()
+    message = f"勉強時間を{study_time}時間に設定しました。"
+    return {"date": date,
+            "study_time": study_time,
+            "target_time": target_time,
+            "message": message}
 
 
 @router.get("/finish_today", status_code=200)
