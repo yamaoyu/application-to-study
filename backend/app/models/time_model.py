@@ -2,8 +2,8 @@ from pydantic import BaseModel
 from datetime import date
 
 
-class TimeIn(BaseModel):
-    hour: int
+class DateIn(BaseModel):
+    date: str
 
 
 class TargetTimeIn(BaseModel):

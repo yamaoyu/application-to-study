@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from app.models.time_model import (
     Sample, ResponseTargetTime, TargetTimeIn,
-    StudyTimeIn, ResponseStudyTime
+    StudyTimeIn, ResponseStudyTime, DateIn
 )
 from datetime import datetime
 import pytz
@@ -70,32 +70,47 @@ async def register_study_time(study: StudyTimeIn,
             db_model.Activity.date == date).one()
     except Exception:
         raise HTTPException(status_code=400, detail="先に本日の目標を入力して下さい")
-    target_time = activity.target
     activity.study = study_time
     db.commit()
     message = f"勉強時間を{study_time}時間に設定しました。"
     return {"date": date,
             "study_time": study_time,
-            "target_time": target_time,
+            "target_time": activity.target,
             "message": message}
 
 
-@router.get("/finish_today", status_code=200)
-async def finish_today_work():
-    if today_situation["target"] == "未登録":
-        raise HTTPException(status_code=400, detail="本日の目標を入力して下さい")
-    elif today_situation["study"] == "未登録":
-        raise HTTPException(status_code=400, detail="本日の勉強時間を入力して下さい")
-    target = today_situation["target"].hour
-    achievement = today_situation["study"].hour
-    current_salary["check"] = "完了"
-    if achievement >= target:
-        current_salary["bonus"] += 1000
-        return {
-            "message": "目標達成！ボーナス追加", "today bonus": current_salary["bonus"]}
+@router.get("/finish", status_code=200)
+async def finish_today_work(date: DateIn, db: Session = Depends(get_db)):
+    date = date.date
+    year_month = date[:7]
+    try:
+        activity = db.query(db_model.Activity).filter(
+            db_model.Activity.date == date).one()
+    except Exception:
+        raise HTTPException(status_code=400, detail=f"{date}の情報は登録されていません")
+    target_hour = activity.target
+    study_hour = activity.study
+    if study_hour is None:
+        raise HTTPException(status_code=400, detail="本日の勉強時間を登録して下さい")
+    elif activity.is_achieved is not None:
+        raise HTTPException(status_code=400, detail=f"{date}の実績は登録済みです")
+    elif study_hour >= target_hour:
+        activity.is_achieved = True
+        message = "目標達成！ボーナス追加！"
+        salary = db.query(db_model.Salary).filter(
+            db_model.Salary.year_month == year_month).one()
+        salary.bonus += 1000
     else:
-        diff = target - achievement
-        return {"message": f"{diff}時間足りませんでした。"}
+        activity.is_achieved = False
+        diff = round((target_hour - study_hour), 1)
+        message = f"{diff}時間足りませんでした"
+    db.commit()
+    return {
+        "date": date,
+        "target hour": target_hour,
+        "study hour": study_hour,
+        "is achieved": activity.is_achieved,
+        "message": message}
 
 
 @router.post("/sample", status_code=201, response_model=Sample)
