@@ -6,9 +6,5 @@ app = FastAPI()
 router = APIRouter()
 
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
 app.include_router(today_router)
 app.include_router(money_router)

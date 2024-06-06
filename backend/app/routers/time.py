@@ -113,7 +113,29 @@ async def finish_today_work(date: DateIn, db: Session = Depends(get_db)):
         "message": message}
 
 
-@router.post("/sample", status_code=201, response_model=Sample)
+@router.get("/month")
+async def get_month_situation(date: DateIn, db: Session = Depends(get_db)):
+    year_month = date.date
+    activity = db.query(db_model.Activity).filter(
+        db_model.Activity.date.like(f"{year_month}%")).all()
+    if not activity:
+        raise HTTPException(status_code=400,
+                            detail=f"{year_month}内の活動は登録されていません")
+    salary = db.query(db_model.Salary).filter(
+        db_model.Salary.year_month == year_month).one()
+    if not salary:
+        raise HTTPException(status_code=400,
+                            detail=f"{year_month}の給料は登録されていません")
+    total_monthly_income = salary.monthly_income + salary.bonus
+    success_days = [act for act in activity if act.is_achieved is True]
+    return {"total_monthly_income": total_monthly_income,
+            "base income": salary.monthly_income,
+            "study bonus": salary.bonus,
+            "success days": len(success_days),
+            "activity lists": activity}
+
+
+@ router.post("/sample", status_code=201, response_model=Sample)
 async def sample(sample: Sample, db: Session = Depends(get_db)):
     try:
         target = sample.target
@@ -132,6 +154,6 @@ async def sample(sample: Sample, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="データ登録に失敗")
 
 
-@router.get("/sample")
-async def get_sample(db: Session = Depends(get_db)):
+@ router.get("/all")
+async def get_all_activities(db: Session = Depends(get_db)):
     return db.query(db_model.Activity).all()
