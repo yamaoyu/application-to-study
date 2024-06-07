@@ -17,24 +17,26 @@ current_salary = {"base": "未登録", "bonus": 0, "check": "未完了"}
 
 
 @router.get("/today", status_code=200)
-async def show_today_situation():
-    if today_situation["target"] == "未登録":
-        return {"today situation": today_situation,
-                "present achivement": current_salary}
-    elif today_situation["study"] == 0:
-        return {"today situation": today_situation,
-                "present achivement": current_salary}
+async def show_today_situation(date: DateIn, db: Session = Depends(get_db)):
+    date = date.date
+    activity = db.query(db_model.Activity).filter(
+        db_model.Activity.date == date).one()
+    target_time = activity.target
+    study_time = activity.study
+    is_achieved = activity.is_achieved
+    if not target_time:
+        return {"date": date, "target time": "未設定", "study time": "未設定"}
+    elif not study_time:
+        return {"date": date, "target time": target_time, "study time": "未設定"}
+    elif is_achieved is None:
+        return {"date": date, "target time": target_time,
+                "study time": study_time, "is achieved": "未完了"}
     else:
-        if current_salary["base"] == "未登録":
-            raise HTTPException(status_code=400, detail="月収を登録して下さい")
-        elif current_salary["check"] == "未完了":
-            raise HTTPException(status_code=400, detail="本日の成果を確認して下さい")
-        added_salary = current_salary["base"].salary + current_salary["bonus"]
-        return {
-            "today situation": today_situation,
-            "present achivement": current_salary,
-            "current total": added_salary
-        }
+        bonus = lambda is_achieved: 1000 if is_achieved else 0  # noqa
+        print(bonus)
+        return {"date": date, "target time": target_time,
+                "study time": study_time, "is achieved": is_achieved,
+                "bonus": bonus(is_achieved)}
 
 
 @router.post("/target_time",
