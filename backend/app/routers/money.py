@@ -10,6 +10,7 @@ router = APIRouter()
 @router.post("/income", status_code=201)
 async def register_salary(salary: RegisterSalary,
                           db: Session = Depends(get_db)):
+    """  月収を登録する """
     income = salary.monthly_income
     year_month = salary.year_month
     data = db_model.Salary(year_month=year_month, monthly_income=income,
@@ -26,6 +27,7 @@ async def register_salary(salary: RegisterSalary,
 @router.get("/income", status_code=200)
 async def get_monthly_income(year_month: YearMonth,
                              db: Session = Depends(get_db)):
+    """ 月毎の収入を確認する """
     year_month = year_month.year_month
     try:
         result = db.query(db_model.Salary).filter(

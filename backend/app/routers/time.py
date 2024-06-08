@@ -1,23 +1,18 @@
 from fastapi import APIRouter, HTTPException, Depends
 from app.models.time_model import (
-    Sample, ResponseTargetTime, TargetTimeIn,
+    ResponseTargetTime, TargetTimeIn,
     StudyTimeIn, ResponseStudyTime, DateIn
 )
-from datetime import datetime
-import pytz
 from db import db_model
 from db.database import get_db
 from sqlalchemy.orm import Session
 
 router = APIRouter()
 
-now = format(datetime.now(pytz.timezone('Asia/Tokyo')), "%Y-%m-%d")
-today_situation = {"target": "未登録", "study": "未登録", "date": now}
-current_salary = {"base": "未登録", "bonus": 0, "check": "未完了"}
-
 
 @router.get("/today", status_code=200)
 async def show_today_situation(date: DateIn, db: Session = Depends(get_db)):
+    """ その日の勉強時間を確認する """
     date = date.date
     activity = db.query(db_model.Activity).filter(
         db_model.Activity.date == date).one()
@@ -83,6 +78,7 @@ async def register_study_time(study: StudyTimeIn,
 
 @router.get("/finish", status_code=200)
 async def finish_today_work(date: DateIn, db: Session = Depends(get_db)):
+    """ その日の作業時間を確定し、目標を達成しているのかを確認する """
     date = date.date
     year_month = date[:7]
     try:
@@ -117,6 +113,7 @@ async def finish_today_work(date: DateIn, db: Session = Depends(get_db)):
 
 @router.get("/month")
 async def get_month_situation(date: DateIn, db: Session = Depends(get_db)):
+    """ 月毎のデータを取得 """
     year_month = date.date
     activity = db.query(db_model.Activity).filter(
         db_model.Activity.date.like(f"{year_month}%")).all()
@@ -137,25 +134,7 @@ async def get_month_situation(date: DateIn, db: Session = Depends(get_db)):
             "activity lists": activity}
 
 
-@ router.post("/sample", status_code=201, response_model=Sample)
-async def sample(sample: Sample, db: Session = Depends(get_db)):
-    try:
-        target = sample.target
-        study = sample.study
-        if study >= target:
-            is_achieved = True
-        else:
-            is_achieved = False
-        data = db_model.Activity(date=now, target=target,
-                                 study=study, is_achieved=is_achieved)
-        db.add(data)
-        db.commit()
-        db.refresh(data)
-        return data
-    except Exception:
-        raise HTTPException(status_code=400, detail="データ登録に失敗")
-
-
 @ router.get("/all")
 async def get_all_activities(db: Session = Depends(get_db)):
+    """ 全てのデータを取得 """
     return db.query(db_model.Activity).all()
