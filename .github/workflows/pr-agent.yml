@@ -1,0 +1,35 @@
+name: pr-agent
+
+on:
+  pull_request:
+    types: [opened]
+  issue_comment:
+    types: [created, edited]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  pr_agent:
+    runs-on: ubuntu-latest
+    name: Run PR Agent
+    if: ${{ github.event.sender.type != 'Bot' }}
+    steps:
+      - id: pr-agent
+        uses: Codium-ai/pr-agent@main
+        env:
+          CONFIG.MODEL: gpt-4o
+          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github_action.auto_describe: true
+          github_action.auto_review: true
+          github_action.auto_improve: true
+          PR_DESCRIPTION.EXTRA_INSTRUCTIONS: '日本語で記述してください。タイトルに次のPrefixをつけてください。`feat:`, `fix:`, `perf:`, `refactor:`, `test:`, `chore:`, `ci:`, `docs:` etc'
+          PR_REVIEWER.EXTRA_INSTRUCTIONS: '日本語で記述してください。'
+          PR_CODE_SUGGESTIONS.EXTRA_INSTRUCTIONS: |
+            あなたはPython, vue.js, MYSQLに精通したwebアプリケーションエンジニアです。
+            日本語で記述してください。特に以下の点を指摘してください:
+            - 誤解を招いたり、実態を正確に表していない命名があるか
+            - 誰にとっても読みやすいコードになっているか
+            - 明らかなセキュリティの問題はあるのか
