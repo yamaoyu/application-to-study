@@ -14,12 +14,12 @@ class ResponseTargetTime(TargetTimeIn):
     message: str
 
 
-class StudyTimeIn(BaseModel):
+class ActualTimeIn(BaseModel):
     date: str
-    study_time: int
+    actual_time: int
 
 
-class ResponseStudyTime(StudyTimeIn):
+class ResponseStudyTime(ActualTimeIn):
     target_time: int
     message: str
 

@@ -1,11 +1,12 @@
 from fastapi import APIRouter, HTTPException, Depends
 from app.models.time_model import (
     ResponseTargetTime, TargetTimeIn,
-    StudyTimeIn, ResponseStudyTime, DateIn
+    ActualTimeIn, ResponseStudyTime, DateIn
 )
 from db import db_model
 from db.database import get_db
 from sqlalchemy.orm import Session
+import re
 
 router = APIRouter()
 
@@ -14,23 +15,26 @@ router = APIRouter()
 async def show_today_situation(date: DateIn, db: Session = Depends(get_db)):
     """ その日の勉強時間を確認する """
     date = date.date
-    activity = db.query(db_model.Activity).filter(
-        db_model.Activity.date == date).one()
+    try:
+        activity = db.query(db_model.Activity).filter(
+            db_model.Activity.date == date).one()
+    except Exception:
+        raise HTTPException(status_code=400, detail=f"{date}の情報は登録されていません")
     target_time = activity.target
-    study_time = activity.study
+    actual_time = activity.actual
     is_achieved = activity.is_achieved
     if not target_time:
-        return {"date": date, "target time": "未設定", "study time": "未設定"}
-    elif not study_time:
-        return {"date": date, "target time": target_time, "study time": "未設定"}
+        return {"date": date, "target time": "未設定", "actual time": "未設定"}
+    elif not actual_time:
+        return {"date": date, "target time": target_time, "actual time": "未設定"}
     elif is_achieved is None:
         return {"date": date, "target time": target_time,
-                "study time": study_time, "is achieved": "未完了"}
+                "actual time": actual_time, "is achieved": "未完了"}
     else:
-        bonus = lambda is_achieved: 1000 if is_achieved else 0  # noqa
+        bonus = lambda is_achieved: 0.1 if is_achieved else 0  # noqa
         print(bonus)
         return {"date": date, "target time": target_time,
-                "study time": study_time, "is achieved": is_achieved,
+                "actual time": actual_time, "is achieved": is_achieved,
                 "bonus": bonus(is_achieved)}
 
 
@@ -42,6 +46,10 @@ async def register_today_target(target: TargetTimeIn,
     """ 目標勉強時間を登録、登録済みなら更新する """
     target_hour = target.target_hour
     date = target.date
+    # dateのフォーマットがYYYY-MM-DDか確認
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", date):
+        raise HTTPException(status_code=400,
+                            detail="入力形式が違います。正しい形式:YYYY-MM-DD")
     data = db_model.Activity(date=date, target=target_hour)
     try:
         db.add(data)
@@ -50,30 +58,35 @@ async def register_today_target(target: TargetTimeIn,
     except Exception:
         raise HTTPException(status_code=400,
                             detail=f"{data.date}の目標時間は既に登録済みです")
-    message = f"本日の目標時間を{target_hour}時間に設定しました"
+    message = f"{date}の目標時間を{target_hour}時間に設定しました"
     return {"target_hour": target_hour, "date": date, "message": message}
 
 
-@router.post("/study_time",
+@router.post("/actual_time",
              status_code=201,
              response_model=ResponseStudyTime)
-async def register_study_time(study: StudyTimeIn,
-                              db: Session = Depends(get_db)):
+async def register_actual_time(actual: ActualTimeIn,
+                               db: Session = Depends(get_db)):
     """ 目標時間が登録済みの場合、勉強時間を入力 """
-    date = study.date
-    study_time = study.study_time
+    date = actual.date
+    # dateのフォーマットがYYYY-MM-DDか確認
+    actual_time = actual.actual_time
     try:
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date).one()
     except Exception:
-        raise HTTPException(status_code=400, detail="先に本日の目標を入力して下さい")
-    activity.study = study_time
-    db.commit()
-    message = f"勉強時間を{study_time}時間に設定しました。"
-    return {"date": date,
-            "study_time": study_time,
-            "target_time": activity.target,
-            "message": message}
+        raise HTTPException(status_code=400, detail=f"先に{date}の目標を入力して下さい")
+    if activity.is_achieved is None:
+        activity.actual = actual_time
+        db.commit()
+        message = f"勉強時間を{actual_time}時間に設定しました。"
+        return {"date": date,
+                "actual_time": actual_time,
+                "target_time": activity.target,
+                "message": message}
+    else:
+        raise HTTPException(status_code=400,
+                            detail=f"{date}の活動実績は既に確定済みです。変更できません")
 
 
 @router.get("/finish", status_code=200)
@@ -87,7 +100,7 @@ async def finish_today_work(date: DateIn, db: Session = Depends(get_db)):
     except Exception:
         raise HTTPException(status_code=400, detail=f"{date}の情報は登録されていません")
     target_hour = activity.target
-    study_hour = activity.study
+    study_hour = activity.actual
     if study_hour is None:
         raise HTTPException(status_code=400, detail="本日の勉強時間を登録して下さい")
     elif activity.is_achieved is not None:
@@ -97,7 +110,7 @@ async def finish_today_work(date: DateIn, db: Session = Depends(get_db)):
         message = "目標達成！ボーナス追加！"
         salary = db.query(db_model.Salary).filter(
             db_model.Salary.year_month == year_month).one()
-        salary.bonus += 1000
+        salary.bonus = float(salary.bonus) + 0.1
     else:
         activity.is_achieved = False
         diff = round((target_hour - study_hour), 1)
@@ -106,7 +119,7 @@ async def finish_today_work(date: DateIn, db: Session = Depends(get_db)):
     return {
         "date": date,
         "target hour": target_hour,
-        "study hour": study_hour,
+        "actual hour": study_hour,
         "is achieved": activity.is_achieved,
         "message": message}
 
@@ -129,7 +142,7 @@ async def get_month_situation(date: DateIn, db: Session = Depends(get_db)):
     success_days = [act for act in activity if act.is_achieved is True]
     return {"total_monthly_income": total_monthly_income,
             "base income": salary.monthly_income,
-            "study bonus": salary.bonus,
+            "total bonus": salary.bonus,
             "success days": len(success_days),
             "activity lists": activity}
 

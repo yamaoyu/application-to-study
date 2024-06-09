@@ -3,6 +3,7 @@ from app.models.money_model import RegisterSalary, YearMonth
 from db import db_model
 from db.database import get_db
 from sqlalchemy.orm import Session
+import re
 
 router = APIRouter()
 
@@ -11,15 +12,20 @@ router = APIRouter()
 async def register_salary(salary: RegisterSalary,
                           db: Session = Depends(get_db)):
     """  月収を登録する """
-    income = salary.monthly_income
+    monthly_income = salary.monthly_income
     year_month = salary.year_month
-    data = db_model.Salary(year_month=year_month, monthly_income=income,
-                           bonus=0, add_monthly_income=income)
+    # year_monthのフォーマットがYYYY-MMか確認
+    if not re.match(r"^\d{4}-\d{2}$", year_month):
+        raise HTTPException(status_code=400,
+                            detail="入力形式が違います。正しい形式:YYYY-MM")
+    data = db_model.Salary(year_month=year_month,
+                           monthly_income=monthly_income,
+                           bonus=0)
     try:
         db.add(data)
         db.commit()
         db.refresh(data)
-        return income
+        return {"message": f"{year_month}の月収:{monthly_income}万円"}
     except Exception:
         raise HTTPException(status_code=400, detail="その月の月収は既に登録されています。")
 
