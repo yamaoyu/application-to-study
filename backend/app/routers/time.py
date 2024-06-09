@@ -69,7 +69,6 @@ async def register_actual_time(actual: ActualTimeIn,
                                db: Session = Depends(get_db)):
     """ 目標時間が登録済みの場合、勉強時間を入力 """
     date = actual.date
-    # dateのフォーマットがYYYY-MM-DDか確認
     actual_time = actual.actual_time
     try:
         activity = db.query(db_model.Activity).filter(

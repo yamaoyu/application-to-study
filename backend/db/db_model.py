@@ -13,7 +13,7 @@ class Activity(Base):
 
 class Salary(Base):
     __tablename__ = "salary"
-    activity_id = Column(Integer, primary_key=True, autoincrement=True)
+    salary_id = Column(Integer, primary_key=True, autoincrement=True)
     year_month = Column(CHAR(7), unique=True)
     monthly_income = Column(Float(4, 1))
     bonus = Column(Float(3, 1))
