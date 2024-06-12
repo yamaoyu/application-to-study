@@ -12,7 +12,7 @@ router = APIRouter()
 
 
 @router.get("/today", status_code=200)
-async def show_today_situation(date: DateIn, db: Session = Depends(get_db)):
+def show_today_situation(date: DateIn, db: Session = Depends(get_db)):
     """ その日の勉強時間を確認する """
     date = date.date
     try:
@@ -41,8 +41,8 @@ async def show_today_situation(date: DateIn, db: Session = Depends(get_db)):
 @router.post("/target_time",
              status_code=201,
              response_model=ResponseTargetTime)
-async def register_today_target(target: TargetTimeIn,
-                                db: Session = Depends(get_db)):
+def register_today_target(target: TargetTimeIn,
+                          db: Session = Depends(get_db)):
     """ 目標勉強時間を登録、登録済みなら更新する """
     target_hour = target.target_hour
     date = target.date
@@ -65,8 +65,8 @@ async def register_today_target(target: TargetTimeIn,
 @router.post("/actual_time",
              status_code=201,
              response_model=ResponseStudyTime)
-async def register_actual_time(actual: ActualTimeIn,
-                               db: Session = Depends(get_db)):
+def register_actual_time(actual: ActualTimeIn,
+                         db: Session = Depends(get_db)):
     """ 目標時間が登録済みの場合、勉強時間を入力 """
     date = actual.date
     actual_time = actual.actual_time
@@ -89,7 +89,7 @@ async def register_actual_time(actual: ActualTimeIn,
 
 
 @router.get("/finish", status_code=200)
-async def finish_today_work(date: DateIn, db: Session = Depends(get_db)):
+def finish_today_work(date: DateIn, db: Session = Depends(get_db)):
     """ その日の作業時間を確定し、目標を達成しているのかを確認する """
     date = date.date
     year_month = date[:7]
@@ -124,7 +124,7 @@ async def finish_today_work(date: DateIn, db: Session = Depends(get_db)):
 
 
 @router.get("/month")
-async def get_month_situation(date: DateIn, db: Session = Depends(get_db)):
+def get_month_situation(date: DateIn, db: Session = Depends(get_db)):
     """ 月毎のデータを取得 """
     year_month = date.date
     activity = db.query(db_model.Activity).filter(
@@ -147,6 +147,6 @@ async def get_month_situation(date: DateIn, db: Session = Depends(get_db)):
 
 
 @ router.get("/all")
-async def get_all_activities(db: Session = Depends(get_db)):
+def get_all_activities(db: Session = Depends(get_db)):
     """ 全てのデータを取得 """
     return db.query(db_model.Activity).all()
