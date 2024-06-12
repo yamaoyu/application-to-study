@@ -18,6 +18,8 @@ def register_salary(salary: RegisterSalary,
     if not re.match(r"^\d{4}-\d{2}$", year_month):
         raise HTTPException(status_code=400,
                             detail="入力形式が違います。正しい形式:YYYY-MM")
+    if monthly_income < 0:
+        raise HTTPException(status_code=400, detail="正の数を入力して下さい")
     data = db_model.Salary(year_month=year_month,
                            monthly_income=monthly_income,
                            bonus=0)
