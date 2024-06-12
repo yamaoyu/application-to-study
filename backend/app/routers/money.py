@@ -9,8 +9,8 @@ router = APIRouter()
 
 
 @router.post("/income", status_code=201)
-def register_salary(salary: RegisterSalary,
-                    db: Session = Depends(get_db)):
+async def register_salary(salary: RegisterSalary,
+                          db: Session = Depends(get_db)):
     """  月収を登録する """
     monthly_income = salary.monthly_income
     year_month = salary.year_month
@@ -31,8 +31,8 @@ def register_salary(salary: RegisterSalary,
 
 
 @router.get("/income", status_code=200)
-def get_monthly_income(year_month: YearMonth,
-                       db: Session = Depends(get_db)):
+async def get_monthly_income(year_month: YearMonth,
+                             db: Session = Depends(get_db)):
     """ 月毎の収入を確認する """
     year_month = year_month.year_month
     try:
