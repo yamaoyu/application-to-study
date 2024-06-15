@@ -100,6 +100,10 @@ def register_actual_time(actual: ActualTimeIn,
 def finish_today_work(date: DateIn, db: Session = Depends(get_db)):
     """ その日の作業時間を確定し、目標を達成しているのかを確認する """
     date = date.date
+    # dateのフォーマットがYYYY-MM-DDか確認
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", date):
+        raise HTTPException(status_code=400,
+                            detail="入力形式が違います。正しい形式:YYYY-MM-DD")
     year_month = date[:7]
     try:
         activity = db.query(db_model.Activity).filter(
