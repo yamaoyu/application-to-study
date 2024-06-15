@@ -15,6 +15,10 @@ router = APIRouter()
 def show_today_situation(date: DateIn, db: Session = Depends(get_db)):
     """ その日の勉強時間を確認する """
     date = date.date
+    # dateのフォーマットがYYYY-MM-DDか確認
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", date):
+        raise HTTPException(status_code=400,
+                            detail="入力形式が違います。正しい形式:YYYY-MM-DD")
     try:
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date).one()
@@ -62,14 +66,18 @@ def register_today_target(target: TargetTimeIn,
     return {"target_hour": target_hour, "date": date, "message": message}
 
 
-@router.post("/actual_time",
-             status_code=201,
-             response_model=ResponseStudyTime)
+@router.put("/actual_time",
+            status_code=201,
+            response_model=ResponseStudyTime)
 def register_actual_time(actual: ActualTimeIn,
                          db: Session = Depends(get_db)):
     """ 目標時間が登録済みの場合、勉強時間を入力 """
-    date = actual.date
     actual_time = actual.actual_time
+    date = actual.date
+    # dateのフォーマットがYYYY-MM-DDか確認
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", date):
+        raise HTTPException(status_code=400,
+                            detail="入力形式が違います。正しい形式:YYYY-MM-DD")
     try:
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date).one()
@@ -88,7 +96,7 @@ def register_actual_time(actual: ActualTimeIn,
                             detail=f"{date}の活動実績は既に確定済みです。変更できません")
 
 
-@router.get("/finish", status_code=200)
+@router.put("/finish", status_code=200)
 def finish_today_work(date: DateIn, db: Session = Depends(get_db)):
     """ その日の作業時間を確定し、目標を達成しているのかを確認する """
     date = date.date
@@ -104,12 +112,14 @@ def finish_today_work(date: DateIn, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="本日の勉強時間を登録して下さい")
     elif activity.is_achieved is not None:
         raise HTTPException(status_code=400, detail=f"{date}の実績は登録済みです")
+    # 達成している場合はIncomeテーブルのボーナスを加算する。
     elif study_hour >= target_hour:
         activity.is_achieved = True
         message = "目標達成！ボーナス追加！"
-        salary = db.query(db_model.Salary).filter(
-            db_model.Salary.year_month == year_month).one()
+        salary = db.query(db_model.Income).filter(
+            db_model.Income.year_month == year_month).one()
         salary.bonus = float(salary.bonus) + 0.1
+    # 達成していない場合はIncomeテーブルを更新しない
     else:
         activity.is_achieved = False
         diff = round((target_hour - study_hour), 1)
@@ -127,14 +137,19 @@ def finish_today_work(date: DateIn, db: Session = Depends(get_db)):
 def get_month_situation(date: DateIn, db: Session = Depends(get_db)):
     """ 月毎のデータを取得 """
     year_month = date.date
+    # dateのフォーマットがYYYY-MMか確認
+    if not re.match(r"^\d{4}-\d{2}$", year_month):
+        raise HTTPException(status_code=400,
+                            detail="入力形式が違います。正しい形式:YYYY-MM")
     activity = db.query(db_model.Activity).filter(
         db_model.Activity.date.like(f"{year_month}%")).all()
     if not activity:
         raise HTTPException(status_code=400,
                             detail=f"{year_month}内の活動は登録されていません")
-    salary = db.query(db_model.Salary).filter(
-        db_model.Salary.year_month == year_month).one()
-    if not salary:
+    try:
+        salary = db.query(db_model.Income).filter(
+            db_model.Income.year_month == year_month).one()
+    except Exception:
         raise HTTPException(status_code=400,
                             detail=f"{year_month}の給料は登録されていません")
     total_monthly_income = salary.monthly_income + salary.bonus
@@ -144,9 +159,3 @@ def get_month_situation(date: DateIn, db: Session = Depends(get_db)):
             "total bonus": salary.bonus,
             "success days": len(success_days),
             "activity lists": activity}
-
-
-@ router.get("/all")
-def get_all_activities(db: Session = Depends(get_db)):
-    """ 全てのデータを取得 """
-    return db.query(db_model.Activity).all()

@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, Float, Date, Boolean, CHAR
+from sqlalchemy import (Column, Integer, Float, Date,
+                        Boolean, CHAR, VARCHAR, UniqueConstraint)
 from db.database import Base, engine
 
 
@@ -11,12 +12,21 @@ class Activity(Base):
     is_achieved = Column(Boolean)
 
 
-class Salary(Base):
-    __tablename__ = "salary"
-    salary_id = Column(Integer, primary_key=True, autoincrement=True)
+class Income(Base):
+    __tablename__ = "income"
+    income_id = Column(Integer, primary_key=True, autoincrement=True)
     year_month = Column(CHAR(7), unique=True)
     monthly_income = Column(Float(4, 1))
     bonus = Column(Float(3, 1))
+
+
+class Todo(Base):
+    __tablename__ = "todo"
+    todo_id = Column(Integer, primary_key=True, autoincrement=True)
+    action = Column(VARCHAR(32))
+    date = Column(Date)
+    status = Column(Boolean, default=False)
+    UniqueConstraint(action, date)
 
 
 Base.metadata.create_all(bind=engine)
