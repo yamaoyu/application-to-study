@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 
-class RegisterSalary(BaseModel):
+class RegisterIncome(BaseModel):
     year_month: str
     monthly_income: float
 
