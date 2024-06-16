@@ -1,0 +1,6 @@
+fastapi[all]
+pytz
+sqlalchemy
+pymysql
+cryptography
+pytest

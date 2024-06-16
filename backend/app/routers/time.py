@@ -1,3 +1,4 @@
+import re
 from fastapi import APIRouter, HTTPException, Depends
 from app.models.time_model import (
     ResponseTargetTime, TargetTimeIn,
@@ -6,7 +7,7 @@ from app.models.time_model import (
 from db import db_model
 from db.database import get_db
 from sqlalchemy.orm import Session
-import re
+from sqlalchemy.exc import NoResultFound
 
 router = APIRouter()
 
@@ -22,24 +23,28 @@ def show_today_situation(date: DateIn, db: Session = Depends(get_db)):
     try:
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date).one()
-    except Exception:
+    except NoResultFound:
         raise HTTPException(status_code=400, detail=f"{date}の情報は登録されていません")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=e)
+
     target_time = activity.target
-    actual_time = activity.actual
-    is_achieved = activity.is_achieved
     if not target_time:
         return {"date": date, "target time": "未設定", "actual time": "未設定"}
-    elif not actual_time:
+
+    actual_time = activity.actual
+    if not actual_time:
         return {"date": date, "target time": target_time, "actual time": "未設定"}
-    elif is_achieved is None:
+
+    is_achieved = activity.is_achieved
+    if is_achieved is None:
         return {"date": date, "target time": target_time,
                 "actual time": actual_time, "is achieved": "未完了"}
-    else:
-        bonus = lambda is_achieved: 0.1 if is_achieved else 0  # noqa
-        print(bonus)
-        return {"date": date, "target time": target_time,
-                "actual time": actual_time, "is achieved": is_achieved,
-                "bonus": bonus(is_achieved)}
+
+    bonus = lambda is_achieved: 0.1 if is_achieved else 0  # noqa
+    return {"date": date, "target time": target_time,
+            "actual time": actual_time, "is achieved": is_achieved,
+            "bonus": bonus(is_achieved)}
 
 
 @router.post("/target_time",
@@ -108,31 +113,39 @@ def finish_today_work(date: DateIn, db: Session = Depends(get_db)):
     try:
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date).one()
-    except Exception:
+    except NoResultFound:
         raise HTTPException(status_code=400, detail=f"{date}の情報は登録されていません")
+
     target_hour = activity.target
-    study_hour = activity.actual
-    if study_hour is None:
+    actual_hour = activity.actual
+
+    if actual_hour is None:
         raise HTTPException(status_code=400, detail="本日の勉強時間を登録して下さい")
     elif activity.is_achieved is not None:
         raise HTTPException(status_code=400, detail=f"{date}の実績は登録済みです")
     # 達成している場合はIncomeテーブルのボーナスを加算する。
-    elif study_hour >= target_hour:
-        activity.is_achieved = True
-        message = "目標達成！ボーナス追加！"
-        salary = db.query(db_model.Income).filter(
-            db_model.Income.year_month == year_month).one()
-        salary.bonus = float(salary.bonus) + 0.1
+    if actual_hour >= target_hour:
+        try:
+            salary = db.query(db_model.Income).filter(
+                db_model.Income.year_month == year_month).one()
+            activity.is_achieved = True
+            message = "目標達成！ボーナス追加！"
+            salary.bonus = float(salary.bonus) + 0.1
+        except NoResultFound:
+            raise HTTPException(status_code=400,
+                                detail=f"{year_month}の収入が未登録です。")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=e)
     # 達成していない場合はIncomeテーブルを更新しない
     else:
         activity.is_achieved = False
-        diff = round((target_hour - study_hour), 1)
+        diff = round((target_hour - actual_hour), 1)
         message = f"{diff}時間足りませんでした"
     db.commit()
     return {
         "date": date,
         "target hour": target_hour,
-        "actual hour": study_hour,
+        "actual hour": actual_hour,
         "is achieved": activity.is_achieved,
         "message": message}
 
@@ -153,9 +166,11 @@ def get_month_situation(date: DateIn, db: Session = Depends(get_db)):
     try:
         salary = db.query(db_model.Income).filter(
             db_model.Income.year_month == year_month).one()
-    except Exception:
+    except NoResultFound:
         raise HTTPException(status_code=400,
                             detail=f"{year_month}の給料は登録されていません")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=e)
     total_monthly_income = salary.monthly_income + salary.bonus
     success_days = [act for act in activity if act.is_achieved is True]
     return {"total_monthly_income": total_monthly_income,
