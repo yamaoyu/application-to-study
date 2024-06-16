@@ -3,3 +3,4 @@ pytz
 sqlalchemy
 pymysql
 cryptography
+pytest

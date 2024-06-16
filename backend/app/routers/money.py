@@ -1,9 +1,10 @@
+import re
 from fastapi import APIRouter, Depends, HTTPException
 from app.models.money_model import RegisterIncome, YearMonth
 from db import db_model
 from db.database import get_db
 from sqlalchemy.orm import Session
-import re
+from sqlalchemy.exc import NoResultFound
 
 router = APIRouter()
 
@@ -42,5 +43,7 @@ def get_monthly_income(year_month: YearMonth,
             db_model.Income.year_month == year_month).one()
         total_income = result.monthly_income + result.bonus
         return {"今月の詳細": result, "ボーナス換算後の月収": total_income}
-    except Exception:
+    except NoResultFound:
         raise HTTPException(status_code=400, detail="その月の月収は未登録です。")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=e)
