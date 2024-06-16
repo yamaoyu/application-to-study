@@ -120,9 +120,13 @@ def finish_today_work(date: DateIn, db: Session = Depends(get_db)):
     elif study_hour >= target_hour:
         activity.is_achieved = True
         message = "目標達成！ボーナス追加！"
-        salary = db.query(db_model.Income).filter(
-            db_model.Income.year_month == year_month).one()
-        salary.bonus = float(salary.bonus) + 0.1
+        try:
+            salary = db.query(db_model.Income).filter(
+                db_model.Income.year_month == year_month).one()
+            salary.bonus = float(salary.bonus) + 0.1
+        except Exception:
+            raise HTTPException(status_code=400,
+                                detail=f"{year_month}の収入が未登録です。")
     # 達成していない場合はIncomeテーブルを更新しない
     else:
         activity.is_achieved = False
