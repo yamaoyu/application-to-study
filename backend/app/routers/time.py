@@ -47,7 +47,7 @@ def show_today_situation(date: DateIn, db: Session = Depends(get_db)):
             "bonus": bonus(is_achieved)}
 
 
-@router.post("/target_time",
+@router.post("/target",
              status_code=201,
              response_model=ResponseTargetTime)
 def register_today_target(target: TargetTimeIn,
@@ -71,8 +71,8 @@ def register_today_target(target: TargetTimeIn,
     return {"target_hour": target_hour, "date": date, "message": message}
 
 
-@router.put("/actual_time",
-            status_code=201,
+@router.put("/actual",
+            status_code=200,
             response_model=ResponseStudyTime)
 def register_actual_time(actual: ActualTimeIn,
                          db: Session = Depends(get_db)):
@@ -115,6 +115,8 @@ def finish_today_work(date: DateIn, db: Session = Depends(get_db)):
             db_model.Activity.date == date).one()
     except NoResultFound:
         raise HTTPException(status_code=400, detail=f"{date}の情報は登録されていません")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=e)
 
     target_hour = activity.target
     actual_hour = activity.actual
