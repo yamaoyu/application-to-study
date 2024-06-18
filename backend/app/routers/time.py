@@ -109,7 +109,6 @@ def finish_today_work(date: DateIn, db: Session = Depends(get_db)):
     if not re.match(r"^\d{4}-\d{2}-\d{2}$", date):
         raise HTTPException(status_code=400,
                             detail="入力形式が違います。正しい形式:YYYY-MM-DD")
-    year_month = date[:7]
     try:
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date).one()
@@ -120,6 +119,7 @@ def finish_today_work(date: DateIn, db: Session = Depends(get_db)):
 
     target_hour = activity.target
     actual_hour = activity.actual
+    year_month = date[:7]
 
     if actual_hour is None:
         raise HTTPException(status_code=400, detail="本日の勉強時間を登録して下さい")

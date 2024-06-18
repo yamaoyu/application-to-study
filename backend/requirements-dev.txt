@@ -1,7 +1,6 @@
 fastapi[all]
 pytz
 sqlalchemy
-sqlalchemy_utils
 pymysql
 cryptography
 pytest
