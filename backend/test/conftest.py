@@ -22,7 +22,7 @@ TestSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 @pytest.fixture(scope="session", autouse=True)
-def create_test_database():
+def create_test_table():
     Base.metadata.create_all(bind=engine)
     yield
     Base.metadata.drop_all(bind=engine)
@@ -48,7 +48,7 @@ def client(db_session):
         finally:
             db_session.close()
 
-    # FastAPIの依存関係をオーバーライド
+    # FastAPIの依存関係をオーバーライド(本番用のDBに接続しないようにするため)
     app.dependency_overrides[get_db] = override_get_db
 
     with TestClient(app) as c:

@@ -1,6 +1,6 @@
 import re
 from fastapi import APIRouter, Depends, HTTPException
-from app.models.money_model import RegisterIncome, YearMonth
+from app.models.money_model import RegisterIncome
 from db import db_model
 from db.database import get_db
 from sqlalchemy.orm import Session
@@ -33,11 +33,10 @@ def register_salary(income: RegisterIncome,
         raise HTTPException(status_code=400, detail="その月の月収は既に登録されています。")
 
 
-@router.get("/income", status_code=200)
-def get_monthly_income(year_month: YearMonth,
+@router.get("/income/{year_month}", status_code=200)
+def get_monthly_income(year_month: str,
                        db: Session = Depends(get_db)):
     """ 月毎の収入を確認する """
-    year_month = year_month.year_month
     try:
         result = db.query(db_model.Income).filter(
             db_model.Income.year_month == year_month).one()

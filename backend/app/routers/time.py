@@ -12,10 +12,9 @@ from sqlalchemy.exc import NoResultFound
 router = APIRouter()
 
 
-@router.get("/today", status_code=200)
-def show_today_situation(date: DateIn, db: Session = Depends(get_db)):
+@router.get("/situation/{date}", status_code=200)
+def show_today_situation(date: str, db: Session = Depends(get_db)):
     """ その日の勉強時間を確認する """
-    date = date.date
     # dateのフォーマットがYYYY-MM-DDか確認
     if not re.match(r"^\d{4}-\d{2}-\d{2}$", date):
         raise HTTPException(status_code=400,

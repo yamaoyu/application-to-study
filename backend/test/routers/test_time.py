@@ -1,25 +1,25 @@
 import pytest
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def register_target(client):
     data = {"date": "2024-05-05", "target_hour": 5}
     client.post("/target", json=data)
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def register_actual(client, register_target):
     data = {"actual_time": 5, "date": "2024-05-05"}
     client.put("/actual", json=data)
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def finish_activity(client, register_actual):
     data = {"date": "2024-05-05"}
     client.put("/finish", json=data)
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def register_monthly_income(client):
     data = {"monthly_income": 23, "year_month": "2024-05"}
     client.post("/income", json=data)
@@ -82,4 +82,24 @@ def test_finish_activity_without_register_income(client, register_actual):
     """ 月収を登録せずに活動を終了しようとした場合 """
     data = {"date": "2024-05-05"}
     response = client.put("/finish", json=data)
+    assert response.status_code == 400
+
+
+def test_get_today_situation(client, finish_activity):
+    """ 活動終了記録まで行った日の場合 """
+    date = "2024-05-05"
+    response = client.get(f"/situation/{date}")
+    print(response.content)
+    assert response.status_code == 200
+    assert response.json() == {"date": date,
+                               "target time": 5.0,
+                               "actual time": 5.0,
+                               "is achieved": True,
+                               "bonus": 0.1}
+
+
+def test_get_today_situation_without_register_activity(client):
+    """ 活動記録が未登録の日の情報を取得する場合 """
+    date = "2024-05-10"
+    response = client.get(f"/situation/{date}")
     assert response.status_code == 400
