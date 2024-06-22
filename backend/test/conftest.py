@@ -21,7 +21,7 @@ engine = create_engine(TEST_DATABASE_URL, poolclass=NullPool)
 TestSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(autouse=True)
 def create_test_table():
     Base.metadata.create_all(bind=engine)
     yield

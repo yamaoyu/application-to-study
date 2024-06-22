@@ -1,23 +1,28 @@
-import pytest
+# 事前処理
 
-
-@pytest.fixture(scope="function")
 def register_monthly_income(client):
     data = {"monthly_income": 23, "year_month": "2024-06"}
     client.post("/income", json=data)
 
+# 事前処理ここまで
+
+
+# 以降テスト関数
 
 def test_register_income(client):
     data = {"year_month": "2024-06", "monthly_income": 23}
     response = client.post("/income", json=data)
     assert response.status_code == 201
+    assert response.json() == {"message": "2024-06の月収:23.0万円"}
 
 
-def test_register_income_already_registered(client, register_monthly_income):
+def test_register_income_already_registered(client):
     """ すでに登録されている月の月収を登録しようとした場合 """
+    register_monthly_income(client)
     data = {"year_month": "2024-06", "monthly_income": 23}
     response = client.post("/income", json=data)
     assert response.status_code == 400
+    assert response.json() == {"detail": "その月の月収は既に登録されています。"}
 
 
 def test_register_income_with_minus_digit(client):
@@ -25,9 +30,11 @@ def test_register_income_with_minus_digit(client):
     data = {"year_month": "2024-06", "monthly_income": -23}
     response = client.post("/income", json=data)
     assert response.status_code == 400
+    assert response.json() == {"detail": "正の数を入力して下さい"}
 
 
 def test_get_income(client):
+    register_monthly_income(client)
     year_month = "2024-06"
     response = client.get(f"/income/{year_month}")
     assert response.status_code == 200

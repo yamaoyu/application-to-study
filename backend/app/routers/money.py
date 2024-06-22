@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound
 
 router = APIRouter()
+year_month_pattern = r"^\d{4}-\d{2}$"
 
 
 @router.post("/income", status_code=201)
@@ -16,7 +17,7 @@ def register_salary(income: RegisterIncome,
     monthly_income = income.monthly_income
     year_month = income.year_month
     # year_monthのフォーマットがYYYY-MMか確認
-    if not re.match(r"^\d{4}-\d{2}$", year_month):
+    if not re.match(year_month_pattern, year_month):
         raise HTTPException(status_code=400,
                             detail="入力形式が違います。正しい形式:YYYY-MM")
     if monthly_income < 0:
