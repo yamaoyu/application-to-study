@@ -55,4 +55,4 @@ def client(db_session):
         yield c
 
     # テスト終了後に依存関係のオーバーライドをリセット
-    app.dependency_overrides[get_db] = get_db
+    del app.dependency_overrides[get_db]

@@ -1,6 +1,6 @@
 # 事前処理
 
-def register_monthly_income(client):
+def setup_monthly_income_for_test(client):
     data = {"monthly_income": 23, "year_month": "2024-06"}
     client.post("/income", json=data)
 
@@ -18,7 +18,7 @@ def test_register_income(client):
 
 def test_register_income_already_registered(client):
     """ すでに登録されている月の月収を登録しようとした場合 """
-    register_monthly_income(client)
+    setup_monthly_income_for_test(client)
     data = {"year_month": "2024-06", "monthly_income": 23}
     response = client.post("/income", json=data)
     assert response.status_code == 400
@@ -34,7 +34,7 @@ def test_register_income_with_minus_digit(client):
 
 
 def test_get_income(client):
-    register_monthly_income(client)
+    setup_monthly_income_for_test(client)
     year_month = "2024-06"
     response = client.get(f"/income/{year_month}")
     assert response.status_code == 200

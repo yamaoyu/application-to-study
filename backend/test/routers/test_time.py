@@ -1,21 +1,21 @@
 # 事前処理
 
-def register_target(client):
+def setup_target_for_test(client):
     data = {"date": "2024-05-05", "target_time": 5}
     client.post("/target", json=data)
 
 
-def register_actual(client):
+def setup_actual_for_test(client):
     data = {"actual_time": 5, "date": "2024-05-05"}
     client.put("/actual", json=data)
 
 
-def finish_activity(client):
+def setup_finish_activity_for_test(client):
     data = {"date": "2024-05-05"}
     client.put("/finish", json=data)
 
 
-def register_monthly_income(client):
+def setup_monthly_income_for_test(client):
     data = {"monthly_income": 23, "year_month": "2024-05"}
     client.post("/income", json=data)
 
@@ -47,7 +47,7 @@ def test_register_target_incorrect_date_format_missing_zero(client):
 
 
 def test_register_actual_success(client):
-    register_target(client)
+    setup_target_for_test(client)
     data = {"actual_time": 5, "date": "2024-05-05"}
     response = client.put("/actual", json=data)
     assert response.status_code == 200
@@ -69,10 +69,10 @@ def test_register_actual_before_register_target(client):
 
 def test_register_actual_after_finish(client):
     """ 活動を終了した日の活動時間を更新しようとした場合 """
-    register_target(client)
-    register_actual(client)
-    register_monthly_income(client)
-    finish_activity(client)
+    setup_target_for_test(client)
+    setup_actual_for_test(client)
+    setup_monthly_income_for_test(client)
+    setup_finish_activity_for_test(client)
     data = {"actual_time": 5, "date": "2024-05-05"}
     response = client.put("/actual", json=data)
     assert response.status_code == 400
@@ -81,9 +81,9 @@ def test_register_actual_after_finish(client):
 
 
 def test_finish_activity_success(client):
-    register_target(client)
-    register_actual(client)
-    register_monthly_income(client)
+    setup_target_for_test(client)
+    setup_actual_for_test(client)
+    setup_monthly_income_for_test(client)
     data = {"date": "2024-05-05"}
     response = client.put("/finish", json=data)
     assert response.status_code == 200
@@ -97,7 +97,7 @@ def test_finish_activity_success(client):
 
 def test_finish_activity_before_register_actual(client):
     """ 活動時間登録前に活動を終了しようとした場合 """
-    register_target(client)
+    setup_target_for_test(client)
     data = {"date": "2024-05-05"}
     response = client.put("/finish", json=data)
     assert response.status_code == 400
@@ -106,8 +106,8 @@ def test_finish_activity_before_register_actual(client):
 
 def test_finish_activity_without_register_income(client):
     """ 月収を登録せずに活動を終了しようとした場合 """
-    register_target(client)
-    register_actual(client)
+    setup_target_for_test(client)
+    setup_actual_for_test(client)
     data = {"date": "2024-05-05"}
     response = client.put("/finish", json=data)
     assert response.status_code == 400
@@ -116,10 +116,10 @@ def test_finish_activity_without_register_income(client):
 
 def test_get_today_situation(client):
     """ 活動終了記録まで行った日の情報を取得 """
-    register_target(client)
-    register_actual(client)
-    register_monthly_income(client)
-    finish_activity(client)
+    setup_target_for_test(client)
+    setup_actual_for_test(client)
+    setup_monthly_income_for_test(client)
+    setup_finish_activity_for_test(client)
     date = "2024-05-05"
     response = client.get(f"/situation/{date}")
     assert response.status_code == 200
