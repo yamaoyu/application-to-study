@@ -1,12 +1,13 @@
 import re
 from fastapi import APIRouter, Depends, HTTPException
-from app.models.money_model import RegisterIncome, YearMonth
+from app.models.money_model import RegisterIncome
 from db import db_model
 from db.database import get_db
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound
 
 router = APIRouter()
+year_month_pattern = r"^\d{4}-\d{2}$"
 
 
 @router.post("/income", status_code=201)
@@ -16,7 +17,7 @@ def register_salary(income: RegisterIncome,
     monthly_income = income.monthly_income
     year_month = income.year_month
     # year_monthのフォーマットがYYYY-MMか確認
-    if not re.match(r"^\d{4}-\d{2}$", year_month):
+    if not re.match(year_month_pattern, year_month):
         raise HTTPException(status_code=400,
                             detail="入力形式が違います。正しい形式:YYYY-MM")
     if monthly_income < 0:
@@ -33,11 +34,10 @@ def register_salary(income: RegisterIncome,
         raise HTTPException(status_code=400, detail="その月の月収は既に登録されています。")
 
 
-@router.get("/income", status_code=200)
-def get_monthly_income(year_month: YearMonth,
+@router.get("/income/{year_month}", status_code=200)
+def get_monthly_income(year_month: str,
                        db: Session = Depends(get_db)):
     """ 月毎の収入を確認する """
-    year_month = year_month.year_month
     try:
         result = db.query(db_model.Income).filter(
             db_model.Income.year_month == year_month).one()

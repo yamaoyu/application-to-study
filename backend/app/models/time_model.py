@@ -7,7 +7,7 @@ class DateIn(BaseModel):
 
 class TargetTimeIn(BaseModel):
     date: str
-    target_hour: int
+    target_time: int
 
 
 class ResponseTargetTime(TargetTimeIn):
