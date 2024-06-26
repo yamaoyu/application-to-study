@@ -9,3 +9,4 @@ backend/app/__pycache__
 *.png
 .gitignore
 temp
+backend/.pytest_cache
