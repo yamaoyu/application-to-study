@@ -2,38 +2,40 @@ from fastapi import APIRouter, HTTPException, Depends
 from db import db_model
 from db.database import get_db
 from sqlalchemy.orm import Session
-from app.models.todo_model import TodoIn, UpdateAction
-import re
+from app.models.todo_model import Todo
 
 router = APIRouter()
 
 
 @router.post("/todo")
-def create_todo(todo: TodoIn, db: Session = Depends(get_db)):
+def create_todo(todo: Todo, db: Session = Depends(get_db)):
     action = todo.action
-    date = todo.date
-    if not re.match(r"^\d{4}-\d{2}-\d{2}$", date):
-        raise HTTPException(status_code=400,
-                            detail="入力形式が違います。正しい形式:YYYY-MM-DD")
     try:
-        data = db_model.Todo(action=action, date=date, status=False)
+        data = db_model.Todo(action=action, status=False)
         db.add(data)
         db.commit()
         db.refresh(data)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"dbの更新に失敗しました{e}")
-    return {"action": action, "date": date}
+    return {"action": action}
 
 
-@router.get("/todo/{date}")
-def get_specific_todo(date: str, db: Session = Depends(get_db)):
-    if not re.match(r"^\d{4}-\d{2}-\d{2}$", date):
-        raise HTTPException(status_code=400,
-                            detail="入力形式が違います。正しい形式:YYYY-MM-DD")
-    todo = db.query(db_model.Todo).filter(db_model.Todo.date == date).all()
+@router.get("/todo")
+def get_all_todo(db: Session = Depends(get_db)):
+    todo = db.query(db_model.Todo).filter().all()
     if not todo:
         raise HTTPException(status_code=400,
-                            detail=f"{date}の情報は未登録です。")
+                            detail="登録された情報はありません。")
+    return todo
+
+
+@router.get("/todo/{todo_id}")
+def get_specific_todo(todo_id: int, db: Session = Depends(get_db)):
+    todo = db.query(db_model.Todo).filter(
+        db_model.Todo.todo_id == todo_id).all()
+    if not todo:
+        raise HTTPException(status_code=400,
+                            detail=f"{todo_id}の情報は未登録です。")
     return todo
 
 
@@ -51,7 +53,7 @@ def delete_action(todo_id: int, db: Session = Depends(get_db)):
 
 @router.put("/todo/{todo_id}")
 def edit_action(todo_id: int,
-                new_action: UpdateAction,
+                new_action: Todo,
                 db: Session = Depends(get_db)):
     action = new_action.action
     try:
@@ -74,4 +76,4 @@ def finish_action(todo_id: int, db: Session = Depends(get_db)):
                             detail=f"{todo_id}の内容は登録されていません")
     todo.status = True
     db.commit()
-    return todo
+    return {"action": todo.action, "status": todo.status}
