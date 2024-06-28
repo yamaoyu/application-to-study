@@ -23,7 +23,7 @@ class Income(Base):
 class Todo(Base):
     __tablename__ = "todo"
     todo_id = Column(Integer, primary_key=True, autoincrement=True)
-    action = Column(VARCHAR(32))
+    action = Column(VARCHAR(32), unique=True)
     status = Column(Boolean, default=False)
 
 

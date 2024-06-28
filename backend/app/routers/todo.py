@@ -3,6 +3,7 @@ from db import db_model
 from db.database import get_db
 from sqlalchemy.orm import Session
 from app.models.todo_model import Todo
+from sqlalchemy.exc import NoResultFound, IntegrityError
 
 router = APIRouter()
 
@@ -15,6 +16,12 @@ def create_todo(todo: Todo, db: Session = Depends(get_db)):
         db.add(data)
         db.commit()
         db.refresh(data)
+    except IntegrityError as sqlalchemy_error:
+        if "Duplicate entry" in str(sqlalchemy_error.orig):
+            raise HTTPException(status_code=400, detail="既に登録されている内容です")
+        else:
+            raise HTTPException(
+                status_code=400, detail="Integrity errorが発生しました")
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"dbの更新に失敗しました{e}")
     return {"action": action}
@@ -59,10 +66,19 @@ def edit_action(todo_id: int,
     try:
         todo = db.query(db_model.Todo).filter(
             db_model.Todo.todo_id == todo_id).one()
-    except Exception:
-        raise HTTPException(status_code=400, detail=f"{todo_id}の内容は登録されていません")
-    todo.action = action
-    db.commit()
+        todo.action = action
+        db.commit()
+    except NoResultFound:
+        raise HTTPException(status_code=400,
+                            detail=f"id:{todo_id}のデータは登録されていません")
+    except IntegrityError as sqlalchemy_error:
+        if "Duplicate entry" in str(sqlalchemy_error.orig):
+            raise HTTPException(status_code=400, detail="既に登録されている内容です")
+        else:
+            raise HTTPException(
+                status_code=400, detail="Integrity errorが発生しました")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"dbの更新でエラーが発生しました{e}")
     return {"message": f"更新後のタスク:{action}"}
 
 
