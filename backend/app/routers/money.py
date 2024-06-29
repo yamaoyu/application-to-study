@@ -4,7 +4,7 @@ from app.models.money_model import RegisterIncome
 from db import db_model
 from db.database import get_db
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, IntegrityError
 
 router = APIRouter()
 year_month_pattern = r"^\d{4}-\d{2}$"
@@ -30,8 +30,14 @@ def register_salary(income: RegisterIncome,
         db.commit()
         db.refresh(data)
         return {"message": f"{year_month}の月収:{monthly_income}万円"}
-    except Exception:
-        raise HTTPException(status_code=400, detail="その月の月収は既に登録されています。")
+    except IntegrityError as sqlalchemy_error:
+        if "Duplicate entry" in str(sqlalchemy_error.orig):
+            raise HTTPException(status_code=400, detail="その月の月収は既に登録されています。")
+        else:
+            raise HTTPException(
+                status_code=400, detail="Integrity errorが発生しました")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"dbの更新でエラーが発生しました。{e}")
 
 
 @router.get("/income/{year_month}", status_code=200)

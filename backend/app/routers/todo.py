@@ -16,6 +16,7 @@ def create_todo(todo: Todo, db: Session = Depends(get_db)):
         db.add(data)
         db.commit()
         db.refresh(data)
+        return {"action": action}
     except IntegrityError as sqlalchemy_error:
         if "Duplicate entry" in str(sqlalchemy_error.orig):
             raise HTTPException(status_code=400, detail="既に登録されている内容です")
@@ -24,7 +25,6 @@ def create_todo(todo: Todo, db: Session = Depends(get_db)):
                 status_code=400, detail="Integrity errorが発生しました")
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"dbの更新に失敗しました{e}")
-    return {"action": action}
 
 
 @router.get("/todo")
@@ -39,7 +39,7 @@ def get_all_todo(db: Session = Depends(get_db)):
 @router.get("/todo/{todo_id}")
 def get_specific_todo(todo_id: int, db: Session = Depends(get_db)):
     todo = db.query(db_model.Todo).filter(
-        db_model.Todo.todo_id == todo_id).all()
+        db_model.Todo.todo_id == todo_id).one_or_none()
     if not todo:
         raise HTTPException(status_code=400,
                             detail=f"{todo_id}の情報は未登録です。")
@@ -52,10 +52,12 @@ def delete_action(todo_id: int, db: Session = Depends(get_db)):
         db.query(db_model.Todo).filter(
             db_model.Todo.todo_id == todo_id).delete()
         db.commit()
+        return {"message": "選択したタスクを削除しました。"}
+    except NoResultFound:
+        raise HTTPException(status_code=404, detail="選択されたタスクは存在しません。")
     except Exception as e:
         raise HTTPException(status_code=400,
                             detail=f"削除に失敗しました。\\{e}")
-    return {"message": "選択したタスクを削除しました。"}
 
 
 @router.put("/todo/{todo_id}")
@@ -66,10 +68,13 @@ def edit_action(todo_id: int,
     try:
         todo = db.query(db_model.Todo).filter(
             db_model.Todo.todo_id == todo_id).one()
+        if todo.status:
+            raise HTTPException(status_code=400, detail="終了したアクションは更新できません")
         todo.action = action
         db.commit()
+        return {"message": f"更新後のタスク:{action}"}
     except NoResultFound:
-        raise HTTPException(status_code=400,
+        raise HTTPException(status_code=404,
                             detail=f"id:{todo_id}のデータは登録されていません")
     except IntegrityError as sqlalchemy_error:
         if "Duplicate entry" in str(sqlalchemy_error.orig):
@@ -79,7 +84,6 @@ def edit_action(todo_id: int,
                 status_code=400, detail="Integrity errorが発生しました")
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"dbの更新でエラーが発生しました{e}")
-    return {"message": f"更新後のタスク:{action}"}
 
 
 @router.put("/todo/finish/{todo_id}")
@@ -87,9 +91,13 @@ def finish_action(todo_id: int, db: Session = Depends(get_db)):
     try:
         todo = db.query(db_model.Todo).filter(
             db_model.Todo.todo_id == todo_id).one()
-    except Exception:
-        raise HTTPException(status_code=400,
+        if todo.status:
+            raise HTTPException(status_code=400, detail="既に終了したタスクです")
+        todo.status = True
+        db.commit()
+        return {"action": todo.action, "status": todo.status}
+    except NoResultFound:
+        raise HTTPException(status_code=404,
                             detail=f"{todo_id}の内容は登録されていません")
-    todo.status = True
-    db.commit()
-    return {"action": todo.action, "status": todo.status}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"データ更新時にエラーが発生しました。{e}")
