@@ -27,4 +27,10 @@ class Todo(Base):
     status = Column(Boolean, default=False)
 
 
+class User(Base):
+    __tablename__ = "user"
+    usermail = Column(VARCHAR(32), primary_key=True)
+    password = Column(CHAR(60), nullable=False)
+
+
 Base.metadata.create_all(bind=engine)
