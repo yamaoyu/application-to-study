@@ -1,5 +1,5 @@
 from sqlalchemy import (Column, Integer, Float, Date,
-                        Boolean, CHAR, VARCHAR, UniqueConstraint)
+                        Boolean, CHAR, VARCHAR)
 from db.database import Base, engine
 
 
@@ -23,10 +23,8 @@ class Income(Base):
 class Todo(Base):
     __tablename__ = "todo"
     todo_id = Column(Integer, primary_key=True, autoincrement=True)
-    action = Column(VARCHAR(32))
-    date = Column(Date)
+    action = Column(VARCHAR(32), unique=True)
     status = Column(Boolean, default=False)
-    UniqueConstraint(action, date)
 
 
 Base.metadata.create_all(bind=engine)
