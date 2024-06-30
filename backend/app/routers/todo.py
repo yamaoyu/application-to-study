@@ -49,12 +49,14 @@ def get_specific_todo(todo_id: int, db: Session = Depends(get_db)):
 @router.delete("/todo/{todo_id}")
 def delete_action(todo_id: int, db: Session = Depends(get_db)):
     try:
-        db.query(db_model.Todo).filter(
+        result = db.query(db_model.Todo).filter(
             db_model.Todo.todo_id == todo_id).delete()
         db.commit()
+        if not result:
+            raise HTTPException(status_code=404, detail="選択されたタスクは存在しません。")
         return {"message": "選択したタスクを削除しました。"}
-    except NoResultFound:
-        raise HTTPException(status_code=404, detail="選択されたタスクは存在しません。")
+    except HTTPException as http_exception:
+        raise http_exception
     except Exception as e:
         raise HTTPException(status_code=400,
                             detail=f"削除に失敗しました。\\{e}")
@@ -82,6 +84,8 @@ def edit_action(todo_id: int,
         else:
             raise HTTPException(
                 status_code=400, detail="Integrity errorが発生しました")
+    except HTTPException as http_exception:
+        raise http_exception
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"dbの更新でエラーが発生しました{e}")
 
@@ -99,5 +103,7 @@ def finish_action(todo_id: int, db: Session = Depends(get_db)):
     except NoResultFound:
         raise HTTPException(status_code=404,
                             detail=f"{todo_id}の内容は登録されていません")
+    except HTTPException as http_exception:
+        raise http_exception
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"データ更新時にエラーが発生しました。{e}")
