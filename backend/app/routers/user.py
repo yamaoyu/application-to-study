@@ -3,23 +3,23 @@ from db import db_model
 from security import get_password_hash, verify_password
 from db.database import get_db
 from sqlalchemy.orm import Session
-from app.models.user_model import UserInfo, ResponseUserInfo
+from app.models.user_model import UserInfo, ResponseCreatedUser
 from sqlalchemy.exc import IntegrityError, NoResultFound
 
 
 router = APIRouter()
 
 
-@router.post("/registration", response_model=ResponseUserInfo)
+@router.post("/registration", response_model=ResponseCreatedUser)
 def create_user(user: UserInfo, db: Session = Depends(get_db)):
     try:
         username = user.username
         plain_password = user.password
         email = user.email
-        if len(plain_password) > 12 or len(plain_password) < 6:
+        if not (6 <= len(plain_password) <= 12):
             raise HTTPException(status_code=400,
                                 detail="パスワードは6文字以上、12文字以下としてください")
-        hash_password = get_password_hash(user.password)
+        hash_password = get_password_hash(plain_password)
         user_info = db_model.User(
             username=username, password=hash_password, email=email)
         db.add(user_info)

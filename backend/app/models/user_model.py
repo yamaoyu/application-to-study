@@ -8,6 +8,6 @@ class UserInfo(BaseModel):
     email: Optional[str] = None
 
 
-class ResponseUserInfo(UserInfo):
+class ResponseCreatedUser(UserInfo):
     model_config = ConfigDict(from_attributes=True)
     message: str
