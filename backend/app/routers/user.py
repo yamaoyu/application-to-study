@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from db import db_model
 from security import (get_password_hash,
                       verify_password,
-                      create_access_token)
+                      create_access_token,)
 from db.database import get_db
 from sqlalchemy.orm import Session
 from app.models.user_model import UserInfo, ResponseCreatedUser
@@ -41,7 +41,7 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
                             detail=f"ユーザー登録処理中にエラーが発生しました。{e}")
 
 
-@router.post("/login")
+@router.post("/token")
 def login(user: UserInfo, db: Session = Depends(get_db)):
     try:
         user_id = user.user_id
@@ -51,8 +51,8 @@ def login(user: UserInfo, db: Session = Depends(get_db)):
         is_password = verify_password(plain_password, user_info.password)
         if not is_password:
             raise HTTPException(status_code=400, detail="パスワードが正しくありません。")
-        token = create_access_token({"user_id": user_id})
-        return {"message": "ログインに成功しました。", "token": token}
+        token = create_access_token({"sub": user_id})
+        return {"access_token": token, "token_type": "bearer"}
     except NoResultFound:
         raise HTTPException(status_code=404,
                             detail=f"{user_id}は登録されていません。")

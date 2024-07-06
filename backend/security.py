@@ -1,12 +1,13 @@
+import os
 from passlib.context import CryptContext
 from typing import Union
 from datetime import datetime, timedelta, timezone
 from fastapi.security import OAuth2PasswordBearer
-import jwt
+from jose import jwt
 
 # openssl rand -hex 32
-SECRET_KEY = "70044bb10d20a2cad0c547ea3d37319a74475dc5e77e8cfc48feb0c3d565aeaa"
-ALGORITHM = "HS256"
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -28,5 +29,4 @@ def create_access_token(data: dict,
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encode_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encode_jwt
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
