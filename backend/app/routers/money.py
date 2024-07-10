@@ -1,10 +1,11 @@
 import re
-from fastapi import APIRouter, Depends, HTTPException
 from app.models.money_model import RegisterIncome
 from db import db_model
 from db.database import get_db
+from security import get_current_user
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound, IntegrityError
+from fastapi import APIRouter, Depends, HTTPException
 
 router = APIRouter()
 year_month_pattern = r"^\d{4}-\d{2}$"
@@ -12,10 +13,12 @@ year_month_pattern = r"^\d{4}-\d{2}$"
 
 @router.post("/income", status_code=201)
 def register_salary(income: RegisterIncome,
+                    current_user: dict = Depends(get_current_user),
                     db: Session = Depends(get_db)):
     """  月収を登録する """
     monthly_income = income.monthly_income
     year_month = income.year_month
+    username = current_user['username']
     # year_monthのフォーマットがYYYY-MMか確認
     if not re.match(year_month_pattern, year_month):
         raise HTTPException(status_code=400,
@@ -24,7 +27,8 @@ def register_salary(income: RegisterIncome,
         raise HTTPException(status_code=400, detail="正の数を入力して下さい")
     data = db_model.Income(year_month=year_month,
                            monthly_income=monthly_income,
-                           bonus=0)
+                           bonus=0,
+                           username=username)
     try:
         db.add(data)
         db.commit()
@@ -41,12 +45,16 @@ def register_salary(income: RegisterIncome,
 
 @router.get("/income/{year_month}", status_code=200)
 def get_monthly_income(year_month: str,
+                       current_user: dict = Depends(get_current_user),
                        db: Session = Depends(get_db)):
     """ 月毎の収入を確認する """
     try:
+        username = current_user['username']
         result = db.query(db_model.Income).filter(
-            db_model.Income.year_month == year_month).one()
+            db_model.Income.year_month == year_month,
+            db_model.Income.username == username).one()
         total_income = result.monthly_income + result.bonus
+        print(result)
         return {"今月の詳細": result, "ボーナス換算後の月収": total_income}
     except NoResultFound:
         raise HTTPException(status_code=400, detail="その月の月収は未登録です。")

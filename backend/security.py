@@ -3,7 +3,11 @@ from passlib.context import CryptContext
 from typing import Union
 from datetime import datetime, timedelta, timezone
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt
+from fastapi import Depends, HTTPException, status
+from db import db_model
+from db.database import get_db
+from sqlalchemy.orm import Session
+from jose import jwt, JWTError
 
 # openssl rand -hex 32
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -11,6 +15,17 @@ ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+def get_user(username: str, db: Session = Depends(get_db)):
+    user = db.query(db_model.User).filter(
+        db_model.User.username == username).one()
+    return user
+
+
+def get_access_token(username: str):
+    print(username)
+    return create_access_token({"sub": username})
 
 
 def verify_password(plain_password, hashed_password) -> bool:
@@ -29,4 +44,26 @@ def create_access_token(data: dict,
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=15)
     to_encode.update({"exp": expire})
+    print(to_encode)
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def get_current_user(token: str = Depends(oauth2_scheme),
+                     db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="証明書を認証できませんでした",
+        headers={"WWW-Authenticate": "Bearer"}
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
+        username: str = payload.get('sub')
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    user = get_user(username, db)
+    print(user)
+    if not user:
+        raise credentials_exception
+    return {"username": username}
