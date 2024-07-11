@@ -56,6 +56,7 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
 @router.post("/login")
 def login(user_info: UserInfo,
           db: Session = Depends(get_db)):
+    """ ユーザー操作用 """
     try:
         username = user_info.username
         plain_password = user_info.password
@@ -78,6 +79,7 @@ def login(user_info: UserInfo,
 @router.post("/token")
 def login_for_access_token(
         form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
+    """ APIでアクセストークン取得用 """
     if not authenticate_user(form_data.username, form_data.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

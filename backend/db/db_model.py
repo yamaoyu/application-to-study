@@ -28,8 +28,12 @@ class Income(Base):
 class Todo(Base):
     __tablename__ = "todo"
     todo_id = Column(Integer, primary_key=True, autoincrement=True)
-    action = Column(VARCHAR(32), unique=True)
+    action = Column(VARCHAR(32), nullable=False)
     status = Column(Boolean, default=False)
+    username = Column(VARCHAR(16), ForeignKey("user.username"), nullable=False)
+    UniqueConstraint(action, username)
+
+    user = relationship('User', back_populates='todo')
 
 
 class User(Base):
@@ -39,6 +43,7 @@ class User(Base):
     email = Column(VARCHAR(32), default=None)
 
     income = relationship('Income', back_populates='user')
+    todo = relationship('Todo', back_populates='user')
 
 
 Base.metadata.create_all(bind=engine)
