@@ -7,10 +7,14 @@ from db.database import Base, engine
 class Activity(Base):
     __tablename__ = "activity"
     activity_id = Column(Integer, primary_key=True, autoincrement=True)
-    date = Column(Date, unique=True)
+    date = Column(Date)
     target = Column(Float(3, 1))
     actual = Column(Float(3, 1))
     is_achieved = Column(Boolean)
+    username = Column(VARCHAR(16), ForeignKey("user.username"), nullable=False)
+    UniqueConstraint(date, username)
+
+    user = relationship('User', back_populates='activity')
 
 
 class Income(Base):
@@ -44,6 +48,7 @@ class User(Base):
 
     income = relationship('Income', back_populates='user')
     todo = relationship('Todo', back_populates='user')
+    activity = relationship('Activity', back_populates='user')
 
 
 Base.metadata.create_all(bind=engine)
