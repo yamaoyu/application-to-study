@@ -16,12 +16,15 @@ router = APIRouter()
 
 def authenticate_user(username: str, plain_password: str,
                       db: Session = Depends(get_db)):
-    user = db.query(db_model.User).filter(
-        db_model.User.username == username).one_or_none()
-    is_password = verify_password(plain_password, user.password)
-    if user and is_password:
-        return True
-    return False
+    try:
+        user = db.query(db_model.User).filter(
+            db_model.User.username == username).one_or_none()
+        is_password = verify_password(plain_password, user.password)
+        if user and is_password:
+            return True
+        return False
+    except NoResultFound:
+        raise HTTPException(status_code=404, detail="ユーザー名かパスワードが不正です")
 
 
 @router.post("/registration", response_model=ResponseCreatedUser)
@@ -34,11 +37,11 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
             raise HTTPException(status_code=400,
                                 detail="パスワードは6文字以上、12文字以下としてください")
         hash_password = get_password_hash(plain_password)
-        user_info = db_model.User(
+        form_data = db_model.User(
             username=username, password=hash_password, email=email)
-        db.add(user_info)
+        db.add(form_data)
         db.commit()
-        db.refresh(user_info)
+        db.refresh(form_data)
         return {"username": user.username,
                 "password": len(user.password) * "*",
                 "email": user.email,
@@ -54,12 +57,12 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
 
 
 @router.post("/login")
-def login(user_info: UserInfo,
+def login(form_data: UserInfo,
           db: Session = Depends(get_db)):
     """ ユーザー操作用 """
     try:
-        username = user_info.username
-        plain_password = user_info.password
+        username = form_data.username
+        plain_password = form_data.password
         user = db.query(db_model.User).filter(
             db_model.User.username == username).one()
         is_password = verify_password(plain_password, user.password)

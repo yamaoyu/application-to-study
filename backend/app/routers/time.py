@@ -25,10 +25,9 @@ def show_today_situation(date: str,
         raise HTTPException(status_code=400,
                             detail="入力形式が違います。正しい形式:YYYY-MM-DD")
     try:
-        username = current_user["username"]
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date,
-            db_model.Activity.username == username).one()
+            db_model.Activity.username == current_user["username"]).one()
 
         target_time = activity.target
         if not target_time:
@@ -51,7 +50,7 @@ def show_today_situation(date: str,
                 "actual_time": actual_time,
                 "is_achieved": is_achieved,
                 "bonus": bonus(is_achieved),
-                "username": username}
+                "username": current_user["username"]}
         # return {**activity.model_dump(), 'bonus': bonus}
     except NoResultFound:
         db.rollback()

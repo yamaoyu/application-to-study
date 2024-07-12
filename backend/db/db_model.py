@@ -12,7 +12,7 @@ class Activity(Base):
     actual = Column(Float(3, 1))
     is_achieved = Column(Boolean)
     username = Column(VARCHAR(16), ForeignKey("user.username"), nullable=False)
-    UniqueConstraint(date, username)
+    __table_args__ = (UniqueConstraint(date, username),)
 
     user = relationship('User', back_populates='activity')
 
@@ -24,7 +24,7 @@ class Income(Base):
     monthly_income = Column(Float(4, 1))
     bonus = Column(Float(3, 1))
     username = Column(VARCHAR(16), ForeignKey("user.username"))
-    UniqueConstraint(year_month, username)
+    __table_args__ = (UniqueConstraint(year_month, username),)
 
     user = relationship('User', back_populates='income')
 
@@ -35,7 +35,7 @@ class Todo(Base):
     action = Column(VARCHAR(32), nullable=False)
     status = Column(Boolean, default=False)
     username = Column(VARCHAR(16), ForeignKey("user.username"), nullable=False)
-    UniqueConstraint(action, username)
+    __table_args__ = (UniqueConstraint(action, username),)
 
     user = relationship('User', back_populates='todo')
 

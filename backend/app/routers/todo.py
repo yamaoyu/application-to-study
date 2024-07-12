@@ -45,8 +45,10 @@ def get_all_todo(db: Session = Depends(get_db),
                                 detail="登録された情報はありません。")
         return todo
     except HTTPException as http_e:
+        db.rollback()
         raise http_e
     except Exception as e:
+        db.rollback()
         raise HTTPException(status_code=400, detail=f"todo取得にエラーが発生しました。{e}")
 
 
@@ -63,8 +65,10 @@ def get_specific_todo(todo_id: int,
                                 detail=f"{todo_id}の情報は未登録です。")
         return todo
     except HTTPException as http_e:
+        db.rollback()
         raise http_e
     except Exception as e:
+        db.rollback()
         raise HTTPException(status_code=400, detail=f"todo取得にエラーが発生しました。{e}")
 
 
@@ -81,8 +85,10 @@ def delete_action(todo_id: int,
             raise HTTPException(status_code=404, detail="選択されたタスクは存在しません。")
         return {"message": "選択したタスクを削除しました。"}
     except HTTPException as http_exception:
+        db.rollback()
         raise http_exception
     except Exception as e:
+        db.rollback()
         raise HTTPException(status_code=400,
                             detail=f"削除に失敗しました。\\{e}")
 
@@ -134,6 +140,7 @@ def finish_action(todo_id: int,
         db.commit()
         return {"action": todo.action, "status": todo.status}
     except NoResultFound:
+        db.rollback()
         raise HTTPException(status_code=404,
                             detail=f"{todo_id}の内容は登録されていません")
     except HTTPException as http_exception:

@@ -54,7 +54,6 @@ def get_monthly_income(year_month: str,
             db_model.Income.year_month == year_month,
             db_model.Income.username == username).one()
         total_income = result.monthly_income + result.bonus
-        print(result)
         return {"今月の詳細": result, "ボーナス換算後の月収": total_income}
     except NoResultFound:
         raise HTTPException(status_code=400, detail="その月の月収は未登録です。")
