@@ -147,5 +147,5 @@ def finish_action(todo_id: int,
         db.rollback()
         raise http_exception
     except Exception as e:
-        db.rollback
+        db.rollback()
         raise HTTPException(status_code=400, detail=f"データ更新時にエラーが発生しました。{e}")

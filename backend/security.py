@@ -10,8 +10,11 @@ from sqlalchemy.orm import Session
 from jose import jwt, JWTError
 
 # openssl rand -hex 32
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
+SECRET_KEY = os.getenv(
+    "SECRET_KEY",
+    "ecd518ef9af267a68cd92ae2ba3e8570eae25c713a84dedf0b96066e7d73d205"
+)
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -24,7 +27,6 @@ def get_user(username: str, db: Session = Depends(get_db)):
 
 
 def get_access_token(username: str):
-    print(username)
     return create_access_token({"sub": username})
 
 
@@ -60,10 +62,13 @@ def get_current_user(token: str = Depends(oauth2_scheme),
         username: str = payload.get('sub')
         if username is None:
             raise credentials_exception
+        user = get_user(username, db)
+        if not user:
+            raise HTTPException(status_code=404, detail="ユーザーが見つかりません")
+        return {"username": username}
     except JWTError:
         raise credentials_exception
-    user = get_user(username, db)
-    print(user)
-    if not user:
-        raise credentials_exception
-    return {"username": username}
+    except HTTPException as http_e:
+        raise http_e
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

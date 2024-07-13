@@ -51,7 +51,6 @@ def show_today_situation(date: str,
                 "is_achieved": is_achieved,
                 "bonus": bonus(is_achieved),
                 "username": current_user["username"]}
-        # return {**activity.model_dump(), 'bonus': bonus}
     except NoResultFound:
         db.rollback()
         raise HTTPException(status_code=400, detail=f"{date}の情報は登録されていません")
