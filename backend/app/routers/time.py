@@ -52,10 +52,8 @@ def show_today_situation(date: str,
                 "bonus": bonus(is_achieved),
                 "username": current_user["username"]}
     except NoResultFound:
-        db.rollback()
         raise HTTPException(status_code=400, detail=f"{date}の情報は登録されていません")
     except Exception as e:
-        db.rollback()
         raise HTTPException(status_code=400, detail=e)
 
 
@@ -81,7 +79,6 @@ def register_today_target(target: TargetTimeIn,
         message = f"{date}の目標時間を{target_time}時間に設定しました"
         return {"target_time": target_time, "date": date, "message": message}
     except HTTPException as http_e:
-        db.rollback()
         raise http_e
     except Exception:
         db.rollback()
@@ -115,10 +112,8 @@ def register_actual_time(actual: ActualTimeIn,
                     "message": f"活動時間を{actual_time}時間に設定しました。",
                     "username": current_user['username']}
     except HTTPException as http_e:
-        db.rollback()
         raise http_e
     except NoResultFound:
-        db.rollback()
         raise HTTPException(status_code=404, detail=f"先に{date}の目標を入力して下さい")
     else:
         db.rollback()
@@ -141,13 +136,10 @@ def finish_today_work(date: DateIn,
             db_model.Activity.date == date,
             db_model.Activity.username == current_user["username"]).one()
     except HTTPException as http_e:
-        db.rollback()
         raise http_e
     except NoResultFound:
-        db.rollback()
         raise HTTPException(status_code=400, detail=f"{date}の情報は登録されていません")
     except Exception as e:
-        db.rollback()
         raise HTTPException(status_code=400, detail=e)
 
     try:
@@ -180,10 +172,8 @@ def finish_today_work(date: DateIn,
             "is_achieved": activity.is_achieved,
             "message": message}
     except HTTPException as http_e:
-        db.rollback()
         raise http_e
     except NoResultFound:
-        db.rollback()
         raise HTTPException(status_code=400,
                             detail=f"{year_month}の月収が未登録です")
     except Exception as e:
@@ -219,12 +209,9 @@ def get_month_situation(date: DateIn,
                 "success days": len(success_days),
                 "activity lists": activity}
     except HTTPException as http_e:
-        db.rollback()
         raise http_e
     except NoResultFound:
-        db.rollback()
         raise HTTPException(status_code=400,
                             detail=f"{year_month}の給料は登録されていません")
     except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=400, detail=e)
+        raise HTTPException(status_code=400, detail=str(e))

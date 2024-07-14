@@ -35,11 +35,13 @@ def register_salary(income: RegisterIncome,
         db.refresh(data)
         return {"message": f"{year_month}の月収:{monthly_income}万円"}
     except IntegrityError as sqlalchemy_error:
+        db.rollback()
         if "Duplicate entry" in str(sqlalchemy_error.orig):
             raise HTTPException(status_code=400, detail="その月の月収は既に登録されています。")
         raise HTTPException(
             status_code=400, detail="Integrity errorが発生しました")
     except Exception as e:
+        db.rollback()
         raise HTTPException(status_code=400, detail=f"dbの更新でエラーが発生しました。{e}")
 
 

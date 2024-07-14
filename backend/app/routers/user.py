@@ -21,17 +21,14 @@ def authenticate_user(username: str, plain_password: str,
             db_model.User.username == username).one_or_none()
         if not user:
             raise HTTPException(status_code=404, detail="ユーザーが見つかりません")
-        is_password = verify_password(plain_password, user.password)
-        if not is_password:
+        if not verify_password(plain_password, user.password):
             raise HTTPException(status_code=400, detail="パスワードが不正です")
-        if user and is_password:
-            return True
-        return False
+        return True
     except HTTPException as http_e:
         raise http_e
 
 
-@router.post("/registration", response_model=ResponseCreatedUser)
+@router.post("/register", response_model=ResponseCreatedUser)
 def create_user(user: UserInfo, db: Session = Depends(get_db)):
     try:
         username = user.username
@@ -53,9 +50,11 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
     except HTTPException as http_e:
         raise http_e
     except IntegrityError:
+        db.rollback()
         raise HTTPException(status_code=400,
                             detail="既に登録されています。")
     except Exception as e:
+        db.rollback()
         raise HTTPException(status_code=400,
                             detail=f"ユーザー登録処理中にエラーが発生しました。{e}")
 

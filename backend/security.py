@@ -7,7 +7,7 @@ from fastapi import Depends, HTTPException, status
 from db import db_model
 from db.database import get_db
 from sqlalchemy.orm import Session
-from jose import jwt, JWTError
+from jose import jwt, JWTError, ExpiredSignatureError
 
 # openssl rand -hex 32
 SECRET_KEY = os.getenv(
@@ -46,7 +46,6 @@ def create_access_token(data: dict,
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    print(to_encode)
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
@@ -64,11 +63,16 @@ def get_current_user(token: str = Depends(oauth2_scheme),
             raise credentials_exception
         user = get_user(username, db)
         if not user:
-            raise HTTPException(status_code=404, detail="ユーザーが見つかりません")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="ユーザーが見つかりません")
         return {"username": username}
+    except ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="再度ログインしてください")
     except JWTError:
         raise credentials_exception
     except HTTPException as http_e:
         raise http_e
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
