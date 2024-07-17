@@ -69,7 +69,7 @@ test_plain_password = "password"
 
 @pytest.fixture(scope="function", autouse=True)
 def create_user(client):
-    """ test_user.pyにてユーザーを作成するテスト以外ではここで作成するユーザーを使用 """
+    """ 基本的にはここで作成するユーザーを使用 """
     data = {"username": test_username,
             "password": test_plain_password,
             "email": "test@test.com"}

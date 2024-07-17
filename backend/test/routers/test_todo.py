@@ -1,4 +1,7 @@
+from unittest.mock import patch
+from datetime import timedelta
 from conftest import test_username
+from security import create_access_token
 
 another_user = "another testuser"
 password = "password"
@@ -49,6 +52,20 @@ def test_create_todo_without_login(client):
     assert response.json() == {"detail": "Not authenticated"}
 
 
+def test_create_todo_with_expired_token(client):
+    """ 期限の切れたトークンでタスクを作成しようとした場合 """
+    def mock_create_access_token(data, expires_delta=timedelta(minutes=-30)):
+        return create_access_token(data, expires_delta)
+
+    with patch("security.create_access_token", mock_create_access_token):
+        access_token = mock_create_access_token(data={"sub": test_username})
+        headers = {"Authorization": f"Bearer {access_token}"}
+        data = {"action": action, "username": test_username}
+        response = client.post("/todo", json=data, headers=headers)
+        assert response.status_code == 401
+        assert response.json() == {"detail": "再度ログインしてください"}
+
+
 def test_create_todo_with_same_content(client, login_and_get_token):
     """ 同じ内容を登録した場合 """
     setup_create_todo(client, login_and_get_token)
@@ -77,6 +94,20 @@ def test_get_all_todo_without_login(client, login_and_get_token):
     response = client.get("/todo")
     assert response.status_code == 401
     assert response.json() == {"detail": "Not authenticated"}
+
+
+def test_get_todo_with_expired_token(client, login_and_get_token):
+    """ 期限の切れたトークンでタスクを取得しようとした場合 """
+    def mock_create_access_token(data, expires_delta=timedelta(minutes=-30)):
+        return create_access_token(data, expires_delta)
+
+    setup_create_todo(client, login_and_get_token)
+    with patch("security.create_access_token", mock_create_access_token):
+        access_token = mock_create_access_token(data={"sub": test_username})
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = client.get("/todo", headers=headers)
+        assert response.status_code == 401
+        assert response.json() == {"detail": "再度ログインしてください"}
 
 
 def test_get_all_todo_without_register(client, login_and_get_token):
