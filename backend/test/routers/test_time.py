@@ -42,11 +42,13 @@ def test_register_target(client, login_and_get_token):
 
 def test_register_target_with_expired_token(client):
     """ 期限の切れたトークンで目標時間を登録しようとした場合 """
-    def mock_create_access_token(data, expires_delta=timedelta(minutes=-30)):
+    def mock_create_access_token(data, minutes):
+        expires_delta = timedelta(minutes=minutes)
         return create_access_token(data, expires_delta)
 
     with patch("security.create_access_token", mock_create_access_token):
-        access_token = mock_create_access_token(data={"sub": test_username})
+        access_token = mock_create_access_token(data={"sub": test_username},
+                                                minutes=-30)
         data = {"date": "2024-05-05", "target_time": 5}
         headers = {"Authorization": f"Bearer {access_token}"}
         response = client.post("/target", json=data, headers=headers)

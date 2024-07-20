@@ -3,8 +3,9 @@ from datetime import timedelta
 from conftest import test_username
 from security import create_access_token
 
-another_user = "another testuser"
-password = "password"
+# 以下の変数は共通で使用し、変更しない
+another_test_user = "another testuser"
+test_password = "password"
 
 
 def setup_monthly_income_for_test(client, login_and_get_token):
@@ -15,14 +16,14 @@ def setup_monthly_income_for_test(client, login_and_get_token):
 
 
 def setup_create_another_user(client):
-    user_info = {"username": another_user,
-                 "password": password}
+    user_info = {"username": another_test_user,
+                 "password": test_password}
     client.post("/register", json=user_info)
 
 
 def setup_login(client):
-    user_info = {"username": another_user,
-                 "password": password}
+    user_info = {"username": another_test_user,
+                 "password": test_password}
     response = client.post("/login", json=user_info)
     access_token = response.json()["access_token"]
     return access_token
@@ -39,11 +40,13 @@ def test_register_income(client, login_and_get_token):
 
 def test_register_income_with_expired_token(client):
     """ 期限の切れたトークンで月収を登録しようとした場合 """
-    def mock_create_access_token(data, expires_delta=timedelta(minutes=-30)):
+    def mock_create_access_token(data, minutes):
+        expires_delta = timedelta(minutes=minutes)
         return create_access_token(data, expires_delta)
 
     with patch("security.create_access_token", mock_create_access_token):
-        access_token = mock_create_access_token(data={"sub": test_username})
+        access_token = mock_create_access_token(data={"sub": test_username},
+                                                minutes=-30)
         headers = {"Authorization": f"Bearer {access_token}"}
         data = {"year_month": "2024-06", "monthly_income": 23}
         response = client.post("/income", json=data, headers=headers)

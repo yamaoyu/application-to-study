@@ -3,15 +3,16 @@ from datetime import timedelta
 from conftest import test_username
 from security import create_access_token
 
-another_user = "another testuser"
-password = "password"
-action = "create test"
+# 以下の変数は共通で使用し、変更しない
+another_test_user = "another testuser"
+test_password = "password"
+test_action = "create test"
 
 
 def setup_create_todo(client, login_and_get_token):
     access_token = login_and_get_token.json()["access_token"]
     headers = {"Authorization": f"Bearer {access_token}"}
-    data = {"action": action, "username": test_username}
+    data = {"action": test_action, "username": test_username}
     client.post("/todo", json=data, headers=headers)
 
 
@@ -22,14 +23,18 @@ def setup_finish_todo(client, login_and_get_token):
 
 
 def setup_create_another_user(client):
-    user_info = {"username": another_user,
-                 "password": password}
+    user_info = {
+        "username": another_test_user,
+        "password": test_password
+    }
     client.post("/register", json=user_info)
 
 
 def setup_login(client):
-    user_info = {"username": another_user,
-                 "password": password}
+    user_info = {
+        "username": another_test_user,
+        "password": test_password
+    }
     response = client.post("/login", json=user_info)
     access_token = response.json()["access_token"]
     return access_token
@@ -38,15 +43,15 @@ def setup_login(client):
 def test_create_todo(client, login_and_get_token):
     access_token = login_and_get_token.json()["access_token"]
     headers = {"Authorization": f"Bearer {access_token}"}
-    data = {"action": action, "username": test_username}
+    data = {"action": test_action, "username": test_username}
     response = client.post("/todo", json=data, headers=headers)
     assert response.status_code == 200
-    assert response.json() == {"action": action}
+    assert response.json() == {"action": test_action}
 
 
 def test_create_todo_without_login(client):
     """ ログインしていない状態で作成した場合 """
-    data = {"action": action, "username": test_username}
+    data = {"action": test_action, "username": test_username}
     response = client.post("/todo", json=data)
     assert response.status_code == 401
     assert response.json() == {"detail": "Not authenticated"}
@@ -60,7 +65,7 @@ def test_create_todo_with_expired_token(client):
     with patch("security.create_access_token", mock_create_access_token):
         access_token = mock_create_access_token(data={"sub": test_username})
         headers = {"Authorization": f"Bearer {access_token}"}
-        data = {"action": action, "username": test_username}
+        data = {"action": test_action, "username": test_username}
         response = client.post("/todo", json=data, headers=headers)
         assert response.status_code == 401
         assert response.json() == {"detail": "再度ログインしてください"}
@@ -71,7 +76,7 @@ def test_create_todo_with_same_content(client, login_and_get_token):
     setup_create_todo(client, login_and_get_token)
     access_token = login_and_get_token.json()["access_token"]
     headers = {"Authorization": f"Bearer {access_token}"}
-    data = {"action": action, "username": test_username}
+    data = {"action": test_action, "username": test_username}
     response = client.post("/todo", json=data, headers=headers)
     assert response.status_code == 400
     assert response.json() == {"detail": "既に登録されている内容です"}
@@ -84,7 +89,7 @@ def test_get_all_todo(client, login_and_get_token):
     response = client.get("/todo", headers=headers)
     assert response.status_code == 200
     assert response.json() == [{"todo_id": 1,
-                               "action": action,
+                               "action": test_action,
                                 "status": False,
                                 "username": test_username}]
 
@@ -98,12 +103,14 @@ def test_get_all_todo_without_login(client, login_and_get_token):
 
 def test_get_todo_with_expired_token(client, login_and_get_token):
     """ 期限の切れたトークンでタスクを取得しようとした場合 """
-    def mock_create_access_token(data, expires_delta=timedelta(minutes=-30)):
+    def mock_create_access_token(data, minutes):
+        expires_delta = timedelta(minutes=minutes)
         return create_access_token(data, expires_delta)
 
     setup_create_todo(client, login_and_get_token)
     with patch("security.create_access_token", mock_create_access_token):
-        access_token = mock_create_access_token(data={"sub": test_username})
+        access_token = mock_create_access_token(data={"sub": test_username},
+                                                minutes=-30)
         headers = {"Authorization": f"Bearer {access_token}"}
         response = client.get("/todo", headers=headers)
         assert response.status_code == 401
@@ -126,7 +133,7 @@ def test_get_specific_todo(client, login_and_get_token):
     response = client.get("/todo/1", headers=headers)
     assert response.status_code == 200
     assert response.json() == {"todo_id": 1,
-                               "action": action,
+                               "action": test_action,
                                "status": False,
                                "username": test_username}
 
@@ -209,7 +216,7 @@ def test_finish_todo(client, login_and_get_token):
     headers = {"Authorization": f"Bearer {access_token}"}
     response = client.put("/todo/finish/1", headers=headers)
     assert response.status_code == 200
-    assert response.json() == {"action": action, "status": True}
+    assert response.json() == {"action": test_action, "status": True}
 
 
 def test_finish_todo_before_create_todo(client, login_and_get_token):

@@ -10,11 +10,8 @@ from sqlalchemy.orm import Session
 from jose import jwt, JWTError, ExpiredSignatureError
 
 # openssl rand -hex 32
-SECRET_KEY = os.getenv(
-    "SECRET_KEY",
-    "ecd518ef9af267a68cd92ae2ba3e8570eae25c713a84dedf0b96066e7d73d205"
-)
-ALGORITHM = os.getenv("ALGORITHM", "HS256")
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -40,13 +37,19 @@ def get_password_hash(password) -> str:
 
 def create_access_token(data: dict,
                         expires_delta: Union[timedelta, None] = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    try:
+        to_encode = data.copy()
+        if expires_delta:
+            expire = datetime.now(timezone.utc) + expires_delta
+        else:
+            expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+        to_encode.update({"exp": expire})
+        if SECRET_KEY or ALGORITHM:
+            return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+        else:
+            raise ValueError("SECRET_KEYかALGORITHMが環境変数に設定されていません。")
+    except Exception:
+        raise HTTPException(status_code=400, detail="トークンの作成に失敗しました。")
 
 
 def get_current_user(token: str = Depends(oauth2_scheme),
@@ -57,6 +60,8 @@ def get_current_user(token: str = Depends(oauth2_scheme),
         headers={"WWW-Authenticate": "Bearer"}
     )
     try:
+        if not SECRET_KEY or not ALGORITHM:
+            raise ValueError("SECRET_KEYかALGORITHMが環境変数に設定されていません。")
         payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
         username = payload.get('sub')
         if username is None:
@@ -66,6 +71,8 @@ def get_current_user(token: str = Depends(oauth2_scheme),
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="ユーザーが見つかりません")
         return {"username": username}
+    except ValueError as value_e:
+        raise value_e
     except ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="再度ログインしてください")
