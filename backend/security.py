@@ -44,12 +44,12 @@ def create_access_token(data: dict,
         else:
             expire = datetime.now(timezone.utc) + timedelta(minutes=15)
         to_encode.update({"exp": expire})
-        if SECRET_KEY or ALGORITHM:
+        if SECRET_KEY and ALGORITHM:
             return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         else:
             raise ValueError("SECRET_KEYかALGORITHMが環境変数に設定されていません。")
-    except Exception:
-        raise HTTPException(status_code=400, detail="トークンの作成に失敗しました。")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"トークンの作成に失敗しました。{str(e)}")
 
 
 def get_current_user(token: str = Depends(oauth2_scheme),

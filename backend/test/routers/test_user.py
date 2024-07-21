@@ -43,7 +43,7 @@ def test_login(client):
         assert decoded_token["sub"] == "testuser"
         # 必要に応じて他のクレームもチェック
     except jwt.JWTError as e:
-        pytest.fail(f"Invalid JWT token{e}")
+        pytest.fail(f"Invalid JWT token{str(e)}")
 
 
 def test_login_with_invalid_password(client):
