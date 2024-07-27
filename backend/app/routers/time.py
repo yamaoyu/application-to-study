@@ -1,4 +1,5 @@
 import re
+from logging import getLogger, basicConfig, INFO
 from fastapi import APIRouter, HTTPException, Depends
 from app.models.time_model import (
     ResponseTargetTime, TargetTimeIn,
@@ -11,6 +12,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound
 
 router = APIRouter()
+
+basicConfig(level=INFO, format="%(levelname)s: %(message)s")
+logger = getLogger(__name__)
+
 date_pattern = r"^\d{4}-\d{2}-\d{2}$"
 year_month_pattern = r"^\d{4}-\d{2}$"
 
@@ -45,6 +50,7 @@ def show_today_situation(date: str,
                     "actual_time": actual_time, "is_achieved": "未完了"}
 
         bonus = lambda is_achieved: 0.1 if is_achieved else 0  # noqa
+        logger.info(f"{current_user['username']}が{date}の活動実績を取得")
         return {"date": date,
                 "target_time": target_time,
                 "actual_time": actual_time,
@@ -77,6 +83,7 @@ def register_today_target(target: TargetTimeIn,
         db.commit()
         db.refresh(data)
         message = f"{date}の目標時間を{target_time}時間に設定しました"
+        logger.info(f"{current_user['username']}が{date}の目標時間を登録")
         return {"target_time": target_time, "date": date, "message": message}
     except HTTPException as http_e:
         raise http_e
@@ -106,6 +113,7 @@ def register_actual_time(actual: ActualTimeIn,
         if activity.is_achieved is None:
             activity.actual = actual_time
             db.commit()
+            logger.info(f"{current_user['username']}が{date}の活動時間を登録")
             return {"date": date,
                     "actual_time": actual_time,
                     "target_time": activity.target,
@@ -165,6 +173,7 @@ def finish_today_work(date: DateIn,
             diff = round((target_time - actual_time), 1)
             message = f"{diff}時間足りませんでした"
         db.commit()
+        logger.info(f"{current_user['username']}が{date}の活動を終了")
         return {
             "date": date,
             "target_time": target_time,
@@ -203,6 +212,7 @@ def get_month_situation(date: DateIn,
             db_model.Income.username == current_user["username"]).one()
         total_monthly_income = salary.monthly_income + salary.bonus
         success_days = [act for act in activity if act.is_achieved is True]
+        logger.info(f"{current_user['username']}が{year_month}の活動実績を取得")
         return {"total_monthly_income": total_monthly_income,
                 "base income": salary.monthly_income,
                 "total bonus": salary.bonus,

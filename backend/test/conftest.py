@@ -69,7 +69,7 @@ test_plain_password = "password"
 
 @pytest.fixture(scope="function", autouse=True)
 def create_user(client):
-    """ test_user.pyにてユーザーを作成するテスト以外ではここで作成するユーザーを使用 """
+    """ 基本的にはここで作成するユーザーを使用 """
     data = {"username": test_username,
             "password": test_plain_password,
             "email": "test@test.com"}
@@ -80,5 +80,12 @@ def create_user(client):
 @pytest.fixture(scope="function", autouse=True)
 def login_and_get_token(client):
     data = {"username": test_username, "password": test_plain_password}
-    token = client.post("/login", json=data)
-    return token
+    access_token = client.post("/login", json=data)
+    return access_token
+
+
+@pytest.fixture(scope="function", autouse=True)
+def get_headers(login_and_get_token):
+    access_token = login_and_get_token.json()['access_token']
+    headers = {"Authorization": f"Bearer {access_token}"}
+    return headers

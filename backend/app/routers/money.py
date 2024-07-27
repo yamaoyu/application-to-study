@@ -1,4 +1,5 @@
 import re
+from logging import getLogger, basicConfig, INFO
 from app.models.money_model import RegisterIncome
 from db import db_model
 from db.database import get_db
@@ -8,6 +9,10 @@ from sqlalchemy.exc import NoResultFound, IntegrityError
 from fastapi import APIRouter, Depends, HTTPException
 
 router = APIRouter()
+
+basicConfig(level=INFO, format="%(levelname)s: %(message)s")
+logger = getLogger(__name__)
+
 year_month_pattern = r"^\d{4}-\d{2}$"
 
 
@@ -33,6 +38,7 @@ def register_salary(income: RegisterIncome,
         db.add(data)
         db.commit()
         db.refresh(data)
+        logger.info(f"{username}が{year_month}の月収を登録")
         return {"message": f"{year_month}の月収:{monthly_income}万円"}
     except IntegrityError as sqlalchemy_error:
         db.rollback()
@@ -56,6 +62,7 @@ def get_monthly_income(year_month: str,
             db_model.Income.year_month == year_month,
             db_model.Income.username == username).one()
         total_income = result.monthly_income + result.bonus
+        logger.info(f"{username}が{year_month}の月収を取得")
         return {"今月の詳細": result, "ボーナス換算後の月収": total_income}
     except NoResultFound:
         raise HTTPException(status_code=400, detail="その月の月収は未登録です。")

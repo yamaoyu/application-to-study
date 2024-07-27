@@ -10,11 +10,8 @@ from sqlalchemy.orm import Session
 from jose import jwt, JWTError, ExpiredSignatureError
 
 # openssl rand -hex 32
-SECRET_KEY = os.getenv(
-    "SECRET_KEY",
-    "ecd518ef9af267a68cd92ae2ba3e8570eae25c713a84dedf0b96066e7d73d205"
-)
-ALGORITHM = os.getenv("ALGORITHM", "HS256")
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -40,13 +37,22 @@ def get_password_hash(password) -> str:
 
 def create_access_token(data: dict,
                         expires_delta: Union[timedelta, None] = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    try:
+        to_encode = data.copy()
+        if expires_delta:
+            expire = datetime.now(timezone.utc) + expires_delta
+        else:
+            expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+        to_encode.update({"exp": expire})
+        if SECRET_KEY and ALGORITHM:
+            return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+        else:
+            raise HTTPException(status_code=500,
+                                detail="SECRET_KEYかALGORITHMが環境変数に設定されていません。")
+    except HTTPException as http_e:
+        raise http_e
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"トークンの作成に失敗しました。{str(e)}")
 
 
 def get_current_user(token: str = Depends(oauth2_scheme),
@@ -57,8 +63,11 @@ def get_current_user(token: str = Depends(oauth2_scheme),
         headers={"WWW-Authenticate": "Bearer"}
     )
     try:
+        if not SECRET_KEY or not ALGORITHM:
+            raise HTTPException(status_code=500,
+                                detail="SECRET_KEYかALGORITHMが環境変数に設定されていません。")
         payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
-        username: str = payload.get('sub')
+        username = payload.get('sub')
         if username is None:
             raise credentials_exception
         user = get_user(username, db)

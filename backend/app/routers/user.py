@@ -1,3 +1,4 @@
+from logging import getLogger, basicConfig, INFO
 from db import db_model
 from security import (get_password_hash,
                       verify_password)
@@ -12,6 +13,8 @@ from security import get_access_token
 
 
 router = APIRouter()
+basicConfig(level=INFO, format="%(levelname)s: %(message)s")
+logger = getLogger(__name__)
 
 
 def authenticate_user(username: str, plain_password: str,
@@ -43,8 +46,9 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
         db.add(form_data)
         db.commit()
         db.refresh(form_data)
-        return {"username": user.username,
-                "password": len(user.password) * "*",
+        logger.info(f"ユーザー作成:{username}")
+        return {"username": username,
+                "password": len(plain_password) * "*",
                 "email": user.email,
                 "message": f"{username}の作成に成功しました。"}
     except HTTPException as http_e:
@@ -72,6 +76,7 @@ def login(user_info: UserInfo,
         if not is_password:
             raise HTTPException(status_code=400, detail="パスワードが正しくありません。")
         access_token = get_access_token(username)
+        logger.info(f"{username}がログイン")
         return {"access_token": access_token, "token_type": "bearer"}
     except NoResultFound:
         raise HTTPException(status_code=404,

@@ -1,3 +1,4 @@
+from logging import getLogger, basicConfig, INFO
 from fastapi import APIRouter, HTTPException, Depends
 from db import db_model
 from db.database import get_db
@@ -8,6 +9,9 @@ from security import get_current_user
 
 
 router = APIRouter()
+
+basicConfig(level=INFO, format="%(levelname)s: %(message)s")
+logger = getLogger(__name__)
 
 
 @router.post("/todo")
@@ -21,6 +25,7 @@ def create_todo(todo: Todo,
         db.add(data)
         db.commit()
         db.refresh(data)
+        logger.info(f"{username}がTodo作成 内容:{action}")
         return {"action": action}
     except IntegrityError as sqlalchemy_error:
         db.rollback()
@@ -43,6 +48,7 @@ def get_all_todo(db: Session = Depends(get_db),
         if not todo:
             raise HTTPException(status_code=400,
                                 detail="登録された情報はありません。")
+        logger.info(f"ユーザー名:{current_user['username']}  Todoを全て取得")
         return todo
     except HTTPException as http_e:
         raise http_e
@@ -61,6 +67,7 @@ def get_specific_todo(todo_id: int,
         if not todo:
             raise HTTPException(status_code=400,
                                 detail=f"{todo_id}の情報は未登録です。")
+        logger.info(f"Todoを取得:{current_user['username']}:ID{todo.todo_id}")
         return todo
     except HTTPException as http_e:
         raise http_e
@@ -79,6 +86,7 @@ def delete_action(todo_id: int,
         if not result:
             raise HTTPException(status_code=404, detail="選択されたタスクは存在しません。")
         db.commit()
+        logger.info(f"{current_user['username']}がTodoを削除 ID:{todo_id}")
         return {"message": "選択したタスクを削除しました。"}
     except HTTPException as http_exception:
         raise http_exception
@@ -102,6 +110,7 @@ def edit_action(todo_id: int,
             raise HTTPException(status_code=400, detail="終了したアクションは更新できません")
         todo.action = action
         db.commit()
+        logger.info(f"{current_user['username']}がTodoを編集 ID:{todo.todo_id}")
         return {"message": f"更新後のタスク:{action}"}
     except NoResultFound:
         raise HTTPException(status_code=404,
@@ -132,6 +141,7 @@ def finish_action(todo_id: int,
         if todo.status:
             raise HTTPException(status_code=400, detail="既に終了したタスクです")
         todo.status = True
+        logger.info(f"{current_user['username']}がTodoを完了 ID:{todo.todo_id}")
         db.commit()
         return {"action": todo.action, "status": todo.status}
     except NoResultFound:
