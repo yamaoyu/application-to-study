@@ -1,5 +1,5 @@
 <template>
-    <form @submit.prevent="handleSubmit">
+    <form @submit.prevent="UserLogin">
       <div>
         <label for="username">ユーザー名:</label>
         <input type="text" id="username" v-model="username" required>
@@ -10,39 +10,55 @@
       </div>
       <button type="submit">ログイン</button>
     </form>
+    <div>
+      <p v-if="message" class="message">{{ message }}</p>
+    </div>
   </template>
   
   <script>
-  import { ref } from 'vue'
+  import { ref, onMounted } from 'vue'
+  // import { ref } from 'vue'
   import axios from 'axios'
-  // import { useRouter } from 'vue-router';
+  import { useRoute, useRouter } from 'vue-router';
   
   export default {
     setup() {
       const username = ref('')
       const password = ref('')
-      const email = ref('')
-      // const router = useRouter()
+      const message = ref('')
+      const router =  useRouter()
+      const route = useRoute()
+
+      onMounted(() => {
+      if (route.query.message) {
+      message.value = route.query.message;
+      // オプション: メッセージを表示後、URLからパラメータを削除
+      router.replace({ query: {} })
+        }
+      })
   
-      const handleSubmit = () => {
+      const UserLogin = async() => {
         try {
-          const response = axios.post('http://localhost:8000/login', {
+          const response = await axios.post('http://localhost:8000/login', {
             username: username.value,
             password: password.value,
-            email: email.value
           })
           // ここでログイン後の処理を行う（例：トークンの保存、ページ遷移など）
-          console.log('ログイン成功:', response.data)
+          message.value = response.data.message;
+          router.push({
+            "path":"/",
+            "query":{message:response.data.message}})
         } catch (error) {
-          console.error('ユーザー作成失敗:', error)
           // エラー処理（ユーザーへの通知など）
+          message.value = "ユーザーログイン失敗";
         }
       }
   
       return {
         username,
         password,
-        handleSubmit
+        message,
+        UserLogin
       }
     }
   }

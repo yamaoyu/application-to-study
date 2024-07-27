@@ -1,5 +1,5 @@
 <template>
-    <form @submit.prevent="handleSubmit">
+    <form @submit.prevent="CreateUser">
       <div>
         <label for="username">ユーザー名:</label>
         <input type="text" id="username" v-model="username" required>
@@ -30,25 +30,22 @@
       const message = ref('')
       const router = useRouter()
   
-      const handleSubmit = () => {
+      const CreateUser = async() => {
         try {
-          const response = axios.post('http://localhost:8000/register', {
+          const response = await axios.post('http://localhost:8000/register', {
             username: username.value,
             password: password.value,
             email: email.value
           })
-            // router.push("http://localhost:8000/login")
             // ここでログイン後の処理を行う（例：トークンの保存、ページ遷移など）
-          if (response.status === 200) {
-          console.log('ユーザー作成成功:', response.data)
-          message.value = 'ユーザー作成成功';
-          setTimeout(() => {
-            router.push('/login');
-          }, 2000); // 2秒後にログインページへ遷移
-        }
+          message.value = 'success' + response.data.message;
+          router.push({
+            path:'/login', 
+            query : { message:response.data.message }
+          })
         } catch (error) {
-          console.error('ユーザー作成失敗:', error)
           // エラー処理（ユーザーへの通知など）
+          message.value = "ユーザー作成失敗";
         }
       }
   
@@ -57,7 +54,7 @@
         password,
         email,
         message,
-        handleSubmit
+        CreateUser
       }
     }
   }
