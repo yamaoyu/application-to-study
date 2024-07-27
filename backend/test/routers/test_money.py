@@ -21,7 +21,8 @@ def setup_create_another_user(client):
 
 def setup_login(client):
     user_info = {"username": another_test_user,
-                 "password": test_password}
+                 "password": test_password,
+                 "email": "another_test@test.com"}
     response = client.post("/login", json=user_info)
     access_token = response.json()["access_token"]
     return access_token
@@ -36,8 +37,8 @@ def test_register_income(client, get_headers):
 
 def test_register_income_with_expired_token(client):
     """ 期限の切れたトークンで月収を登録しようとした場合 """
-    def mock_create_access_token(data):
-        return create_access_token(data, timedelta(minutes=-30))
+    def mock_create_access_token(data, expires_delta=timedelta(minutes=-30)):
+        return create_access_token(data, expires_delta)
 
     with patch("security.create_access_token", mock_create_access_token):
         access_token = mock_create_access_token(data={"sub": test_username})

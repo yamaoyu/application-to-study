@@ -9,13 +9,13 @@ test_password = "password"
 test_action = "create test"
 
 
-def setup_create_todo(client, get_geaders):
+def setup_create_todo(client, get_headers):
     data = {"action": test_action, "username": test_username}
-    client.post("/todo", json=data, headers=get_geaders)
+    client.post("/todo", json=data, headers=get_headers)
 
 
-def setup_finish_todo(client, get_geaders):
-    client.put("/todo/finish/1", headers=get_geaders)
+def setup_finish_todo(client, get_headers):
+    client.put("/todo/finish/1", headers=get_headers)
 
 
 def setup_create_another_user(client):
@@ -53,8 +53,8 @@ def test_create_todo_without_login(client):
 
 def test_create_todo_with_expired_token(client):
     """ 期限の切れたトークンでタスクを作成しようとした場合 """
-    def mock_create_access_token(data):
-        return create_access_token(data, timedelta(minutes=-30))
+    def mock_create_access_token(data, expires_delta=timedelta(minutes=-30)):
+        return create_access_token(data, expires_delta)
 
     with patch("security.create_access_token", mock_create_access_token):
         access_token = mock_create_access_token(data={"sub": test_username})

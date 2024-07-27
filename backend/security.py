@@ -47,7 +47,10 @@ def create_access_token(data: dict,
         if SECRET_KEY and ALGORITHM:
             return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         else:
-            raise ValueError("SECRET_KEYかALGORITHMが環境変数に設定されていません。")
+            raise HTTPException(status_code=500,
+                                detail="SECRET_KEYかALGORITHMが環境変数に設定されていません。")
+    except HTTPException as http_e:
+        raise http_e
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"トークンの作成に失敗しました。{str(e)}")
 
@@ -61,7 +64,8 @@ def get_current_user(token: str = Depends(oauth2_scheme),
     )
     try:
         if not SECRET_KEY or not ALGORITHM:
-            raise ValueError("SECRET_KEYかALGORITHMが環境変数に設定されていません。")
+            raise HTTPException(status_code=500,
+                                detail="SECRET_KEYかALGORITHMが環境変数に設定されていません。")
         payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
         username = payload.get('sub')
         if username is None:
@@ -71,8 +75,6 @@ def get_current_user(token: str = Depends(oauth2_scheme),
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="ユーザーが見つかりません")
         return {"username": username}
-    except ValueError as value_e:
-        raise value_e
     except ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="再度ログインしてください")
