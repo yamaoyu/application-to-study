@@ -9,7 +9,7 @@ from db import db_model
 from db.database import get_db
 from security import get_current_user
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, IntegrityError
 
 router = APIRouter()
 
@@ -60,7 +60,7 @@ def show_today_situation(date: str,
     except NoResultFound:
         raise HTTPException(status_code=400, detail=f"{date}の情報は登録されていません")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=e)
+        raise HTTPException(status_code=500, detail=f"活動実績の取得に失敗しました: {e}")
 
 
 @router.post("/target",
@@ -87,10 +87,13 @@ def register_today_target(target: TargetTimeIn,
         return {"target_time": target_time, "date": date, "message": message}
     except HTTPException as http_e:
         raise http_e
-    except Exception:
+    except IntegrityError:
+        raise HTTPException(
+            status_code=400, detail=f"{data.date}の目標時間は既に登録済みです")
+    except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400,
-                            detail=f"{data.date}の目標時間は既に登録済みです")
+        raise HTTPException(status_code=500,
+                            detail=f"目標時間の登録中にエラーが発生しました: {e}")
 
 
 @router.put("/actual",
@@ -119,14 +122,17 @@ def register_actual_time(actual: ActualTimeIn,
                     "target_time": activity.target,
                     "message": f"活動時間を{actual_time}時間に設定しました。",
                     "username": current_user['username']}
+        else:
+            raise HTTPException(status_code=400,
+                                detail=f"{date}の活動実績は既に確定済みです。変更できません")
     except HTTPException as http_e:
         raise http_e
     except NoResultFound:
         raise HTTPException(status_code=404, detail=f"先に{date}の目標を入力して下さい")
-    else:
+    except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400,
-                            detail=f"{date}の活動実績は既に確定済みです。変更できません")
+        raise HTTPException(status_code=500,
+                            detail=f"活動時間の登録中にエラーが発生しました: {e}")
 
 
 @router.put("/finish", status_code=200)
@@ -148,7 +154,8 @@ def finish_today_work(date: DateIn,
     except NoResultFound:
         raise HTTPException(status_code=400, detail=f"{date}の情報は登録されていません")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=e)
+        raise HTTPException(
+            status_code=500, detail=f"活動時間確定処理中にエラーが発生しました: {e}")
 
     try:
         target_time = activity.target
@@ -187,7 +194,8 @@ def finish_today_work(date: DateIn,
                             detail=f"{year_month}の月収が未登録です")
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=e)
+        raise HTTPException(
+            status_code=500, detail=f"活動時間確定処理中にエラーが発生しました: {e}")
 
 
 @router.get("/month")
@@ -224,4 +232,5 @@ def get_month_situation(date: DateIn,
         raise HTTPException(status_code=400,
                             detail=f"{year_month}の給料は登録されていません")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(
+            status_code=500, detail=f"月の活動実績確認処理中にエラーが発生しました: {e}")

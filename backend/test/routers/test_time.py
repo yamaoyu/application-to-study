@@ -44,6 +44,17 @@ def test_register_target_with_expired_token(client):
         assert response.json() == {"detail": "再度ログインしてください"}
 
 
+def test_register_target_twice(client, get_headers):
+    """ 既に目標時間が登録されている日の目標時間を登録 """
+    setup_target_time_for_test(client, get_headers)
+    data = {"date": "2024-05-05", "target_time": 5}
+    response = client.post("/target", json=data, headers=get_headers)
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": "2024-05-05の目標時間は既に登録済みです"
+    }
+
+
 def test_register_target_without_slash(client, get_headers):
     """ 日付の形式が-ではなく/の場合 """
     data = {"date": "2024/05/05", "target_time": 5}
