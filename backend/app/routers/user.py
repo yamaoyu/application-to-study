@@ -63,7 +63,7 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500,
-                            detail=f"ユーザー登録処理中にエラーが発生しました\n{e}")
+                            detail=f"ユーザー登録処理中にエラーが発生しました: {e}")
 
 
 @router.post("/login")
@@ -87,7 +87,7 @@ def login(user_info: UserInfo,
     except HTTPException as http_e:
         raise http_e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"ログイン処理に失敗しました\n{e}")
+        raise HTTPException(status_code=500, detail=f"ログイン処理に失敗しました: {e}")
 
 
 @router.post("/token")

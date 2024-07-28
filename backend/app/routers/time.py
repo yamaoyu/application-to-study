@@ -60,7 +60,7 @@ def show_today_situation(date: str,
     except NoResultFound:
         raise HTTPException(status_code=400, detail=f"{date}の情報は登録されていません")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"活動実績の取得に失敗しました\n{e}")
+        raise HTTPException(status_code=500, detail=f"活動実績の取得に失敗しました: {e}")
 
 
 @router.post("/target",
@@ -93,7 +93,7 @@ def register_today_target(target: TargetTimeIn,
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500,
-                            detail=f"目標時間の登録中にエラーが発生しました\n{e}")
+                            detail=f"目標時間の登録中にエラーが発生しました: {e}")
 
 
 @router.put("/actual",
@@ -132,7 +132,7 @@ def register_actual_time(actual: ActualTimeIn,
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500,
-                            detail=f"活動時間の登録中にエラーが発生しました\n{e}")
+                            detail=f"活動時間の登録中にエラーが発生しました: {e}")
 
 
 @router.put("/finish", status_code=200)
@@ -155,7 +155,7 @@ def finish_today_work(date: DateIn,
         raise HTTPException(status_code=400, detail=f"{date}の情報は登録されていません")
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"活動時間確定処理中にエラーが発生しました\n{e}")
+            status_code=500, detail=f"活動時間確定処理中にエラーが発生しました: {e}")
 
     try:
         target_time = activity.target
@@ -195,7 +195,7 @@ def finish_today_work(date: DateIn,
     except Exception as e:
         db.rollback()
         raise HTTPException(
-            status_code=500, detail=f"活動時間確定処理中にエラーが発生しました\n{e}")
+            status_code=500, detail=f"活動時間確定処理中にエラーが発生しました: {e}")
 
 
 @router.get("/month")
@@ -233,4 +233,4 @@ def get_month_situation(date: DateIn,
                             detail=f"{year_month}の給料は登録されていません")
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"月の活動実績確認処理中にエラーが発生しました\n{e}")
+            status_code=500, detail=f"月の活動実績確認処理中にエラーが発生しました: {e}")

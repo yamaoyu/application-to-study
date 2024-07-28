@@ -49,7 +49,7 @@ def register_salary(income: RegisterIncome,
     except Exception as e:
         db.rollback()
         raise HTTPException(
-            status_code=500, detail=f"月収の登録処理中にエラーが発生しました\n{e}")
+            status_code=500, detail=f"月収の登録処理中にエラーが発生しました: {e}")
 
 
 @router.get("/income/{year_month}", status_code=200)
@@ -68,4 +68,4 @@ def get_monthly_income(year_month: str,
     except NoResultFound:
         raise HTTPException(status_code=400, detail="その月の月収は未登録です。")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"月収の取得処理中にエラーがしました\n{e}")
+        raise HTTPException(status_code=500, detail=f"月収の取得処理中にエラーがしました: {e}")
