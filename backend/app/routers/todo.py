@@ -36,7 +36,8 @@ def create_todo(todo: Todo,
                 status_code=400, detail="Integrity errorが発生しました")
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"dbの更新に失敗しました{e}")
+        raise HTTPException(
+            status_code=500, detail=f"Todo作成処理中にエラーが発生しました\n{e}")
 
 
 @router.get("/todo")
@@ -53,7 +54,8 @@ def get_all_todo(db: Session = Depends(get_db),
     except HTTPException as http_e:
         raise http_e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"todo取得にエラーが発生しました。{e}")
+        raise HTTPException(
+            status_code=500, detail=f"todo取得処理にエラーが発生しました\n{e}")
 
 
 @router.get("/todo/{todo_id}")
@@ -72,7 +74,8 @@ def get_specific_todo(todo_id: int,
     except HTTPException as http_e:
         raise http_e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"todo取得にエラーが発生しました。{e}")
+        raise HTTPException(
+            status_code=500, detail=f"todo取得処理にエラーが発生しました\n{e}")
 
 
 @router.delete("/todo/{todo_id}")
@@ -93,7 +96,7 @@ def delete_action(todo_id: int,
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500,
-                            detail=f"削除に失敗しました。\\{e}")
+                            detail=f"Todoの削除処理に失敗しました。\n{e}")
 
 
 @router.put("/todo/{todo_id}")
@@ -127,7 +130,8 @@ def edit_action(todo_id: int,
         raise http_exception
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"dbの更新でエラーが発生しました{e}")
+        raise HTTPException(
+            status_code=500, detail=f"Todoの更新処理でエラーが発生しました\n{e}")
 
 
 @router.put("/todo/finish/{todo_id}")
@@ -151,4 +155,5 @@ def finish_action(todo_id: int,
         raise http_exception
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"データ更新時にエラーが発生しました。{e}")
+        raise HTTPException(
+            status_code=500, detail=f"Todo終了処理中にエラーが発生しました\n{e}")
