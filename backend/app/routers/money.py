@@ -48,7 +48,7 @@ def register_salary(income: RegisterIncome,
             status_code=400, detail="Integrity errorが発生しました")
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=f"dbの更新でエラーが発生しました。{e}")
+        raise HTTPException(status_code=500, detail=f"dbの更新でエラーが発生しました。{e}")
 
 
 @router.get("/income/{year_month}", status_code=200)
@@ -67,4 +67,4 @@ def get_monthly_income(year_month: str,
     except NoResultFound:
         raise HTTPException(status_code=400, detail="その月の月収は未登録です。")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=e)
+        raise HTTPException(status_code=500, detail=e)

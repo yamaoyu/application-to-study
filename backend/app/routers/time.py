@@ -60,7 +60,7 @@ def show_today_situation(date: str,
     except NoResultFound:
         raise HTTPException(status_code=400, detail=f"{date}の情報は登録されていません")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=e)
+        raise HTTPException(status_code=500, detail=e)
 
 
 @router.post("/target",
@@ -89,7 +89,7 @@ def register_today_target(target: TargetTimeIn,
         raise http_e
     except Exception:
         db.rollback()
-        raise HTTPException(status_code=400,
+        raise HTTPException(status_code=500,
                             detail=f"{data.date}の目標時間は既に登録済みです")
 
 
@@ -119,14 +119,17 @@ def register_actual_time(actual: ActualTimeIn,
                     "target_time": activity.target,
                     "message": f"活動時間を{actual_time}時間に設定しました。",
                     "username": current_user['username']}
+        else:
+            raise HTTPException(status_code=400,
+                                detail=f"{date}の活動実績は既に確定済みです。変更できません")
     except HTTPException as http_e:
         raise http_e
     except NoResultFound:
         raise HTTPException(status_code=404, detail=f"先に{date}の目標を入力して下さい")
-    else:
+    except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400,
-                            detail=f"{date}の活動実績は既に確定済みです。変更できません")
+        raise HTTPException(status_code=500,
+                            detail=str(e))
 
 
 @router.put("/finish", status_code=200)
@@ -148,7 +151,7 @@ def finish_today_work(date: DateIn,
     except NoResultFound:
         raise HTTPException(status_code=400, detail=f"{date}の情報は登録されていません")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=e)
+        raise HTTPException(status_code=500, detail=e)
 
     try:
         target_time = activity.target
@@ -187,7 +190,7 @@ def finish_today_work(date: DateIn,
                             detail=f"{year_month}の月収が未登録です")
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=e)
+        raise HTTPException(status_code=500, detail=e)
 
 
 @router.get("/month")
@@ -224,4 +227,4 @@ def get_month_situation(date: DateIn,
         raise HTTPException(status_code=400,
                             detail=f"{year_month}の給料は登録されていません")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
