@@ -80,7 +80,7 @@ def login(user_info: UserInfo,
             raise HTTPException(status_code=400, detail="パスワードが正しくありません。")
         access_token = get_access_token(username)
         logger.info(f"{username}がログイン")
-        return {"access_token": access_token, "token_type": "bearer"}
+        return {"access_token": access_token, "token_type": "Bearer"}
     except NoResultFound:
         raise HTTPException(status_code=404,
                             detail=f"{username}は登録されていません。")
@@ -101,4 +101,4 @@ def login_for_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token = get_access_token(form_data.username)
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "Bearer"}

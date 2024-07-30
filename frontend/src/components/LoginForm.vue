@@ -17,7 +17,6 @@
   
   <script>
   import { ref, onMounted } from 'vue'
-  // import { ref } from 'vue'
   import axios from 'axios'
   import { useRoute, useRouter } from 'vue-router';
   
@@ -44,13 +43,18 @@
             password: password.value,
           })
           // ここでログイン後の処理を行う（例：トークンの保存、ページ遷移など）
-          message.value = response.data.message;
-          router.push({
-            "path":"/",
-            "query":{message:response.data.message}})
+          if (response.status===200){
+            router.push({
+              "path":"/home",
+              "query":{message:"ログイン成功"}})
+          }
         } catch (error) {
           // エラー処理（ユーザーへの通知など）
-          message.value = "ユーザーログイン失敗";
+          if (error.response.status!==500){
+            message.value = error.response.data.detail;
+          }else{
+            message.value = "ログインに失敗しました";
+          }
         }
       }
   

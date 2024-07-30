@@ -14,7 +14,7 @@
       </div>
       <button type="submit">登録</button>
     </form>
-    <p v-if="message">{{ message }}</p>
+    <p v-if="message" class="message">{{ message }}</p>
 </template>
   
   <script>
@@ -38,14 +38,18 @@
             email: email.value
           })
             // ここでログイン後の処理を行う（例：トークンの保存、ページ遷移など）
-          message.value = 'success' + response.data.message;
-          router.push({
+          if (response.status===200){
+            router.push({
             path:'/login', 
-            query : { message:response.data.message }
-          })
+            query : { message:response.data.message }})
+          }
         } catch (error) {
           // エラー処理（ユーザーへの通知など）
-          message.value = "ユーザー作成失敗";
+          if (error.response.status!==500){
+            message.value = error.response.data.detail;
+          }else{
+            message.value = "ユーザー作成に失敗しました";
+          }
         }
       }
   
