@@ -19,6 +19,7 @@
   import { ref, onMounted } from 'vue'
   import axios from 'axios'
   import { useRoute, useRouter } from 'vue-router';
+  import { useStore } from 'vuex';
   
   export default {
     setup() {
@@ -27,6 +28,8 @@
       const message = ref('')
       const router =  useRouter()
       const route = useRoute()
+      const store = useStore()
+
 
       onMounted(() => {
       if (route.query.message) {
@@ -44,6 +47,13 @@
           })
           // ここでログイン後の処理を行う（例：トークンの保存、ページ遷移など）
           if (response.status===200){
+              store.commit('SET_AUTH_DATA', {
+              accessToken: response.data.access_token,
+              tokenType: response.data.token_type})
+            
+            // Axiosのデフォルトヘッダーにトークンを設定
+          axios.defaults.headers.common['Authorization'] = `${response.data.token_type} ${response.data.access_token}`
+
             router.push({
               "path":"/home",
               "query":{message:"ログイン成功"}})
