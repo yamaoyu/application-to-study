@@ -52,12 +52,14 @@ def register_salary(income: RegisterIncome,
             status_code=500, detail=f"月収の登録処理中にエラーが発生しました: {e}")
 
 
-@router.get("/income/{year_month}", status_code=200)
-def get_monthly_income(year_month: str,
+@router.get("/income/{year}/{month}", status_code=200)
+def get_monthly_income(year: str,
+                       month: str,
                        current_user: dict = Depends(get_current_user),
                        db: Session = Depends(get_db)):
     """ 月毎の収入を確認する """
     try:
+        year_month = f"{year}-{month}"
         username = current_user['username']
         result = db.query(db_model.Income).filter(
             db_model.Income.year_month == year_month,

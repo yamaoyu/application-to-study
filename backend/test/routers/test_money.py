@@ -70,8 +70,9 @@ def test_register_income_with_minus_digit(client, get_headers):
 
 def test_get_income(client, get_headers):
     setup_monthly_income_for_test(client, get_headers)
-    year_month = "2024-06"
-    response = client.get(f"/income/{year_month}", headers=get_headers)
+    year = "2024"
+    month = "06"
+    response = client.get(f"/income/{year}/{month}", headers=get_headers)
     assert response.status_code == 200
     assert response.json() == {
         "今月の詳細": {
@@ -93,8 +94,9 @@ def test_get_income_with_expired_token(client):
     with patch("security.create_access_token", mock_create_access_token):
         access_token = mock_create_access_token(data={"sub": test_username})
         headers = {"Authorization": f"Bearer {access_token}"}
-        year_month = "2024-06"
-        response = client.get(f"/income/{year_month}", headers=headers)
+        year = "2024"
+        month = "06"
+        response = client.get(f"/income/{year}/{month}", headers=headers)
         assert response.status_code == 401
         assert response.json() == {"detail": "再度ログインしてください"}
 
@@ -104,8 +106,9 @@ def test_get_income_by_another_user(client, get_headers):
     setup_monthly_income_for_test(client, get_headers)
     setup_create_another_user(client)
     access_token = setup_login(client)
-    year_month = "2024-06"
+    year = "2024"
+    month = "06"
     headers = {"Authorization": f"Bearer {access_token}"}
-    response = client.get(f"/income/{year_month}", headers=headers)
+    response = client.get(f"/income/{year}/{month}", headers=headers)
     assert response.status_code == 400
     assert response.json() == {"detail": "その月の月収は未登録です。"}
