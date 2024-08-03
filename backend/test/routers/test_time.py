@@ -6,26 +6,26 @@ from security import create_access_token
 # セットアップ用変数
 setup_monthly_income = 23.0
 setup_bonus = 0.1
-setup_date_url = "/2024/05/05"
+setup_date_path = "/2024/05/05"
 setup_date_message = "2024-05-05"
 
 
 def setup_target_time_for_test(client, get_headers):
     data = {"target_time": 5}
-    client.post(f"/activities{setup_date_url}/target",
+    client.post(f"/activities{setup_date_path}/target",
                 json=data,
                 headers=get_headers)
 
 
 def setup_actual_time_for_test(client, get_headers):
     data = {"actual_time": 5}
-    client.put(f"/activities{setup_date_url}/actual",
+    client.put(f"/activities{setup_date_path}/actual",
                json=data,
                headers=get_headers)
 
 
 def setup_finish_activity_for_test(client, get_headers):
-    client.put(f"/activities{setup_date_url}/finish",
+    client.put(f"/activities{setup_date_path}/finish",
                headers=get_headers)
 
 
@@ -38,7 +38,7 @@ def setup_monthly_income_for_test(client, get_headers):
 
 def test_register_target(client, get_headers):
     data = {"target_time": 5}
-    response = client.post(f"/activities{setup_date_url}/target",
+    response = client.post(f"/activities{setup_date_path}/target",
                            json=data,
                            headers=get_headers)
     assert response.status_code == 201
@@ -53,7 +53,7 @@ def test_register_target_with_expired_token(client):
         access_token = mock_create_access_token(data={"sub": test_username})
         data = {"target_time": 5}
         headers = {"Authorization": f"Bearer {access_token}"}
-        response = client.post(f"/activities{setup_date_url}/target",
+        response = client.post(f"/activities{setup_date_path}/target",
                                json=data,
                                headers=headers)
         assert response.status_code == 401
@@ -64,7 +64,7 @@ def test_register_target_twice(client, get_headers):
     """ 既に目標時間が登録されている日の目標時間を登録 """
     setup_target_time_for_test(client, get_headers)
     data = {"target_time": 5}
-    response = client.post(f"/activities{setup_date_url}/target",
+    response = client.post(f"/activities{setup_date_path}/target",
                            json=data,
                            headers=get_headers)
     assert response.status_code == 400
@@ -86,7 +86,7 @@ def test_register_target_missing_zero(client, get_headers):
 def test_register_actual(client, get_headers):
     setup_target_time_for_test(client, get_headers)
     data = {"actual_time": 5}
-    response = client.put(f"/activities{setup_date_url}/actual",
+    response = client.put(f"/activities{setup_date_path}/actual",
                           json=data,
                           headers=get_headers)
     assert response.status_code == 200
@@ -115,7 +115,7 @@ def test_register_actual_after_finish(client, get_headers):
     setup_monthly_income_for_test(client, get_headers)
     setup_finish_activity_for_test(client, get_headers)
     data = {"actual_time": 5}
-    response = client.put(f"/activities{setup_date_url}/actual",
+    response = client.put(f"/activities{setup_date_path}/actual",
                           json=data,
                           headers=get_headers)
     assert response.status_code == 400
@@ -127,7 +127,7 @@ def test_finish_activity(client, get_headers):
     setup_target_time_for_test(client, get_headers)
     setup_actual_time_for_test(client, get_headers)
     setup_monthly_income_for_test(client, get_headers)
-    response = client.put(f"/activities{setup_date_url}/finish",
+    response = client.put(f"/activities{setup_date_path}/finish",
                           headers=get_headers)
     assert response.status_code == 200
     assert response.json() == {
@@ -141,7 +141,7 @@ def test_finish_activity(client, get_headers):
 def test_finish_activity_before_register_actual(client, get_headers):
     """ 活動時間登録前に活動を終了しようとした場合 """
     setup_target_time_for_test(client, get_headers)
-    response = client.put(f"/activities{setup_date_url}/finish",
+    response = client.put(f"/activities{setup_date_path}/finish",
                           headers=get_headers)
     assert response.status_code == 400
     assert response.json() == {"detail": f"{setup_date_message}の活動時間を登録して下さい"}
@@ -151,20 +151,20 @@ def test_finish_activity_without_register_income(client, get_headers):
     """ 月収を登録せずに活動を終了しようとした場合 """
     setup_target_time_for_test(client, get_headers)
     setup_actual_time_for_test(client, get_headers)
-    response = client.put(f"/activities{setup_date_url}/finish",
+    response = client.put(f"/activities{setup_date_path}/finish",
                           headers=get_headers)
     assert response.status_code == 400
     assert response.json() == {"detail": "2024-05の月収が未登録です"}
 
 
-def test_get_day_acitivities(client, get_headers):
+def test_get_day_activities(client, get_headers):
     """ 活動終了記録まで行った日の情報を取得 """
     setup_target_time_for_test(client, get_headers)
     setup_actual_time_for_test(client, get_headers)
     setup_monthly_income_for_test(client, get_headers)
     setup_finish_activity_for_test(client, get_headers)
     date = setup_date_message
-    response = client.get(f"/activities{setup_date_url}",
+    response = client.get(f"/activities{setup_date_path}",
                           headers=get_headers)
     assert response.status_code == 200
     assert response.json() == {"date": date,
@@ -192,7 +192,7 @@ def test_get_day_activities_with_expired_token(client, get_headers):
     with patch("security.create_access_token", mock_create_access_token):
         access_token = mock_create_access_token(data={"sub": test_username})
         headers = {"Authorization": f"Bearer {access_token}"}
-        response = client.get(f"/activities{setup_date_url}",
+        response = client.get(f"/activities{setup_date_path}",
                               headers=headers)
         assert response.status_code == 401
         assert response.json() == {"detail": "再度ログインしてください"}

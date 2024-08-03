@@ -16,7 +16,6 @@ class ActualTimeIn(BaseModel):
 
 class ResponseActualTime(ResponseTargetTime):
     actual_time: int
-    message: str
 
 
 class RegisterSalary(BaseModel):
