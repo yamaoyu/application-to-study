@@ -1,6 +1,6 @@
-import re
 from logging import getLogger, basicConfig, INFO
 from app.models.money_model import RegisterIncome
+from app import set_date_format
 from db import db_model
 from db.database import get_db
 from security import get_current_user
@@ -13,8 +13,6 @@ router = APIRouter()
 basicConfig(level=INFO, format="%(levelname)s: %(message)s")
 logger = getLogger(__name__)
 
-year_month_pattern = r"^\d{4}-\d{2}$"
-
 
 @router.post("/income", status_code=201)
 def register_salary(income: RegisterIncome,
@@ -22,12 +20,8 @@ def register_salary(income: RegisterIncome,
                     db: Session = Depends(get_db)):
     """  月収を登録する """
     monthly_income = income.monthly_income
-    year_month = income.year_month
+    year_month = set_date_format(income.year, income.month)
     username = current_user['username']
-    # year_monthのフォーマットがYYYY-MMか確認
-    if not re.match(year_month_pattern, year_month):
-        raise HTTPException(status_code=400,
-                            detail="入力形式が違います。正しい形式:YYYY-MM")
     if monthly_income < 0:
         raise HTTPException(status_code=400, detail="正の数を入力して下さい")
     data = db_model.Income(year_month=year_month,

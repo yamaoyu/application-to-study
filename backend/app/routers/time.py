@@ -1,4 +1,4 @@
-import re
+from datetime import datetime
 from logging import getLogger, basicConfig, INFO
 from fastapi import APIRouter, HTTPException, Depends
 from app.models.time_model import (
@@ -6,6 +6,7 @@ from app.models.time_model import (
     ActualTimeIn, ResponseActualTime, ResponseFinishActivity
 )
 from db import db_model
+from app import set_date_format
 from db.database import get_db
 from security import get_current_user
 from sqlalchemy.orm import Session
@@ -16,9 +17,6 @@ router = APIRouter()
 basicConfig(level=INFO, format="%(levelname)s: %(message)s")
 logger = getLogger(__name__)
 
-date_pattern = r"^\d{4}-\d{2}-\d{2}$"
-year_month_pattern = r"^\d{4}-\d{2}$"
-
 
 @router.get("/activities/{year}/{month}/{day}", status_code=200)
 def day_activities(year: str,
@@ -28,12 +26,7 @@ def day_activities(year: str,
                    current_user: dict = Depends(get_current_user)):
     """ 特定日の活動時間を確認する """
     try:
-        # dateのフォーマットがYYYY-MM-DDとなるか確認
-        date = year + "-" + month + "-" + day
-        if not re.match(date_pattern, date):
-            raise HTTPException(status_code=400,
-                                detail="入力形式が違います。正しい形式:YYYY-MM-DD")
-
+        date = set_date_format(year, month, day)
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date,
             db_model.Activity.username == current_user["username"]).one()
@@ -81,16 +74,13 @@ def create_target_time(target: TargetTimeIn,
     try:
         username = current_user["username"]
         target_time = target.target_time
-        # dateのフォーマットがYYYY-MM-DDとなるか確認
-        date = year + "-" + month + "-" + day
-        if not re.match(date_pattern, date):
-            raise HTTPException(status_code=400,
-                                detail="入力形式が違います。正しい形式:YYYY-MM-DD")
-        data = db_model.Activity(
+        date = set_date_format(year, month, day)
+
+        insert_data = db_model.Activity(
             date=date, target=target_time, username=username)
-        db.add(data)
+        db.add(insert_data)
         db.commit()
-        db.refresh(data)
+        db.refresh(insert_data)
         message = f"{date}の目標時間を{target_time}時間に設定しました"
         logger.info(f"{current_user['username']}が{date}の目標時間を登録")
         return {"target_time": target_time, "date": date, "message": message}
@@ -98,7 +88,7 @@ def create_target_time(target: TargetTimeIn,
         raise http_e
     except IntegrityError:
         raise HTTPException(
-            status_code=400, detail=f"{data.date}の目標時間は既に登録済みです")
+            status_code=400, detail=f"{date}の目標時間は既に登録済みです")
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500,
@@ -117,11 +107,8 @@ def update_actual_time(actual: ActualTimeIn,
     """ 目標時間が登録済みの場合、活動時間を入力 """
     try:
         actual_time = actual.actual_time
-        # dateのフォーマットがYYYY-MM-DDとなるか確認
-        date = year + "-" + month + "-" + day
-        if not re.match(date_pattern, date):
-            raise HTTPException(status_code=400,
-                                detail="入力形式が違います。正しい形式:YYYY-MM-DD")
+        date = set_date_format(year, month, day)
+
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date,
             db_model.Activity.username == current_user["username"]).one()
@@ -156,11 +143,8 @@ def finish_activities(year: str,
                       current_user: dict = Depends(get_current_user)):
     """ 特定日の作業時間を確定し、目標を達成しているのかを確認する """
     try:
-        date = year + "-" + month + "-" + day
-        # dateのフォーマットがYYYY-MM-DDとなるか確認
-        if not re.match(date_pattern, date):
-            raise HTTPException(status_code=400,
-                                detail="入力形式が違います。正しい形式:YYYY-MM-DD")
+        date = set_date_format(year, month, day)
+
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date,
             db_model.Activity.username == current_user["username"]).one()
@@ -175,7 +159,7 @@ def finish_activities(year: str,
     try:
         target_time = activity.target
         actual_time = activity.actual
-        year_month = date[:7]
+        year_month = f"{year}-{month}"
 
         if actual_time is None:
             raise HTTPException(status_code=400, detail=f"{date}の活動時間を登録して下さい")
@@ -219,14 +203,17 @@ def month_activities(year: str,
                      db: Session = Depends(get_db),
                      current_user: dict = Depends(get_current_user)):
     """ 特定月のデータを取得 """
-    # dateのフォーマットがYYYY-MMか確認
-    year_month = year + "-" + month
-    if not re.match(year_month_pattern, year_month):
-        raise HTTPException(status_code=400,
-                            detail="入力形式が違います。正しい形式:YYYY-MM")
     try:
+        year_month = set_date_format(year, month)
+        # 検索範囲の指定
+        start_date = datetime(int(year), int(month), 1).date()
+        if int(month) == 12:
+            end_date = datetime(int(year) + 1, 1, 1).date()
+        else:
+            end_date = datetime(int(year), int(month) + 1, 1).date()
+
         activity = db.query(db_model.Activity).filter(
-            db_model.Activity.date.like(f"{year_month}%"),
+            db_model.Activity.date.between(start_date, end_date),
             db_model.Activity.username == current_user["username"]).all()
         if not activity:
             raise HTTPException(status_code=400,

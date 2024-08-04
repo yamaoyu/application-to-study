@@ -6,8 +6,10 @@ from security import create_access_token
 # セットアップ用変数
 setup_monthly_income = 23.0
 setup_bonus = 0.1
-setup_date_path = "/2024/05/05"
-setup_date_message = "2024-05-05"
+setup_date_path = "/2024/5/5"
+setup_date_message = "2024-5-5"
+setup_year = "2024"
+setup_month = "5"
 
 
 def setup_target_time_for_test(client, get_headers):
@@ -30,7 +32,9 @@ def setup_finish_activity_for_test(client, get_headers):
 
 
 def setup_monthly_income_for_test(client, get_headers):
-    data = {"monthly_income": setup_monthly_income, "year_month": "2024-05"}
+    data = {"monthly_income": setup_monthly_income,
+            "year": setup_year,
+            "month": setup_month}
     client.post("/income",
                 json=data,
                 headers=get_headers)
@@ -73,14 +77,14 @@ def test_register_target_twice(client, get_headers):
     }
 
 
-def test_register_target_missing_zero(client, get_headers):
-    """ 日付の書き方が不正(一桁の場合は0xの形式が正しい)の場合 """
+def test_register_target_with_invalid_date(client, get_headers):
+    """ 日付が不正の場合 """
     data = {"target_time": 5}
-    response = client.post("/activities/2024/5/5/target",
+    response = client.post("/activities/2024/6/31/target",
                            json=data,
                            headers=get_headers)
     assert response.status_code == 400
-    assert response.json() == {"detail": "入力形式が違います。正しい形式:YYYY-MM-DD"}
+    assert response.json() == {"detail": "日付が不正です"}
 
 
 def test_register_actual(client, get_headers):
@@ -101,11 +105,11 @@ def test_register_actual(client, get_headers):
 def test_register_actual_before_register_target(client, get_headers):
     """ 目標時間登録前に活動時間を登録した場合 """
     data = {"actual_time": 5}
-    response = client.put("/activities/2024/05/10/actual",
+    response = client.put("/activities/2024/5/10/actual",
                           json=data,
                           headers=get_headers)
     assert response.status_code == 404
-    assert response.json() == {"detail": "先に2024-05-10の目標を入力して下さい"}
+    assert response.json() == {"detail": "先に2024-5-10の目標を入力して下さい"}
 
 
 def test_register_actual_after_finish(client, get_headers):
@@ -154,7 +158,8 @@ def test_finish_activity_without_register_income(client, get_headers):
     response = client.put(f"/activities{setup_date_path}/finish",
                           headers=get_headers)
     assert response.status_code == 400
-    assert response.json() == {"detail": "2024-05の月収が未登録です"}
+    assert response.json() == {"detail":
+                               f"{setup_year}-{setup_month}の月収が未登録です"}
 
 
 def test_get_day_activities(client, get_headers):
@@ -176,8 +181,8 @@ def test_get_day_activities(client, get_headers):
 
 def test_get_day_activities_before_register_activity(client, get_headers):
     """ 活動記録が未登録の日の情報を取得する場合 """
-    date = "2024-05-10"
-    response = client.get("/activities/2024/05/10",
+    date = "2024-5-10"
+    response = client.get("/activities/2024/5/10",
                           headers=get_headers)
     assert response.status_code == 400
     assert response.json() == {"detail": f"{date}の情報は登録されていません"}
@@ -205,7 +210,7 @@ def test_get_month_acitivities(client, get_headers):
     setup_monthly_income_for_test(client, get_headers)
     setup_finish_activity_for_test(client, get_headers)
     total_monthly_income = setup_monthly_income + setup_bonus
-    response = client.get("/activities/2024/05",
+    response = client.get("/activities/2024/5",
                           headers=get_headers)
     assert response.status_code == 200
     assert response.json() == {"total_monthly_income": total_monthly_income,
