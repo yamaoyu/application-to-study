@@ -1,11 +1,12 @@
-import re
+from datetime import datetime
 from logging import getLogger, basicConfig, INFO
 from fastapi import APIRouter, HTTPException, Depends
 from app.models.time_model import (
     ResponseTargetTime, TargetTimeIn,
-    ActualTimeIn, ResponseStudyTime, DateIn
+    ActualTimeIn, ResponseActualTime, ResponseFinishActivity
 )
 from db import db_model
+from app import set_date_format
 from db.database import get_db
 from security import get_current_user
 from sqlalchemy.orm import Session
@@ -16,20 +17,16 @@ router = APIRouter()
 basicConfig(level=INFO, format="%(levelname)s: %(message)s")
 logger = getLogger(__name__)
 
-date_pattern = r"^\d{4}-\d{2}-\d{2}$"
-year_month_pattern = r"^\d{4}-\d{2}$"
 
-
-@router.get("/situation/{date}", status_code=200)
-def show_today_situation(date: str,
-                         db: Session = Depends(get_db),
-                         current_user: dict = Depends(get_current_user)):
-    """ その日の活動時間を確認する """
-    # dateのフォーマットがYYYY-MM-DDか確認
-    if not re.match(date_pattern, date):
-        raise HTTPException(status_code=400,
-                            detail="入力形式が違います。正しい形式:YYYY-MM-DD")
+@router.get("/activities/{year}/{month}/{day}", status_code=200)
+def day_activities(year: str,
+                   month: str,
+                   day: str,
+                   db: Session = Depends(get_db),
+                   current_user: dict = Depends(get_current_user)):
+    """ 特定日の活動時間を確認する """
     try:
+        date = set_date_format(year, month, day)
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date,
             db_model.Activity.username == current_user["username"]).one()
@@ -55,33 +52,35 @@ def show_today_situation(date: str,
                 "target_time": target_time,
                 "actual_time": actual_time,
                 "is_achieved": is_achieved,
-                "bonus": bonus(is_achieved),
-                "username": current_user["username"]}
+                "bonus": bonus(is_achieved)}
+    except HTTPException as http_e:
+        raise http_e
     except NoResultFound:
         raise HTTPException(status_code=400, detail=f"{date}の情報は登録されていません")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"活動実績の取得に失敗しました: {e}")
 
 
-@router.post("/target",
+@router.post("/activities/{year}/{month}/{day}/target",
              status_code=201,
              response_model=ResponseTargetTime)
-def register_today_target(target: TargetTimeIn,
-                          db: Session = Depends(get_db),
-                          current_user: dict = Depends(get_current_user)):
+def create_target_time(target: TargetTimeIn,
+                       year: str,
+                       month: str,
+                       day: str,
+                       db: Session = Depends(get_db),
+                       current_user: dict = Depends(get_current_user)):
     """ 目標活動時間を登録、登録済みなら更新する """
-    username = current_user["username"]
-    target_time = target.target_time
-    date = target.date
-    # dateのフォーマットがYYYY-MM-DDか確認
-    if not re.match(date_pattern, date):
-        raise HTTPException(status_code=400,
-                            detail="入力形式が違います。正しい形式:YYYY-MM-DD")
-    data = db_model.Activity(date=date, target=target_time, username=username)
     try:
-        db.add(data)
+        username = current_user["username"]
+        target_time = target.target_time
+        date = set_date_format(year, month, day)
+
+        insert_data = db_model.Activity(
+            date=date, target=target_time, username=username)
+        db.add(insert_data)
         db.commit()
-        db.refresh(data)
+        db.refresh(insert_data)
         message = f"{date}の目標時間を{target_time}時間に設定しました"
         logger.info(f"{current_user['username']}が{date}の目標時間を登録")
         return {"target_time": target_time, "date": date, "message": message}
@@ -89,27 +88,27 @@ def register_today_target(target: TargetTimeIn,
         raise http_e
     except IntegrityError:
         raise HTTPException(
-            status_code=400, detail=f"{data.date}の目標時間は既に登録済みです")
+            status_code=400, detail=f"{date}の目標時間は既に登録済みです")
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500,
                             detail=f"目標時間の登録中にエラーが発生しました: {e}")
 
 
-@router.put("/actual",
+@router.put("/activities/{year}/{month}/{day}/actual",
             status_code=200,
-            response_model=ResponseStudyTime)
-def register_actual_time(actual: ActualTimeIn,
-                         db: Session = Depends(get_db),
-                         current_user: dict = Depends(get_current_user)):
+            response_model=ResponseActualTime)
+def update_actual_time(actual: ActualTimeIn,
+                       year: str,
+                       month: str,
+                       day: str,
+                       db: Session = Depends(get_db),
+                       current_user: dict = Depends(get_current_user)):
     """ 目標時間が登録済みの場合、活動時間を入力 """
-    actual_time = actual.actual_time
-    date = actual.date
-    # dateのフォーマットがYYYY-MM-DDか確認
-    if not re.match(date_pattern, date):
-        raise HTTPException(status_code=400,
-                            detail="入力形式が違います。正しい形式:YYYY-MM-DD")
     try:
+        actual_time = actual.actual_time
+        date = set_date_format(year, month, day)
+
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date,
             db_model.Activity.username == current_user["username"]).one()
@@ -120,8 +119,7 @@ def register_actual_time(actual: ActualTimeIn,
             return {"date": date,
                     "actual_time": actual_time,
                     "target_time": activity.target,
-                    "message": f"活動時間を{actual_time}時間に設定しました。",
-                    "username": current_user['username']}
+                    "message": f"活動時間を{actual_time}時間に設定しました。"}
         else:
             raise HTTPException(status_code=400,
                                 detail=f"{date}の活動実績は既に確定済みです。変更できません")
@@ -135,17 +133,18 @@ def register_actual_time(actual: ActualTimeIn,
                             detail=f"活動時間の登録中にエラーが発生しました: {e}")
 
 
-@router.put("/finish", status_code=200)
-def finish_today_work(date: DateIn,
+@router.put("/activities/{year}/{month}/{day}/finish",
+            status_code=200,
+            response_model=ResponseFinishActivity)
+def finish_activities(year: str,
+                      month: str,
+                      day: str,
                       db: Session = Depends(get_db),
                       current_user: dict = Depends(get_current_user)):
-    """ その日の作業時間を確定し、目標を達成しているのかを確認する """
-    date = date.date
-    # dateのフォーマットがYYYY-MM-DDか確認
-    if not re.match(date_pattern, date):
-        raise HTTPException(status_code=400,
-                            detail="入力形式が違います。正しい形式:YYYY-MM-DD")
+    """ 特定日の作業時間を確定し、目標を達成しているのかを確認する """
     try:
+        date = set_date_format(year, month, day)
+
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date,
             db_model.Activity.username == current_user["username"]).one()
@@ -160,7 +159,7 @@ def finish_today_work(date: DateIn,
     try:
         target_time = activity.target
         actual_time = activity.actual
-        year_month = date[:7]
+        year_month = f"{year}-{month}"
 
         if actual_time is None:
             raise HTTPException(status_code=400, detail=f"{date}の活動時間を登録して下さい")
@@ -198,23 +197,27 @@ def finish_today_work(date: DateIn,
             status_code=500, detail=f"活動時間確定処理中にエラーが発生しました: {e}")
 
 
-@router.get("/month")
-def get_month_situation(date: DateIn,
-                        db: Session = Depends(get_db),
-                        current_user: dict = Depends(get_current_user)):
-    """ 月毎のデータを取得 """
-    year_month = date.date
-    # dateのフォーマットがYYYY-MMか確認
-    if not re.match(year_month_pattern, year_month):
-        raise HTTPException(status_code=400,
-                            detail="入力形式が違います。正しい形式:YYYY-MM")
-    activity = db.query(db_model.Activity).filter(
-        db_model.Activity.date.like(f"{year_month}%"),
-        db_model.Activity.username == current_user["username"]).all()
-    if not activity:
-        raise HTTPException(status_code=400,
-                            detail=f"{year_month}内の活動は登録されていません")
+@router.get("/activities/{year}/{month}")
+def month_activities(year: str,
+                     month: str,
+                     db: Session = Depends(get_db),
+                     current_user: dict = Depends(get_current_user)):
+    """ 特定月のデータを取得 """
     try:
+        year_month = set_date_format(year, month)
+        # 検索範囲の指定
+        start_date = datetime(int(year), int(month), 1).date()
+        if int(month) == 12:
+            end_date = datetime(int(year) + 1, 1, 1).date()
+        else:
+            end_date = datetime(int(year), int(month) + 1, 1).date()
+
+        activity = db.query(db_model.Activity).filter(
+            db_model.Activity.date.between(start_date, end_date),
+            db_model.Activity.username == current_user["username"]).all()
+        if not activity:
+            raise HTTPException(status_code=400,
+                                detail=f"{year_month}内の活動は登録されていません")
         salary = db.query(db_model.Income).filter(
             db_model.Income.year_month == year_month,
             db_model.Income.username == current_user["username"]).one()

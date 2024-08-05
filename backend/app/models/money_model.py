@@ -2,5 +2,6 @@ from pydantic import BaseModel
 
 
 class RegisterIncome(BaseModel):
-    year_month: str
+    year: str
+    month: str
     monthly_income: float
