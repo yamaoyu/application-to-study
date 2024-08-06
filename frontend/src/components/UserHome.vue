@@ -2,9 +2,11 @@
   <h3>今月の活動実績</h3>
   <div>
     <p v-if="message" class="message">{{ message }}</p>
-    <p v-if="date" class="date">{{ date }}</p>
+    <p v-if="year" class="year">{{ year }}</p>
+    <p v-if="month" class="month">{{ month }}</p>
   </div>
   <router-link to="/form/income">月収登録</router-link>
+  <router-link to="/form/target">目標時間登録</router-link>
 </template>
 
 <script>
@@ -15,20 +17,19 @@ import { useRouter } from 'vue-router';
 export default {
   setup() {
     const today = new Date();
-    const year = ("00" + today.getFullYear()).slice(-4);
-    const month = ("00" + (today.getMonth() + 1)).slice(-2);
-    const date = year + "-" + month;
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
     const message = ref("")
+    const url = ref("")
     const router = useRouter()
 
     onMounted( async() =>{
         try {
-          const response = await axios.get('http://localhost:8000/month${date}', {
-            data:{date: date.value}
-          },)
+          url.value = 'http://localhost:8000/activities/' + year + '/' + month;
+          const response = await axios.get(url.value)
           // ここでログイン後の処理を行う（例：トークンの保存、ページ遷移など）
           if (response.status===200){
-            message.value = response.data.message
+            message.value = response.data
           }
         } catch (error) {
           // エラー処理（ユーザーへの通知など）
@@ -47,7 +48,8 @@ export default {
 
     return {
       message,
-      date
+      year,
+      month
     }
   }
 }
