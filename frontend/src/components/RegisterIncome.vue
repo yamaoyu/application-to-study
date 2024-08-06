@@ -30,14 +30,13 @@ export default {
     const MonthlyIncome = ref('')
     const message = ref('')
     const router = useRouter()
-    const year_month = ref('')
     
 
     const RegisterIncome = async() =>{
         try {
-          year_month.value =  year.value + "-" + month.value
           const response = await axios.post('http://localhost:8000/income', {
-            year_month: year_month.value,
+            year: year.value,
+            month: month.value,
             monthly_income: MonthlyIncome.value,
           })
           // ここでログイン後の処理を行う（例：トークンの保存、ページ遷移など）
@@ -62,7 +61,6 @@ export default {
     return {
       year,
       month,
-      year_month,
       MonthlyIncome,
       message,
       RegisterIncome
