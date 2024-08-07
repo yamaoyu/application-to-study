@@ -5,6 +5,7 @@ import LoginView from '../components/LoginForm.vue'
 import UserHomeView from '../components/UserHome.vue'
 import RegisterIncome from '../components/RegisterIncome.vue'
 import RegisterTarget from '../components/RegisterTarget.vue'
+import RegisterActual from '../components/RegisterActual.vue'
 
 
 const routes = [
@@ -38,6 +39,11 @@ const routes = [
     path:"/form/target",
     name:"RegisterTarget",
     component:RegisterTarget
+  },
+  {
+    path:"/form/actual",
+    name:"RegisterActual",
+    component:RegisterActual
   }
 ]
 
