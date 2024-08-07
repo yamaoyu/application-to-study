@@ -60,7 +60,7 @@ export default {
           }else if (error.response.status!==500){
             message.value = error.response.data.detail
           }else{
-            message.value = "情報の取得に失敗しました";
+            message.value = "目標時間の登録に失敗しました";
           }
         }
       }

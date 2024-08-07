@@ -1,11 +1,21 @@
 <template>
-  <h3>今日の活動実績</h3>
+  <h3>月ごとの活動実績</h3>
   <div>
     <p v-if="message" class="message">{{ message }}</p>
     <p v-if="year" class="year">{{ year }}</p>
     <p v-if="month" class="month">{{ month }}</p>
-    <p v-if="date" class="date">{{ date }}</p>
   </div>
+  <form @submit.prevent="GetMonthlyInfo">
+      <div>
+        <label for="year">年:</label>
+        <input type="text" id="year" v-model="year" required>
+      </div>
+      <div>
+        <label for="month">月:</label>
+        <input type="text" id="month" v-model="month" required>
+      </div>
+      <button type="submit">検索</button>
+  </form>
   <div>
     <router-link to="/form/income">月収登録</router-link>
   </div>
@@ -15,56 +25,49 @@
   <div>
     <router-link to="/form/actual">活動時間登録</router-link>
   </div>
-  <div>
-    <router-link to="/month">月ごとの活動記録</router-link>
-  </div>
 </template>
 
 <script>
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 
 export default {
   setup() {
-    const today = new Date()
-    const year = today.getFullYear()
-    const month = today.getMonth() + 1;
-    const date = today.getDate();
+    const year = ref("")
+    const month = ref("")
     const message = ref("")
     const url = ref("")
     const router = useRouter()
 
-    onMounted( async() =>{
-        try {
-          url.value = 'http://localhost:8000/activities/' + year + '/' + month + '/' + date;
+
+    const GetMonthlyInfo = async() =>{
+      try{
+          url.value = 'http://localhost:8000/activities/' + year.value + '/' + month.value;
           const response = await axios.get(url.value)
           // ここでログイン後の処理を行う（例：トークンの保存、ページ遷移など）
           if (response.status===200){
             message.value = response.data
           }
-        } catch (error) {
-          // エラー処理（ユーザーへの通知など）
-          if (error.response.status===401){
+      } catch (error){
+        if (error.response.status===401){
             router.push(
               {"path":"/login",
                 "query":{message:"再度ログインしてください"}
               })
-          }else if(error.response.data.detail===404){
-            message.value = today
           }else if (error.response.status!==500){
             message.value = error.response.data.detail;
           }else{
             message.value = "情報の取得に失敗しました";
           }
-        }
-      })
+      }
+    }
 
     return {
       message,
       year,
       month,
-      date
+      GetMonthlyInfo
     }
   }
 }
