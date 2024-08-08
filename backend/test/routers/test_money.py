@@ -122,5 +122,5 @@ def test_get_income_by_another_user(client, get_headers):
     month = test_month
     headers = {"Authorization": f"Bearer {access_token}"}
     response = client.get(f"/income/{year}/{month}", headers=headers)
-    assert response.status_code == 400
+    assert response.status_code == 404
     assert response.json() == {"detail": "その月の月収は未登録です。"}

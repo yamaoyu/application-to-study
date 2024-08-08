@@ -7,7 +7,7 @@ def test_register_user(client):
     user_info = {"username": "test",
                  "password": "testpassword"}
     response = client.post("/register", json=user_info)
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert response.json() == {
         "username": "test",
         "password": "************",
