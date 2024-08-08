@@ -51,7 +51,7 @@ def test_login_with_invalid_password(client):
     user_info = {"username": test_username,
                  "password": "invalid_password"}
     response = client.post("/login", json=user_info)
-    assert response.status_code == 400
+    assert response.status_code == 401
     assert response.json() == {
         "detail": "パスワードが正しくありません。"
     }

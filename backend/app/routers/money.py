@@ -62,6 +62,7 @@ def get_monthly_income(year: str,
         logger.info(f"{username}が{year_month}の月収を取得")
         return {"今月の詳細": result, "ボーナス換算後の月収": total_income}
     except NoResultFound:
-        raise HTTPException(status_code=404, detail="その月の月収は未登録です。")
+        raise HTTPException(status_code=404, detail=f"{year_month}の月収は未登録です。")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"月収の取得処理中にエラーがしました: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"月収の取得処理中にエラーが発生しました: {e}")

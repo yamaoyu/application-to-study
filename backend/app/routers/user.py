@@ -77,7 +77,7 @@ def login(user_info: UserInfo,
             db_model.User.username == username).one()
         is_password = verify_password(plain_password, user.password)
         if not is_password:
-            raise HTTPException(status_code=400, detail="パスワードが正しくありません。")
+            raise HTTPException(status_code=401, detail="パスワードが正しくありません。")
         access_token = get_access_token(username)
         logger.info(f"{username}がログイン")
         return {"access_token": access_token, "token_type": "bearer"}
