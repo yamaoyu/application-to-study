@@ -185,7 +185,7 @@ def test_get_day_activities_before_register_activity(client, get_headers):
     response = client.get("/activities/2024/5/10",
                           headers=get_headers)
     assert response.status_code == 404
-    assert response.json() == {"detail": f"{date}の情報は登録されていません"}
+    assert response.json() == {"detail": f"{date}の情報は未登録です"}
 
 
 def test_get_day_activities_with_expired_token(client, get_headers):

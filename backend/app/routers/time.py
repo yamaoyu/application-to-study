@@ -56,7 +56,7 @@ def day_activities(year: str,
     except HTTPException as http_e:
         raise http_e
     except NoResultFound:
-        raise HTTPException(status_code=404, detail=f"{date}の情報は登録されていません")
+        raise HTTPException(status_code=404, detail=f"{date}の情報は未登録です")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"活動実績の取得に失敗しました: {e}")
 
