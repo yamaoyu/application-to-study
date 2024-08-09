@@ -34,7 +34,7 @@ def authenticate_user(username: str, plain_password: str,
             status_code=500, detail=f"ユーザー認証処理中にエラーが発生しました\n{e}")
 
 
-@router.post("/register", response_model=ResponseCreatedUser)
+@router.post("/register", response_model=ResponseCreatedUser, status_code=201)
 def create_user(user: UserInfo, db: Session = Depends(get_db)):
     try:
         username = user.username
@@ -66,7 +66,7 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
                             detail=f"ユーザー登録処理中にエラーが発生しました: {e}")
 
 
-@router.post("/login")
+@router.post("/login", status_code=200)
 def login(user_info: UserInfo,
           db: Session = Depends(get_db)):
     """ ユーザー操作用 """
@@ -77,7 +77,7 @@ def login(user_info: UserInfo,
             db_model.User.username == username).one()
         is_password = verify_password(plain_password, user.password)
         if not is_password:
-            raise HTTPException(status_code=400, detail="パスワードが正しくありません。")
+            raise HTTPException(status_code=401, detail="パスワードが正しくありません。")
         access_token = get_access_token(username)
         logger.info(f"{username}がログイン")
         return {"access_token": access_token, "token_type": "Bearer"}

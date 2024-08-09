@@ -157,7 +157,7 @@ def test_finish_activity_without_register_income(client, get_headers):
     setup_actual_time_for_test(client, get_headers)
     response = client.put(f"/activities{test_date_path}/finish",
                           headers=get_headers)
-    assert response.status_code == 400
+    assert response.status_code == 404
     assert response.json() == {"detail":
                                f"{test_year}-{test_month}の月収が未登録です"}
 
@@ -184,8 +184,8 @@ def test_get_day_activities_before_register_activity(client, get_headers):
     date = "2024-5-10"
     response = client.get("/activities/2024/5/10",
                           headers=get_headers)
-    assert response.status_code == 400
-    assert response.json() == {"detail": f"{date}の情報は登録されていません"}
+    assert response.status_code == 404
+    assert response.json() == {"detail": f"{date}の情報は未登録です"}
 
 
 def test_get_day_activities_with_expired_token(client, get_headers):

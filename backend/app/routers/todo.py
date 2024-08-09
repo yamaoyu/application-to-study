@@ -14,7 +14,7 @@ basicConfig(level=INFO, format="%(levelname)s: %(message)s")
 logger = getLogger(__name__)
 
 
-@router.post("/todo")
+@router.post("/todo", status_code=201)
 def create_todo(todo: Todo,
                 db: Session = Depends(get_db),
                 current_user: dict = Depends(get_current_user)):
@@ -40,14 +40,14 @@ def create_todo(todo: Todo,
             status_code=500, detail=f"Todo作成処理中にエラーが発生しました: {e}")
 
 
-@router.get("/todo")
+@router.get("/todo", status_code=200)
 def get_all_todo(db: Session = Depends(get_db),
                  current_user: dict = Depends(get_current_user)):
     try:
         todo = db.query(db_model.Todo).filter(
             db_model.Todo.username == current_user['username']).all()
         if not todo:
-            raise HTTPException(status_code=400,
+            raise HTTPException(status_code=404,
                                 detail="登録された情報はありません。")
         logger.info(f"ユーザー名:{current_user['username']}  Todoを全て取得")
         return todo
@@ -58,7 +58,7 @@ def get_all_todo(db: Session = Depends(get_db),
             status_code=500, detail=f"todo取得処理にエラーが発生しました:n {e}")
 
 
-@router.get("/todo/{todo_id}")
+@router.get("/todo/{todo_id}", status_code=200)
 def get_specific_todo(todo_id: int,
                       db: Session = Depends(get_db),
                       current_user: dict = Depends(get_current_user)):
@@ -67,7 +67,7 @@ def get_specific_todo(todo_id: int,
             db_model.Todo.todo_id == todo_id,
             db_model.Todo.username == current_user['username']).one_or_none()
         if not todo:
-            raise HTTPException(status_code=400,
+            raise HTTPException(status_code=404,
                                 detail=f"{todo_id}の情報は未登録です。")
         logger.info(f"Todoを取得:{current_user['username']}:ID{todo.todo_id}")
         return todo
@@ -78,7 +78,7 @@ def get_specific_todo(todo_id: int,
             status_code=500, detail=f"todo取得処理にエラーが発生しました: {e}")
 
 
-@router.delete("/todo/{todo_id}")
+@router.delete("/todo/{todo_id}", status_code=204)
 def delete_action(todo_id: int,
                   db: Session = Depends(get_db),
                   current_user: dict = Depends(get_current_user)):
@@ -90,7 +90,7 @@ def delete_action(todo_id: int,
             raise HTTPException(status_code=404, detail="選択されたタスクは存在しません。")
         db.commit()
         logger.info(f"{current_user['username']}がTodoを削除 ID:{todo_id}")
-        return {"message": "選択したタスクを削除しました。"}
+        return
     except HTTPException as http_exception:
         raise http_exception
     except Exception as e:
@@ -99,7 +99,7 @@ def delete_action(todo_id: int,
                             detail=f"Todoの削除処理に失敗しました: {e}")
 
 
-@router.put("/todo/{todo_id}")
+@router.put("/todo/{todo_id}", status_code=200)
 def edit_action(todo_id: int,
                 new_action: Todo,
                 db: Session = Depends(get_db),
@@ -134,7 +134,7 @@ def edit_action(todo_id: int,
             status_code=500, detail=f"Todoの更新処理でエラーが発生しました: {e}")
 
 
-@router.put("/todo/finish/{todo_id}")
+@router.put("/todo/finish/{todo_id}", status_code=200)
 def finish_action(todo_id: int,
                   db: Session = Depends(get_db),
                   current_user: dict = Depends(get_current_user)):

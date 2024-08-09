@@ -56,7 +56,7 @@ def day_activities(year: str,
     except HTTPException as http_e:
         raise http_e
     except NoResultFound:
-        raise HTTPException(status_code=400, detail=f"{date}の情報は登録されていません")
+        raise HTTPException(status_code=404, detail=f"{date}の情報は未登録です")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"活動実績の取得に失敗しました: {e}")
 
@@ -151,7 +151,7 @@ def finish_activities(year: str,
     except HTTPException as http_e:
         raise http_e
     except NoResultFound:
-        raise HTTPException(status_code=400, detail=f"{date}の情報は登録されていません")
+        raise HTTPException(status_code=404, detail=f"{date}の情報は登録されていません")
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"活動時間確定処理中にエラーが発生しました: {e}")
@@ -189,7 +189,7 @@ def finish_activities(year: str,
     except HTTPException as http_e:
         raise http_e
     except NoResultFound:
-        raise HTTPException(status_code=400,
+        raise HTTPException(status_code=404,
                             detail=f"{year_month}の月収が未登録です")
     except Exception as e:
         db.rollback()
@@ -197,7 +197,7 @@ def finish_activities(year: str,
             status_code=500, detail=f"活動時間確定処理中にエラーが発生しました: {e}")
 
 
-@router.get("/activities/{year}/{month}")
+@router.get("/activities/{year}/{month}", status_code=200)
 def month_activities(year: str,
                      month: str,
                      db: Session = Depends(get_db),
@@ -216,7 +216,7 @@ def month_activities(year: str,
             db_model.Activity.date.between(start_date, end_date),
             db_model.Activity.username == current_user["username"]).all()
         if not activity:
-            raise HTTPException(status_code=400,
+            raise HTTPException(status_code=404,
                                 detail=f"{year_month}内の活動は登録されていません")
         salary = db.query(db_model.Income).filter(
             db_model.Income.year_month == year_month,
@@ -232,7 +232,7 @@ def month_activities(year: str,
     except HTTPException as http_e:
         raise http_e
     except NoResultFound:
-        raise HTTPException(status_code=400,
+        raise HTTPException(status_code=404,
                             detail=f"{year_month}の給料は登録されていません")
     except Exception as e:
         raise HTTPException(

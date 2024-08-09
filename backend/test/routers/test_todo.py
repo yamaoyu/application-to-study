@@ -39,7 +39,7 @@ def setup_login(client):
 def test_create_todo(client, get_headers):
     data = {"action": test_action, "username": test_username}
     response = client.post("/todo", json=data, headers=get_headers)
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert response.json() == {"action": test_action}
 
 
@@ -110,7 +110,7 @@ def test_get_todo_with_expired_token(client, get_headers):
 def test_get_all_todo_without_register(client, get_headers):
     """ 作成したタスクが1つもない状態でget """
     response = client.get("/todo", headers=get_headers)
-    assert response.status_code == 400
+    assert response.status_code == 404
     assert response.json() == {"detail": "登録された情報はありません。"}
 
 
@@ -131,15 +131,14 @@ def test_get_todo_by_another_user(client, get_headers):
     access_token = setup_login(client)
     headers = {"Authorization": f"Bearer {access_token}"}
     response = client.get("/todo/1", headers=headers)
-    assert response.status_code == 400
+    assert response.status_code == 404
     assert response.json() == {"detail": "1の情報は未登録です。"}
 
 
 def test_delete_todo(client, get_headers):
     setup_create_todo(client, get_headers)
     response = client.delete("/todo/1", headers=get_headers)
-    assert response.status_code == 200
-    assert response.json() == {"message": "選択したタスクを削除しました。"}
+    assert response.status_code == 204
 
 
 def test_delete_todo_by_another_user(client, get_headers):

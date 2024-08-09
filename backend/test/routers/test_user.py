@@ -7,7 +7,7 @@ def test_register_user(client):
     user_info = {"username": "test",
                  "password": "testpassword"}
     response = client.post("/register", json=user_info)
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert response.json() == {
         "username": "test",
         "password": "************",
@@ -51,7 +51,7 @@ def test_login_with_invalid_password(client):
     user_info = {"username": test_username,
                  "password": "invalid_password"}
     response = client.post("/login", json=user_info)
-    assert response.status_code == 400
+    assert response.status_code == 401
     assert response.json() == {
         "detail": "パスワードが正しくありません。"
     }
