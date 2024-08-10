@@ -2,9 +2,6 @@
   <h3>今日の活動実績</h3>
   <div>
     <p v-if="message" class="message">{{ message }}</p>
-    <p v-if="year" class="year">{{ year }}</p>
-    <p v-if="month" class="month">{{ month }}</p>
-    <p v-if="date" class="date">{{ date }}</p>
   </div>
   <div>
     <router-link to="/form/income">月収登録</router-link>
@@ -16,7 +13,13 @@
     <router-link to="/form/actual">活動時間登録</router-link>
   </div>
   <div>
+    <router-link to="/finish/activity">活動を終了</router-link>
+  </div>
+  <div>
     <router-link to="/month">月ごとの活動記録</router-link>
+  </div>
+  <div>
+    <router-link to="/form/todo">Todoを登録</router-link>
   </div>
 </template>
 

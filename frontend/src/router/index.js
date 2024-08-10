@@ -7,7 +7,8 @@ import RegisterIncome from '../components/RegisterIncome.vue'
 import RegisterTarget from '../components/RegisterTarget.vue'
 import RegisterActual from '../components/RegisterActual.vue'
 import MonthlyInfo from '../components/MonthlyInfo.vue'
-
+import RegisterTodo from '../components/RegisterTodo.vue'
+import finishActivity from '../components/FinishActivity.vue'
 
 const routes = [
   {
@@ -50,6 +51,16 @@ const routes = [
     path:"/month",
     name:"MonthlyInfo",
     component:MonthlyInfo
+  },
+  {
+    path:"/form/todo",
+    name:"RegisterTodo",
+    component:RegisterTodo
+  },
+  {
+    path:"/finish/activity",
+    name:"finishActivity",
+    component:finishActivity
   }
 ]
 

@@ -25,6 +25,9 @@
   <div>
     <router-link to="/form/actual">活動時間登録</router-link>
   </div>
+  <div>
+    <router-link to="/finish/activity">活動を終了</router-link>
+  </div>
 </template>
 
 <script>
