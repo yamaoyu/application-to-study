@@ -12,7 +12,7 @@ def test_register_user(client):
         "username": "test",
         "password": "************",
         "email": None,
-        "message": "testの作成に成功しました。"
+        "message": "testの作成に成功しました"
     }
 
 
@@ -53,7 +53,7 @@ def test_login_with_invalid_password(client):
     response = client.post("/login", json=user_info)
     assert response.status_code == 401
     assert response.json() == {
-        "detail": "パスワードが正しくありません。"
+        "detail": "パスワードが正しくありません"
     }
 
 

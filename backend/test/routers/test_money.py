@@ -67,7 +67,7 @@ def test_register_income_already_registered(client, get_headers):
             "month": test_month}
     response = client.post("/income", json=data, headers=get_headers)
     assert response.status_code == 400
-    assert response.json() == {"detail": "その月の月収は既に登録されています。"}
+    assert response.json() == {"detail": "その月の月収は既に登録されています"}
 
 
 def test_register_income_with_minus_digit(client, get_headers):
@@ -123,4 +123,4 @@ def test_get_income_by_another_user(client, get_headers):
     headers = {"Authorization": f"Bearer {access_token}"}
     response = client.get(f"/income/{year}/{month}", headers=headers)
     assert response.status_code == 404
-    assert response.json() == {"detail": f"{year}-{month}の月収は未登録です。"}
+    assert response.json() == {"detail": f"{year}-{month}の月収は未登録です"}
