@@ -1,5 +1,4 @@
 from datetime import datetime
-from logging import getLogger, basicConfig, INFO
 from fastapi import APIRouter, HTTPException, Depends
 from app.models.time_model import (
     ResponseTargetTime, TargetTimeIn,
@@ -9,13 +8,11 @@ from db import db_model
 from app import set_date_format
 from db.database import get_db
 from security import get_current_user
+from log_conf import logger
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound, IntegrityError
 
 router = APIRouter()
-
-basicConfig(level=INFO, format="%(levelname)s: %(message)s")
-logger = getLogger(__name__)
 
 
 @router.get("/activities/{year}/{month}/{day}", status_code=200)
@@ -24,7 +21,7 @@ def day_activities(year: str,
                    day: str,
                    db: Session = Depends(get_db),
                    current_user: dict = Depends(get_current_user)):
-    """ 特定日の活動時間を確認する """
+    """ 特定日の活動実績を確認する """
     try:
         date = set_date_format(year, month, day)
         activity = db.query(db_model.Activity).filter(
@@ -58,7 +55,9 @@ def day_activities(year: str,
     except NoResultFound:
         raise HTTPException(status_code=404, detail=f"{date}の情報は未登録です")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"活動実績の取得に失敗しました: {e}")
+        logger.warning(f"日別の活動実績の取得に失敗しました\n{str(e)}")
+        raise HTTPException(
+            status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
 @router.post("/activities/{year}/{month}/{day}/target",
@@ -90,9 +89,10 @@ def create_target_time(target: TargetTimeIn,
         raise HTTPException(
             status_code=400, detail=f"{date}の目標時間は既に登録済みです")
     except Exception as e:
+        logger.warning(f"目標時間の登録に失敗しました\n{str(e)}")
         db.rollback()
         raise HTTPException(status_code=500,
-                            detail=f"目標時間の登録中にエラーが発生しました: {e}")
+                            detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
 @router.put("/activities/{year}/{month}/{day}/actual",
@@ -119,7 +119,7 @@ def update_actual_time(actual: ActualTimeIn,
             return {"date": date,
                     "actual_time": actual_time,
                     "target_time": activity.target,
-                    "message": f"活動時間を{actual_time}時間に設定しました。"}
+                    "message": f"活動時間を{actual_time}時間に設定しました"}
         else:
             raise HTTPException(status_code=400,
                                 detail=f"{date}の活動実績は既に確定済みです。変更できません")
@@ -128,9 +128,10 @@ def update_actual_time(actual: ActualTimeIn,
     except NoResultFound:
         raise HTTPException(status_code=404, detail=f"先に{date}の目標を入力して下さい")
     except Exception as e:
+        logger.warning(f"活動時間の登録に失敗しました\n{str(e)}")
         db.rollback()
         raise HTTPException(status_code=500,
-                            detail=f"活動時間の登録中にエラーが発生しました: {e}")
+                            detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
 @router.put("/activities/{year}/{month}/{day}/finish",
@@ -153,8 +154,9 @@ def finish_activities(year: str,
     except NoResultFound:
         raise HTTPException(status_code=404, detail=f"{date}の情報は登録されていません")
     except Exception as e:
+        logger.warning(f"活動終了処理に失敗しました\n{str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"活動時間確定処理中にエラーが発生しました: {e}")
+            status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
     try:
         target_time = activity.target
@@ -192,9 +194,10 @@ def finish_activities(year: str,
         raise HTTPException(status_code=404,
                             detail=f"{year_month}の月収が未登録です")
     except Exception as e:
+        logger.warning(f"活動終了処理に失敗しました\n{str(e)}")
         db.rollback()
         raise HTTPException(
-            status_code=500, detail=f"活動時間確定処理中にエラーが発生しました: {e}")
+            status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
 @router.get("/activities/{year}/{month}", status_code=200)
@@ -235,5 +238,6 @@ def month_activities(year: str,
         raise HTTPException(status_code=404,
                             detail=f"{year_month}の給料は登録されていません")
     except Exception as e:
+        logger.warning(f"月別の活動実績の取得に失敗しました\n{str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"月の活動実績確認処理中にエラーが発生しました: {e}")
+            status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")

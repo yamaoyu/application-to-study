@@ -149,14 +149,14 @@ def test_delete_todo_by_another_user(client, get_headers):
     headers = {"Authorization": f"Bearer {access_token}"}
     response = client.delete("/todo/1", headers=headers)
     assert response.status_code == 404
-    assert response.json() == {"detail": "選択されたタスクは存在しません。"}
+    assert response.json() == {"detail": "選択されたタスクは存在しません"}
 
 
 def test_delete_todo_not_exist(client, get_headers):
     """ 存在しないタスクを削除しようとした場合 """
     response = client.delete("/todo/1", headers=get_headers)
     assert response.status_code == 404
-    assert response.json() == {"detail": "選択されたタスクは存在しません。"}
+    assert response.json() == {"detail": "選択されたタスクは存在しません"}
 
 
 def test_edit_todo(client, get_headers):

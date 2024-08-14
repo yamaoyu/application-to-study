@@ -98,7 +98,7 @@ def test_register_actual(client, get_headers):
         "date": test_date_message,
         "target_time": 5,
         "actual_time": data["actual_time"],
-        "message": f"活動時間を{data['actual_time']}時間に設定しました。"
+        "message": f"活動時間を{data['actual_time']}時間に設定しました"
     }
 
 

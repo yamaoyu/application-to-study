@@ -1,8 +1,8 @@
-from logging import getLogger, basicConfig, INFO
 from db import db_model
 from security import (get_password_hash,
                       verify_password)
 from db.database import get_db
+from log_conf import logger
 from typing import Annotated
 from sqlalchemy.orm import Session
 from app.models.user_model import UserInfo, ResponseCreatedUser
@@ -13,8 +13,6 @@ from security import get_access_token
 
 
 router = APIRouter()
-basicConfig(level=INFO, format="%(levelname)s: %(message)s")
-logger = getLogger(__name__)
 
 
 def authenticate_user(username: str, plain_password: str,
@@ -30,8 +28,9 @@ def authenticate_user(username: str, plain_password: str,
     except HTTPException as http_e:
         raise http_e
     except Exception as e:
+        logger.warning(f"ユーザー認証に失敗しました\n{str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"ユーザー認証処理中にエラーが発生しました\n{e}")
+            status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
 @router.post("/register", response_model=ResponseCreatedUser, status_code=201)
@@ -53,17 +52,18 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
         return {"username": username,
                 "password": len(plain_password) * "*",
                 "email": user.email,
-                "message": f"{username}の作成に成功しました。"}
+                "message": f"{username}の作成に成功しました"}
     except HTTPException as http_e:
         raise http_e
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=400,
-                            detail="既に登録されています。")
+                            detail="既に登録されています")
     except Exception as e:
+        logger.warning(f"ユーザー作成に失敗しました\n{str(e)}")
         db.rollback()
         raise HTTPException(status_code=500,
-                            detail=f"ユーザー登録処理中にエラーが発生しました: {e}")
+                            detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
 @router.post("/login", status_code=200)
@@ -77,17 +77,19 @@ def login(user_info: UserInfo,
             db_model.User.username == username).one()
         is_password = verify_password(plain_password, user.password)
         if not is_password:
-            raise HTTPException(status_code=401, detail="パスワードが正しくありません。")
+            raise HTTPException(status_code=401, detail="パスワードが正しくありません")
         access_token = get_access_token(username)
         logger.info(f"{username}がログイン")
         return {"access_token": access_token, "token_type": "Bearer"}
     except NoResultFound:
         raise HTTPException(status_code=404,
-                            detail=f"{username}は登録されていません。")
+                            detail=f"{username}は登録されていません")
     except HTTPException as http_e:
         raise http_e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"ログイン処理に失敗しました: {e}")
+        logger.warning(f"ログイン処理に失敗しました\n{str(e)}")
+        raise HTTPException(
+            status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
 @router.post("/token")

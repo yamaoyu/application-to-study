@@ -1,7 +1,7 @@
-from logging import getLogger, basicConfig, INFO
 from fastapi import APIRouter, HTTPException, Depends
 from db import db_model
 from db.database import get_db
+from log_conf import logger
 from sqlalchemy.orm import Session
 from app.models.todo_model import Todo
 from sqlalchemy.exc import NoResultFound, IntegrityError
@@ -9,9 +9,6 @@ from security import get_current_user
 
 
 router = APIRouter()
-
-basicConfig(level=INFO, format="%(levelname)s: %(message)s")
-logger = getLogger(__name__)
 
 
 @router.post("/todo", status_code=201)
@@ -35,9 +32,10 @@ def create_todo(todo: Todo,
             raise HTTPException(
                 status_code=400, detail="Integrity errorが発生しました")
     except Exception as e:
+        logger.warning(f"todoの作成に失敗しました\n{str(e)}")
         db.rollback()
         raise HTTPException(
-            status_code=500, detail=f"Todo作成処理中にエラーが発生しました: {e}")
+            status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
 @router.get("/todo", status_code=200)
@@ -54,8 +52,9 @@ def get_all_todo(db: Session = Depends(get_db),
     except HTTPException as http_e:
         raise http_e
     except Exception as e:
+        logger.warning(f"全てのtodoの取得に失敗しました\n{str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"todo取得処理にエラーが発生しました:n {e}")
+            status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
 @router.get("/todo/{todo_id}", status_code=200)
@@ -74,8 +73,9 @@ def get_specific_todo(todo_id: int,
     except HTTPException as http_e:
         raise http_e
     except Exception as e:
+        logger.warning(f"指定のtodoの取得に失敗しました\n{str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"todo取得処理にエラーが発生しました: {e}")
+            status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
 @router.delete("/todo/{todo_id}", status_code=204)
@@ -87,16 +87,17 @@ def delete_action(todo_id: int,
             db_model.Todo.todo_id == todo_id,
             db_model.Todo.username == current_user['username']).delete()
         if not result:
-            raise HTTPException(status_code=404, detail="選択されたタスクは存在しません。")
+            raise HTTPException(status_code=404, detail="選択されたタスクは存在しません")
         db.commit()
         logger.info(f"{current_user['username']}がTodoを削除 ID:{todo_id}")
         return
     except HTTPException as http_exception:
         raise http_exception
     except Exception as e:
+        logger.warning(f"todoの削除に失敗しました\n{str(e)}")
         db.rollback()
         raise HTTPException(status_code=500,
-                            detail=f"Todoの削除処理に失敗しました: {e}")
+                            detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
 @router.put("/todo/{todo_id}", status_code=200)
@@ -129,9 +130,10 @@ def edit_action(todo_id: int,
         db.rollback()
         raise http_exception
     except Exception as e:
+        logger.warning(f"todoの編集に失敗しました\n{str(e)}")
         db.rollback()
         raise HTTPException(
-            status_code=500, detail=f"Todoの更新処理でエラーが発生しました: {e}")
+            status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
 @router.put("/todo/finish/{todo_id}", status_code=200)
@@ -154,6 +156,7 @@ def finish_action(todo_id: int,
     except HTTPException as http_exception:
         raise http_exception
     except Exception as e:
+        logger.warning(f"todoの終了に失敗しました\n{str(e)}")
         db.rollback()
         raise HTTPException(
-            status_code=500, detail=f"Todo終了処理中にエラーが発生しました:n {e}")
+            status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
