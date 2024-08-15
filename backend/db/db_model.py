@@ -49,6 +49,18 @@ class User(Base):
     income = relationship('Income', back_populates='user')
     todo = relationship('Todo', back_populates='user')
     activity = relationship('Activity', back_populates='user')
+    token = relationship('Token', back_populates='user')
+
+
+class Token(Base):
+    __tablename__ = "token"
+    username = Column(VARCHAR(16), ForeignKey(
+        "user.username"), primary_key=True)
+    token = Column(VARCHAR(256))
+    expires_at = Column(Date, nullable=False)
+    status = Column(Boolean, default=False)
+
+    user = relationship('User', back_populates='token')
 
 
 Base.metadata.create_all(bind=engine)

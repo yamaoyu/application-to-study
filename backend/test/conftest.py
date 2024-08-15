@@ -26,7 +26,7 @@ engine = create_engine(TEST_DATABASE_URL, poolclass=NullPool)
 TestSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="function")
 def create_test_table():
     Base.metadata.create_all(bind=engine)
     yield
@@ -80,8 +80,8 @@ def create_user(client):
 @pytest.fixture(scope="function", autouse=True)
 def login_and_get_token(client):
     data = {"username": test_username, "password": test_plain_password}
-    access_token = client.post("/login", json=data)
-    return access_token
+    token = client.post("/login", json=data)
+    return token
 
 
 @pytest.fixture(scope="function", autouse=True)

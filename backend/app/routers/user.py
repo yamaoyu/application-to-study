@@ -7,9 +7,9 @@ from typing import Annotated
 from sqlalchemy.orm import Session
 from app.models.user_model import UserInfo, ResponseCreatedUser
 from sqlalchemy.exc import IntegrityError, NoResultFound
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
-from security import get_access_token
+from security import get_token
 
 
 router = APIRouter()
@@ -78,9 +78,12 @@ def login(user_info: UserInfo,
         is_password = verify_password(plain_password, user.password)
         if not is_password:
             raise HTTPException(status_code=401, detail="パスワードが正しくありません")
-        access_token = get_access_token(username)
+        access_token = get_token(username, token_type="access")
+        refresh_token = get_token(username, token_type="refresh", db=db)
         logger.info(f"{username}がログイン")
-        return {"access_token": access_token, "token_type": "bearer"}
+        return {"access_token": access_token,
+                "token_type": "Bearer",
+                "refresh_token": refresh_token}
     except NoResultFound:
         raise HTTPException(status_code=404,
                             detail=f"{username}は登録されていません")
@@ -93,14 +96,11 @@ def login(user_info: UserInfo,
 
 
 @router.post("/token")
-def login_for_access_token(
+def refresh_token(
         form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
-    """ APIでアクセストークン取得用 """
-    if not authenticate_user(form_data.username, form_data.password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token = get_access_token(form_data.username)
-    return {"access_token": access_token, "token_type": "bearer"}
+    """ APIでアクセス・リフレッシュトークン更新用 """
+    access_token = get_token(form_data.username, token_type="access")
+    refresh_token = get_token(form_data.username, token_type="refresh")
+    return {"access_token": access_token,
+            "token_type": "bearer",
+            "refresh_token": refresh_token}
