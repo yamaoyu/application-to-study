@@ -9,7 +9,7 @@ from app.models.user_model import UserInfo, ResponseCreatedUser
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
-from security import get_token
+from security import get_token, get_current_user
 
 
 router = APIRouter()
@@ -89,6 +89,26 @@ def login(user_info: UserInfo,
                             detail=f"{username}は登録されていません")
     except HTTPException as http_e:
         raise http_e
+    except Exception as e:
+        logger.warning(f"ログイン処理に失敗しました\n{str(e)}")
+        raise HTTPException(
+            status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
+
+
+@router.put("/logout", status_code=200)
+def logout(current_user: dict = Depends(get_current_user),
+           db: Session = Depends(get_db)):
+    try:
+        username = current_user['username']
+        token = db.query(db_model.Token).filter(
+            db_model.Token.username == username).one()
+        token.status = False
+        db.commit()
+        logger.info(f"{username}がログアウト")
+        return {"message": f"{username}がログアウト"}
+    except NoResultFound:
+        raise HTTPException(status_code=404,
+                            detail=f"{username}は登録されていません")
     except Exception as e:
         logger.warning(f"ログイン処理に失敗しました\n{str(e)}")
         raise HTTPException(

@@ -58,7 +58,7 @@ class Token(Base):
         "user.username"), primary_key=True)
     token = Column(VARCHAR(256))
     expires_at = Column(Date, nullable=False)
-    status = Column(Boolean, default=False)
+    status = Column(Boolean, default=True)
 
     user = relationship('User', back_populates='token')
 
