@@ -3,12 +3,10 @@ from security import (get_password_hash,
                       verify_password)
 from db.database import get_db
 from log_conf import logger
-from typing import Annotated
 from sqlalchemy.orm import Session
 from app.models.user_model import UserInfo, ResponseCreatedUser
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from fastapi import APIRouter, HTTPException, Depends
-from fastapi.security import OAuth2PasswordRequestForm
 from security import get_token, get_current_user
 
 
@@ -113,14 +111,3 @@ def logout(current_user: dict = Depends(get_current_user),
         logger.warning(f"ログイン処理に失敗しました\n{str(e)}")
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
-
-
-@router.post("/token")
-def refresh_token(
-        form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
-    """ APIでアクセス・リフレッシュトークン更新用 """
-    access_token = get_token(form_data.username, token_type="access")
-    refresh_token = get_token(form_data.username, token_type="refresh")
-    return {"access_token": access_token,
-            "token_type": "bearer",
-            "refresh_token": refresh_token}
