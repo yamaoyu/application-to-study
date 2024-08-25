@@ -65,6 +65,7 @@ def client(db_session):
 
 test_username = "testuser"
 test_plain_password = "password"
+test_email = "test@test.com"
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -72,7 +73,7 @@ def create_user(client):
     """ 基本的にはここで作成するユーザーを使用 """
     data = {"username": test_username,
             "password": test_plain_password,
-            "email": "test@test.com"}
+            "email": test_email}
     user = client.post("/register", json=data)
     return user
 

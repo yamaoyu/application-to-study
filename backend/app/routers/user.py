@@ -53,10 +53,17 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
                 "message": f"{username}の作成に成功しました"}
     except HTTPException as http_e:
         raise http_e
-    except IntegrityError:
+    except IntegrityError as sqlalchemy_error:
         db.rollback()
-        raise HTTPException(status_code=400,
-                            detail="既に登録されています")
+        if "for key 'user.PRIMARY'" in str(sqlalchemy_error.orig):
+            raise HTTPException(status_code=400,
+                                detail="そのユーザー名は既に登録されています")
+        elif "for key 'user.email'" in str(sqlalchemy_error.orig):
+            raise HTTPException(status_code=400,
+                                detail="そのメールアドレスは既に登録されています")
+        else:
+            logger.warning(f"ユーザー作成に失敗しました\n{str(sqlalchemy_error)}")
+            raise HTTPException(status_code=400, detail="ユーザーの作成に失敗しました")
     except Exception as e:
         logger.warning(f"ユーザー作成に失敗しました\n{str(e)}")
         db.rollback()

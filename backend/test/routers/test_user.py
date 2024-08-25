@@ -1,5 +1,5 @@
 import pytest
-from conftest import test_username, test_plain_password, SECRET_KEY
+from conftest import test_username, test_plain_password, test_email, SECRET_KEY
 from jose import jwt
 
 
@@ -24,6 +24,29 @@ def test_register_user_with_invalid_password(client):
     assert response.status_code == 400
     assert response.json() == {
         "detail": "パスワードは6文字以上、12文字以下としてください"
+    }
+
+
+def test_register_with_duplicate_user_name(client):
+    """ 既に登録されているユーザー名で登録した場合 """
+    user_info = {"username": test_username,
+                 "password": "testpassword"}
+    response = client.post("/register", json=user_info)
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": "そのユーザー名は既に登録されています"
+    }
+
+
+def test_register_with_duplicate_email(client):
+    """ 既に登録されているメールアドレスで登録した場合 """
+    user_info = {"username": "test",
+                 "password": "testpassword",
+                 "email": test_email}
+    response = client.post("/register", json=user_info)
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": "そのメールアドレスは既に登録されています"
     }
 
 
