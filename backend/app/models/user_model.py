@@ -6,6 +6,7 @@ class UserInfo(BaseModel):
     username: str
     password: str
     email: Optional[str] = None
+    role: Optional[str] = None
 
 
 class ResponseCreatedUser(UserInfo):

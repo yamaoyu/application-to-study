@@ -37,12 +37,13 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
         username = user.username
         plain_password = user.password
         email = user.email
+        role = user.role
         if not (6 <= len(plain_password) <= 12):
             raise HTTPException(status_code=400,
                                 detail="パスワードは6文字以上、12文字以下としてください")
         hash_password = get_password_hash(plain_password)
         form_data = db_model.User(
-            username=username, password=hash_password, email=email)
+            username=username, password=hash_password, email=email, role=role)
         db.add(form_data)
         db.commit()
         db.refresh(form_data)
