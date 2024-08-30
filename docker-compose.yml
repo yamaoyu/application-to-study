@@ -21,6 +21,15 @@ services:
       db:
         condition: service_healthy
 
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./frontend:/frontend
+    depends_on:
+      - web
+
   db:
     image: mysql:8.0
     platform: linux/arm64
