@@ -12,7 +12,8 @@ def test_register_user(client):
         "username": "test",
         "password": "************",
         "email": None,
-        "message": "testの作成に成功しました"
+        "message": "testの作成に成功しました",
+        "role": "general"
     }
 
 

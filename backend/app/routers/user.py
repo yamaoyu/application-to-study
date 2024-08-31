@@ -51,7 +51,8 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
         return {"username": username,
                 "password": len(plain_password) * "*",
                 "email": user.email,
-                "message": f"{username}の作成に成功しました"}
+                "message": f"{username}の作成に成功しました",
+                "role": role if role else "general"}
     except HTTPException as http_e:
         raise http_e
     except IntegrityError as sqlalchemy_error:
