@@ -1,6 +1,7 @@
 import os
 from passlib.context import CryptContext
 from typing import Union
+from functools import wraps
 from datetime import datetime, timedelta, timezone
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
@@ -128,7 +129,7 @@ def get_current_user(token: str = Depends(oauth2_scheme),
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="ユーザーが見つかりません")
-        return {"username": username}
+        return {"username": username, "role": user.role}
     except ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="再度ログインしてください")
@@ -140,3 +141,17 @@ def get_current_user(token: str = Depends(oauth2_scheme),
         logger.warning(f"トークンの作成中にエラーが発生しました{str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="ユーザーの認証に失敗しました")
+
+
+def admin_only():
+    def decorator(func):
+        @wraps(func)
+        def wrapper(**kwargs):
+            role = kwargs["current_user"]["role"]
+            if role == "admin":
+                return func(**kwargs)
+            else:
+                raise HTTPException(
+                    status_code=403, detail="管理者権限を持つユーザー以外はアクセスできません")
+        return wrapper
+    return decorator

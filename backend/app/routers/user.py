@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.models.user_model import UserInfo, ResponseCreatedUser
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from fastapi import APIRouter, HTTPException, Depends
-from security import get_token, get_current_user
+from security import get_token, get_current_user, admin_only
 
 
 router = APIRouter()
@@ -54,6 +54,51 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
                 "email": user.email,
                 "message": f"{username}の作成に成功しました",
                 "role": role if role else "general"}
+    except HTTPException as http_e:
+        raise http_e
+    except IntegrityError as sqlalchemy_error:
+        db.rollback()
+        if "for key 'user.PRIMARY'" in str(sqlalchemy_error.orig):
+            raise HTTPException(status_code=400,
+                                detail="そのユーザー名は既に登録されています")
+        elif "for key 'user.email'" in str(sqlalchemy_error.orig):
+            raise HTTPException(status_code=400,
+                                detail="そのメールアドレスは既に登録されています")
+        else:
+            logger.warning(f"ユーザー作成に失敗しました\n{str(sqlalchemy_error)}")
+            raise HTTPException(status_code=400, detail="ユーザーの作成に失敗しました")
+    except Exception as e:
+        logger.warning(f"ユーザー作成に失敗しました\n{str(e)}")
+        db.rollback()
+        raise HTTPException(status_code=500,
+                            detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
+
+
+@router.post("/admin", response_model=ResponseCreatedUser, status_code=201)
+@admin_only()
+def create_admin_user(user: UserInfo,
+                      db: Session = Depends(get_db),
+                      current_user: dict = Depends(get_current_user)):
+    try:
+        username = user.username
+        plain_password = user.password
+        email = user.email
+        role = "admin"
+        if not (6 <= len(plain_password) <= 12):
+            raise HTTPException(status_code=400,
+                                detail="パスワードは6文字以上、12文字以下としてください")
+        hash_password = get_password_hash(plain_password)
+        form_data = db_model.User(
+            username=username, password=hash_password, email=email, role=role)
+        db.add(form_data)
+        db.commit()
+        db.refresh(form_data)
+        logger.info(f"ユーザー作成:{username}")
+        return {"username": username,
+                "password": len(plain_password) * "*",
+                "email": user.email,
+                "message": f"管理者ユーザー「{username}」の作成に成功しました",
+                "role": role}
     except HTTPException as http_e:
         raise http_e
     except IntegrityError as sqlalchemy_error:

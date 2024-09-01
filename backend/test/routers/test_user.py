@@ -89,3 +89,9 @@ def test_login_not_registered_user(client):
                  "password": "testpassword"}
     response = client.post("/login", json=user_info)
     assert response.status_code == 404
+
+
+def test_logout(client, get_headers):
+    response = client.put("/logout", headers=get_headers)
+    assert response.status_code == 200
+    assert response.json() == {"message": f"{test_username}がログアウト"}
