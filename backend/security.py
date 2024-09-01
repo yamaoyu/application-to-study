@@ -146,10 +146,10 @@ def get_current_user(token: str = Depends(oauth2_scheme),
 def admin_only():
     def decorator(func):
         @wraps(func)
-        def wrapper(**kwargs):
+        def wrapper(*args, **kwargs):
             role = kwargs["current_user"]["role"]
             if role == "admin":
-                return func(**kwargs)
+                return func(*args, **kwargs)
             else:
                 raise HTTPException(
                     status_code=403, detail="管理者権限を持つユーザー以外はアクセスできません")

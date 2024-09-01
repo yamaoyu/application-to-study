@@ -83,13 +83,13 @@ def create_admin_user(user: UserInfo,
         username = user.username
         plain_password = user.password
         email = user.email
-        role = "admin"
         if not (6 <= len(plain_password) <= 12):
             raise HTTPException(status_code=400,
                                 detail="パスワードは6文字以上、12文字以下としてください")
         hash_password = get_password_hash(plain_password)
         form_data = db_model.User(
-            username=username, password=hash_password, email=email, role=role)
+            username=username, password=hash_password,
+            email=email, role="admin")
         db.add(form_data)
         db.commit()
         db.refresh(form_data)
@@ -98,7 +98,7 @@ def create_admin_user(user: UserInfo,
                 "password": len(plain_password) * "*",
                 "email": user.email,
                 "message": f"管理者ユーザー「{username}」の作成に成功しました",
-                "role": role}
+                "role": "admin"}
     except HTTPException as http_e:
         raise http_e
     except IntegrityError as sqlalchemy_error:
