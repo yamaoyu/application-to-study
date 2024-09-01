@@ -26,7 +26,7 @@ engine = create_engine(TEST_DATABASE_URL, poolclass=NullPool)
 TestSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="function")
 def create_test_table():
     Base.metadata.create_all(bind=engine)
     yield
@@ -65,6 +65,7 @@ def client(db_session):
 
 test_username = "testuser"
 test_plain_password = "password"
+test_email = "test@test.com"
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -72,7 +73,7 @@ def create_user(client):
     """ 基本的にはここで作成するユーザーを使用 """
     data = {"username": test_username,
             "password": test_plain_password,
-            "email": "test@test.com"}
+            "email": test_email}
     user = client.post("/register", json=data)
     return user
 
@@ -80,8 +81,8 @@ def create_user(client):
 @pytest.fixture(scope="function", autouse=True)
 def login_and_get_token(client):
     data = {"username": test_username, "password": test_plain_password}
-    access_token = client.post("/login", json=data)
-    return access_token
+    token = client.post("/login", json=data)
+    return token
 
 
 @pytest.fixture(scope="function", autouse=True)

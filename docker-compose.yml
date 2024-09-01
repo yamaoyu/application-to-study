@@ -17,6 +17,8 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       SECRET_KEY: ${SECRET_KEY}
       ALGORITHM: ${ALGORITHM}
+      APP_ADMIN_USER: ${APP_ADMIN_USER}
+      APP_ADMIN_PASSWORD: ${APP_ADMIN_PASSWORD}
     depends_on:
       db:
         condition: service_healthy

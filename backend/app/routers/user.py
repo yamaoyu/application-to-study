@@ -3,13 +3,11 @@ from security import (get_password_hash,
                       verify_password)
 from db.database import get_db
 from log_conf import logger
-from typing import Annotated
 from sqlalchemy.orm import Session
 from app.models.user_model import UserInfo, ResponseCreatedUser
 from sqlalchemy.exc import IntegrityError, NoResultFound
-from fastapi import APIRouter, HTTPException, Depends, status
-from fastapi.security import OAuth2PasswordRequestForm
-from security import get_access_token
+from fastapi import APIRouter, HTTPException, Depends
+from security import get_token, get_current_user, admin_only
 
 
 router = APIRouter()
@@ -39,12 +37,14 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
         username = user.username
         plain_password = user.password
         email = user.email
+        valid_roles = ["admin", "general"]
+        role = user.role if user.role in valid_roles else "general"
         if not (6 <= len(plain_password) <= 12):
             raise HTTPException(status_code=400,
                                 detail="パスワードは6文字以上、12文字以下としてください")
         hash_password = get_password_hash(plain_password)
         form_data = db_model.User(
-            username=username, password=hash_password, email=email)
+            username=username, password=hash_password, email=email, role=role)
         db.add(form_data)
         db.commit()
         db.refresh(form_data)
@@ -52,13 +52,66 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
         return {"username": username,
                 "password": len(plain_password) * "*",
                 "email": user.email,
-                "message": f"{username}の作成に成功しました"}
+                "message": f"{username}の作成に成功しました",
+                "role": role if role else "general"}
     except HTTPException as http_e:
         raise http_e
-    except IntegrityError:
+    except IntegrityError as sqlalchemy_error:
         db.rollback()
-        raise HTTPException(status_code=400,
-                            detail="既に登録されています")
+        if "for key 'user.PRIMARY'" in str(sqlalchemy_error.orig):
+            raise HTTPException(status_code=400,
+                                detail="そのユーザー名は既に登録されています")
+        elif "for key 'user.email'" in str(sqlalchemy_error.orig):
+            raise HTTPException(status_code=400,
+                                detail="そのメールアドレスは既に登録されています")
+        else:
+            logger.warning(f"ユーザー作成に失敗しました\n{str(sqlalchemy_error)}")
+            raise HTTPException(status_code=400, detail="ユーザーの作成に失敗しました")
+    except Exception as e:
+        logger.warning(f"ユーザー作成に失敗しました\n{str(e)}")
+        db.rollback()
+        raise HTTPException(status_code=500,
+                            detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
+
+
+@router.post("/admin", response_model=ResponseCreatedUser, status_code=201)
+@admin_only()
+def create_admin_user(user: UserInfo,
+                      db: Session = Depends(get_db),
+                      current_user: dict = Depends(get_current_user)):
+    try:
+        username = user.username
+        plain_password = user.password
+        email = user.email
+        if not (6 <= len(plain_password) <= 12):
+            raise HTTPException(status_code=400,
+                                detail="パスワードは6文字以上、12文字以下としてください")
+        hash_password = get_password_hash(plain_password)
+        form_data = db_model.User(
+            username=username, password=hash_password,
+            email=email, role="admin")
+        db.add(form_data)
+        db.commit()
+        db.refresh(form_data)
+        logger.info(f"ユーザー作成:{username}")
+        return {"username": username,
+                "password": len(plain_password) * "*",
+                "email": user.email,
+                "message": f"管理者ユーザー「{username}」の作成に成功しました",
+                "role": "admin"}
+    except HTTPException as http_e:
+        raise http_e
+    except IntegrityError as sqlalchemy_error:
+        db.rollback()
+        if "for key 'user.PRIMARY'" in str(sqlalchemy_error.orig):
+            raise HTTPException(status_code=400,
+                                detail="そのユーザー名は既に登録されています")
+        elif "for key 'user.email'" in str(sqlalchemy_error.orig):
+            raise HTTPException(status_code=400,
+                                detail="そのメールアドレスは既に登録されています")
+        else:
+            logger.warning(f"ユーザー作成に失敗しました\n{str(sqlalchemy_error)}")
+            raise HTTPException(status_code=400, detail="ユーザーの作成に失敗しました")
     except Exception as e:
         logger.warning(f"ユーザー作成に失敗しました\n{str(e)}")
         db.rollback()
@@ -78,9 +131,12 @@ def login(user_info: UserInfo,
         is_password = verify_password(plain_password, user.password)
         if not is_password:
             raise HTTPException(status_code=401, detail="パスワードが正しくありません")
-        access_token = get_access_token(username)
+        access_token = get_token(user, token_type="access")
+        refresh_token = get_token(user, token_type="refresh", db=db)
         logger.info(f"{username}がログイン")
-        return {"access_token": access_token, "token_type": "Bearer"}
+        return {"access_token": access_token,
+                "token_type": "Bearer",
+                "refresh_token": refresh_token}
     except NoResultFound:
         raise HTTPException(status_code=404,
                             detail=f"{username}は登録されていません")
@@ -92,15 +148,21 @@ def login(user_info: UserInfo,
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.post("/token")
-def login_for_access_token(
-        form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
-    """ APIでアクセストークン取得用 """
-    if not authenticate_user(form_data.username, form_data.password):
+@router.put("/logout", status_code=200)
+def logout(current_user: dict = Depends(get_current_user),
+           db: Session = Depends(get_db)):
+    try:
+        username = current_user['username']
+        token = db.query(db_model.Token).filter(
+            db_model.Token.username == username).one()
+        token.status = False
+        db.commit()
+        logger.info(f"{username}がログアウト")
+        return {"message": f"{username}がログアウト"}
+    except NoResultFound:
+        raise HTTPException(status_code=404,
+                            detail=f"{username}は登録されていません")
+    except Exception as e:
+        logger.warning(f"ログイン処理に失敗しました\n{str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token = get_access_token(form_data.username)
-    return {"access_token": access_token, "token_type": "Bearer"}
+            status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")

@@ -1,4 +1,4 @@
-from sqlalchemy import (Column, Integer, Float, Date, Boolean,
+from sqlalchemy import (Column, Integer, Float, Date, Boolean, Enum,
                         CHAR, VARCHAR, ForeignKey, UniqueConstraint)
 from sqlalchemy.orm import relationship
 from db.database import Base, engine
@@ -44,11 +44,24 @@ class User(Base):
     __tablename__ = "user"
     username = Column(VARCHAR(16), primary_key=True)
     password = Column(CHAR(60), nullable=False)
-    email = Column(VARCHAR(32), default=None)
+    email = Column(VARCHAR(32), default=None, unique=True)
+    role = Column(Enum("admin", "general"), default="general")
 
     income = relationship('Income', back_populates='user')
     todo = relationship('Todo', back_populates='user')
     activity = relationship('Activity', back_populates='user')
+    token = relationship('Token', back_populates='user')
+
+
+class Token(Base):
+    __tablename__ = "token"
+    username = Column(VARCHAR(16), ForeignKey(
+        "user.username"), primary_key=True)
+    token = Column(VARCHAR(256))
+    expires_at = Column(Date, nullable=False)
+    status = Column(Boolean, default=True)
+
+    user = relationship('User', back_populates='token')
 
 
 Base.metadata.create_all(bind=engine)
