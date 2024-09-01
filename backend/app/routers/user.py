@@ -37,7 +37,8 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
         username = user.username
         plain_password = user.password
         email = user.email
-        role = user.role
+        valid_roles = ["admin", "general"]
+        role = user.role if user.role in valid_roles else "general"
         if not (6 <= len(plain_password) <= 12):
             raise HTTPException(status_code=400,
                                 detail="パスワードは6文字以上、12文字以下としてください")
@@ -85,8 +86,8 @@ def login(user_info: UserInfo,
         is_password = verify_password(plain_password, user.password)
         if not is_password:
             raise HTTPException(status_code=401, detail="パスワードが正しくありません")
-        access_token = get_token(username, token_type="access")
-        refresh_token = get_token(username, token_type="refresh", db=db)
+        access_token = get_token(user, token_type="access")
+        refresh_token = get_token(user, token_type="refresh", db=db)
         logger.info(f"{username}がログイン")
         return {"access_token": access_token,
                 "token_type": "Bearer",

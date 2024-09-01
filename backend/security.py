@@ -26,11 +26,13 @@ def get_user(username: str, db: Session = Depends(get_db)):
     return user
 
 
-def get_token(username: str, token_type: str, db=None):
+def get_token(user: db_model, token_type: str, db=None):
     if token_type == "access":
-        return create_access_token({"sub": username})
+        return create_access_token({"sub": user.username,
+                                    "role": user.role})
     elif token_type == "refresh":
-        return create_refresh_token({"sub": username}, db=db)
+        return create_refresh_token({"sub": user.username,
+                                     "role": user.role}, db=db)
 
 
 def verify_password(plain_password, hashed_password) -> bool:
@@ -119,7 +121,7 @@ def get_current_user(token: str = Depends(oauth2_scheme),
             raise HTTPException(status_code=500,
                                 detail="SECRET_KEYかALGORITHMが環境変数に設定されていません")
         payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
-        username = payload.get('sub')
+        username = payload.get("sub")
         if username is None:
             raise credentials_exception
         user = get_user(username, db)
