@@ -1,4 +1,5 @@
 import os
+import traceback
 from passlib.context import CryptContext
 from typing import Union
 from functools import wraps
@@ -62,8 +63,8 @@ def create_access_token(data: dict,
                                 detail="SECRET_KEYかALGORITHMが環境変数に設定されていません")
     except HTTPException as http_e:
         raise http_e
-    except Exception as e:
-        logger.warning(f"アクセストークンの作成中にエラーが発生しました\n{str(e)}")
+    except Exception:
+        logger.warning(f"アクセストークンの作成中にエラーが発生しました\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="トークンの作成に失敗しました")
 
 
@@ -105,8 +106,8 @@ def create_refresh_token(data: dict,
         return refresh_token
     except HTTPException as http_e:
         raise http_e
-    except Exception as e:
-        logger.warning(f"リフレッシュトークンの作成中にエラーが発生しました\n{str(e)}")
+    except Exception:
+        logger.warning(f"リフレッシュトークンの作成中にエラーが発生しました\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="トークンの作成に失敗しました")
 
 
@@ -137,8 +138,8 @@ def get_current_user(token: str = Depends(oauth2_scheme),
         raise credentials_exception
     except HTTPException as http_e:
         raise http_e
-    except Exception as e:
-        logger.warning(f"トークンの作成中にエラーが発生しました{str(e)}")
+    except Exception:
+        logger.warning(f"トークンの作成中にエラーが発生しました{traceback.format_exc()}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="ユーザーの認証に失敗しました")
 
