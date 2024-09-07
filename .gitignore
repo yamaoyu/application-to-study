@@ -10,4 +10,4 @@ backend/app/__pycache__
 .gitignore
 temp
 backend/.pytest_cache
-/backend/logs
+/var

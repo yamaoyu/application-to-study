@@ -55,7 +55,7 @@ log_conf = {
             "class": "logging.handlers.TimedRotatingFileHandler",
             "backupCount": 3,
             "formatter": "file_format",
-            "filename": "logs/error_log.log",
+            "filename": "../var/log/error_log.log",
             "when": "W0",
             "level": "WARNING",
             "filters": ["file_filter"]
