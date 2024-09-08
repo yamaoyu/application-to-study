@@ -1,5 +1,8 @@
+import os
 from logging import config, Filter, INFO, WARNING, DEBUG, getLogger, Formatter
 from datetime import datetime, timezone, timedelta
+
+ENV = os.getenv("ENV")
 
 
 class ConsoleFilter(Filter):
@@ -55,8 +58,8 @@ log_conf = {
             "class": "logging.handlers.TimedRotatingFileHandler",
             "backupCount": 3,
             "formatter": "file_format",
-            "filename": "../var/log/error_log.log",
-            "when": "W0",
+            "filename": "/backend/log/error_log.log" if ENV == "DEV" else "/var/log/error_log.log",
+            "when": "W6",
             "level": "WARNING",
             "filters": ["file_filter"]
         }
