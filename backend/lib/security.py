@@ -8,7 +8,7 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
 from db import db_model
 from db.database import get_db
-from log_conf import logger
+from lib.log_conf import logger
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError, ExpiredSignatureError

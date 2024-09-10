@@ -1,14 +1,14 @@
 import traceback
 from db import db_model
-from security import (get_password_hash,
-                      verify_password)
+from lib.security import (get_password_hash,
+                          verify_password)
 from db.database import get_db
-from log_conf import logger
+from lib.log_conf import logger
 from sqlalchemy.orm import Session
 from app.models.user_model import UserInfo, ResponseCreatedUser
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from fastapi import APIRouter, HTTPException, Depends
-from security import get_token, get_current_user, admin_only
+from lib.security import get_token, get_current_user, admin_only
 
 
 router = APIRouter()

@@ -1,7 +1,7 @@
 from unittest.mock import patch
 from datetime import timedelta
 from conftest import test_username
-from security import create_access_token
+from lib.security import create_access_token
 
 # セットアップ用変数
 test_monthly_income = 23.0
@@ -53,7 +53,7 @@ def test_register_target_with_expired_token(client):
     def mock_create_access_token(data, expires_delta=timedelta(minutes=-30)):
         return create_access_token(data, expires_delta)
 
-    with patch("security.create_access_token", mock_create_access_token):
+    with patch("lib.security.create_access_token", mock_create_access_token):
         access_token = mock_create_access_token(data={"sub": test_username})
         data = {"target_time": 5}
         headers = {"Authorization": f"Bearer {access_token}"}
@@ -194,7 +194,7 @@ def test_get_day_activities_with_expired_token(client, get_headers):
         return create_access_token(data, expires_delta)
 
     setup_target_time_for_test(client, get_headers)
-    with patch("security.create_access_token", mock_create_access_token):
+    with patch("lib.security.create_access_token", mock_create_access_token):
         access_token = mock_create_access_token(data={"sub": test_username})
         headers = {"Authorization": f"Bearer {access_token}"}
         response = client.get(f"/activities{test_date_path}",

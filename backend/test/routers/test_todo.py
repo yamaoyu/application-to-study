@@ -1,7 +1,7 @@
 from unittest.mock import patch
 from datetime import timedelta
 from conftest import test_username
-from security import create_access_token
+from lib.security import create_access_token
 
 # 以下の変数はconftestで作成していないユーザー用で値を変更しない
 another_test_user = "another testuser"
@@ -56,7 +56,7 @@ def test_create_todo_with_expired_token(client):
     def mock_create_access_token(data, expires_delta=timedelta(minutes=-30)):
         return create_access_token(data, expires_delta)
 
-    with patch("security.create_access_token", mock_create_access_token):
+    with patch("lib.security.create_access_token", mock_create_access_token):
         access_token = mock_create_access_token(data={"sub": test_username})
         headers = {"Authorization": f"Bearer {access_token}"}
         data = {"action": test_action, "username": test_username}
@@ -98,7 +98,7 @@ def test_get_todo_with_expired_token(client, get_headers):
         return create_access_token(data, expires_delta)
 
     setup_create_todo(client, get_headers)
-    with patch("security.create_access_token", mock_create_access_token):
+    with patch("lib.security.create_access_token", mock_create_access_token):
         access_token = mock_create_access_token(data={"sub": test_username},
                                                 minutes=-30)
         headers = {"Authorization": f"Bearer {access_token}"}

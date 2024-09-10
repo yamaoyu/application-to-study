@@ -8,8 +8,8 @@ from app.models.time_model import (
 from db import db_model
 from app import set_date_format
 from db.database import get_db
-from security import get_current_user
-from log_conf import logger
+from lib.security import get_current_user
+from lib.log_conf import logger
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound, IntegrityError
 
