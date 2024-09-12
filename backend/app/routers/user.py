@@ -27,7 +27,7 @@ def authenticate_user(username: str, plain_password: str,
     except HTTPException as http_e:
         raise http_e
     except Exception:
-        logger.warning(f"ユーザー認証に失敗しました\n{traceback.format_exc()}")
+        logger.error(f"ユーザー認証に失敗しました\n{traceback.format_exc()}")
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
@@ -69,7 +69,7 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
             logger.warning(f"ユーザー作成に失敗しました\n{str(sqlalchemy_error)}")
             raise HTTPException(status_code=400, detail="ユーザーの作成に失敗しました")
     except Exception:
-        logger.warning(f"ユーザー作成に失敗しました\n{traceback.format_exc()}")
+        logger.error(f"ユーザー作成に失敗しました\n{traceback.format_exc()}")
         db.rollback()
         raise HTTPException(status_code=500,
                             detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
@@ -114,7 +114,7 @@ def create_admin_user(user: UserInfo,
             logger.warning(f"ユーザー作成に失敗しました\n{str(sqlalchemy_error)}")
             raise HTTPException(status_code=400, detail="ユーザーの作成に失敗しました")
     except Exception:
-        logger.warning(f"ユーザー作成に失敗しました\n{traceback.format_exc()}")
+        logger.error(f"ユーザー作成に失敗しました\n{traceback.format_exc()}")
         db.rollback()
         raise HTTPException(status_code=500,
                             detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
@@ -144,7 +144,7 @@ def login(user_info: UserInfo,
     except HTTPException as http_e:
         raise http_e
     except Exception:
-        logger.warning(f"ログイン処理に失敗しました\n{traceback.format_exc()}")
+        logger.error(f"ログイン処理に失敗しました\n{traceback.format_exc()}")
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
@@ -164,6 +164,6 @@ def logout(current_user: dict = Depends(get_current_user),
         raise HTTPException(status_code=404,
                             detail=f"{username}は登録されていません")
     except Exception:
-        logger.warning(f"ログイン処理に失敗しました\n{traceback.format_exc()}")
+        logger.error(f"ログイン処理に失敗しました\n{traceback.format_exc()}")
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")

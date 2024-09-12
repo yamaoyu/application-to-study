@@ -40,7 +40,7 @@ def register_salary(income: RegisterIncome,
         raise HTTPException(
             status_code=400, detail="Integrity errorが発生しました")
     except Exception:
-        logger.warning(f"月収の登録処理中にエラーが発生しました\n{traceback.format_exc()}")
+        logger.error(f"月収の登録処理中にエラーが発生しました\n{traceback.format_exc()}")
         db.rollback()
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
@@ -64,6 +64,6 @@ def get_monthly_income(year: str,
     except NoResultFound:
         raise HTTPException(status_code=404, detail=f"{year_month}の月収は未登録です")
     except Exception:
-        logger.warning(f"月収の取得処理中にエラーが発生しました\n{traceback.format_exc()}")
+        logger.error(f"月収の取得処理中にエラーが発生しました\n{traceback.format_exc()}")
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")

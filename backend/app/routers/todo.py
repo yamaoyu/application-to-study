@@ -33,7 +33,7 @@ def create_todo(todo: Todo,
             raise HTTPException(
                 status_code=400, detail="Integrity errorが発生しました")
     except Exception:
-        logger.warning(f"todoの作成に失敗しました\n{traceback.format_exc()}")
+        logger.error(f"todoの作成に失敗しました\n{traceback.format_exc()}")
         db.rollback()
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
@@ -53,7 +53,7 @@ def get_all_todo(db: Session = Depends(get_db),
     except HTTPException as http_e:
         raise http_e
     except Exception:
-        logger.warning(f"全てのtodoの取得に失敗しました\n{traceback.format_exc()}")
+        logger.error(f"全てのtodoの取得に失敗しました\n{traceback.format_exc()}")
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
@@ -74,7 +74,7 @@ def get_specific_todo(todo_id: int,
     except HTTPException as http_e:
         raise http_e
     except Exception:
-        logger.warning(f"指定のtodoの取得に失敗しました\n{traceback.format_exc()}")
+        logger.error(f"指定のtodoの取得に失敗しました\n{traceback.format_exc()}")
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
@@ -95,7 +95,7 @@ def delete_action(todo_id: int,
     except HTTPException as http_exception:
         raise http_exception
     except Exception:
-        logger.warning(f"todoの削除に失敗しました\n{traceback.format_exc()}")
+        logger.error(f"todoの削除に失敗しました\n{traceback.format_exc()}")
         db.rollback()
         raise HTTPException(status_code=500,
                             detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
@@ -131,7 +131,7 @@ def edit_action(todo_id: int,
         db.rollback()
         raise http_exception
     except Exception:
-        logger.warning(f"todoの編集に失敗しました\n{traceback.format_exc()}")
+        logger.error(f"todoの編集に失敗しました\n{traceback.format_exc()}")
         db.rollback()
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
@@ -157,7 +157,7 @@ def finish_action(todo_id: int,
     except HTTPException as http_exception:
         raise http_exception
     except Exception:
-        logger.warning(f"todoの終了に失敗しました\n{traceback.format_exc()}")
+        logger.error(f"todoの終了に失敗しました\n{traceback.format_exc()}")
         db.rollback()
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
