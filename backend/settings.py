@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from security import get_password_hash
+from lib.security import get_password_hash
 from db.database import SessionLocal
 from db import db_model
 

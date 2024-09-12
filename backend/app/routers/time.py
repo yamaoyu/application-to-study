@@ -1,3 +1,4 @@
+import traceback
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, Depends
 from app.models.time_model import (
@@ -7,8 +8,8 @@ from app.models.time_model import (
 from db import db_model
 from app import set_date_format
 from db.database import get_db
-from security import get_current_user
-from log_conf import logger
+from lib.security import get_current_user
+from lib.log_conf import logger
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound, IntegrityError
 
@@ -54,8 +55,8 @@ def day_activities(year: str,
         raise http_e
     except NoResultFound:
         raise HTTPException(status_code=404, detail=f"{date}の情報は未登録です")
-    except Exception as e:
-        logger.warning(f"日別の活動実績の取得に失敗しました\n{str(e)}")
+    except Exception:
+        logger.error(f"日別の活動実績の取得に失敗しました\n{traceback.format_exc()}")
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
@@ -88,8 +89,8 @@ def create_target_time(target: TargetTimeIn,
     except IntegrityError:
         raise HTTPException(
             status_code=400, detail=f"{date}の目標時間は既に登録済みです")
-    except Exception as e:
-        logger.warning(f"目標時間の登録に失敗しました\n{str(e)}")
+    except Exception:
+        logger.error(f"目標時間の登録に失敗しました\n{traceback.format_exc()}")
         db.rollback()
         raise HTTPException(status_code=500,
                             detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
@@ -127,8 +128,8 @@ def update_actual_time(actual: ActualTimeIn,
         raise http_e
     except NoResultFound:
         raise HTTPException(status_code=404, detail=f"先に{date}の目標を入力して下さい")
-    except Exception as e:
-        logger.warning(f"活動時間の登録に失敗しました\n{str(e)}")
+    except Exception:
+        logger.error(f"活動時間の登録に失敗しました\n{traceback.format_exc()}")
         db.rollback()
         raise HTTPException(status_code=500,
                             detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
@@ -153,8 +154,8 @@ def finish_activities(year: str,
         raise http_e
     except NoResultFound:
         raise HTTPException(status_code=404, detail=f"{date}の情報は登録されていません")
-    except Exception as e:
-        logger.warning(f"活動終了処理に失敗しました\n{str(e)}")
+    except Exception:
+        logger.error(f"活動終了処理に失敗しました\n{traceback.format_exc()}")
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
@@ -193,8 +194,8 @@ def finish_activities(year: str,
     except NoResultFound:
         raise HTTPException(status_code=404,
                             detail=f"{year_month}の月収が未登録です")
-    except Exception as e:
-        logger.warning(f"活動終了処理に失敗しました\n{str(e)}")
+    except Exception:
+        logger.error(f"活動終了処理に失敗しました\n{traceback.format_exc()}")
         db.rollback()
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
@@ -237,7 +238,7 @@ def month_activities(year: str,
     except NoResultFound:
         raise HTTPException(status_code=404,
                             detail=f"{year_month}の給料は登録されていません")
-    except Exception as e:
-        logger.warning(f"月別の活動実績の取得に失敗しました\n{str(e)}")
+    except Exception:
+        logger.error(f"月別の活動実績の取得に失敗しました\n{traceback.format_exc()}")
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")

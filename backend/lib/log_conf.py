@@ -1,5 +1,12 @@
+import os
 from logging import config, Filter, INFO, WARNING, DEBUG, getLogger, Formatter
 from datetime import datetime, timezone, timedelta
+
+ENV = os.getenv("ENV")
+if ENV == "DEV":
+    logfile_path = os.getenv("DEV_LOGFILE_PATH")
+else:
+    logfile_path = os.getenv("LOGFILE_PATH")
 
 
 class ConsoleFilter(Filter):
@@ -55,8 +62,8 @@ log_conf = {
             "class": "logging.handlers.TimedRotatingFileHandler",
             "backupCount": 3,
             "formatter": "file_format",
-            "filename": "logs/error_log.log",
-            "when": "W0",
+            "filename": logfile_path,
+            "when": "W6",
             "level": "WARNING",
             "filters": ["file_filter"]
         }
