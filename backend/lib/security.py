@@ -64,7 +64,7 @@ def create_access_token(data: dict,
     except HTTPException as http_e:
         raise http_e
     except Exception:
-        logger.warning(f"アクセストークンの作成中にエラーが発生しました\n{traceback.format_exc()}")
+        logger.error(f"アクセストークンの作成中にエラーが発生しました\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="トークンの作成に失敗しました")
 
 
@@ -107,7 +107,7 @@ def create_refresh_token(data: dict,
     except HTTPException as http_e:
         raise http_e
     except Exception:
-        logger.warning(f"リフレッシュトークンの作成中にエラーが発生しました\n{traceback.format_exc()}")
+        logger.error(f"リフレッシュトークンの作成中にエラーが発生しました\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="トークンの作成に失敗しました")
 
 
@@ -139,7 +139,7 @@ def get_current_user(token: str = Depends(oauth2_scheme),
     except HTTPException as http_e:
         raise http_e
     except Exception:
-        logger.warning(f"トークンの作成中にエラーが発生しました{traceback.format_exc()}")
+        logger.error(f"トークンの作成中にエラーが発生しました\n{traceback.format_exc()}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="ユーザーの認証に失敗しました")
 
