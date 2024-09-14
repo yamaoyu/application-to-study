@@ -19,6 +19,12 @@ ALGORITHM = os.getenv("ALGORITHM")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
+credentials_exception = HTTPException(
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="証明書を認証できませんでした",
+    headers={"WWW-Authenticate": "Bearer"}
+)
+
 
 def get_user(username: str, db: Session = Depends(get_db)):
     user = db.query(db_model.User).filter(
@@ -113,11 +119,6 @@ def create_refresh_token(data: dict,
 
 def get_current_user(token: str = Depends(oauth2_scheme),
                      db: Session = Depends(get_db)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="証明書を認証できませんでした",
-        headers={"WWW-Authenticate": "Bearer"}
-    )
     try:
         if not SECRET_KEY or not ALGORITHM:
             raise HTTPException(status_code=500,
@@ -154,5 +155,33 @@ def admin_only():
             else:
                 raise HTTPException(
                     status_code=403, detail="管理者権限を持つユーザー以外はアクセスできません")
+        return wrapper
+    return decorator
+
+
+def login_required():
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                token = kwargs["token"]
+                db = kwargs["db"]
+                if not SECRET_KEY or not ALGORITHM:
+                    raise HTTPException(status_code=500,
+                                        detail="SECRET_KEYかALGORITHMが環境変数に設定されていません")
+                payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
+                username = payload.get("sub")
+                if username is None:
+                    raise credentials_exception
+                user = get_user(username, db)
+                if not user:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND, detail="ユーザーが見つかりません")
+                return func(*args, **kwargs)
+            except ExpiredSignatureError:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="再度ログインしてください")
+            except JWTError:
+                raise credentials_exception
         return wrapper
     return decorator
