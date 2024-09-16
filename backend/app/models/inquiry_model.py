@@ -9,6 +9,12 @@ class Category(str, Enum):
     other = "その他"
 
 
+class Priority(str, Enum):
+    high = "高"
+    middle = "中"
+    low = "低"
+
+
 class InquiryForm(BaseModel):
     category: Category
     detail: str
@@ -23,3 +29,5 @@ class GetInquiry(BaseModel):
     month: Optional[str] = None
     day: Optional[str] = None
     category: Optional[Category] = None
+    priority: Optional[Priority] = None
+    is_watched: Optional[bool] = None

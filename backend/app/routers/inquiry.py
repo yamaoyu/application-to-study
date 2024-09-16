@@ -8,6 +8,7 @@ from lib.security import (get_current_user, admin_only, login_required,
                           oauth2_scheme)
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import NoResultFound
 from app.models.inquiry_model import InquiryForm, ResponseInquiry, GetInquiry
 
 
@@ -72,6 +73,10 @@ def get_inquiry(condition: GetInquiry,
         if ((year and not month) or (not year and month)):
             raise HTTPException(status_code=400, detail="年と月はセットで入力してください")
         category = condition.category.value if condition.category else None
+        priority = condition.priority.value if condition.priority else None
+        is_watched = condition.is_watched
+        # インプットに応じてsql文を作成
+        sqlstatement = db.query(db_model.Inquiry)
         if year and month:
             year_month = set_date_format(year, month)
             start_date = datetime(int(year), int(month), 1).date()
@@ -79,31 +84,32 @@ def get_inquiry(condition: GetInquiry,
                 end_date = datetime(int(year) + 1, 1, 1).date()
             else:
                 end_date = datetime(int(year), int(month) + 1, 1).date()
-        if year and month and category:
-            inquiry = db.query(db_model.Inquiry).filter(
-                db_model.Inquiry.date.between(start_date, end_date),
-                db_model.Inquiry.category == category).all()
-            if not inquiry:
-                raise HTTPException(status_code=404,
-                                    detail=f"期間が「{year_month}」、かつカテゴリが「{category}」の問い合わせはありません")
-        elif year and month:
-            inquiry = db.query(db_model.Inquiry).filter(
-                db_model.Inquiry.date.between(start_date, end_date)).all()
-            if not inquiry:
-                raise HTTPException(status_code=404,
-                                    detail=f"期間が「{year_month}」の問い合わせはありません")
-        elif category:
-            inquiry = db.query(db_model.Inquiry).filter(
-                db_model.Inquiry.category == category).all()
-            if not inquiry:
-                raise HTTPException(status_code=404,
-                                    detail=f"カテゴリが「{category}」の問い合わせはありません")
-        else:
-            inquiry = db.query(db_model.Inquiry).all()
-            if not inquiry:
-                raise HTTPException(status_code=404,
-                                    detail="問い合わせはありません")
+            sqlstatement = sqlstatement.filter(
+                db_model.Inquiry.date.between(start_date, end_date))
+        if category:
+            sqlstatement = sqlstatement.filter(db_model.Inquiry.category == category)
+        if priority:
+            sqlstatement = sqlstatement.filter(db_model.Inquiry.priority == priority)
+        if is_watched:
+            sqlstatement = sqlstatement.filter(db_model.Inquiry.is_watched == is_watched)
+        inquiry = sqlstatement.all()
+        if not inquiry:
+            raise NoResultFound
         return inquiry
+    except NoResultFound:
+        message = ""
+        if year and month:
+            message += f"期間が「{year_month}」、"
+        if category:
+            message += f"カテゴリが「{category}」、"
+        if priority:
+            message += f"優先度が「{priority}」、"
+        if is_watched is not None:
+            message += f"確認済みが「{is_watched}」、"
+        if message:
+            message = message[:-1] + "の"
+        raise HTTPException(status_code=404,
+                            detail=f"{message}問い合わせはありません")
     except HTTPException as http_e:
         raise http_e
     except Exception:
