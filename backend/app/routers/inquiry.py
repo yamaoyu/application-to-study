@@ -9,7 +9,8 @@ from lib.security import (get_current_user, admin_only, login_required,
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound
-from app.models.inquiry_model import InquiryForm, ResponseInquiry, GetInquiry
+from app.models.inquiry_model import (InquiryForm, ResponseInquiry,
+                                      GetInquiry, EditInquiry)
 
 
 router = APIRouter()
@@ -25,16 +26,17 @@ def check_data(category, detail):
 
 @router.post("/inquiry", status_code=201, response_model=ResponseInquiry)
 @login_required()
-def send_inquiry(inquiry_form: InquiryForm,
+def send_inquiry(param: InquiryForm,
                  db: Session = Depends(get_db),
                  token: str = Depends(oauth2_scheme)):
     try:
-        category = inquiry_form.category.value
-        detail = inquiry_form.detail
+        category = param.category.value
+        detail = param.detail
         date = datetime.today()
         check_data(category, detail)
         fetch_data = db.query(db_model.Inquiry).filter(
-            db_model.Inquiry.category == category, db_model.Inquiry.detail == detail).one_or_none()
+            db_model.Inquiry.category == category,
+            db_model.Inquiry.detail == detail).one_or_none()
         # 同じ内容で登録があれば日付を更新
         if fetch_data:
             fetch_data.date = date
@@ -64,17 +66,17 @@ def send_inquiry(inquiry_form: InquiryForm,
 
 @router.get("/inquiry")
 @admin_only()
-def get_inquiry(condition: GetInquiry,
+def get_inquiry(param: GetInquiry,
                 db: Session = Depends(get_db),
                 current_user: dict = Depends(get_current_user)):
     try:
-        year = condition.year
-        month = condition.month
+        year = param.year
+        month = param.month
         if ((year and not month) or (not year and month)):
             raise HTTPException(status_code=400, detail="年と月はセットで入力してください")
-        category = condition.category.value if condition.category else None
-        priority = condition.priority.value if condition.priority else None
-        is_watched = condition.is_watched
+        category = param.category.value if param.category else None
+        priority = param.priority.value if param.priority else None
+        is_checked = param.is_checked
         # インプットに応じてsql文を作成
         sqlstatement = db.query(db_model.Inquiry)
         if year and month:
@@ -90,8 +92,8 @@ def get_inquiry(condition: GetInquiry,
             sqlstatement = sqlstatement.filter(db_model.Inquiry.category == category)
         if priority:
             sqlstatement = sqlstatement.filter(db_model.Inquiry.priority == priority)
-        if is_watched:
-            sqlstatement = sqlstatement.filter(db_model.Inquiry.is_watched == is_watched)
+        if is_checked:
+            sqlstatement = sqlstatement.filter(db_model.Inquiry.is_checked == is_checked)
         inquiry = sqlstatement.all()
         if not inquiry:
             raise NoResultFound
@@ -104,14 +106,46 @@ def get_inquiry(condition: GetInquiry,
             message += f"カテゴリが「{category}」、"
         if priority:
             message += f"優先度が「{priority}」、"
-        if is_watched is not None:
-            message += f"確認済みが「{is_watched}」、"
+        if is_checked is not None:
+            message += f"確認済みが「{is_checked}」、"
         if message:
             message = message[:-1] + "の"
         raise HTTPException(status_code=404,
                             detail=f"{message}問い合わせはありません")
     except HTTPException as http_e:
         raise http_e
+    except Exception:
+        logger.error(traceback.format_exc())
+        db.rollback()
+        raise HTTPException(status_code=500,
+                            detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
+
+
+@router.put("/inquiry")
+@admin_only()
+def edit_inquiry(param: EditInquiry,
+                 db: Session = Depends(get_db),
+                 current_user: dict = Depends(get_current_user)):
+    try:
+        id = param.id
+        priority = param.priority.value if param.priority else None
+        is_checked = param.is_checked
+        inquiry = db.query(db_model.Inquiry).filter(
+            db_model.Inquiry.id == id).one_or_none()
+        if not inquiry:
+            raise NoResultFound
+        # 登録があれば更新
+        if priority:
+            inquiry.priority = priority
+        if is_checked is not None:
+            inquiry.is_checked = is_checked
+        db.add(inquiry)
+        db.commit()
+        db.refresh(inquiry)
+        return inquiry
+    except NoResultFound:
+        raise HTTPException(status_code=404,
+                            detail=f"idが「{id}の問い合わせはありません」")
     except Exception:
         logger.error(traceback.format_exc())
         db.rollback()

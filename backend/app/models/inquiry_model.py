@@ -30,4 +30,10 @@ class GetInquiry(BaseModel):
     day: Optional[str] = None
     category: Optional[Category] = None
     priority: Optional[Priority] = None
-    is_watched: Optional[bool] = None
+    is_checked: Optional[bool] = None
+
+
+class EditInquiry(BaseModel):
+    id: int
+    priority: Optional[Priority] = None
+    is_checked: Optional[bool] = None

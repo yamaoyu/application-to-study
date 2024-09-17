@@ -71,7 +71,7 @@ class Inquiry(Base):
     detail = Column(VARCHAR(256), nullable=False)
     date = Column(Date, nullable=False)
     priority = Column(Enum("高", "中", "低"), default="低")
-    is_watched = Column(Boolean, default=False)
+    is_checked = Column(Boolean, default=False)
 
 
 Base.metadata.create_all(bind=engine)
