@@ -10,7 +10,8 @@ def set_date_format(year, month, day=None):
     if not re.match(year_format, year):
         raise HTTPException(status_code=400, detail="年は20xxの形式で入力してください")
     if not re.match(month_format, month):
-        raise HTTPException(status_code=400, detail="月は1~12で入力してください")
+        raise HTTPException(status_code=400,
+                            detail="月は1~12で入力してください。一桁の場合01とせず1のみを入力してください")
     # dayが引数で渡されていない場合はスキップする
     if day:
         if not re.match(day_format, day):

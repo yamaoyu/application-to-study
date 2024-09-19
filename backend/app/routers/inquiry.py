@@ -7,10 +7,11 @@ from lib.log_conf import logger
 from lib.security import (get_current_user, admin_only, login_required,
                           oauth2_scheme)
 from fastapi import APIRouter, HTTPException, Depends
+from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound
 from app.models.inquiry_model import (InquiryForm, ResponseInquiry,
-                                      GetInquiry, EditInquiry)
+                                      Category, Priority, EditInquiry)
 
 
 router = APIRouter()
@@ -66,17 +67,16 @@ def send_inquiry(param: InquiryForm,
 
 @router.get("/inquiry")
 @admin_only()
-def get_inquiry(param: GetInquiry,
+def get_inquiry(year: Optional[str] = None,
+                month: Optional[str] = None,
+                category: Optional[Category] = None,
+                priority: Optional[Priority] = None,
+                is_checked: Optional[bool] = None,
                 db: Session = Depends(get_db),
                 current_user: dict = Depends(get_current_user)):
     try:
-        year = param.year
-        month = param.month
         if ((year and not month) or (not year and month)):
             raise HTTPException(status_code=400, detail="年と月はセットで入力してください")
-        category = param.category.value if param.category else None
-        priority = param.priority.value if param.priority else None
-        is_checked = param.is_checked
         # インプットに応じてsql文を作成
         sqlstatement = db.query(db_model.Inquiry)
         if year and month:
@@ -92,7 +92,7 @@ def get_inquiry(param: GetInquiry,
             sqlstatement = sqlstatement.filter(db_model.Inquiry.category == category)
         if priority:
             sqlstatement = sqlstatement.filter(db_model.Inquiry.priority == priority)
-        if is_checked:
+        if is_checked is not None:
             sqlstatement = sqlstatement.filter(db_model.Inquiry.is_checked == is_checked)
         inquiry = sqlstatement.all()
         if not inquiry:
@@ -103,9 +103,9 @@ def get_inquiry(param: GetInquiry,
         if year and month:
             message += f"期間が「{year_month}」、"
         if category:
-            message += f"カテゴリが「{category}」、"
+            message += f"カテゴリが「{category.value}」、"
         if priority:
-            message += f"優先度が「{priority}」、"
+            message += f"優先度が「{priority.value}」、"
         if is_checked is not None:
             message += f"確認済みが「{is_checked}」、"
         if message:
