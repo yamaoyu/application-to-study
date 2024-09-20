@@ -34,6 +34,5 @@ class GetInquiry(BaseModel):
 
 
 class EditInquiry(BaseModel):
-    id: int
     priority: Optional[Priority] = None
     is_checked: Optional[bool] = None

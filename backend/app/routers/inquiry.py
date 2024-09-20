@@ -121,13 +121,13 @@ def get_inquiry(year: Optional[str] = None,
                             detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.put("/inquiry")
+@router.put("/inquiry/{id}")
 @admin_only()
-def edit_inquiry(param: EditInquiry,
+def edit_inquiry(id: int,
+                 param: EditInquiry,
                  db: Session = Depends(get_db),
                  current_user: dict = Depends(get_current_user)):
     try:
-        id = param.id
         priority = param.priority.value if param.priority else None
         is_checked = param.is_checked
         inquiry = db.query(db_model.Inquiry).filter(
