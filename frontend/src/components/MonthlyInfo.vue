@@ -28,6 +28,9 @@
   <div>
     <router-link to="/finish/activity">活動を終了</router-link>
   </div>
+  <div>
+    <router-link to="/home">ホームへ戻る</router-link>
+  </div>
 </template>
 
 <script>

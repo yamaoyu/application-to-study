@@ -10,7 +10,9 @@
   <div>
     <p v-if="message" class="message">{{ message }}</p>
   </div>
-  <div></div>
+  <div>
+    <router-link to="/home">ホームへ戻る</router-link>
+  </div>
 </template>
 
 <script>
@@ -30,8 +32,8 @@ export default {
                                             action: action.value
                                           })
           // ここでログイン後の処理を行う（例：トークンの保存、ページ遷移など）
-          if (response.status===200){
-            message.value = response.data.message
+          if (response.status===201){
+            message.value = response.data
           }
         } catch (error) {
           // エラー処理（ユーザーへの通知など）

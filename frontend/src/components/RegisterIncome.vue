@@ -16,6 +16,9 @@
       <button type="submit">登録</button>
   </form>
   <div v-if="message" class="message">{{ message }}</div>
+  <div>
+    <router-link to="/home">ホームへ戻る</router-link>
+  </div>
 </template>
 
 <script>
