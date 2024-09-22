@@ -64,4 +64,14 @@ class Token(Base):
     user = relationship('User', back_populates='token')
 
 
+class Inquiry(Base):
+    __tablename__ = "inquiry"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    category = Column(Enum("要望", "エラー報告", "その他"), nullable=False)
+    detail = Column(VARCHAR(256), nullable=False)
+    date = Column(Date, nullable=False)
+    priority = Column(Enum("高", "中", "低"), default="低")
+    is_checked = Column(Boolean, default=False)
+
+
 Base.metadata.create_all(bind=engine)
