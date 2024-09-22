@@ -19,7 +19,7 @@ router = APIRouter()
 
 def check_data(category, detail):
     """ 問い合わせフォームのデータに不備がないかを確認する """
-    if category not in ("要望", "エラー報告", "その他"):
+    if category not in Category.__members__.values():
         raise HTTPException(status_code=400, detail="カテゴリは選択肢から選択してください")
     if len(detail) > 256:
         raise HTTPException(status_code=400, detail="詳細は256文字以内で入力してください")
