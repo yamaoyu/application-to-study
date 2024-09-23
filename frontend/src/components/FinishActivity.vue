@@ -41,7 +41,6 @@ export default {
         try {
           url.value = 'http://localhost:8000/activities/' + year.value + '/' + month.value + '/' + day.value + '/finish';
           const response = await axios.put(url.value)
-          // ここでログイン後の処理を行う（例：トークンの保存、ページ遷移など）
           if (response.status===200){
             message.value = response.data.message
           }

@@ -48,7 +48,6 @@ export default {
           const response = await axios.put(url.value, {
                                             actual_time: Number(ActualTime.value)
                                           })
-          // ここでログイン後の処理を行う（例：トークンの保存、ページ遷移など）
           if (response.status===200){
             message.value = response.data.message
           }

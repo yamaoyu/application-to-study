@@ -8,6 +8,7 @@ import RegisterActual from '../components/RegisterActual.vue'
 import MonthlyInfo from '../components/MonthlyInfo.vue'
 import RegisterTodo from '../components/RegisterTodo.vue'
 import finishActivity from '../components/FinishActivity.vue'
+import InquiryForm from '../components/InquiryForm.vue'
 
 const routes = [
   {
@@ -55,6 +56,11 @@ const routes = [
     path:"/finish/activity",
     name:"finishActivity",
     component:finishActivity
+  },
+  {
+    path:"/form/inquiry",
+    name:"InquiryForm",
+    component:InquiryForm
   }
 ]
 

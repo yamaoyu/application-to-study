@@ -42,7 +42,6 @@ export default {
             month: month.value,
             monthly_income: MonthlyIncome.value,
           })
-          // ここでログイン後の処理を行う（例：トークンの保存、ページ遷移など）
           if (response.status===201){
             message.value = response.data.message
           }

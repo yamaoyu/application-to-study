@@ -40,7 +40,6 @@
             password: password.value,
             email: email.value
           })
-            // ここでログイン後の処理を行う（例：トークンの保存、ページ遷移など）
           if (response.status===200){
             router.push({
             path:'/login', 

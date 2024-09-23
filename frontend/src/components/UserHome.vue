@@ -27,6 +27,9 @@
   <div>
     <router-link to="/form/todo">Todoを登録</router-link>
   </div>
+  <div>
+    <router-link to="/form/inquiry">問い合わせ</router-link>
+  </div>
 </template>
 
 <script>
