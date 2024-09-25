@@ -8,7 +8,7 @@
     </div>
     <div>
       <label for="detail">詳細(最大256文字):</label><br>
-      <textarea type="detail" id="detail" maxlength="256" v-model="detail" required></textarea>
+      <textarea id="detail" maxlength="256" v-model="detail" required></textarea>
     </div>
     <button type="submit">送信</button>
   </form>
