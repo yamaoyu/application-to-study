@@ -1,40 +1,40 @@
 <template>
   <h3>月収の登録</h3>
   <form @submit.prevent="RegisterIncome">
-      <div>
-        <label for="year">年:</label>
-        <select id="year" v-model="year" required>
-          <option value="">-</option>
-          <option value="2024">2024</option>
-          <option value="2025">2025</option>
-          <option value="2026">2026</option>
-          <option value="2027">2027</option>
-          <option value="2028">2028</option>
-        </select>
-      </div>
-      <div>
-        <label for="month">月:</label>
-        <select id="month" v-model="month" required>
-          <option value="">-</option>
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="5">5</option>
-          <option value="6">6</option>
-          <option value="7">7</option>
-          <option value="8">8</option>
-          <option value="9">9</option>
-          <option value="10">10</option>
-          <option value="11">11</option>
-          <option value="12">12</option>
-        </select>
-      </div>
-      <div>
-        <label for="MonthlyIncome">月収(万):</label>
-        <input type="MonthlyIncome" id="MonthlyIncome" v-model="MonthlyIncome" required>
-      </div>
-      <button type="submit">登録</button>
+    <div>
+      <label for="year">年:</label>
+      <select id="year" v-model="year" required>
+        <option value="">-</option>
+        <option value="2024">2024</option>
+        <option value="2025">2025</option>
+        <option value="2026">2026</option>
+        <option value="2027">2027</option>
+        <option value="2028">2028</option>
+      </select>
+    </div>
+    <div>
+      <label for="month">月:</label>
+      <select id="month" v-model="month" required>
+        <option value="">-</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+        <option value="11">11</option>
+        <option value="12">12</option>
+      </select>
+    </div>
+    <div>
+      <label for="MonthlyIncome">月収(万):</label>
+      <input type="MonthlyIncome" id="MonthlyIncome" v-model="MonthlyIncome" required>
+    </div>
+    <button type="submit">登録</button>
   </form>
   <div v-if="message" class="message">{{ message }}</div>
   <div>
