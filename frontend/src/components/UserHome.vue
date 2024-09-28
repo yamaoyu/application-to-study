@@ -1,14 +1,14 @@
 <template>
   <h3>今日の活動実績</h3>
-  <div>
+  <div style="white-space: pre-wrap;">
     <p v-if="activity_msg" class="activity_msg">{{ activity_msg }}</p>
   </div>
-  <div>
+  <div style="white-space: pre-wrap;">
     <p v-if="salary_msg" class="salary_msg">{{ salary_msg }}</p>
   </div>
-  <div>
-    <p v-if="todo_message" class="todo_message">{{ todo_message }}</p>
-  </div>
+  <ul v-for="(todo, index) in todo_message" :key="index" class="todo-item">
+    <li v-if="todo" class="todo_message">{{ index + 1 }}: {{ todo.action }}</li>
+  </ul>
   <div>
     <router-link to="/form/income">月収登録</router-link>
   </div>
@@ -31,6 +31,14 @@
     <router-link to="/form/inquiry">問い合わせ</router-link>
   </div>
 </template>
+
+<style scoped>
+.todo-item {
+  margin: 0; /* 要素間の余白を削除 */
+  padding: 0;
+  line-height: 1.5; /* 行の高さを調整 */
+}
+</style>
 
 <script>
 import { onMounted, ref } from 'vue';
@@ -55,7 +63,11 @@ export default {
           url.value = 'http://localhost:8000/activities/' + year + '/' + month + '/' + date;
           const response = await axios.get(url.value)
           if (response.status===200){
-            activity_msg.value = response.data
+            activity_msg.value = response.data.date
+            activity_msg.value += "\n目標時間:" + response.data.target_time + "時間"
+            activity_msg.value += "\n活動時間:" + response.data.actual_time + "時間"
+            activity_msg.value += "\nステータス:" + response.data.is_achieved
+            activity_msg.value += "\nボーナス:" + (response.data.bonus * 10) + "千円"
           }
         } catch (error) {
           if (error.response.status===401){
@@ -77,7 +89,9 @@ export default {
           url.value = 'http://localhost:8000/income/' + year + '/' + month;
           const response = await axios.get(url.value)
           if (response.status===200){
-            salary_msg.value = response.data
+            salary_msg.value = "今月の月収:" + response.data["今月の詳細"].monthly_income + "万円"
+            salary_msg.value += "\n合計ボーナス:" + (response.data["今月の詳細"].bonus * 10000) + "円"
+            salary_msg.value += "\nボーナス換算後の月収:" + response.data["ボーナス換算後の月収"] + "万円"
           }
         } catch (error) {
           if (error.response.status===401){
