@@ -8,8 +8,8 @@ class Activity(Base):
     __tablename__ = "activity"
     activity_id = Column(Integer, primary_key=True, autoincrement=True)
     date = Column(Date)
-    target = Column(Float(3, 1))
-    actual = Column(Float(3, 1))
+    target_time = Column(Float(3, 1))
+    actual_time = Column(Float(3, 1))
     is_achieved = Column(Boolean)
     username = Column(VARCHAR(16), ForeignKey("user.username"), nullable=False)
     __table_args__ = (UniqueConstraint(date, username),)
@@ -44,7 +44,7 @@ class User(Base):
     __tablename__ = "user"
     username = Column(VARCHAR(16), primary_key=True)
     password = Column(CHAR(60), nullable=False)
-    email = Column(VARCHAR(32), default=None, unique=True)
+    email = Column(VARCHAR(32), default=None)
     role = Column(Enum("admin", "general"), default="general")
 
     income = relationship('Income', back_populates='user')
