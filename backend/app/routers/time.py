@@ -226,7 +226,8 @@ def month_activities(year: str,
 
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date.between(start_date, end_date),
-            db_model.Activity.username == current_user["username"]).all()
+            db_model.Activity.username == current_user["username"]).order_by(
+                db_model.Activity.date).all()
         if not activity:
             raise HTTPException(status_code=404,
                                 detail=f"{year_month}内の活動は登録されていません")

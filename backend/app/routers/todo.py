@@ -24,7 +24,7 @@ def create_todo(todo: Todo,
         db.commit()
         db.refresh(data)
         logger.info(f"{username}がTodo作成 内容:{action}")
-        return {"action": action}
+        return {"message": "以下の内容で作成しました", "action": action}
     except IntegrityError as sqlalchemy_error:
         db.rollback()
         if "Duplicate entry" in str(sqlalchemy_error.orig):
@@ -91,7 +91,7 @@ def delete_action(todo_id: int,
             raise HTTPException(status_code=404, detail="選択されたタスクは存在しません")
         db.commit()
         logger.info(f"{current_user['username']}がTodoを削除 ID:{todo_id}")
-        return
+        return {"message": "選択したタスクを削除しました"}
     except HTTPException as http_exception:
         raise http_exception
     except Exception:
@@ -150,7 +150,9 @@ def finish_action(todo_id: int,
         todo.status = True
         logger.info(f"{current_user['username']}がTodoを完了 ID:{todo.todo_id}")
         db.commit()
-        return {"action": todo.action, "status": todo.status}
+        return {"message": "以下のタスクのステータスを終了にしました",
+                "action": todo.action,
+                "status": todo.status}
     except NoResultFound:
         raise HTTPException(status_code=404,
                             detail=f"{todo_id}の内容は登録されていません")
