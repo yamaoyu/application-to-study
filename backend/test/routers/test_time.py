@@ -47,10 +47,10 @@ def test_register_target(client, get_headers):
                            headers=get_headers)
     assert response.status_code == 201
     assert response.json() == {"date": test_date,
-                               "target_time": 5,
+                               "target_time": 5.0,
                                "actual_time": "未設定",
                                "is_achieved": "未設定",
-                               "message": f"{test_date}の目標時間を5時間に設定しました"}
+                               "message": f"{test_date}の目標時間を5.0時間に設定しました"}
 
 
 def test_register_target_with_expired_token(client):
@@ -94,14 +94,14 @@ def test_register_target_with_invalid_date(client, get_headers):
 
 def test_register_actual(client, get_headers):
     setup_target_time_for_test(client, get_headers)
-    data = {"actual_time": 5}
+    data = {"actual_time": 5.0}
     response = client.put(f"/activities{test_date_path}/actual",
                           json=data,
                           headers=get_headers)
     assert response.status_code == 200
     assert response.json() == {
         "date": test_date,
-        "target_time": 5,
+        "target_time": 5.0,
         "actual_time": data["actual_time"],
         "is_achieved": "未設定",
         "message": f"活動時間を{data['actual_time']}時間に設定しました"
