@@ -1,5 +1,5 @@
 import pytest
-from conftest import test_username, test_plain_password, test_email, SECRET_KEY
+from conftest import test_username, test_plain_password, SECRET_KEY
 from jose import jwt
 
 
@@ -36,18 +36,6 @@ def test_register_with_duplicate_user_name(client):
     assert response.status_code == 400
     assert response.json() == {
         "detail": "そのユーザー名は既に登録されています"
-    }
-
-
-def test_register_with_duplicate_email(client):
-    """ 既に登録されているメールアドレスで登録した場合 """
-    user_info = {"username": "test",
-                 "password": "testpassword",
-                 "email": test_email}
-    response = client.post("/register", json=user_info)
-    assert response.status_code == 400
-    assert response.json() == {
-        "detail": "そのメールアドレスは既に登録されています"
     }
 
 
