@@ -1,12 +1,11 @@
 from pydantic import BaseModel
-from typing import Union
 
 
 class RegisterActivities(BaseModel):
     date: str
-    target_time: Union[float, str]
-    actual_time: Union[float, str]
-    is_achieved: Union[bool, str]
+    target_time: float
+    actual_time: float
+    is_achieved: bool
     message: str
 
 

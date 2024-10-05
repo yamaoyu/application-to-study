@@ -48,8 +48,8 @@ def test_register_target(client, get_headers):
     assert response.status_code == 201
     assert response.json() == {"date": test_date,
                                "target_time": 5.0,
-                               "actual_time": "未設定",
-                               "is_achieved": "未設定",
+                               "actual_time": 0,
+                               "is_achieved": False,
                                "message": f"{test_date}の目標時間を5.0時間に設定しました"}
 
 
@@ -103,7 +103,7 @@ def test_register_actual(client, get_headers):
         "date": test_date,
         "target_time": 5.0,
         "actual_time": data["actual_time"],
-        "is_achieved": "未設定",
+        "is_achieved": False,
         "message": f"活動時間を{data['actual_time']}時間に設定しました"
     }
 
@@ -148,15 +148,6 @@ def test_finish_activity(client, get_headers):
         "message": "目標達成！ボーナス追加！"}
 
 
-def test_finish_activity_before_register_actual(client, get_headers):
-    """ 活動時間登録前に活動を終了しようとした場合 """
-    setup_target_time_for_test(client, get_headers)
-    response = client.put(f"/activities{test_date_path}/finish",
-                          headers=get_headers)
-    assert response.status_code == 400
-    assert response.json() == {"detail": f"{test_date}の活動時間を登録して下さい"}
-
-
 def test_finish_activity_without_register_income(client, get_headers):
     """ 月収を登録せずに活動を終了しようとした場合 """
     setup_target_time_for_test(client, get_headers)
@@ -177,9 +168,9 @@ def test_get_day_activities_registered_target(client, get_headers):
     assert response.status_code == 200
     assert response.json() == {"date": date,
                                "target_time": 5.0,
-                               "actual_time": "未登録",
-                               "is_achieved": "未登録",
-                               "bonus": "未登録"}
+                               "actual_time": 0,
+                               "is_achieved": False,
+                               "bonus": 0}
 
 
 def test_get_day_activities_registered_actual(client, get_headers):
@@ -193,8 +184,8 @@ def test_get_day_activities_registered_actual(client, get_headers):
     assert response.json() == {"date": date,
                                "target_time": 5.0,
                                "actual_time": 5.0,
-                               "is_achieved": "未登録",
-                               "bonus": "未登録"}
+                               "is_achieved": False,
+                               "bonus": 0}
 
 
 def test_get_day_activities(client, get_headers):

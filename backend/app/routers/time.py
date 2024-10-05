@@ -30,30 +30,14 @@ def day_activities(year: str,
 
         target_time = activity.target_time
         actual_time = activity.actual_time
-        if not actual_time:
-            return {"date": date,
-                    "target_time": target_time,
-                    "actual_time": "未登録",
-                    "is_achieved": "未登録",
-                    "bonus": "未登録"
-                    }
-
         is_achieved = activity.is_achieved
-        if is_achieved is None:
-            return {"date": date,
-                    "target_time": target_time,
-                    "actual_time": actual_time,
-                    "is_achieved": "未登録",
-                    "bonus": "未登録"
-                    }
-
-        bonus = lambda is_achieved: 0.1 if is_achieved else 0  # noqa
+        bonus = 0.1 if is_achieved else 0
         logger.info(f"{current_user['username']}が{date}の活動実績を取得")
         return {"date": date,
                 "target_time": target_time,
                 "actual_time": actual_time,
                 "is_achieved": is_achieved,
-                "bonus": bonus(is_achieved)}
+                "bonus": bonus}
     except HTTPException as http_e:
         raise http_e
     except NoResultFound:
@@ -88,8 +72,8 @@ def create_target_time(target: TargetTimeIn,
         logger.info(f"{current_user['username']}が{date}の目標時間を登録")
         return {"date": date,
                 "target_time": target_time,
-                "actual_time": "未設定",
-                "is_achieved": "未設定",
+                "actual_time": 0,
+                "is_achieved": False,
                 "message": message}
     except HTTPException as http_e:
         raise http_e
@@ -120,14 +104,14 @@ def update_actual_time(actual: ActualTimeIn,
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date,
             db_model.Activity.username == current_user["username"]).one()
-        if activity.is_achieved is None:
+        if activity.is_achieved is not True:
             activity.actual_time = actual_time
             db.commit()
             logger.info(f"{current_user['username']}が{date}の活動時間を登録")
             return {"date": date,
                     "target_time": activity.target_time,
                     "actual_time": actual_time,
-                    "is_achieved": "未設定",
+                    "is_achieved": False,
                     "message": f"活動時間を{actual_time}時間に設定しました"}
         else:
             raise HTTPException(status_code=400,
@@ -172,9 +156,7 @@ def finish_activities(year: str,
         actual_time = activity.actual_time
         year_month = f"{year}-{month}"
 
-        if actual_time is None:
-            raise HTTPException(status_code=400, detail=f"{date}の活動時間を登録して下さい")
-        elif activity.is_achieved is not None:
+        if activity.is_achieved is True:
             raise HTTPException(status_code=400, detail=f"{date}の実績は登録済みです")
         # 達成している場合はIncomeテーブルのボーナスを加算する。
         if actual_time >= target_time:
