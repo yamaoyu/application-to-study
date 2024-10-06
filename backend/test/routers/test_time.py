@@ -13,14 +13,14 @@ test_month = "5"
 
 
 def setup_target_time_for_test(client, get_headers):
-    data = {"target_time": 5}
+    data = {"target_time": 5.0}
     client.post(f"/activities{test_date_path}/target",
                 json=data,
                 headers=get_headers)
 
 
 def setup_actual_time_for_test(client, get_headers):
-    data = {"actual_time": 5}
+    data = {"actual_time": 5.0}
     client.put(f"/activities{test_date_path}/actual",
                json=data,
                headers=get_headers)
@@ -41,7 +41,7 @@ def setup_monthly_income_for_test(client, get_headers):
 
 
 def test_register_target(client, get_headers):
-    data = {"target_time": 5}
+    data = {"target_time": 5.0}
     response = client.post(f"/activities{test_date_path}/target",
                            json=data,
                            headers=get_headers)
@@ -72,7 +72,7 @@ def test_register_target_with_expired_token(client):
 def test_register_target_twice(client, get_headers):
     """ 既に目標時間が登録されている日の目標時間を登録 """
     setup_target_time_for_test(client, get_headers)
-    data = {"target_time": 5}
+    data = {"target_time": 5.0}
     response = client.post(f"/activities{test_date_path}/target",
                            json=data,
                            headers=get_headers)
@@ -84,12 +84,22 @@ def test_register_target_twice(client, get_headers):
 
 def test_register_target_with_invalid_date(client, get_headers):
     """ 存在しない日付の場合 """
-    data = {"target_time": 5}
+    data = {"target_time": 5.0}
     response = client.post("/activities/2024/6/31/target",
                            json=data,
                            headers=get_headers)
     assert response.status_code == 400
     assert response.json() == {"detail": "日付が不正です"}
+
+
+def test_register_target_with_invalid_hour(client, get_headers):
+    """ 時間を1x.0or5、もしくはx.0or5の形で入力していない場合 """
+    data = {"target_time": 5.2}
+    response = client.post("/activities/2024/5/5/target",
+                           json=data,
+                           headers=get_headers)
+    assert response.status_code == 400
+    assert response.json() == {"detail": "入力時間は0.5~12.5の範囲で入力してください"}
 
 
 def test_register_actual(client, get_headers):
@@ -110,12 +120,23 @@ def test_register_actual(client, get_headers):
 
 def test_register_actual_before_register_target(client, get_headers):
     """ 目標時間登録前に活動時間を登録した場合 """
-    data = {"actual_time": 5}
+    data = {"actual_time": 5.0}
     response = client.put("/activities/2024/5/10/actual",
                           json=data,
                           headers=get_headers)
     assert response.status_code == 404
     assert response.json() == {"detail": "先に2024-5-10の目標を入力して下さい"}
+
+
+def test_register_actual_with_invalid_hour(client, get_headers):
+    """ 時間を1x.0or5、もしくはx.0or5の形で入力していない場合 """
+    setup_target_time_for_test(client, get_headers)
+    data = {"target_time": 5.2}
+    response = client.post("/activities/2024/5/5/target",
+                           json=data,
+                           headers=get_headers)
+    assert response.status_code == 400
+    assert response.json() == {"detail": "入力時間は0.5~12.5の範囲で入力してください"}
 
 
 def test_register_actual_after_finish(client, get_headers):
@@ -124,7 +145,7 @@ def test_register_actual_after_finish(client, get_headers):
     setup_actual_time_for_test(client, get_headers)
     setup_monthly_income_for_test(client, get_headers)
     setup_finish_activity_for_test(client, get_headers)
-    data = {"actual_time": 5}
+    data = {"actual_time": 5.0}
     response = client.put(f"/activities{test_date_path}/actual",
                           json=data,
                           headers=get_headers)

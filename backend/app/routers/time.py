@@ -8,7 +8,7 @@ from db import db_model
 from db.database import get_db
 from lib.security import get_current_user
 from lib.log_conf import logger
-from lib.check_date import set_date_format
+from lib.check_data import set_date_format, check_input_time
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound, IntegrityError
 
@@ -51,17 +51,20 @@ def day_activities(year: str,
 @router.post("/activities/{year}/{month}/{day}/target",
              status_code=201,
              response_model=RegisterActivities)
-def create_target_time(target: TargetTimeIn,
-                       year: str,
-                       month: str,
-                       day: str,
-                       db: Session = Depends(get_db),
-                       current_user: dict = Depends(get_current_user)):
+def register_target_time(target: TargetTimeIn,
+                         year: str,
+                         month: str,
+                         day: str,
+                         db: Session = Depends(get_db),
+                         current_user: dict = Depends(get_current_user)):
     """ 目標活動時間を登録、登録済みなら更新する """
     try:
         username = current_user["username"]
         target_time = target.target_time
         date = set_date_format(year, month, day)
+        if not check_input_time(target_time):
+            raise HTTPException(status_code=400,
+                                detail="入力時間は0.5~12.5の範囲で入力してください")
 
         insert_data = db_model.Activity(
             date=date, target_time=target_time, username=username)
@@ -100,6 +103,9 @@ def update_actual_time(actual: ActualTimeIn,
     try:
         actual_time = actual.actual_time
         date = set_date_format(year, month, day)
+        if not check_input_time(actual_time):
+            raise HTTPException(status_code=400,
+                                detail="入力時間は0.5~12.5の範囲で入力してください")
 
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date,
