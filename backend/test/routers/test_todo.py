@@ -40,7 +40,8 @@ def test_create_todo(client, get_headers):
     data = {"action": test_action, "username": test_username}
     response = client.post("/todo", json=data, headers=get_headers)
     assert response.status_code == 201
-    assert response.json() == {"action": test_action}
+    assert response.json() == {"message": "以下の内容で作成しました",
+                               "action": test_action}
 
 
 def test_create_todo_without_login(client):
@@ -192,7 +193,9 @@ def test_finish_todo(client, get_headers):
     setup_create_todo(client, get_headers)
     response = client.put("/todo/finish/1", headers=get_headers)
     assert response.status_code == 200
-    assert response.json() == {"action": test_action, "status": True}
+    assert response.json() == {"message": "以下のタスクのステータスを終了にしました",
+                               "action": test_action,
+                               "status": True}
 
 
 def test_finish_todo_before_create_todo(client, get_headers):

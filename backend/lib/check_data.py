@@ -24,3 +24,10 @@ def set_date_format(year, month, day=None):
     else:
         date = year + "-" + month
     return date
+
+
+def is_valid_input_time(time):
+    time_str = str(time)
+    if re.match(r"^((1[0-2]|\d)\.[0|5])$", time_str):
+        return True
+    return False

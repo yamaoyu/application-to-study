@@ -2,14 +2,13 @@ import traceback
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, Depends
 from app.models.time_model import (
-    ResponseTargetTime, TargetTimeIn,
-    ActualTimeIn, ResponseActualTime, ResponseFinishActivity
+    TargetTimeIn, ActualTimeIn, RegisterActivities
 )
 from db import db_model
 from db.database import get_db
 from lib.security import get_current_user
 from lib.log_conf import logger
-from lib.check_date import set_date_format
+from lib.check_data import set_date_format, is_valid_input_time
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound, IntegrityError
 
@@ -29,28 +28,16 @@ def day_activities(year: str,
             db_model.Activity.date == date,
             db_model.Activity.username == current_user["username"]).one()
 
-        target_time = activity.target
-        if not target_time:
-            return {"date": date, "target_time": "未設定", "actual_time": "未設定"}
-
-        actual_time = activity.actual
-        if not actual_time:
-            return {"date": date,
-                    "target_time": target_time,
-                    "actual_time": "未設定"}
-
+        target_time = activity.target_time
+        actual_time = activity.actual_time
         is_achieved = activity.is_achieved
-        if is_achieved is None:
-            return {"date": date, "target_time": target_time,
-                    "actual_time": actual_time, "is_achieved": "未完了"}
-
-        bonus = lambda is_achieved: 0.1 if is_achieved else 0  # noqa
+        bonus = 0.1 if is_achieved else 0.0
         logger.info(f"{current_user['username']}が{date}の活動実績を取得")
         return {"date": date,
                 "target_time": target_time,
                 "actual_time": actual_time,
                 "is_achieved": is_achieved,
-                "bonus": bonus(is_achieved)}
+                "bonus": bonus}
     except HTTPException as http_e:
         raise http_e
     except NoResultFound:
@@ -63,27 +50,34 @@ def day_activities(year: str,
 
 @router.post("/activities/{year}/{month}/{day}/target",
              status_code=201,
-             response_model=ResponseTargetTime)
-def create_target_time(target: TargetTimeIn,
-                       year: str,
-                       month: str,
-                       day: str,
-                       db: Session = Depends(get_db),
-                       current_user: dict = Depends(get_current_user)):
+             response_model=RegisterActivities)
+def register_target_time(target: TargetTimeIn,
+                         year: str,
+                         month: str,
+                         day: str,
+                         db: Session = Depends(get_db),
+                         current_user: dict = Depends(get_current_user)):
     """ 目標活動時間を登録、登録済みなら更新する """
     try:
         username = current_user["username"]
         target_time = target.target_time
         date = set_date_format(year, month, day)
+        if not is_valid_input_time(target_time):
+            raise HTTPException(status_code=400,
+                                detail="入力時間は0.5~12.5の範囲で入力してください")
 
         insert_data = db_model.Activity(
-            date=date, target=target_time, username=username)
+            date=date, target_time=target_time, username=username)
         db.add(insert_data)
         db.commit()
         db.refresh(insert_data)
         message = f"{date}の目標時間を{target_time}時間に設定しました"
         logger.info(f"{current_user['username']}が{date}の目標時間を登録")
-        return {"target_time": target_time, "date": date, "message": message}
+        return {"date": date,
+                "target_time": target_time,
+                "actual_time": 0,
+                "is_achieved": False,
+                "message": message}
     except HTTPException as http_e:
         raise http_e
     except IntegrityError:
@@ -98,7 +92,7 @@ def create_target_time(target: TargetTimeIn,
 
 @router.put("/activities/{year}/{month}/{day}/actual",
             status_code=200,
-            response_model=ResponseActualTime)
+            response_model=RegisterActivities)
 def update_actual_time(actual: ActualTimeIn,
                        year: str,
                        month: str,
@@ -109,17 +103,21 @@ def update_actual_time(actual: ActualTimeIn,
     try:
         actual_time = actual.actual_time
         date = set_date_format(year, month, day)
+        if not is_valid_input_time(actual_time):
+            raise HTTPException(status_code=400,
+                                detail="入力時間は0.5~12.5の範囲で入力してください")
 
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date,
             db_model.Activity.username == current_user["username"]).one()
-        if activity.is_achieved is None:
-            activity.actual = actual_time
+        if activity.is_achieved is not True:
+            activity.actual_time = actual_time
             db.commit()
             logger.info(f"{current_user['username']}が{date}の活動時間を登録")
             return {"date": date,
+                    "target_time": activity.target_time,
                     "actual_time": actual_time,
-                    "target_time": activity.target,
+                    "is_achieved": False,
                     "message": f"活動時間を{actual_time}時間に設定しました"}
         else:
             raise HTTPException(status_code=400,
@@ -137,7 +135,7 @@ def update_actual_time(actual: ActualTimeIn,
 
 @router.put("/activities/{year}/{month}/{day}/finish",
             status_code=200,
-            response_model=ResponseFinishActivity)
+            response_model=RegisterActivities)
 def finish_activities(year: str,
                       month: str,
                       day: str,
@@ -160,13 +158,11 @@ def finish_activities(year: str,
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
     try:
-        target_time = activity.target
-        actual_time = activity.actual
+        target_time = activity.target_time
+        actual_time = activity.actual_time
         year_month = f"{year}-{month}"
 
-        if actual_time is None:
-            raise HTTPException(status_code=400, detail=f"{date}の活動時間を登録して下さい")
-        elif activity.is_achieved is not None:
+        if activity.is_achieved is True:
             raise HTTPException(status_code=400, detail=f"{date}の実績は登録済みです")
         # 達成している場合はIncomeテーブルのボーナスを加算する。
         if actual_time >= target_time:
@@ -218,7 +214,8 @@ def month_activities(year: str,
 
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date.between(start_date, end_date),
-            db_model.Activity.username == current_user["username"]).all()
+            db_model.Activity.username == current_user["username"]).order_by(
+                db_model.Activity.date).all()
         if not activity:
             raise HTTPException(status_code=404,
                                 detail=f"{year_month}内の活動は登録されていません")
@@ -229,10 +226,10 @@ def month_activities(year: str,
         success_days = [act for act in activity if act.is_achieved is True]
         logger.info(f"{current_user['username']}が{year_month}の活動実績を取得")
         return {"total_monthly_income": total_monthly_income,
-                "base income": salary.monthly_income,
-                "total bonus": salary.bonus,
-                "success days": len(success_days),
-                "activity lists": activity}
+                "base_income": salary.monthly_income,
+                "total_bonus": salary.bonus,
+                "success_days": len(success_days),
+                "activity_lists": activity}
     except HTTPException as http_e:
         raise http_e
     except NoResultFound:
