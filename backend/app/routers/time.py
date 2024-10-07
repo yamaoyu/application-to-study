@@ -8,7 +8,7 @@ from db import db_model
 from db.database import get_db
 from lib.security import get_current_user
 from lib.log_conf import logger
-from lib.check_data import set_date_format, check_input_time
+from lib.check_data import set_date_format, is_valid_input_time
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound, IntegrityError
 
@@ -31,7 +31,7 @@ def day_activities(year: str,
         target_time = activity.target_time
         actual_time = activity.actual_time
         is_achieved = activity.is_achieved
-        bonus = 0.1 if is_achieved else 0
+        bonus = 0.1 if is_achieved else 0.0
         logger.info(f"{current_user['username']}が{date}の活動実績を取得")
         return {"date": date,
                 "target_time": target_time,
@@ -62,7 +62,7 @@ def register_target_time(target: TargetTimeIn,
         username = current_user["username"]
         target_time = target.target_time
         date = set_date_format(year, month, day)
-        if not check_input_time(target_time):
+        if not is_valid_input_time(target_time):
             raise HTTPException(status_code=400,
                                 detail="入力時間は0.5~12.5の範囲で入力してください")
 
@@ -103,7 +103,7 @@ def update_actual_time(actual: ActualTimeIn,
     try:
         actual_time = actual.actual_time
         date = set_date_format(year, month, day)
-        if not check_input_time(actual_time):
+        if not is_valid_input_time(actual_time):
             raise HTTPException(status_code=400,
                                 detail="入力時間は0.5~12.5の範囲で入力してください")
 
