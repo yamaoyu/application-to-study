@@ -32,7 +32,7 @@ def authenticate_user(username: str, plain_password: str,
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.post("/register", response_model=ResponseCreatedUser, status_code=201)
+@router.post("/users", response_model=ResponseCreatedUser, status_code=201)
 def create_user(user: UserInfo, db: Session = Depends(get_db)):
     try:
         username = user.username
@@ -75,7 +75,7 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
                             detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.post("/admin", response_model=ResponseCreatedUser, status_code=201)
+@router.post("/admins", response_model=ResponseCreatedUser, status_code=201)
 @admin_only()
 def create_admin_user(user: UserInfo,
                       db: Session = Depends(get_db),

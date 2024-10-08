@@ -25,7 +25,7 @@ def check_data(category, detail):
         raise HTTPException(status_code=400, detail="詳細は256文字以内で入力してください")
 
 
-@router.post("/inquiry", status_code=201, response_model=ResponseInquiry)
+@router.post("/inquiries", status_code=201, response_model=ResponseInquiry)
 @login_required()
 def send_inquiry(param: InquiryForm,
                  db: Session = Depends(get_db),
@@ -65,7 +65,7 @@ def send_inquiry(param: InquiryForm,
                             detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.get("/inquiry")
+@router.get("/inquiries")
 @admin_only()
 def get_inquiry(year: Optional[str] = None,
                 month: Optional[str] = None,
@@ -121,7 +121,7 @@ def get_inquiry(year: Optional[str] = None,
                             detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.put("/inquiry/{id}")
+@router.put("/inquiries/{id}")
 @admin_only()
 def edit_inquiry(id: int,
                  param: EditInquiry,

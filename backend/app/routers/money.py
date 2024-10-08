@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException
 router = APIRouter()
 
 
-@router.post("/income", status_code=201)
+@router.post("/earnings", status_code=201)
 def register_salary(income: RegisterIncome,
                     current_user: dict = Depends(get_current_user),
                     db: Session = Depends(get_db)):
@@ -46,7 +46,7 @@ def register_salary(income: RegisterIncome,
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.get("/income/{year}/{month}", status_code=200)
+@router.get("/earnings/{year}/{month}", status_code=200)
 def get_monthly_income(year: str,
                        month: str,
                        current_user: dict = Depends(get_current_user),

@@ -6,7 +6,7 @@ from jose import jwt
 def test_register_user(client):
     user_info = {"username": "test",
                  "password": "testpassword"}
-    response = client.post("/register", json=user_info)
+    response = client.post("/users", json=user_info)
     assert response.status_code == 201
     assert response.json() == {
         "username": "test",
@@ -21,7 +21,7 @@ def test_register_user_with_invalid_password(client):
     """6文字以上、12文字以下でないパスワードで登録した場合"""
     user_info = {"username": "test",
                  "password": "test"}
-    response = client.post("/register", json=user_info)
+    response = client.post("/users", json=user_info)
     assert response.status_code == 400
     assert response.json() == {
         "detail": "パスワードは6文字以上、12文字以下としてください"
@@ -32,7 +32,7 @@ def test_register_with_duplicate_user_name(client):
     """ 既に登録されているユーザー名で登録した場合 """
     user_info = {"username": test_username,
                  "password": "testpassword"}
-    response = client.post("/register", json=user_info)
+    response = client.post("/users", json=user_info)
     assert response.status_code == 400
     assert response.json() == {
         "detail": "そのユーザー名は既に登録されています"

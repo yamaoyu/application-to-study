@@ -12,7 +12,7 @@ from lib.security import get_current_user
 router = APIRouter()
 
 
-@router.post("/todo", status_code=201)
+@router.post("/todos", status_code=201)
 def create_todo(todo: Todo,
                 db: Session = Depends(get_db),
                 current_user: dict = Depends(get_current_user)):
@@ -39,7 +39,7 @@ def create_todo(todo: Todo,
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.get("/todo", status_code=200)
+@router.get("/todos", status_code=200)
 def get_all_todo(db: Session = Depends(get_db),
                  current_user: dict = Depends(get_current_user)):
     try:
@@ -58,7 +58,7 @@ def get_all_todo(db: Session = Depends(get_db),
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.get("/todo/{todo_id}", status_code=200)
+@router.get("/todos/{todo_id}", status_code=200)
 def get_specific_todo(todo_id: int,
                       db: Session = Depends(get_db),
                       current_user: dict = Depends(get_current_user)):
@@ -79,10 +79,10 @@ def get_specific_todo(todo_id: int,
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.delete("/todo/{todo_id}", status_code=204)
-def delete_action(todo_id: int,
-                  db: Session = Depends(get_db),
-                  current_user: dict = Depends(get_current_user)):
+@router.delete("/todos/{todo_id}", status_code=204)
+def delete_todo(todo_id: int,
+                db: Session = Depends(get_db),
+                current_user: dict = Depends(get_current_user)):
     try:
         result = db.query(db_model.Todo).filter(
             db_model.Todo.todo_id == todo_id,
@@ -101,11 +101,11 @@ def delete_action(todo_id: int,
                             detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.put("/todo/{todo_id}", status_code=200)
-def edit_action(todo_id: int,
-                new_action: Todo,
-                db: Session = Depends(get_db),
-                current_user: dict = Depends(get_current_user)):
+@router.put("/todos/{todo_id}", status_code=200)
+def edit_todo(todo_id: int,
+              new_action: Todo,
+              db: Session = Depends(get_db),
+              current_user: dict = Depends(get_current_user)):
     action = new_action.action
     try:
         todo = db.query(db_model.Todo).filter(
@@ -137,7 +137,7 @@ def edit_action(todo_id: int,
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.put("/todo/finish/{todo_id}", status_code=200)
+@router.put("/todos/finish/{todo_id}", status_code=200)
 def finish_action(todo_id: int,
                   db: Session = Depends(get_db),
                   current_user: dict = Depends(get_current_user)):
