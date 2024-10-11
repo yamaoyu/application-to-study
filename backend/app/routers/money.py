@@ -23,10 +23,10 @@ def register_salary(income: RegisterIncome,
     username = current_user['username']
     if monthly_income < 0:
         raise HTTPException(status_code=400, detail="正の数を入力して下さい")
-    data = db_model.Income(year_month=year_month,
-                           monthly_income=monthly_income,
-                           bonus=0,
-                           username=username)
+    data = db_model.Earning(year_month=year_month,
+                            monthly_income=monthly_income,
+                            bonus=0,
+                            username=username)
     try:
         db.add(data)
         db.commit()
@@ -55,9 +55,9 @@ def get_monthly_income(year: str,
     try:
         year_month = f"{year}-{month}"
         username = current_user['username']
-        result = db.query(db_model.Income).filter(
-            db_model.Income.year_month == year_month,
-            db_model.Income.username == username).one()
+        result = db.query(db_model.Earning).filter(
+            db_model.Earning.year_month == year_month,
+            db_model.Earning.username == username).one()
         total_income = result.monthly_income + result.bonus
         logger.info(f"{username}:{year_month}の月収を取得")
         return {"今月の詳細": result, "ボーナス換算後の月収": total_income}
