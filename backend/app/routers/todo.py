@@ -138,9 +138,9 @@ def edit_todo(todo_id: int,
 
 
 @router.put("/todos/finish/{todo_id}", status_code=200)
-def finish_action(todo_id: int,
-                  db: Session = Depends(get_db),
-                  current_user: dict = Depends(get_current_user)):
+def finish_todo(todo_id: int,
+                db: Session = Depends(get_db),
+                current_user: dict = Depends(get_current_user)):
     try:
         todo = db.query(db_model.Todo).filter(
             db_model.Todo.todo_id == todo_id,

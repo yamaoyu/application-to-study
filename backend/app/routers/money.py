@@ -14,7 +14,7 @@ router = APIRouter()
 
 
 @router.post("/earnings", status_code=201)
-def register_salary(income: RegisterIncome,
+def register_income(income: RegisterIncome,
                     current_user: dict = Depends(get_current_user),
                     db: Session = Depends(get_db)):
     """  月収を登録する """

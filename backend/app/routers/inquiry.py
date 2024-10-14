@@ -67,13 +67,13 @@ def send_inquiry(param: InquiryForm,
 
 @router.get("/inquiries")
 @admin_only()
-def get_inquiry(year: Optional[str] = None,
-                month: Optional[str] = None,
-                category: Optional[Category] = None,
-                priority: Optional[Priority] = None,
-                is_checked: Optional[bool] = None,
-                db: Session = Depends(get_db),
-                current_user: dict = Depends(get_current_user)):
+def get_inquiries(year: Optional[str] = None,
+                  month: Optional[str] = None,
+                  category: Optional[Category] = None,
+                  priority: Optional[Priority] = None,
+                  is_checked: Optional[bool] = None,
+                  db: Session = Depends(get_db),
+                  current_user: dict = Depends(get_current_user)):
     try:
         if not year and month:
             raise HTTPException(status_code=400, detail="月を指定する場合は年も指定してください")

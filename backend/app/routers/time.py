@@ -16,11 +16,11 @@ router = APIRouter()
 
 
 @router.get("/activities/{year}/{month}/{day}", status_code=200)
-def day_activities(year: str,
-                   month: str,
-                   day: str,
-                   db: Session = Depends(get_db),
-                   current_user: dict = Depends(get_current_user)):
+def get_ay_activities(year: str,
+                      month: str,
+                      day: str,
+                      db: Session = Depends(get_db),
+                      current_user: dict = Depends(get_current_user)):
     """ 特定日の活動実績を確認する """
     try:
         date = set_date_format(year, month, day)
@@ -136,11 +136,11 @@ def update_actual_time(actual: ActualTimeIn,
 @router.put("/activities/{year}/{month}/{day}/finish",
             status_code=200,
             response_model=RegisterActivities)
-def finish_activities(year: str,
-                      month: str,
-                      day: str,
-                      db: Session = Depends(get_db),
-                      current_user: dict = Depends(get_current_user)):
+def finish_activity(year: str,
+                    month: str,
+                    day: str,
+                    db: Session = Depends(get_db),
+                    current_user: dict = Depends(get_current_user)):
     """ 特定日の作業時間を確定し、目標を達成しているのかを確認する """
     try:
         date = set_date_format(year, month, day)
@@ -198,10 +198,10 @@ def finish_activities(year: str,
 
 
 @router.get("/activities/{year}/{month}", status_code=200)
-def month_activities(year: str,
-                     month: str,
-                     db: Session = Depends(get_db),
-                     current_user: dict = Depends(get_current_user)):
+def get_month_activities(year: str,
+                         month: str,
+                         db: Session = Depends(get_db),
+                         current_user: dict = Depends(get_current_user)):
     """ 特定月のデータを取得 """
     try:
         year_month = set_date_format(year, month)
