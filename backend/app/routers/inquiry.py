@@ -75,8 +75,8 @@ def get_inquiry(year: Optional[str] = None,
                 db: Session = Depends(get_db),
                 current_user: dict = Depends(get_current_user)):
     try:
-        if ((year and not month) or (not year and month)):
-            raise HTTPException(status_code=400, detail="年と月はセットで入力してください")
+        if not year and month:
+            raise HTTPException(status_code=400, detail="月を指定する場合は年も指定してください")
         # インプットに応じてsql文を作成
         sqlstatement = db.query(db_model.Inquiry)
         if year and month:
