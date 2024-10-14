@@ -14,7 +14,7 @@ class Activity(Base):
     username = Column(VARCHAR(16), ForeignKey("users.username"), nullable=False)
     __table_args__ = (UniqueConstraint(date, username),)
 
-    users = relationship('User', back_populates='activity')
+    user = relationship('User', back_populates='activities')
 
 
 class Earning(Base):
@@ -26,7 +26,7 @@ class Earning(Base):
     username = Column(VARCHAR(16), ForeignKey("users.username"))
     __table_args__ = (UniqueConstraint(year_month, username),)
 
-    users = relationship('User', back_populates='earning')
+    user = relationship('User', back_populates='earnings')
 
 
 class Todo(Base):
@@ -37,7 +37,7 @@ class Todo(Base):
     username = Column(VARCHAR(16), ForeignKey("users.username"), nullable=False)
     __table_args__ = (UniqueConstraint(action, username),)
 
-    users = relationship('User', back_populates='todo')
+    user = relationship('User', back_populates='todos')
 
 
 class User(Base):
@@ -47,10 +47,10 @@ class User(Base):
     email = Column(VARCHAR(32), unique=True)
     role = Column(Enum("admin", "general"), default="general")
 
-    earning = relationship('Earning', back_populates='users')
-    todo = relationship('Todo', back_populates='users')
-    activity = relationship('Activity', back_populates='users')
-    token = relationship('Token', back_populates='users')
+    earnings = relationship('Earning', back_populates='user')
+    todos = relationship('Todo', back_populates='user')
+    activities = relationship('Activity', back_populates='user')
+    tokens = relationship('Token', back_populates='user')
 
 
 class Token(Base):
@@ -60,7 +60,7 @@ class Token(Base):
     expires_at = Column(Date, nullable=False)
     status = Column(Boolean, default=True)
 
-    users = relationship('User', back_populates='token')
+    user = relationship('User', back_populates='tokens')
 
 
 class Inquiry(Base):
