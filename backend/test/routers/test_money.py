@@ -15,13 +15,13 @@ def setup_monthly_income_for_test(client, get_headers):
     data = {"monthly_income": test_monthly_income,
             "year": test_year,
             "month": test_month}
-    client.post("/income", json=data, headers=get_headers)
+    client.post("/earnings", json=data, headers=get_headers)
 
 
 def setup_create_another_user(client):
     user_info = {"username": another_test_user,
                  "password": test_password, }
-    client.post("/register", json=user_info)
+    client.post("/users", json=user_info)
 
 
 def setup_login(client):
@@ -37,7 +37,7 @@ def test_register_income(client, get_headers):
     data = {"monthly_income": test_monthly_income,
             "year": test_year,
             "month": test_month}
-    response = client.post("/income", json=data, headers=get_headers)
+    response = client.post("/earnings", json=data, headers=get_headers)
     assert response.status_code == 201
     assert response.json() == {
         "message": f"{test_year}-{test_month}の月収:{test_monthly_income}万円"}
@@ -54,7 +54,7 @@ def test_register_income_with_expired_token(client):
         data = {"monthly_income": test_monthly_income,
                 "year": test_year,
                 "month": test_month}
-        response = client.post("/income", json=data, headers=headers)
+        response = client.post("/earnings", json=data, headers=headers)
         assert response.status_code == 401
         assert response.json() == {"detail": "再度ログインしてください"}
 
@@ -65,7 +65,7 @@ def test_register_income_already_registered(client, get_headers):
     data = {"monthly_income": test_monthly_income,
             "year": test_year,
             "month": test_month}
-    response = client.post("/income", json=data, headers=get_headers)
+    response = client.post("/earnings", json=data, headers=get_headers)
     assert response.status_code == 400
     assert response.json() == {"detail": "その月の月収は既に登録されています"}
 
@@ -75,7 +75,7 @@ def test_register_income_with_minus_digit(client, get_headers):
     data = {"monthly_income": -23.0,
             "year": test_year,
             "month": test_month}
-    response = client.post("/income", json=data, headers=get_headers)
+    response = client.post("/earnings", json=data, headers=get_headers)
     assert response.status_code == 400
     assert response.json() == {"detail": "正の数を入力して下さい"}
 
@@ -84,7 +84,7 @@ def test_get_income(client, get_headers):
     setup_monthly_income_for_test(client, get_headers)
     year = test_year
     month = test_month
-    response = client.get(f"/income/{year}/{month}", headers=get_headers)
+    response = client.get(f"/earnings/{year}/{month}", headers=get_headers)
     assert response.status_code == 200
     assert response.json() == {
         "今月の詳細": {
@@ -108,7 +108,7 @@ def test_get_income_with_expired_token(client):
         headers = {"Authorization": f"Bearer {access_token}"}
         year = test_year
         month = test_month
-        response = client.get(f"/income/{year}/{month}", headers=headers)
+        response = client.get(f"/earnings/{year}/{month}", headers=headers)
         assert response.status_code == 401
         assert response.json() == {"detail": "再度ログインしてください"}
 
@@ -121,6 +121,6 @@ def test_get_income_by_another_user(client, get_headers):
     year = test_year
     month = test_month
     headers = {"Authorization": f"Bearer {access_token}"}
-    response = client.get(f"/income/{year}/{month}", headers=headers)
+    response = client.get(f"/earnings/{year}/{month}", headers=headers)
     assert response.status_code == 404
     assert response.json() == {"detail": f"{year}-{month}の月収は未登録です"}

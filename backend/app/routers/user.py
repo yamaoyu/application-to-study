@@ -32,7 +32,7 @@ def authenticate_user(username: str, plain_password: str,
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.post("/register", response_model=ResponseCreatedUser, status_code=201)
+@router.post("/users", response_model=ResponseCreatedUser, status_code=201)
 def create_user(user: UserInfo, db: Session = Depends(get_db)):
     try:
         username = user.username
@@ -59,10 +59,10 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
         raise http_e
     except IntegrityError as sqlalchemy_error:
         db.rollback()
-        if "for key 'user.PRIMARY'" in str(sqlalchemy_error.orig):
+        if "for key 'users.PRIMARY'" in str(sqlalchemy_error.orig):
             raise HTTPException(status_code=400,
                                 detail="そのユーザー名は既に登録されています")
-        elif "for key 'user.email'" in str(sqlalchemy_error.orig):
+        elif "for key 'users.email'" in str(sqlalchemy_error.orig):
             raise HTTPException(status_code=400,
                                 detail="そのメールアドレスは既に登録されています")
         else:
@@ -75,7 +75,7 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
                             detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.post("/admin", response_model=ResponseCreatedUser, status_code=201)
+@router.post("/admins", response_model=ResponseCreatedUser, status_code=201)
 @admin_only()
 def create_admin_user(user: UserInfo,
                       db: Session = Depends(get_db),
@@ -104,10 +104,10 @@ def create_admin_user(user: UserInfo,
         raise http_e
     except IntegrityError as sqlalchemy_error:
         db.rollback()
-        if "for key 'user.PRIMARY'" in str(sqlalchemy_error.orig):
+        if "for key 'users.PRIMARY'" in str(sqlalchemy_error.orig):
             raise HTTPException(status_code=400,
                                 detail="そのユーザー名は既に登録されています")
-        elif "for key 'user.email'" in str(sqlalchemy_error.orig):
+        elif "for key 'users.email'" in str(sqlalchemy_error.orig):
             raise HTTPException(status_code=400,
                                 detail="そのメールアドレスは既に登録されています")
         else:

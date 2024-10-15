@@ -35,7 +35,7 @@ def setup_monthly_income_for_test(client, get_headers):
     data = {"monthly_income": test_monthly_income,
             "year": test_year,
             "month": test_month}
-    client.post("/income",
+    client.post("/earnings",
                 json=data,
                 headers=get_headers)
 

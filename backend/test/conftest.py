@@ -74,7 +74,7 @@ def create_user(client):
     data = {"username": test_username,
             "password": test_plain_password,
             "email": test_email}
-    user = client.post("/register", json=data)
+    user = client.post("/users", json=data)
     return user
 
 

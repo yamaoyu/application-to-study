@@ -16,11 +16,11 @@ router = APIRouter()
 
 
 @router.get("/activities/{year}/{month}/{day}", status_code=200)
-def day_activities(year: str,
-                   month: str,
-                   day: str,
-                   db: Session = Depends(get_db),
-                   current_user: dict = Depends(get_current_user)):
+def get_ay_activities(year: str,
+                      month: str,
+                      day: str,
+                      db: Session = Depends(get_db),
+                      current_user: dict = Depends(get_current_user)):
     """ 特定日の活動実績を確認する """
     try:
         date = set_date_format(year, month, day)
@@ -136,11 +136,11 @@ def update_actual_time(actual: ActualTimeIn,
 @router.put("/activities/{year}/{month}/{day}/finish",
             status_code=200,
             response_model=RegisterActivities)
-def finish_activities(year: str,
-                      month: str,
-                      day: str,
-                      db: Session = Depends(get_db),
-                      current_user: dict = Depends(get_current_user)):
+def finish_activity(year: str,
+                    month: str,
+                    day: str,
+                    db: Session = Depends(get_db),
+                    current_user: dict = Depends(get_current_user)):
     """ 特定日の作業時間を確定し、目標を達成しているのかを確認する """
     try:
         date = set_date_format(year, month, day)
@@ -164,15 +164,15 @@ def finish_activities(year: str,
 
         if activity.is_achieved is True:
             raise HTTPException(status_code=400, detail=f"{date}の実績は登録済みです")
-        # 達成している場合はIncomeテーブルのボーナスを加算する。
+        # 達成している場合はEarningテーブルのボーナスを加算する。
         if actual_time >= target_time:
-            salary = db.query(db_model.Income).filter(
-                db_model.Income.year_month == year_month,
-                db_model.Income.username == current_user["username"]).one()
+            salary = db.query(db_model.Earning).filter(
+                db_model.Earning.year_month == year_month,
+                db_model.Earning.username == current_user["username"]).one()
             activity.is_achieved = True
             message = "目標達成！ボーナス追加！"
             salary.bonus = float(salary.bonus) + 0.1
-        # 達成していない場合はIncomeテーブルを更新しない
+        # 達成していない場合はEarningテーブルを更新しない
         else:
             activity.is_achieved = False
             diff = round((target_time - actual_time), 1)
@@ -198,10 +198,10 @@ def finish_activities(year: str,
 
 
 @router.get("/activities/{year}/{month}", status_code=200)
-def month_activities(year: str,
-                     month: str,
-                     db: Session = Depends(get_db),
-                     current_user: dict = Depends(get_current_user)):
+def get_month_activities(year: str,
+                         month: str,
+                         db: Session = Depends(get_db),
+                         current_user: dict = Depends(get_current_user)):
     """ 特定月のデータを取得 """
     try:
         year_month = set_date_format(year, month)
@@ -219,9 +219,9 @@ def month_activities(year: str,
         if not activity:
             raise HTTPException(status_code=404,
                                 detail=f"{year_month}内の活動は登録されていません")
-        salary = db.query(db_model.Income).filter(
-            db_model.Income.year_month == year_month,
-            db_model.Income.username == current_user["username"]).one()
+        salary = db.query(db_model.Earning).filter(
+            db_model.Earning.year_month == year_month,
+            db_model.Earning.username == current_user["username"]).one()
         total_monthly_income = salary.monthly_income + salary.bonus
         success_days = [act for act in activity if act.is_achieved is True]
         logger.info(f"{current_user['username']}が{year_month}の活動実績を取得")
