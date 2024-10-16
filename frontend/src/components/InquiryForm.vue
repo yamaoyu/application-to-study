@@ -32,7 +32,7 @@
   
       const SendInquiry = async() => {
         try {
-          const response = await axios.post('http://localhost:8000/inquiry', {
+          const response = await axios.post('http://localhost:8000/inquiries', {
             category: category.value,
             detail: detail.value,
           })

@@ -28,7 +28,7 @@ export default {
 
     const RegisterTodo = async() =>{
         try {
-          const response = await axios.post('http://localhost:8000/todo', {
+          const response = await axios.post('http://localhost:8000/todos', {
                                             action: action.value
                                           })
           if (response.status===201){

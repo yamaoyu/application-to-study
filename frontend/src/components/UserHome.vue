@@ -86,7 +86,7 @@ export default {
 
         // その月の月収を取得
         try{
-          url.value = 'http://localhost:8000/income/' + year + '/' + month;
+          url.value = 'http://localhost:8000/earnings/' + year + '/' + month;
           const response = await axios.get(url.value)
           if (response.status===200){
             salary_msg.value = "今月の月収:" + response.data["今月の詳細"].monthly_income + "万円"
@@ -110,7 +110,7 @@ export default {
 
         // そのユーザーのtodoを取得
         try{
-          url.value = 'http://localhost:8000/todo/'
+          url.value = 'http://localhost:8000/todos/'
           const response = await axios.get(url.value)
           if (response.status===200){
             todo_message.value = response.data

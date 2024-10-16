@@ -58,7 +58,7 @@ export default {
 
     const RegisterIncome = async() =>{
         try {
-          const response = await axios.post('http://localhost:8000/income', {
+          const response = await axios.post('http://localhost:8000/earnings', {
             year: year.value,
             month: month.value,
             monthly_income: MonthlyIncome.value,
