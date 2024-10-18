@@ -1,14 +1,22 @@
 <template>
-  <h3>今日の活動実績</h3>
   <div style="white-space: pre-wrap;">
+    <h3>今日の活動実績</h3>
     <p v-if="activity_msg" class="activity_msg">{{ activity_msg }}</p>
   </div>
   <div style="white-space: pre-wrap;">
+    <h3>今月の給料</h3>
     <p v-if="salary_msg" class="salary_msg">{{ salary_msg }}</p>
   </div>
-  <ul v-for="(todo, index) in todo_message" :key="index" class="todo-item">
-    <li v-if="todo" class="todo_message">{{ index + 1 }}: {{ todo.action }}</li>
-  </ul>
+  <div>
+    <h3>Todo一覧</h3>
+    <template v-if="todos.length">
+      <ul v-for="(todo, index) in todos" :key="index" class="todo-item">
+        <li v-if="todo.action" class="todos">{{ index + 1 }}: {{ todo.action }}</li>
+      </ul>
+    </template>
+    <p v-else>{{ todo_msg }}</p>
+  </div>
+  <br>
   <div>
     <router-link to="/form/income">月収登録</router-link>
   </div>
@@ -53,7 +61,8 @@ export default {
     const date = today.getDate();
     const activity_msg = ref("")
     const salary_msg = ref("")
-    const todo_message = ref("")
+    const todos = ref("")
+    const todo_msg = ref("")
     const url = ref("")
     const router = useRouter()
 
@@ -61,81 +70,89 @@ export default {
         // その日の活動実績を取得
         try {
           url.value = 'http://localhost:8000/activities/' + year + '/' + month + '/' + date;
-          const response = await axios.get(url.value)
-          if (response.status===200){
-            activity_msg.value = response.data.date
-            activity_msg.value += "\n目標時間:" + response.data.target_time + "時間"
-            activity_msg.value += "\n活動時間:" + response.data.actual_time + "時間"
-            activity_msg.value += "\nステータス:" + response.data.is_achieved
-            activity_msg.value += "\nボーナス:" + (response.data.bonus * 10) + "千円"
+          const activity_res = await axios.get(url.value)
+          if (activity_res.status===200){
+            activity_msg.value = activity_res.data.date
+            activity_msg.value += "\n目標時間:" + activity_res.data.target_time + "時間"
+            activity_msg.value += "\n活動時間:" + activity_res.data.actual_time + "時間"
+            activity_msg.value += "\nステータス:" + activity_res.data.is_achieved
+            activity_msg.value += "\nボーナス:" + (activity_res.data.bonus * 10) + "千円"
           }
-        } catch (error) {
-          if (error.response.status===401){
-            router.push(
-              {"path":"/login",
-                "query":{message:"再度ログインしてください"}
-              })
-          }else if(error.response.data.detail===404){
-            activity_msg.value = error.response.data.detail;
-          }else if (error.response.status!==500){
-            activity_msg.value = error.response.data.detail;
-          }else{
-            activity_msg.value = "情報の取得に失敗しました";
+        } catch (act_err) {
+          switch (act_err.response.status){
+            case 401:
+              router.push(
+                {"path":"/login",
+                  "query":{message:"再度ログインしてください"}
+                })
+              break;
+            case 404:
+            case 500:
+              activity_msg.value = act_err.response.data.detail;
+              break;
+            default:
+              activity_msg.value = "情報の取得に失敗しました";
           }
         }
 
         // その月の月収を取得
         try{
           url.value = 'http://localhost:8000/earnings/' + year + '/' + month;
-          const response = await axios.get(url.value)
-          if (response.status===200){
-            salary_msg.value = "今月の月収:" + response.data["今月の詳細"].monthly_income + "万円"
-            salary_msg.value += "\n合計ボーナス:" + (response.data["今月の詳細"].bonus * 10000) + "円"
-            salary_msg.value += "\nボーナス換算後の月収:" + response.data["ボーナス換算後の月収"] + "万円"
+          const earn_res = await axios.get(url.value)
+          if (earn_res.status===200){
+            salary_msg.value = "今月の月収:" + earn_res.data["今月の詳細"].monthly_income + "万円"
+            salary_msg.value += "\n合計ボーナス:" + (earn_res.data["今月の詳細"].bonus * 10000) + "円"
+            salary_msg.value += "\nボーナス換算後の月収:" + earn_res.data["ボーナス換算後の月収"] + "万円"
           }
-        } catch (error) {
-          if (error.response.status===401){
-            router.push(
-              {"path":"/login",
-                "query":{message:"再度ログインしてください"}
-              })
-          }else if(error.response.data.detail===404){
-            salary_msg.value = error.response.data.detail;
-          }else if (error.response.status!==500){
-            salary_msg.value = error.response.data.detail;
-          }else{
-            salary_msg.value = "情報の取得に失敗しました";
+        } catch (earn_err) {
+          switch (earn_err.response.status){
+            case 401:
+              router.push(
+                {"path":"/login",
+                  "query":{message:"再度ログインしてください"}
+                })
+              break;
+            case 404:
+            case 500:
+              salary_msg.value = earn_err.response.data.detail;
+              break;
+            default:
+              salary_msg.value = "情報の取得に失敗しました";
           }
         }
 
         // そのユーザーのtodoを取得
         try{
           url.value = 'http://localhost:8000/todos/'
-          const response = await axios.get(url.value)
-          if (response.status===200){
-            todo_message.value = response.data
+          const todo_res = await axios.get(url.value)
+          if (todo_res.status===200){
+            todos.value = todo_res.data;
           }
-        } catch (error) {
-          if (error.response.status===401){
+        } catch (todo_err) {
+          todos.value = "";
+          switch (todo_err.response.status){
+            case 401:
             router.push(
               {"path":"/login",
                 "query":{message:"再度ログインしてください"}
               })
-          }else if(error.response.data.detail===404){
-            todo_message.value = error.response.data.detail;
-          }else if (error.response.status!==500){
-            todo_message.value = error.response.data.detail;
-          }else{
-            todo_message.value = "情報の取得に失敗しました";
+              break;
+            case 404:
+            case 500:
+              todo_msg.value = todo_err.response.data.detail;
+              break;
+            default:
+              todo_msg.value = "情報の取得に失敗しました";
           }
         }
-
-      })
+      }
+    )
 
     return {
       activity_msg,
       salary_msg,
-      todo_message,
+      todos,
+      todo_msg,
       year,
       month,
       date
