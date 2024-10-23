@@ -33,9 +33,10 @@ export default {
     const FinishActivity = async() =>{
         try {
           // 日付から年月日を取得
-          year.value = date.value.split('-')[0];
-          month.value = date.value.split('-')[1];
-          day.value = date.value.split('-')[2];
+          const dateParts = date.value.split('-');
+          year.value = dateParts[0];
+          month.value = dateParts[1];
+          day.value = dateParts[2];
           // 月と日が一桁の場合、表記を変更 例)09→9
           month.value = parseInt(month.value, 10);
           day.value = parseInt(day.value, 10);

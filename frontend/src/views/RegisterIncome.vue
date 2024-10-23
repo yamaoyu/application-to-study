@@ -32,7 +32,7 @@
     </div>
     <div>
       <label for="MonthlyIncome">月収(万):</label>
-      <input type="MonthlyIncome" id="MonthlyIncome" v-model="MonthlyIncome" required>
+      <input type="number" id="MonthlyIncome" v-model="MonthlyIncome" required>
     </div>
     <button type="submit">登録</button>
   </form>

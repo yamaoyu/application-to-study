@@ -2,9 +2,9 @@
   <form @submit.prevent="SendInquiry">
     <div>
       <label for="category">カテゴリ:</label><br>
-      <input type="radio" id="category" value="要望" v-model="category" required>要望
-      <input type="radio" id="category" value="エラー報告" v-model="category" required>エラー報告
-      <input type="radio" id="category" value="その他" v-model="category" required>その他
+      <input type="radio" id="category-request" value="要望" v-model="category" required>要望
+      <input type="radio" id="category-error" value="エラー報告" v-model="category" required>エラー報告
+      <input type="radio" id="category-other" value="その他" v-model="category" required>その他
     </div>
     <div>
       <label for="detail">詳細(最大256文字):</label><br>

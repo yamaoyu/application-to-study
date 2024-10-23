@@ -61,7 +61,7 @@ export default {
     const date = today.getDate();
     const activity_msg = ref("")
     const salary_msg = ref("")
-    const todos = ref("")
+    const todos = ref([])
     const todo_msg = ref("")
     const url = ref("")
     const router = useRouter()
