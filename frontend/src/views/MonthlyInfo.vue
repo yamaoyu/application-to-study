@@ -1,9 +1,14 @@
 <template>
-  <h3>月ごとの活動実績</h3>
-  <div>
+  <div style="white-space: pre-wrap;" v-if="message" class="message">
+    <h3>月ごとの活動実績</h3>
     <p v-if="message" class="message">{{ message }}</p>
-    <p v-if="year" class="year">{{ year }}</p>
-    <p v-if="month" class="month">{{ month }}</p>
+  </div>
+  <div v-if="activities.length > 0" class="activities">
+    <h3>活動状況(日別)</h3>
+    <ul v-for="(activity, index) in activities" :key="index" class="activity">
+      <p>{{ activity.date }}</p>
+      <p>目標時間:{{ activity.target_time }}時間 活動時間:{{ activity.actual_time }}時間 ステータス:{{ activity.is_achieved }}</p>
+    </ul>
   </div>
   <form @submit.prevent="GetMonthlyInfo">
     <div>
@@ -66,6 +71,7 @@ export default {
     const message = ref("")
     const url = ref("")
     const router = useRouter()
+    const activities = ref([])
 
 
     const GetMonthlyInfo = async() =>{
@@ -73,7 +79,11 @@ export default {
           url.value = 'http://localhost:8000/activities/' + year.value + '/' + month.value;
           const response = await axios.get(url.value)
           if (response.status===200){
-            message.value = response.data
+            message.value = "合計:" + response.data.total_monthly_income + "万円\n";
+            message.value += "内訳\n" + "月収:" + response.data.base_income + "万円\n";
+            message.value += "ボーナス合計:" + response.data.total_bonus + "万円\n";
+            message.value += "目標達成日数:" + response.data.success_days + "日\n";
+            activities.value = response.data.activity_lists;
           }
       } catch (error){
         if (error.response.status===401){
@@ -93,6 +103,7 @@ export default {
       message,
       year,
       month,
+      activities,
       GetMonthlyInfo
     }
   }
