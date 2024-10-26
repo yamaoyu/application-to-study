@@ -72,11 +72,12 @@ export default {
           url.value = 'http://localhost:8000/activities/' + year + '/' + month + '/' + date;
           const activity_res = await axios.get(url.value)
           if (activity_res.status===200){
-            activity_msg.value = activity_res.data.date
-            activity_msg.value += "\n目標時間:" + activity_res.data.target_time + "時間"
-            activity_msg.value += "\n活動時間:" + activity_res.data.actual_time + "時間"
-            activity_msg.value += "\nステータス:" + activity_res.data.is_achieved
-            activity_msg.value += "\nボーナス:" + (activity_res.data.bonus * 10) + "千円"
+            activity_msg.value = [activity_res.data.date,
+                                  `\n目標時間:${activity_res.data.target_time}時間`,
+                                  `\n活動時間:${activity_res.data.actual_time}時間`,
+                                  `\nステータス:${activity_res.data.is_achieved}`,
+                                  `\nボーナス:${(activity_res.data.bonus * 10)}千円`
+            ].join('');
           }
         } catch (act_err) {
           switch (act_err.response.status){
@@ -100,9 +101,10 @@ export default {
           url.value = 'http://localhost:8000/earnings/' + year + '/' + month;
           const earn_res = await axios.get(url.value)
           if (earn_res.status===200){
-            salary_msg.value = "今月の月収:" + earn_res.data["今月の詳細"].monthly_income + "万円"
-            salary_msg.value += "\n合計ボーナス:" + (earn_res.data["今月の詳細"].bonus * 10000) + "円"
-            salary_msg.value += "\nボーナス換算後の月収:" + earn_res.data["ボーナス換算後の月収"] + "万円"
+            salary_msg.value = [`今月の月収:${earn_res.data["今月の詳細"].monthly_income}万円`,
+                                `\n合計ボーナス:${(earn_res.data["今月の詳細"].bonus * 10000)}円`,
+                                `\nボーナス換算後の月収:${earn_res.data["ボーナス換算後の月収"]}万円`
+          ].join('');
           }
         } catch (earn_err) {
           switch (earn_err.response.status){

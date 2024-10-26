@@ -79,10 +79,11 @@ export default {
           url.value = 'http://localhost:8000/activities/' + year.value + '/' + month.value;
           const response = await axios.get(url.value)
           if (response.status===200){
-            message.value = "合計:" + response.data.total_monthly_income + "万円\n";
-            message.value += "内訳\n" + "月収:" + response.data.base_income + "万円\n";
-            message.value += "ボーナス合計:" + response.data.total_bonus + "万円\n";
-            message.value += "目標達成日数:" + response.data.success_days + "日\n";
+            message.value = [`合計:${response.data.total_monthly_income}万円\n`,
+                            `内訳\n`,
+                            `月収:${response.data.base_income}万円\n`,
+                            `ボーナス合計:${response.data.total_bonus}万円\n`,
+                            `目標達成日数:${response.data.success_days}日`].join('');
             activities.value = response.data.activity_lists;
           }
       } catch (error){
