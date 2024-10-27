@@ -3,8 +3,8 @@ from pydantic import BaseModel, Field
 
 class RegisterActivities(BaseModel):
     date: str
-    target_time: float = Field(ge=0.5, le=12.5)
-    actual_time: float = Field(ge=0.0, le=12.5)  # 目標時間設定時は0が入るため
+    target_time: float = Field(ge=0.5, le=12.0)
+    actual_time: float = Field(ge=0.0, le=12.0)  # 目標時間設定時は0が入るため
     is_achieved: bool
     message: str
 

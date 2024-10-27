@@ -16,11 +16,11 @@ router = APIRouter()
 
 
 @router.get("/activities/{year}/{month}/{day}", status_code=200)
-def get_ay_activities(year: str,
-                      month: str,
-                      day: str,
-                      db: Session = Depends(get_db),
-                      current_user: dict = Depends(get_current_user)):
+def get_day_activities(year: str,
+                       month: str,
+                       day: str,
+                       db: Session = Depends(get_db),
+                       current_user: dict = Depends(get_current_user)):
     """ 特定日の活動実績を確認する """
     try:
         date = set_date_format(year, month, day)
@@ -229,7 +229,7 @@ def get_month_activities(year: str,
                 "base_income": salary.monthly_income,
                 "total_bonus": salary.bonus,
                 "success_days": len(success_days),
-                "activity_lists": activity}
+                "activity_list": activity}
     except HTTPException as http_e:
         raise http_e
     except NoResultFound:

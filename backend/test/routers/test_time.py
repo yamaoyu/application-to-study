@@ -264,9 +264,9 @@ def test_get_month_acitivities(client, get_headers):
                                "base_income": test_monthly_income,
                                "total_bonus": test_bonus,
                                "success_days": 1,
-                               "activity_lists": [{"activity_id": 1,
-                                                   "date": "2024-05-05",
-                                                   "target_time": 5.0,
-                                                   "actual_time": 5.0,
-                                                   "is_achieved": True,
-                                                   "username": test_username}]}
+                               "activity_list": [{"activity_id": 1,
+                                                  "date": "2024-05-05",
+                                                  "target_time": 5.0,
+                                                  "actual_time": 5.0,
+                                                  "is_achieved": True,
+                                                  "username": test_username}]}
