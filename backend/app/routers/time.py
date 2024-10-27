@@ -64,7 +64,7 @@ def register_target_time(target: TargetTimeIn,
         date = set_date_format(year, month, day)
         if not is_valid_input_time(target_time):
             raise HTTPException(status_code=400,
-                                detail="入力時間は0.5~12.5の範囲で入力してください")
+                                detail="0.5~12.0の範囲で入力してください\n0.5単位で入力できます")
 
         insert_data = db_model.Activity(
             date=date, target_time=target_time, username=username)
@@ -105,7 +105,7 @@ def update_actual_time(actual: ActualTimeIn,
         date = set_date_format(year, month, day)
         if not is_valid_input_time(actual_time):
             raise HTTPException(status_code=400,
-                                detail="入力時間は0.5~12.5の範囲で入力してください")
+                                detail="0.5~12.0の範囲で入力してください\n0.5単位で入力できます")
 
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date,

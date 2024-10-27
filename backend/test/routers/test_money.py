@@ -4,7 +4,7 @@ from conftest import test_username
 from lib.security import create_access_token
 
 # テストで使用する変数
-another_test_user = "another testuser"
+another_test_user = "testuser2"
 test_password = "password"
 test_year = "2024"
 test_month = "6"
