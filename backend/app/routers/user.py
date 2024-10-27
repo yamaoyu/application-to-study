@@ -1,14 +1,14 @@
 import traceback
 from db import db_model
-from lib.security import (get_password_hash,
-                          verify_password)
+from lib.security import (get_password_hash, get_token, get_current_user,
+                          admin_only, verify_password)
 from db.database import get_db
 from lib.log_conf import logger
+from lib.check_data import check_user_login_data
 from sqlalchemy.orm import Session
 from app.models.user_model import UserInfo, ResponseCreatedUser
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from fastapi import APIRouter, HTTPException, Depends
-from lib.security import get_token, get_current_user, admin_only
 
 
 router = APIRouter()
@@ -40,9 +40,7 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
         email = user.email
         valid_roles = ["admin", "general"]
         role = user.role if user.role in valid_roles else "general"
-        if not (6 <= len(plain_password) <= 12):
-            raise HTTPException(status_code=400,
-                                detail="パスワードは6文字以上、12文字以下としてください")
+        check_user_login_data(username, plain_password)
         hash_password = get_password_hash(plain_password)
         form_data = db_model.User(
             username=username, password=hash_password, email=email, role=role)
@@ -84,9 +82,7 @@ def create_admin_user(user: UserInfo,
         username = user.username
         plain_password = user.password
         email = user.email
-        if not (6 <= len(plain_password) <= 12):
-            raise HTTPException(status_code=400,
-                                detail="パスワードは6文字以上、12文字以下としてください")
+        check_user_login_data(username, plain_password)
         hash_password = get_password_hash(plain_password)
         form_data = db_model.User(
             username=username, password=hash_password,

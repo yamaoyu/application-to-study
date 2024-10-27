@@ -4,7 +4,7 @@ from conftest import test_username
 from lib.security import create_access_token
 
 # 以下の変数はconftestで作成していないユーザー用で値を変更しない
-another_test_user = "another testuser"
+another_test_user = "testuser2"
 test_password = "password"
 test_action = "create test"
 
