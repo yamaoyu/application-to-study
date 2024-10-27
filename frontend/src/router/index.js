@@ -1,14 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import RegisterUser from '../components/RegisterUser.vue'
-import HelloWorld from '../components/HelloWorld.vue'
-import LoginView from '../components/LoginForm.vue'
-import UserHomeView from '../components/UserHome.vue'
-import RegisterIncome from '../components/RegisterIncome.vue'
-import RegisterTarget from '../components/RegisterTarget.vue'
-import RegisterActual from '../components/RegisterActual.vue'
-import MonthlyInfo from '../components/MonthlyInfo.vue'
-import RegisterTodo from '../components/RegisterTodo.vue'
-import finishActivity from '../components/FinishActivity.vue'
+import RegisterUser from '../views/RegisterUser.vue'
+import LoginView from '../views/LoginForm.vue'
+import UserHomeView from '../views/UserHome.vue'
+import RegisterIncome from '../views/RegisterIncome.vue'
+import RegisterTarget from '../views/RegisterTarget.vue'
+import RegisterActual from '../views/RegisterActual.vue'
+import MonthlyInfo from '../views/MonthlyInfo.vue'
+import RegisterTodo from '../views/RegisterTodo.vue'
+import finishActivity from '../views/FinishActivity.vue'
+import InquiryForm from '../views/InquiryForm.vue'
 
 const routes = [
   {
@@ -16,11 +16,6 @@ const routes = [
     name: 'RegisterUser',
     component: RegisterUser
   
-  },
-  {
-    path: '/',
-    name: 'HelloWord',
-    component: HelloWorld
   },
   {
     path:'/login',
@@ -61,6 +56,11 @@ const routes = [
     path:"/finish/activity",
     name:"finishActivity",
     component:finishActivity
+  },
+  {
+    path:"/form/inquiry",
+    name:"InquiryForm",
+    component:InquiryForm
   }
 ]
 

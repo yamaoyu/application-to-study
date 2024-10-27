@@ -1,19 +1,22 @@
 <template>
-    <form @submit.prevent="UserLogin">
-      <div>
-        <label for="username">ユーザー名:</label>
-        <input type="text" id="username" v-model="username" required>
-      </div>
-      <div>
-        <label for="password">パスワード:</label>
-        <input type="password" id="password" v-model="password" required>
-      </div>
-      <button type="submit">ログイン</button>
-    </form>
+  <form @submit.prevent="UserLogin">
     <div>
-      <p v-if="message" class="message">{{ message }}</p>
+      <label for="username">ユーザー名:</label>
+      <input type="text" id="username" v-model="username" required>
     </div>
-  </template>
+    <div>
+      <label for="password">パスワード:</label>
+      <input type="password" id="password" v-model="password" required>
+    </div>
+    <button type="submit">ログイン</button>
+  </form>
+  <div>
+    <p v-if="message" class="message">{{ message }}</p>
+  </div>
+  <div>
+    <router-link to="/form/user">登録はこちら</router-link>
+  </div>
+</template>
   
   <script>
   import { ref, onMounted } from 'vue'
@@ -55,8 +58,7 @@
           axios.defaults.headers.common['Authorization'] = `${response.data.token_type} ${response.data.access_token}`
 
             router.push({
-              "path":"/home",
-              "query":{message:"ログイン成功"}})
+              "path":"/home"})
           }
         } catch (error) {
           // エラー処理（ユーザーへの通知など）

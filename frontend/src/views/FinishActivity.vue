@@ -1,24 +1,18 @@
 <template>
   <h3>活動を終了</h3>
   <form @submit.prevent="FinishActivity">
-      <div>
-        <label for="year">年:</label>
-        <input type="text" id="year" v-model="year" required>
-      </div>
-      <div>
-        <label for="month">月:</label>
-        <input type="text" id="month" v-model="month" required>
-      </div>
-      <div>
-        <label for="day">日:</label>
-        <input type="text" id="day" v-model="day" required>
-      </div>
-      <button type="submit">終了</button>
+    <div>
+      <label for="date">日付:</label>
+      <input type="date" id="date" v-model="date" required>
+    </div>
+    <button type="submit">終了</button>
   </form>
   <div>
     <p v-if="message" class="message">{{ message }}</p>
   </div>
-  <div></div>
+  <div>
+    <router-link to="/home">ホームへ戻る</router-link>
+  </div>
 </template>
 
 <script>
@@ -31,15 +25,23 @@ export default {
     const year = ref("")
     const month = ref("")
     const day = ref("")
+    const date = ref("")
     const message = ref("")
     const url = ref("")
     const router = useRouter()
 
     const FinishActivity = async() =>{
         try {
+          // 日付から年月日を取得
+          const dateParts = date.value.split('-');
+          year.value = dateParts[0];
+          month.value = dateParts[1];
+          day.value = dateParts[2];
+          // 月と日が一桁の場合、表記を変更 例)09→9
+          month.value = parseInt(month.value, 10);
+          day.value = parseInt(day.value, 10);
           url.value = 'http://localhost:8000/activities/' + year.value + '/' + month.value + '/' + day.value + '/finish';
           const response = await axios.put(url.value)
-          // ここでログイン後の処理を行う（例：トークンの保存、ページ遷移など）
           if (response.status===200){
             message.value = response.data.message
           }
@@ -62,6 +64,7 @@ export default {
       year,
       month,
       day,
+      date,
       message,
       url,
       FinishActivity
