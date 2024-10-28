@@ -112,7 +112,7 @@ def test_get_all_todo_without_register(client, get_headers):
     """ 作成したタスクが1つもない状態でget """
     response = client.get("/todos", headers=get_headers)
     assert response.status_code == 404
-    assert response.json() == {"detail": "登録された情報はありません。"}
+    assert response.json() == {"detail": "登録された情報はありません"}
 
 
 def test_get_specific_todo(client, get_headers):
@@ -133,7 +133,7 @@ def test_get_todo_by_another_user(client, get_headers):
     headers = {"Authorization": f"Bearer {access_token}"}
     response = client.get("/todos/1", headers=headers)
     assert response.status_code == 404
-    assert response.json() == {"detail": "1の情報は未登録です。"}
+    assert response.json() == {"detail": "1の情報は未登録です"}
 
 
 def test_delete_todo(client, get_headers):

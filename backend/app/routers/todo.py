@@ -47,7 +47,7 @@ def get_all_todo(db: Session = Depends(get_db),
             db_model.Todo.username == current_user['username']).all()
         if not todo:
             raise HTTPException(status_code=404,
-                                detail="登録された情報はありません。")
+                                detail="登録された情報はありません")
         logger.info(f"ユーザー名:{current_user['username']}  Todoを全て取得")
         return todo
     except HTTPException as http_e:
@@ -68,7 +68,7 @@ def get_specific_todo(todo_id: int,
             db_model.Todo.username == current_user['username']).one_or_none()
         if not todo:
             raise HTTPException(status_code=404,
-                                detail=f"{todo_id}の情報は未登録です。")
+                                detail=f"{todo_id}の情報は未登録です")
         logger.info(f"Todoを取得:{current_user['username']}:ID{todo.todo_id}")
         return todo
     except HTTPException as http_e:
