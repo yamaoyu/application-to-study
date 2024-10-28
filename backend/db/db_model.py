@@ -44,7 +44,7 @@ class User(Base):
     __tablename__ = "users"
     username = Column(VARCHAR(16), primary_key=True)
     password = Column(CHAR(60), nullable=False)
-    email = Column(VARCHAR(32), unique=True)
+    email = Column(VARCHAR(32))
     role = Column(Enum("admin", "general"), default="general")
 
     earnings = relationship('Earning', back_populates='user')
