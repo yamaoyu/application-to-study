@@ -40,7 +40,7 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
         email = user.email
         valid_roles = ["admin", "general"]
         role = user.role if user.role in valid_roles else "general"
-        check_user_login_data(username, plain_password)
+        check_user_login_data(username, plain_password, email)
         hash_password = get_password_hash(plain_password)
         form_data = db_model.User(
             username=username, password=hash_password, email=email, role=role)
@@ -82,7 +82,7 @@ def create_admin_user(user: UserInfo,
         username = user.username
         plain_password = user.password
         email = user.email
-        check_user_login_data(username, plain_password)
+        check_user_login_data(username, plain_password, email)
         hash_password = get_password_hash(plain_password)
         form_data = db_model.User(
             username=username, password=hash_password,

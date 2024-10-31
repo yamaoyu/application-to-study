@@ -37,11 +37,14 @@ def is_valid_input_time(time):
     return False
 
 
-def check_user_login_data(username, plain_password):
+def check_user_login_data(username, plain_password, email):
     """ ユーザー作成時のデータの整合性を確認 """
-    if not (3 <= len(username) <= 12):
+    if not (3 <= len(username) <= 16):
         raise HTTPException(status_code=400,
-                            detail="パスワードは6文字以上、12文字以下としてください")
+                            detail="ユーザー名は3文字以上、16文字以下としてください")
     if not (6 <= len(plain_password) <= 12):
         raise HTTPException(status_code=400,
-                            detail="パスワードは6文字以上、12文字以下としてください")
+                            detail="パスワードは6文字以上、16文字以下としてください")
+    if email is not None and "@" not in email:
+        raise HTTPException(status_code=400,
+                            detail="正しいメールアドレスを入力してください")
