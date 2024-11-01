@@ -8,7 +8,7 @@ from db import db_model
 from db.database import get_db
 from lib.security import get_current_user
 from lib.log_conf import logger
-from lib.check_data import set_date_format, is_valid_input_time
+from lib.check_data import set_date_format
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound, IntegrityError
 
@@ -62,9 +62,6 @@ def register_target_time(target: TargetTimeIn,
         username = current_user["username"]
         target_time = target.target_time
         date = set_date_format(year, month, day)
-        if not is_valid_input_time(target_time):
-            raise HTTPException(status_code=400,
-                                detail="0.5~12.0の範囲で入力してください\n0.5単位で入力できます")
 
         insert_data = db_model.Activity(
             date=date, target_time=target_time, username=username)
@@ -103,9 +100,6 @@ def update_actual_time(actual: ActualTimeIn,
     try:
         actual_time = actual.actual_time
         date = set_date_format(year, month, day)
-        if not is_valid_input_time(actual_time):
-            raise HTTPException(status_code=400,
-                                detail="0.5~12.0の範囲で入力してください\n0.5単位で入力できます")
 
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date,
