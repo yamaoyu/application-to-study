@@ -27,16 +27,6 @@ def set_date_format(year, month, day=None):
     return date
 
 
-def is_valid_input_time(time):
-    """ 目標時間と活動時間が12時間以内かつ、小数点第一位が0か5であることを確認する """
-    if time > 12:
-        return False
-    time_str = str(time)
-    if re.match(r"^((1[0-2]|\d)\.[0|5])$", time_str):
-        return True
-    return False
-
-
 def check_user_login_data(username, plain_password, email):
     """ ユーザー作成時のデータの整合性を確認 """
     if not (3 <= len(username) <= 16):

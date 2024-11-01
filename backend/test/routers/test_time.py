@@ -88,10 +88,8 @@ def test_register_target_out_of_range(client, get_headers):
     response = client.post(f"/activities{test_date_path}/target",
                            json=data,
                            headers=get_headers)
-    assert response.status_code == 400
-    assert response.json() == {
-        "detail": "0.5~12.0の範囲で入力してください\n0.5単位で入力できます"
-    }
+    assert response.status_code == 422
+    assert response.json() == "目標時間は0.5~12.0の範囲で入力してください"
 
 
 def test_register_target_with_invalid_date(client, get_headers):
@@ -133,12 +131,12 @@ def test_register_actual_before_register_target(client, get_headers):
 def test_register_actual_with_invalid_hour(client, get_headers):
     """ 時間を1x.0or5、もしくはx.0or5の形で入力していない場合 """
     setup_target_time_for_test(client, get_headers)
-    data = {"target_time": 5.2}
-    response = client.post("/activities/2024/5/5/target",
-                           json=data,
-                           headers=get_headers)
-    assert response.status_code == 400
-    assert response.json() == {"detail": "0.5~12.0の範囲で入力してください\n0.5単位で入力できます"}
+    data = {"actual_time": 5.2}
+    response = client.put("/activities/2024/5/5/actual",
+                          json=data,
+                          headers=get_headers)
+    assert response.status_code == 422
+    assert response.json() == "活動時間は0.5時間単位で入力してください"
 
 
 def test_register_actual_after_finish(client, get_headers):
