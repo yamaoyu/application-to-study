@@ -270,3 +270,20 @@ def test_get_month_acitivities(client, get_headers):
                                                   "actual_time": 5.0,
                                                   "is_achieved": True,
                                                   "username": test_username}]}
+
+
+def test_get_all_acitivities(client, get_headers):
+    """ 対象ユーザーのすべての情報を取得 """
+    setup_target_time_for_test(client, get_headers)
+    setup_actual_time_for_test(client, get_headers)
+    setup_monthly_income_for_test(client, get_headers)
+    setup_finish_activity_for_test(client, get_headers)
+    total_monthly_income = test_monthly_income + test_bonus
+    response = client.get("/activities/total",
+                          headers=get_headers)
+    assert response.status_code == 200
+    assert response.json() == {"total_monthly_income": total_monthly_income,
+                               "total_base_income": test_monthly_income,
+                               "total_bonus": test_bonus,
+                               "success_days": 1,
+                               "fail_days": 0}
