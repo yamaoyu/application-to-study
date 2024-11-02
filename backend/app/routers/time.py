@@ -206,29 +206,64 @@ def get_month_activities(year: str,
         else:
             end_date = datetime(int(year), int(month) + 1, 1).date()
 
-        activity = db.query(db_model.Activity).filter(
+        activities = db.query(db_model.Activity).filter(
             db_model.Activity.date.between(start_date, end_date),
             db_model.Activity.username == current_user["username"]).order_by(
                 db_model.Activity.date).all()
-        if not activity:
+        if not activities:
             raise HTTPException(status_code=404,
                                 detail=f"{year_month}内の活動は登録されていません")
-        salary = db.query(db_model.Earning).filter(
+        earning = db.query(db_model.Earning).filter(
             db_model.Earning.year_month == year_month,
             db_model.Earning.username == current_user["username"]).one()
-        total_monthly_income = salary.monthly_income + salary.bonus
-        success_days = [act for act in activity if act.is_achieved is True]
+        total_monthly_income = earning.monthly_income + earning.bonus
+        success_days = [act for act in activities if act.is_achieved is True]
         logger.info(f"{current_user['username']}が{year_month}の活動実績を取得")
         return {"total_monthly_income": total_monthly_income,
-                "base_income": salary.monthly_income,
-                "total_bonus": salary.bonus,
+                "base_income": earning.monthly_income,
+                "total_bonus": earning.bonus,
                 "success_days": len(success_days),
-                "activity_list": activity}
+                "activity_list": activities}
     except HTTPException as http_e:
         raise http_e
     except NoResultFound:
         raise HTTPException(status_code=404,
                             detail=f"{year_month}の給料は登録されていません")
+    except Exception:
+        logger.error(f"月別の活動実績の取得に失敗しました\n{traceback.format_exc()}")
+        raise HTTPException(
+            status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
+
+
+@router.get("/activities/total/", status_code=200)
+def get_total_activity_result(db: Session = Depends(get_db),
+                              current_user: dict = Depends(get_current_user)):
+    """ 全期間のデータを取得 """
+    try:
+        # 検索範囲の指定
+        activities = db.query(db_model.Activity).filter(
+            db_model.Activity.username == current_user["username"]).order_by(
+                db_model.Activity.date).all()
+        if not activities:
+            raise HTTPException(status_code=404,
+                                detail=f"{current_user['username']}の活動は登録されていません")
+        earnings = db.query(db_model.Earning).filter(
+            db_model.Earning.username == current_user["username"]).all()
+        if not earnings:
+            raise HTTPException(status_code=404,
+                                detail=f"{current_user['username']}の給料は登録されていません")
+        total_base_income = sum([earning.monthly_income for earning in earnings])
+        total_bonus = sum([earning.bonus for earning in earnings])
+        total_monthly_income = total_base_income + total_bonus
+        success_days = [act for act in activities if act.is_achieved is True]
+        logger.info(f"{current_user['username']}が全期間の活動実績を取得")
+        return {"total_monthly_income": total_monthly_income,
+                "total_base_income": total_base_income,
+                "total_bonus": total_bonus,
+                "success_days": len(success_days),
+                "fail_days": len(activities) - len(success_days)}
+    except HTTPException as http_e:
+        raise http_e
     except Exception:
         logger.error(f"月別の活動実績の取得に失敗しました\n{traceback.format_exc()}")
         raise HTTPException(
