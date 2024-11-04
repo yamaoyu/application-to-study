@@ -1,4 +1,9 @@
 Generic single-database configuration.
+## 概要
+"study_app"と"test_study_app"の2つのテーブルをのバージョンを管理する。
+"test_study_app"はpytestにて自動テストを実行する時のみに使用するテーブルであり、"study_app"と定義は全く同じ。
+そのため、同じAlembicの環境で管理する。
+
 ## 設定手順　
 ### 1.Alembic環境の作成
 手動で実行することはなく、settings.shにてalembicフォルダがない場合は自動で"alembic init alembic"が実行される。
