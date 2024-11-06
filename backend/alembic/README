@@ -2,19 +2,23 @@ Generic single-database configuration.
 ## 概要
 "study_app"と"test_study_app"の2つのテーブルをのバージョンを管理する。
 "test_study_app"はpytestにて自動テストを実行する時のみに使用するテーブルであり、"study_app"と定義は全く同じ。
-そのため、同じAlembicの環境で管理する。
+しかし、"test_study_app"のテーブルはテスト実行時に作成され、終了時に削除される。
+そのため、alembicコマンドでDBを管理する対象は"study_app"のみとなる。
 
 ## 設定手順　
 ### 1.Alembic環境の作成
 手動で実行することはなく、settings.shにてalembicフォルダがない場合は自動で"alembic init alembic"が実行される。
 
-### 2.接続先を設定して実行
+### 3."2"で作成したスクリプトをDBへ反映
 alembic.iniでは"sqlalchemy.url = %(DB_URL)"となっており、動的に接続先を切り替えることができる。
-そのため、exportで環境変数"DB_URL"を設定し、マイグレーションを実行する。
-以下は例
+そのため、環境変数"DB_URL"を設定し、マイグレーションを実行する。
+#### dockerを使用しない場合の例
 '''
 export DB_URL="DBのURL"
 alembic upgrade head
 '''
 
-:::本番用とテスト用で２度実行する必要がある。
+#### dockerを使用する場合の例
+'''
+docker-compose exec -e DB_URL=${DATABASE_URL} web alembic upgrade head
+'''

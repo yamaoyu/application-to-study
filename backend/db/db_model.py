@@ -17,16 +17,16 @@ class Activity(Base):
     user = relationship('User', back_populates='activities')
 
 
-class Earning(Base):
-    __tablename__ = "earnings"
+class Income(Base):
+    __tablename__ = "incomes"
     income_id = Column(Integer, primary_key=True, autoincrement=True)
     year_month = Column(CHAR(7))
-    monthly_income = Column(Float(4, 1))
+    salary = Column(Float(4, 1))
     bonus = Column(Float(3, 1))
     username = Column(VARCHAR(16), ForeignKey("users.username"))
     __table_args__ = (UniqueConstraint(year_month, username),)
 
-    user = relationship('User', back_populates='earnings')
+    user = relationship('User', back_populates='incomes')
 
 
 class Todo(Base):
@@ -47,7 +47,7 @@ class User(Base):
     email = Column(VARCHAR(32))
     role = Column(Enum("admin", "general"), default="general")
 
-    earnings = relationship('Earning', back_populates='user')
+    incomes = relationship('Income', back_populates='user')
     todos = relationship('Todo', back_populates='user')
     activities = relationship('Activity', back_populates='user')
     tokens = relationship('Token', back_populates='user')

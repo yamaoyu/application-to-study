@@ -4,7 +4,7 @@ from conftest import test_username
 from lib.security import create_access_token
 
 # セットアップ用変数
-test_monthly_income = 23.0
+test_salary = 23.0
 test_bonus = 0.1
 test_date_path = "/2024/5/5"
 test_date = "2024-5-5"
@@ -32,10 +32,10 @@ def setup_finish_activity_for_test(client, get_headers):
 
 
 def setup_monthly_income_for_test(client, get_headers):
-    data = {"monthly_income": test_monthly_income,
+    data = {"salary": test_salary,
             "year": test_year,
             "month": test_month}
-    client.post("/earnings",
+    client.post("/incomes",
                 json=data,
                 headers=get_headers)
 
@@ -256,12 +256,12 @@ def test_get_month_acitivities(client, get_headers):
     setup_actual_time_for_test(client, get_headers)
     setup_monthly_income_for_test(client, get_headers)
     setup_finish_activity_for_test(client, get_headers)
-    total_monthly_income = test_monthly_income + test_bonus
+    total_monthly_income = test_salary + test_bonus
     response = client.get("/activities/2024/5",
                           headers=get_headers)
     assert response.status_code == 200
     assert response.json() == {"total_monthly_income": total_monthly_income,
-                               "base_income": test_monthly_income,
+                               "salary": test_salary,
                                "total_bonus": test_bonus,
                                "success_days": 1,
                                "activity_list": [{"activity_id": 1,
@@ -282,8 +282,8 @@ def test_get_all_acitivities(client, get_headers):
     response = client.get("/activities/total",
                           headers=get_headers)
     assert response.status_code == 200
-    assert response.json() == {"total_monthly_income": total_monthly_income,
-                               "total_base_income": test_monthly_income,
+    assert response.json() == {"total_income": total_monthly_income,
+                               "total_salary": test_monthly_income,
                                "total_bonus": test_bonus,
                                "success_days": 1,
                                "fail_days": 0}

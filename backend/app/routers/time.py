@@ -160,9 +160,9 @@ def finish_activity(year: str,
             raise HTTPException(status_code=400, detail=f"{date}の実績は登録済みです")
         # 達成している場合はEarningテーブルのボーナスを加算する。
         if actual_time >= target_time:
-            salary = db.query(db_model.Earning).filter(
-                db_model.Earning.year_month == year_month,
-                db_model.Earning.username == current_user["username"]).one()
+            salary = db.query(db_model.Income).filter(
+                db_model.Income.year_month == year_month,
+                db_model.Income.username == current_user["username"]).one()
             activity.is_achieved = True
             message = "目標達成！ボーナス追加！"
             salary.bonus = float(salary.bonus) + 0.1
@@ -213,15 +213,15 @@ def get_month_activities(year: str,
         if not activities:
             raise HTTPException(status_code=404,
                                 detail=f"{year_month}内の活動は登録されていません")
-        earning = db.query(db_model.Earning).filter(
-            db_model.Earning.year_month == year_month,
-            db_model.Earning.username == current_user["username"]).one()
-        total_monthly_income = earning.monthly_income + earning.bonus
+        fetch_salary = db.query(db_model.Income).filter(
+            db_model.Income.year_month == year_month,
+            db_model.Income.username == current_user["username"]).one()
+        total_monthly_income = fetch_salary.salary + fetch_salary.bonus
         success_days = [act for act in activities if act.is_achieved is True]
         logger.info(f"{current_user['username']}が{year_month}の活動実績を取得")
         return {"total_monthly_income": total_monthly_income,
-                "base_income": earning.monthly_income,
-                "total_bonus": earning.bonus,
+                "salary": fetch_salary.salary,
+                "total_bonus": fetch_salary.bonus,
                 "success_days": len(success_days),
                 "activity_list": activities}
     except HTTPException as http_e:
@@ -247,18 +247,18 @@ def get_total_activity_result(db: Session = Depends(get_db),
         if not activities:
             raise HTTPException(status_code=404,
                                 detail=f"{current_user['username']}の活動は登録されていません")
-        earnings = db.query(db_model.Earning).filter(
-            db_model.Earning.username == current_user["username"]).all()
-        if not earnings:
+        fetch_salaries = db.query(db_model.Income).filter(
+            db_model.Income.username == current_user["username"]).all()
+        if not fetch_salaries:
             raise HTTPException(status_code=404,
                                 detail=f"{current_user['username']}の給料は登録されていません")
-        total_base_income = sum([earning.monthly_income for earning in earnings])
-        total_bonus = sum([earning.bonus for earning in earnings])
-        total_monthly_income = total_base_income + total_bonus
+        total_salary = sum([earning.salary for earning in fetch_salaries])
+        total_bonus = sum([earning.bonus for earning in fetch_salaries])
+        total_income = total_salary + total_bonus
         success_days = [act for act in activities if act.is_achieved is True]
         logger.info(f"{current_user['username']}が全期間の活動実績を取得")
-        return {"total_monthly_income": total_monthly_income,
-                "total_base_income": total_base_income,
+        return {"total_income": total_income,
+                "total_salary": total_salary,
                 "total_bonus": total_bonus,
                 "success_days": len(success_days),
                 "fail_days": len(activities) - len(success_days)}
