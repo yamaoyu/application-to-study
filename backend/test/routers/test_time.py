@@ -264,6 +264,7 @@ def test_get_month_acitivities(client, get_headers):
                                "salary": test_salary,
                                "total_bonus": test_bonus,
                                "success_days": 1,
+                               "fail_days": 0,
                                "activity_list": [{"activity_id": 1,
                                                   "date": "2024-05-05",
                                                   "target_time": 5.0,
@@ -278,12 +279,12 @@ def test_get_all_acitivities(client, get_headers):
     setup_actual_time_for_test(client, get_headers)
     setup_monthly_income_for_test(client, get_headers)
     setup_finish_activity_for_test(client, get_headers)
-    total_monthly_income = test_monthly_income + test_bonus
+    total_monthly_income = test_salary + test_bonus
     response = client.get("/activities/total",
                           headers=get_headers)
     assert response.status_code == 200
     assert response.json() == {"total_income": total_monthly_income,
-                               "total_salary": test_monthly_income,
+                               "total_salary": test_salary,
                                "total_bonus": test_bonus,
                                "success_days": 1,
                                "fail_days": 0}

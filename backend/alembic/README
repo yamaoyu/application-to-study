@@ -9,6 +9,19 @@ Generic single-database configuration.
 ### 1.Alembic環境の作成
 手動で実行することはなく、settings.shにてalembicフォルダがない場合は自動で"alembic init alembic"が実行される。
 
+### 2. revisionの作成
+#### dockerを使用しない場合の例
+'''
+export DB_URL="DBのURL"
+alembic revision (--autogenerate) -m "メッセージ"
+'''
+
+#### dockerを使用する場合の例
+
+'''
+docker-compose exec -e DB_URL=${DATABASE_URL} web alembic revision (--autogenerate) -m "メッセージ"
+'''
+
 ### 3."2"で作成したスクリプトをDBへ反映
 alembic.iniでは"sqlalchemy.url = %(DB_URL)"となっており、動的に接続先を切り替えることができる。
 そのため、環境変数"DB_URL"を設定し、マイグレーションを実行する。
