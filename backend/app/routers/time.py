@@ -223,6 +223,7 @@ def get_month_activities(year: str,
                 "salary": fetch_salary.salary,
                 "total_bonus": fetch_salary.bonus,
                 "success_days": len(success_days),
+                "fail_days": len(activities) - len(success_days),
                 "activity_list": activities}
     except HTTPException as http_e:
         raise http_e
