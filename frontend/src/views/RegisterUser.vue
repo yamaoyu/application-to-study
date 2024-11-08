@@ -40,7 +40,7 @@
             password: password.value,
             email: email.value
           })
-          if (response.status===200){
+          if (response.status===201){
             router.push({
             path:'/login', 
             query : { message:response.data.message }})
