@@ -98,10 +98,10 @@ export default {
 
         // その月の月収を取得
         try{
-          url.value = 'http://localhost:8000/earnings/' + year + '/' + month;
+          url.value = 'http://localhost:8000/incomes/' + year + '/' + month;
           const earn_res = await axios.get(url.value)
           if (earn_res.status===200){
-            salary_msg.value = [`今月の月収:${earn_res.data["今月の詳細"].monthly_income}万円`,
+            salary_msg.value = [`今月の月収:${earn_res.data["今月の詳細"].salary}万円`,
                                 `\n合計ボーナス:${(earn_res.data["今月の詳細"].bonus * 10000)}円`,
                                 `\nボーナス換算後の月収:${earn_res.data["ボーナス換算後の月収"]}万円`
           ].join('');
