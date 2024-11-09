@@ -22,7 +22,7 @@ class UserInfo(BaseModel):
 
     @field_validator("email")
     def validate_email(cls, email):
-        if len(email) > 0 and "@" not in email:
+        if email and "@" not in email:
             raise ValueError("正しいメールアドレスを入力してください")
         return email
 
