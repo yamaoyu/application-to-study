@@ -7,10 +7,11 @@ from lib.security import create_access_token
 another_test_user = "testuser2"
 test_password = "password"
 test_action = "create test"
+test_due = "2024-11-10"
 
 
 def setup_create_todo(client, get_headers):
-    data = {"action": test_action, "username": test_username}
+    data = {"action": test_action, "username": test_username, "due": test_due}
     client.post("/todos", json=data, headers=get_headers)
 
 
@@ -21,7 +22,7 @@ def setup_finish_todo(client, get_headers):
 def setup_create_another_user(client):
     user_info = {
         "username": another_test_user,
-        "password": test_password
+        "password": test_password,
     }
     client.post("/users", json=user_info)
 
@@ -37,11 +38,12 @@ def setup_login(client):
 
 
 def test_create_todo(client, get_headers):
-    data = {"action": test_action, "username": test_username}
+    data = {"action": test_action, "username": test_username, "due": test_due}
     response = client.post("/todos", json=data, headers=get_headers)
     assert response.status_code == 201
     assert response.json() == {"message": "以下の内容で作成しました",
-                               "action": test_action}
+                               "action": test_action,
+                               "due": "2024-11-10T00:00:00"}
 
 
 def test_create_todo_without_login(client):
@@ -69,7 +71,7 @@ def test_create_todo_with_expired_token(client):
 def test_create_todo_with_same_content(client, get_headers):
     """ 同じ内容を登録した場合 """
     setup_create_todo(client, get_headers)
-    data = {"action": test_action, "username": test_username}
+    data = {"action": test_action, "username": test_username, "due": test_due}
     response = client.post("/todos", json=data, headers=get_headers)
     assert response.status_code == 400
     assert response.json() == {"detail": "既に登録されている内容です"}
@@ -82,7 +84,8 @@ def test_get_all_todo(client, get_headers):
     assert response.json() == [{"todo_id": 1,
                                "action": test_action,
                                 "status": False,
-                                "username": test_username}]
+                                "username": test_username,
+                                "due": test_due}]
 
 
 def test_get_all_todo_without_login(client, get_headers):
@@ -122,7 +125,8 @@ def test_get_specific_todo(client, get_headers):
     assert response.json() == {"todo_id": 1,
                                "action": test_action,
                                "status": False,
-                               "username": test_username}
+                               "username": test_username,
+                               "due": test_due}
 
 
 def test_get_todo_by_another_user(client, get_headers):
@@ -162,7 +166,7 @@ def test_delete_todo_not_exist(client, get_headers):
 
 def test_edit_todo(client, get_headers):
     setup_create_todo(client, get_headers)
-    data = {"action": "new action"}
+    data = {"action": "new action", "due": test_due}
     response = client.put("/todos/1", json=data, headers=get_headers)
     assert response.status_code == 200
     assert response.json() == {"message": f"更新後のタスク:{data['action']}"}
@@ -174,7 +178,7 @@ def test_edit_todo_by_another_user(client, get_headers):
     setup_create_another_user(client)
     access_token = setup_login(client)
     headers = {"Authorization": f"Bearer {access_token}"}
-    data = {"action": "new action"}
+    data = {"action": "new action", "due": test_due}
     response = client.put("/todos/1", json=data, headers=headers)
     assert response.status_code == 404
     assert response.json() == {"detail": "id:1のデータは登録されていません"}

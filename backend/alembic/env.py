@@ -1,17 +1,21 @@
 import os
+import db.db_model  # noqa
 from logging.config import fileConfig
 from db.database import Base
-
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-
 from alembic import context
+
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
-config.set_section_option("alembic", "DB_URL", os.getenv("DB_URL"))
+config.set_section_option("alembic", "MYSQL_USER", os.getenv("MYSQL_USER"))
+config.set_section_option("alembic", "MYSQL_PASSWORD", os.getenv("MYSQL_PASSWORD"))
+config.set_section_option("alembic", "MYSQL_HOST", os.getenv("MYSQL_HOST"))
+config.set_section_option("alembic", "MYSQL_DATABASE", os.getenv("MYSQL_DATABASE"))
+
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

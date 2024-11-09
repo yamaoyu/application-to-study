@@ -17,14 +17,15 @@ def create_todo(todo: Todo,
                 db: Session = Depends(get_db),
                 current_user: dict = Depends(get_current_user)):
     action = todo.action
+    due = todo.due
     username = current_user['username']
     try:
-        data = db_model.Todo(action=action, username=username)
+        data = db_model.Todo(action=action, username=username, due=due)
         db.add(data)
         db.commit()
         db.refresh(data)
         logger.info(f"{username}がTodo作成 内容:{action}")
-        return {"message": "以下の内容で作成しました", "action": action}
+        return {"message": "以下の内容で作成しました", "action": action, "due": due}
     except IntegrityError as sqlalchemy_error:
         db.rollback()
         if "Duplicate entry" in str(sqlalchemy_error.orig):
@@ -107,6 +108,7 @@ def edit_todo(todo_id: int,
               db: Session = Depends(get_db),
               current_user: dict = Depends(get_current_user)):
     action = new_action.action
+    due = new_action.due
     try:
         todo = db.query(db_model.Todo).filter(
             db_model.Todo.todo_id == todo_id,
@@ -114,6 +116,7 @@ def edit_todo(todo_id: int,
         if todo.status:
             raise HTTPException(status_code=400, detail="終了したアクションは更新できません")
         todo.action = action
+        todo.due = due
         db.commit()
         logger.info(f"{current_user['username']}がTodoを編集 ID:{todo.todo_id}")
         return {"message": f"更新後のタスク:{action}"}
