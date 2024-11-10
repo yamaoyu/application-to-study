@@ -17,7 +17,7 @@ DATABASE_URL = f"mysql+pymysql://{MYSQL_USER}:{
 
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(autocommit=False, bind=engine)
 Base = declarative_base()
 
 
