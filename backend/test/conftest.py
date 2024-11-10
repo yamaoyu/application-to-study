@@ -23,7 +23,7 @@ SECRET_KEY = os.getenv(
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
 engine = create_engine(TEST_DATABASE_URL, poolclass=NullPool)
-TestSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+TestSession = sessionmaker(autocommit=False, bind=engine)
 
 
 @pytest.fixture(autouse=True, scope="function")
