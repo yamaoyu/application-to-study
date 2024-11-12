@@ -26,12 +26,12 @@ class TargetTimeIn(BaseModel):
 
 
 class ActualTimeIn(BaseModel):
-    actual_time: float = Field(ge=0.5, le=12.0)
+    actual_time: float = Field(ge=0.0, le=12.0)
 
     @field_validator("actual_time")
     def validate_actual_time(cls, actual_time):
-        if not (0.5 <= actual_time <= 12):
-            raise ValueError("活動時間は0.5~12.0の範囲で入力してください")
+        if not (0.0 <= actual_time <= 12):
+            raise ValueError("活動時間は0.0~12.0の範囲で入力してください")
 
         time_str = str(actual_time)
         if not re.match(r"^((1[0-2]|\d)\.[0|5])$", time_str):
