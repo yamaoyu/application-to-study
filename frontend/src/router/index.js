@@ -9,13 +9,13 @@ import MonthlyInfo from '../views/MonthlyInfo.vue'
 import RegisterTodo from '../views/RegisterTodo.vue'
 import finishActivity from '../views/FinishActivity.vue'
 import InquiryForm from '../views/InquiryForm.vue'
+import AllPeriodInfo from '../views/AllPeriodInfo.vue'
 
 const routes = [
   {
     path: '/form/user',
     name: 'RegisterUser',
     component: RegisterUser
-  
   },
   {
     path:'/login',
@@ -61,6 +61,11 @@ const routes = [
     path:"/form/inquiry",
     name:"InquiryForm",
     component:InquiryForm
+  },
+  {
+    path:"/all",
+    name:"AllPeriodInfo",
+    component:AllPeriodInfo
   }
 ]
 
