@@ -33,6 +33,9 @@
     <router-link to="/month">月ごとの活動記録</router-link>
   </div>
   <div>
+    <router-link to="/all">全期間の活動記録</router-link>
+  </div>
+  <div>
     <router-link to="/form/todo">Todoを登録</router-link>
   </div>
   <div>
