@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import RegisterUser from '../views/RegisterUser.vue'
 import LoginView from '../views/LoginForm.vue'
 import UserHomeView from '../views/UserHome.vue'
-import RegisterIncome from '../views/RegisterIncome.vue'
+import RegisterSalary from '../views/RegisterSalary.vue'
 import RegisterTarget from '../views/RegisterTarget.vue'
 import RegisterActual from '../views/RegisterActual.vue'
 import MonthlyInfo from '../views/MonthlyInfo.vue'
@@ -13,7 +13,7 @@ import AllPeriodInfo from '../views/AllPeriodInfo.vue'
 
 const routes = [
   {
-    path: '/form/user',
+    path: '/register/user',
     name: 'RegisterUser',
     component: RegisterUser
   },
@@ -28,27 +28,27 @@ const routes = [
     component: UserHomeView
   },
   {
-    path:'/form/income',
-    name:'RegisterIncome',
-    component: RegisterIncome
+    path:'/register/salary',
+    name:'RegisterSalary',
+    component: RegisterSalary
   },
   {
-    path:"/form/target",
+    path:"/register/target",
     name:"RegisterTarget",
     component:RegisterTarget
   },
   {
-    path:"/form/actual",
+    path:"/register/actual",
     name:"RegisterActual",
     component:RegisterActual
   },
   {
-    path:"/month",
+    path:"/view/month-activities",
     name:"MonthlyInfo",
     component:MonthlyInfo
   },
   {
-    path:"/form/todo",
+    path:"/register/todo",
     name:"RegisterTodo",
     component:RegisterTodo
   },
@@ -58,12 +58,12 @@ const routes = [
     component:finishActivity
   },
   {
-    path:"/form/inquiry",
+    path:"/register/inquiry",
     name:"InquiryForm",
     component:InquiryForm
   },
   {
-    path:"/all",
+    path:"/view/all-activities",
     name:"AllPeriodInfo",
     component:AllPeriodInfo
   }

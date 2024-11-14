@@ -14,7 +14,7 @@
     <p v-if="message" class="message">{{ message }}</p>
   </div>
   <div>
-    <router-link to="/form/user">登録はこちら</router-link>
+    <router-link to="/register/user">登録はこちら</router-link>
   </div>
 </template>
   
