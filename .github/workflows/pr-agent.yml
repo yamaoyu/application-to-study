@@ -19,7 +19,7 @@ jobs:
       - id: pr-agent
         uses: Codium-ai/pr-agent@main
         env:
-          CONFIG.MODEL: gpt-4o
+          CONFIG.MODEL: gpt-4o-mini
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           github_action.auto_describe: true
