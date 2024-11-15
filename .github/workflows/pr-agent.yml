@@ -19,7 +19,7 @@ jobs:
       - id: pr-agent
         uses: Codium-ai/pr-agent@main
         env:
-          CONFIG.MODEL: gpt-4o-mini
+          CONFIG.MODEL: gpt-4o
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           github_action.auto_describe: true
@@ -29,6 +29,7 @@ jobs:
           PR_REVIEWER.EXTRA_INSTRUCTIONS: '日本語で記述してください。'
           PR_CODE_SUGGESTIONS.EXTRA_INSTRUCTIONS: |
             あなたはPython, vue.js, MYSQLに精通したwebアプリケーションエンジニアです。
+            あなたの役割はコードの品質を確認し、エラーがなど修正すべき点があるかを調べることです。
             以下の点は必ず守ってください
             - 絶対にハルシネーションをせずに回答してください。わからないものや確証の低いものはその旨を伝えてください
             - 日本語で回答してください。絶対に日本語以外の言語は使用しないでください。
