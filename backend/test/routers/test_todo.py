@@ -43,7 +43,7 @@ def test_create_todo(client, get_headers):
     assert response.status_code == 201
     assert response.json() == {"message": "以下の内容で作成しました",
                                "action": test_action,
-                               "due": "2024-11-10T00:00:00"}
+                               "due": "2024-11-10"}
 
 
 def test_create_todo_without_login(client):
@@ -83,6 +83,20 @@ def test_get_all_todo(client, get_headers):
     assert response.status_code == 200
     assert response.json() == [{"todo_id": 1,
                                "action": test_action,
+                                "status": False,
+                                "username": test_username,
+                                "due": test_due}]
+
+
+def test_get_all_incomplete_todo(client, get_headers):
+    setup_create_todo(client, get_headers)
+    setup_finish_todo(client, get_headers)
+    data = {"action": "test_2", "username": test_username, "due": test_due}
+    client.post("/todos", json=data, headers=get_headers)
+    response = client.get("/todos?status=False", headers=get_headers)
+    assert response.status_code == 200
+    assert response.json() == [{"todo_id": 2,
+                               "action": "test_2",
                                 "status": False,
                                 "username": test_username,
                                 "due": test_due}]

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.models.todo_model import Todo
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from lib.security import get_current_user
+from typing import Optional
 
 
 router = APIRouter()
@@ -17,7 +18,8 @@ def create_todo(todo: Todo,
                 db: Session = Depends(get_db),
                 current_user: dict = Depends(get_current_user)):
     action = todo.action
-    due = todo.due
+    # dueは日付部分のみ
+    due = todo.due.date()
     username = current_user['username']
     try:
         data = db_model.Todo(action=action, username=username, due=due)
@@ -41,16 +43,20 @@ def create_todo(todo: Todo,
 
 
 @router.get("/todos", status_code=200)
-def get_all_todo(db: Session = Depends(get_db),
+def get_all_todo(status: Optional[bool] = None,
+                 db: Session = Depends(get_db),
                  current_user: dict = Depends(get_current_user)):
     try:
-        todo = db.query(db_model.Todo).filter(
-            db_model.Todo.username == current_user['username']).all()
-        if not todo:
+        sqlstatement = db.query(db_model.Todo).filter(
+            db_model.Todo.username == current_user['username'])
+        if status is not None:
+            sqlstatement = sqlstatement.filter(db_model.Todo.status == status)
+        todos = sqlstatement.all()
+        if not todos:
             raise HTTPException(status_code=404,
                                 detail="登録された情報はありません")
         logger.info(f"ユーザー名:{current_user['username']}  Todoを全て取得")
-        return todo
+        return todos
     except HTTPException as http_e:
         raise http_e
     except Exception:

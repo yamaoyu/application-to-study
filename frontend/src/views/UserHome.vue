@@ -11,7 +11,7 @@
     <h3>Todo一覧</h3>
     <template v-if="todos.length">
       <ul v-for="(todo, index) in todos" :key="index" class="todo-item">
-        <li v-if="todo.action" class="todos">{{ index + 1 }}: {{ todo.action }}</li>
+        <li v-if="todo.action" class="todos">{{ index + 1 }}: {{ todo.action }} (期限: {{ todo.due }})</li>
       </ul>
     </template>
     <p v-else>{{ todo_msg }}</p>
@@ -126,9 +126,9 @@ export default {
           }
         }
 
-        // そのユーザーのtodoを取得
+        // そのユーザーの未完了のtodoを取得
         try{
-          url.value = 'http://localhost:8000/todos/'
+          url.value = 'http://localhost:8000/todos/?status=False'
           const todo_res = await axios.get(url.value)
           if (todo_res.status===200){
             todos.value = todo_res.data;
