@@ -5,6 +5,10 @@
         <label for="action">Todo:</label>
         <input type="text" id="action" v-model="action" required>
       </div>
+      <div>
+        <label for="due">期限:</label>
+        <input type="date" id="date" v-model="due" required>
+      </div>
       <button type="submit">登録</button>
   </form>
   <div>
@@ -24,12 +28,14 @@ export default {
   setup() {
     const message = ref("")
     const action = ref("")
+    const due = ref("")
     const router = useRouter()
 
     const RegisterTodo = async() =>{
         try {
           const response = await axios.post('http://localhost:8000/todos', {
-                                            action: action.value
+                                            action: action.value,
+                                            due: due.value
                                           })
           if (response.status===201){
             message.value = response.data
@@ -52,6 +58,7 @@ export default {
     return {
       message,
       action,
+      due,
       RegisterTodo
     }
   }
