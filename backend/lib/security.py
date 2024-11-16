@@ -65,8 +65,10 @@ def create_access_token(data: dict,
         if SECRET_KEY and ALGORITHM:
             return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         else:
+            logger.error("未設定の環境変数\n"
+                         f"SECRET_KEY:{SECRET_KEY is not None}, ALGORITHM: {ALGORITHM is not None}")
             raise HTTPException(status_code=400,
-                                detail="SECRET_KEYかALGORITHMが環境変数に設定されていません")
+                                detail="トークンの作成に失敗しました")
     except HTTPException as http_e:
         raise http_e
     except Exception:
@@ -126,7 +128,7 @@ def get_current_user(token: str = Depends(oauth2_scheme),
         payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
         username = payload.get("sub")
         if username is None:
-            raise credentials_exception
+            raise HTTPException(status_code=401, detail="ユーザー名を取得できませんでした")
         user = get_user(username, db)
         if not user:
             raise HTTPException(

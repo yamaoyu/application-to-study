@@ -38,7 +38,7 @@ def register_income(income: RegisterIncome,
         if "Duplicate entry" in str(sqlalchemy_error.orig):
             raise HTTPException(status_code=400, detail="その月の月収は既に登録されています")
         raise HTTPException(
-            status_code=400, detail="Integrity errorが発生しました")
+            status_code=400, detail="データの整合性エラーが発生しました。入力データを確認してください")
     except Exception:
         logger.error(f"月収の登録処理中にエラーが発生しました\n{traceback.format_exc()}")
         db.rollback()
