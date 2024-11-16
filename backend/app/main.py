@@ -30,4 +30,4 @@ app.include_router(inquiry_router)
 def validation_exception_handler(request, exc):
     error_msg = str(exc.errors()[0]["ctx"]["error"])
     return JSONResponse(status_code=422,
-                        content=error_msg)
+                        content={"error": error_msg})

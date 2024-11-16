@@ -122,7 +122,7 @@ def get_current_user(token: str = Depends(oauth2_scheme),
     try:
         if not SECRET_KEY or not ALGORITHM:
             raise HTTPException(status_code=500,
-                                detail="SECRET_KEYかALGORITHMが環境変数に設定されていません")
+                                detail="環境変数にSECRET_KEYまたはALGORITHMが設定されていません")
         payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
         username = payload.get("sub")
         if username is None:

@@ -45,11 +45,11 @@ def test_register_income(client, get_headers):
 
 def test_register_income_with_expired_token(client):
     """ 期限の切れたトークンで月収を登録しようとした場合 """
-    def mock_create_access_token(data, expires_delta=timedelta(minutes=-30)):
+    def mock_create_expired_access_token(data, expires_delta=timedelta(minutes=-30)):
         return create_access_token(data, expires_delta)
 
-    with patch("lib.security.create_access_token", mock_create_access_token):
-        access_token = mock_create_access_token(data={"sub": test_username})
+    with patch("lib.security.create_access_token", mock_create_expired_access_token):
+        access_token = mock_create_expired_access_token(data={"sub": test_username})
         headers = {"Authorization": f"Bearer {access_token}"}
         data = {"salary": test_salary,
                 "year": test_year,
@@ -100,11 +100,11 @@ def test_get_income(client, get_headers):
 
 def test_get_income_with_expired_token(client):
     """ 期限の切れたトークンで月収を取得しようとした場合 """
-    def mock_create_access_token(data, expires_delta=timedelta(minutes=-30)):
+    def mock_create_expired_access_token(data, expires_delta=timedelta(minutes=-30)):
         return create_access_token(data, expires_delta)
 
-    with patch("lib.security.create_access_token", mock_create_access_token):
-        access_token = mock_create_access_token(data={"sub": test_username})
+    with patch("lib.security.create_access_token", mock_create_expired_access_token):
+        access_token = mock_create_expired_access_token(data={"sub": test_username})
         headers = {"Authorization": f"Bearer {access_token}"}
         year = test_year
         month = test_month

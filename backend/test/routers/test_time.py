@@ -89,7 +89,7 @@ def test_register_target_out_of_range(client, get_headers):
                            json=data,
                            headers=get_headers)
     assert response.status_code == 422
-    assert response.json() == "目標時間は0.5~12.0の範囲で入力してください"
+    assert response.json() == {"error": "目標時間は0.5~12.0の範囲で入力してください"}
 
 
 def test_register_target_with_invalid_date(client, get_headers):
@@ -136,7 +136,7 @@ def test_register_actual_with_invalid_hour(client, get_headers):
                           json=data,
                           headers=get_headers)
     assert response.status_code == 422
-    assert response.json() == "活動時間は0.5時間単位で入力してください"
+    assert response.json() == {"error": "活動時間は0.5時間単位で入力してください"}
 
 
 def test_register_actual_after_finish(client, get_headers):
@@ -237,12 +237,12 @@ def test_get_day_activities_before_register_activity(client, get_headers):
 
 def test_get_day_activities_with_expired_token(client, get_headers):
     """ 期限の切れたトークンで特定日の状況を取得しようとした場合 """
-    def mock_create_access_token(data, expires_delta=timedelta(minutes=-30)):
+    def mock_create_expired_access_token(data, expires_delta=timedelta(minutes=-30)):
         return create_access_token(data, expires_delta)
 
     setup_target_time_for_test(client, get_headers)
-    with patch("lib.security.create_access_token", mock_create_access_token):
-        access_token = mock_create_access_token(data={"sub": test_username})
+    with patch("lib.security.create_access_token", mock_create_expired_access_token):
+        access_token = mock_create_expired_access_token(data={"sub": test_username})
         headers = {"Authorization": f"Bearer {access_token}"}
         response = client.get(f"/activities{test_date_path}",
                               headers=headers)

@@ -23,7 +23,7 @@ def test_register_user_with_short_username(client):
                  "password": "testpassword"}
     response = client.post("/users", json=user_info)
     assert response.status_code == 422
-    assert response.json() == "ユーザー名は3文字以上、16文字以下としてください"
+    assert response.json() == {"error": "ユーザー名は3文字以上、16文字以下としてください"}
 
 
 def test_register_user_with_invalid_password(client):
@@ -32,7 +32,7 @@ def test_register_user_with_invalid_password(client):
                  "password": "test"}
     response = client.post("/users", json=user_info)
     assert response.status_code == 422
-    assert response.json() == "パスワードは8文字以上、16文字以下としてください"
+    assert response.json() == {"error": "パスワードは8文字以上、16文字以下としてください"}
 
 
 def test_register_user_with_invalid_email(client):
@@ -42,7 +42,7 @@ def test_register_user_with_invalid_email(client):
                  "email": "aaaaa"}
     response = client.post("/users", json=user_info)
     assert response.status_code == 422
-    assert response.json() == "正しいメールアドレスを入力してください"
+    assert response.json() == {"error": "正しいメールアドレスを入力してください"}
 
 
 def test_register_with_duplicate_user_name(client):

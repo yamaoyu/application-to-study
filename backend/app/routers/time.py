@@ -156,7 +156,7 @@ def finish_activity(year: str,
         actual_time = activity.actual_time
         year_month = f"{year}-{month}"
 
-        if activity.is_achieved is True:
+        if activity.is_achieved:
             raise HTTPException(status_code=400, detail=f"{date}の実績は登録済みです")
         # 達成している場合はEarningテーブルのボーナスを加算する。
         if actual_time >= target_time:
