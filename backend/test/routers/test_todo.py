@@ -56,11 +56,11 @@ def test_create_todo_without_login(client):
 
 def test_create_todo_with_expired_token(client):
     """ 期限の切れたトークンでタスクを作成しようとした場合 """
-    def mock_create_access_token(data, expires_delta=timedelta(minutes=-30)):
+    def mock_create_expired_access_token(data, expires_delta=timedelta(minutes=-30)):
         return create_access_token(data, expires_delta)
 
-    with patch("lib.security.create_access_token", mock_create_access_token):
-        access_token = mock_create_access_token(data={"sub": test_username})
+    with patch("lib.security.create_access_token", mock_create_expired_access_token):
+        access_token = mock_create_expired_access_token(data={"sub": test_username})
         headers = {"Authorization": f"Bearer {access_token}"}
         data = {"action": test_action, "username": test_username}
         response = client.post("/todos", json=data, headers=headers)
@@ -111,14 +111,14 @@ def test_get_all_todo_without_login(client, get_headers):
 
 def test_get_todo_with_expired_token(client, get_headers):
     """ 期限の切れたトークンでタスクを取得しようとした場合 """
-    def mock_create_access_token(data, minutes):
+    def mock_create_expired_access_token(data, minutes):
         expires_delta = timedelta(minutes=minutes)
         return create_access_token(data, expires_delta)
 
     setup_create_todo(client, get_headers)
-    with patch("lib.security.create_access_token", mock_create_access_token):
-        access_token = mock_create_access_token(data={"sub": test_username},
-                                                minutes=-30)
+    with patch("lib.security.create_access_token", mock_create_expired_access_token):
+        access_token = mock_create_expired_access_token(data={"sub": test_username},
+                                                        minutes=-30)
         headers = {"Authorization": f"Bearer {access_token}"}
         response = client.get("/todos", headers=headers)
         assert response.status_code == 401
