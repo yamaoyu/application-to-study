@@ -4,26 +4,28 @@ from fastapi import APIRouter, HTTPException, Depends
 from app.models.time_model import (
     TargetTimeIn, ActualTimeIn, RegisterActivities
 )
+from app.models.common_model import CheckDate
 from db import db_model
 from db.database import get_db
 from lib.security import get_current_user
 from lib.log_conf import logger
-from lib.check_data import set_date_format
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound, IntegrityError
+from pydantic import ValidationError
 
 router = APIRouter()
 
 
 @router.get("/activities/{year}/{month}/{day}", status_code=200)
-def get_day_activities(year: str,
-                       month: str,
-                       day: str,
+def get_day_activities(year: int,
+                       month: int,
+                       day: int,
                        db: Session = Depends(get_db),
                        current_user: dict = Depends(get_current_user)):
     """ 特定日の活動実績を確認する """
     try:
-        date = set_date_format(year, month, day)
+        CheckDate(year=year, month=month, day=day)
+        date = f"{year}-{month}-{day}"
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date,
             db_model.Activity.username == current_user["username"]).one()
@@ -38,10 +40,11 @@ def get_day_activities(year: str,
                 "actual_time": actual_time,
                 "is_achieved": is_achieved,
                 "bonus": bonus}
-    except HTTPException as http_e:
-        raise http_e
     except NoResultFound:
         raise HTTPException(status_code=404, detail=f"{date}の情報は未登録です")
+    except ValidationError as validate_e:
+        error_msg = str(validate_e.errors()[0]["ctx"]["error"])
+        raise HTTPException(status_code=422, detail=error_msg)
     except Exception:
         logger.error(f"日別の活動実績の取得に失敗しました\n{traceback.format_exc()}")
         raise HTTPException(
@@ -52,16 +55,17 @@ def get_day_activities(year: str,
              status_code=201,
              response_model=RegisterActivities)
 def register_target_time(target: TargetTimeIn,
-                         year: str,
-                         month: str,
-                         day: str,
+                         year: int,
+                         month: int,
+                         day: int,
                          db: Session = Depends(get_db),
                          current_user: dict = Depends(get_current_user)):
     """ 目標活動時間を登録、登録済みなら更新する """
     try:
         username = current_user["username"]
         target_time = target.target_time
-        date = set_date_format(year, month, day)
+        CheckDate(year=year, month=month, day=day)
+        date = f"{year}-{month}-{day}"
 
         insert_data = db_model.Activity(
             date=date, target_time=target_time, username=username)
@@ -75,11 +79,12 @@ def register_target_time(target: TargetTimeIn,
                 "actual_time": 0,
                 "is_achieved": False,
                 "message": message}
-    except HTTPException as http_e:
-        raise http_e
     except IntegrityError:
         raise HTTPException(
             status_code=400, detail=f"{date}の目標時間は既に登録済みです")
+    except ValidationError as validate_e:
+        error_msg = str(validate_e.errors()[0]["ctx"]["error"])
+        raise HTTPException(status_code=422, detail=error_msg)
     except Exception:
         logger.error(f"目標時間の登録に失敗しました\n{traceback.format_exc()}")
         db.rollback()
@@ -91,15 +96,16 @@ def register_target_time(target: TargetTimeIn,
             status_code=200,
             response_model=RegisterActivities)
 def update_actual_time(actual: ActualTimeIn,
-                       year: str,
-                       month: str,
-                       day: str,
+                       year: int,
+                       month: int,
+                       day: int,
                        db: Session = Depends(get_db),
                        current_user: dict = Depends(get_current_user)):
     """ 目標時間が登録済みの場合、活動時間を入力 """
     try:
         actual_time = actual.actual_time
-        date = set_date_format(year, month, day)
+        CheckDate(year=year, month=month, day=day)
+        date = f"{year}-{month}-{day}"
 
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date,
@@ -130,14 +136,15 @@ def update_actual_time(actual: ActualTimeIn,
 @router.put("/activities/{year}/{month}/{day}/finish",
             status_code=200,
             response_model=RegisterActivities)
-def finish_activity(year: str,
-                    month: str,
-                    day: str,
+def finish_activity(year: int,
+                    month: int,
+                    day: int,
                     db: Session = Depends(get_db),
                     current_user: dict = Depends(get_current_user)):
     """ 特定日の作業時間を確定し、目標を達成しているのかを確認する """
     try:
-        date = set_date_format(year, month, day)
+        CheckDate(year=year, month=month, day=day)
+        date = f"{year}-{month}-{day}"
 
         activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date,
@@ -192,19 +199,20 @@ def finish_activity(year: str,
 
 
 @router.get("/activities/{year}/{month}", status_code=200)
-def get_month_activities(year: str,
-                         month: str,
+def get_month_activities(year: int,
+                         month: int,
                          db: Session = Depends(get_db),
                          current_user: dict = Depends(get_current_user)):
     """ 特定月のデータを取得 """
     try:
-        year_month = set_date_format(year, month)
+        CheckDate(year=year, month=month)
+        year_month = f"{year}-{month}"
         # 検索範囲の指定
-        start_date = datetime(int(year), int(month), 1).date()
-        if int(month) == 12:
-            end_date = datetime(int(year) + 1, 1, 1).date()
+        start_date = datetime(year, month, 1).date()
+        if month == 12:
+            end_date = datetime(year + 1, 1, 1).date()
         else:
-            end_date = datetime(int(year), int(month) + 1, 1).date()
+            end_date = datetime(year, month + 1, 1).date()
 
         activities = db.query(db_model.Activity).filter(
             db_model.Activity.date.between(start_date, end_date),
@@ -230,13 +238,16 @@ def get_month_activities(year: str,
     except NoResultFound:
         raise HTTPException(status_code=404,
                             detail=f"{year_month}の給料は登録されていません")
+    except ValidationError as validate_e:
+        error_msg = str(validate_e.errors()[0]["ctx"]["error"])
+        raise HTTPException(status_code=422, detail=error_msg)
     except Exception:
         logger.error(f"月別の活動実績の取得に失敗しました\n{traceback.format_exc()}")
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.get("/activities/total/", status_code=200)
+@ router.get("/activities/total/", status_code=200)
 def get_total_activity_result(db: Session = Depends(get_db),
                               current_user: dict = Depends(get_current_user)):
     """ 全期間のデータを取得 """

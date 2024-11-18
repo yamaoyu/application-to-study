@@ -1,7 +1,7 @@
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import date
 
 
 class Todo(BaseModel):
     action: str
-    due: datetime
+    due: date

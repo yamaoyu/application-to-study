@@ -18,8 +18,7 @@ def create_todo(todo: Todo,
                 db: Session = Depends(get_db),
                 current_user: dict = Depends(get_current_user)):
     action = todo.action
-    # dueは日付部分のみ
-    due = todo.due.date()
+    due = todo.due
     username = current_user['username']
     try:
         data = db_model.Todo(action=action, username=username, due=due)
