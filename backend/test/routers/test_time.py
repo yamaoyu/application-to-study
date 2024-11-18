@@ -35,7 +35,7 @@ def setup_monthly_income_for_test(client, get_headers):
     data = {"salary": test_salary,
             "year": test_year,
             "month": test_month}
-    client.post("/incomes",
+    client.post(f"/incomes/{test_year}/{test_month}",
                 json=data,
                 headers=get_headers)
 
@@ -92,13 +92,23 @@ def test_register_target_out_of_range(client, get_headers):
     assert response.json() == {"error": "目標時間は0.5~12.0の範囲で入力してください"}
 
 
+def test_register_target_with_invalid_year(client, get_headers):
+    """ 年が2024 <= year <= 2099ではない """
+    data = {"target_time": 5.0}
+    response = client.post("/activities/2022/6/30/target",
+                           json=data,
+                           headers=get_headers)
+    assert response.status_code == 422
+    assert response.json() == {"detail": "年は2024年以降を入力してください"}
+
+
 def test_register_target_with_invalid_date(client, get_headers):
     """ 存在しない日付の場合 """
     data = {"target_time": 5.0}
     response = client.post("/activities/2024/6/31/target",
                            json=data,
                            headers=get_headers)
-    assert response.status_code == 400
+    assert response.status_code == 422
     assert response.json() == {"detail": "日付が不正です"}
 
 

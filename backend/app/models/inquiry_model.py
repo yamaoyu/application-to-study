@@ -1,5 +1,5 @@
 from enum import Enum
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional
 
 
@@ -16,8 +16,20 @@ class Priority(str, Enum):
 
 
 class InquiryForm(BaseModel):
-    category: Category
+    category: str
     detail: str
+
+    @field_validator("category")
+    def validate_target_time(cls, category):
+        if category not in Category:
+            raise ValueError("カテゴリは要望・エラー報告・その他から選択してください")
+        return category
+
+    @field_validator("detail")
+    def check_detail_length(cls, detail):
+        if len(detail) > 256:
+            raise ValueError("詳細は256文字以内で入力してください")
+        return detail
 
 
 class ResponseInquiry(InquiryForm):

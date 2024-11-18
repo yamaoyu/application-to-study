@@ -15,7 +15,7 @@ def setup_salary_for_test(client, get_headers):
     data = {"salary": test_salary,
             "year": test_year,
             "month": test_month}
-    client.post("/incomes", json=data, headers=get_headers)
+    client.post(f"/incomes/{test_year}/{test_month}", json=data, headers=get_headers)
 
 
 def setup_create_another_user(client):
@@ -37,7 +37,7 @@ def test_register_income(client, get_headers):
     data = {"salary": test_salary,
             "year": test_year,
             "month": test_month}
-    response = client.post("/incomes", json=data, headers=get_headers)
+    response = client.post(f"/incomes/{test_year}/{test_month}", json=data, headers=get_headers)
     assert response.status_code == 201
     assert response.json() == {
         "message": f"{test_year}-{test_month}の月収:{test_salary}万円"}
@@ -54,7 +54,7 @@ def test_register_income_with_expired_token(client):
         data = {"salary": test_salary,
                 "year": test_year,
                 "month": test_month}
-        response = client.post("/incomes", json=data, headers=headers)
+        response = client.post(f"/incomes/{test_year}/{test_month}", json=data, headers=headers)
         assert response.status_code == 401
         assert response.json() == {"detail": "再度ログインしてください"}
 
@@ -65,7 +65,7 @@ def test_register_income_already_registered(client, get_headers):
     data = {"salary": test_salary,
             "year": test_year,
             "month": test_month}
-    response = client.post("/incomes", json=data, headers=get_headers)
+    response = client.post(f"/incomes/{test_year}/{test_month}", json=data, headers=get_headers)
     assert response.status_code == 400
     assert response.json() == {"detail": "その月の月収は既に登録されています"}
 
@@ -75,9 +75,9 @@ def test_register_income_with_minus_digit(client, get_headers):
     data = {"salary": -23.0,
             "year": test_year,
             "month": test_month}
-    response = client.post("/incomes", json=data, headers=get_headers)
-    assert response.status_code == 400
-    assert response.json() == {"detail": "正の数を入力して下さい"}
+    response = client.post(f"/incomes/{test_year}/{test_month}", json=data, headers=get_headers)
+    assert response.status_code == 422
+    assert response.json() == {"error": "給料は正の数を入力して下さい"}
 
 
 def test_get_income(client, get_headers):

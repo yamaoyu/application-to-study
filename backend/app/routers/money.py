@@ -1,10 +1,10 @@
 import traceback
 from app.models.money_model import RegisterIncome
+from app.models.common_model import CheckDate
 from db import db_model
 from db.database import get_db
 from lib.security import get_current_user
 from lib.log_conf import logger
-from lib.check_data import set_date_format
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from fastapi import APIRouter, Depends, HTTPException
@@ -13,15 +13,18 @@ from fastapi import APIRouter, Depends, HTTPException
 router = APIRouter()
 
 
-@router.post("/incomes", status_code=201)
-def register_income(income: RegisterIncome,
+@router.post("/incomes/{year}/{month}", status_code=201)
+def register_salary(year: int,
+                    month: int,
+                    income: RegisterIncome,
                     current_user: dict = Depends(get_current_user),
                     db: Session = Depends(get_db)):
     """  月収を登録する """
     salary = income.salary
-    year_month = set_date_format(income.year, income.month)
+    CheckDate(year=year, month=month)
+    year_month = f"{year}-{month}"
     username = current_user['username']
-    if salary < 0:
+    if salary <= 0:
         raise HTTPException(status_code=400, detail="正の数を入力して下さい")
     data = db_model.Income(year_month=year_month,
                            salary=salary,
@@ -47,12 +50,13 @@ def register_income(income: RegisterIncome,
 
 
 @router.get("/incomes/{year}/{month}", status_code=200)
-def get_monthly_income(year: str,
-                       month: str,
+def get_monthly_income(year: int,
+                       month: int,
                        current_user: dict = Depends(get_current_user),
                        db: Session = Depends(get_db)):
     """ 月毎の収入を確認する """
     try:
+        CheckDate(year=year, month=month)
         year_month = f"{year}-{month}"
         username = current_user['username']
         result = db.query(db_model.Income).filter(

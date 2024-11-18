@@ -2,12 +2,12 @@ import traceback
 from datetime import datetime
 from db.database import get_db
 from db import db_model
-from lib.check_data import set_date_format
 from lib.log_conf import logger
 from lib.security import (get_current_user, admin_only, login_required,
                           oauth2_scheme)
 from fastapi import APIRouter, HTTPException, Depends
 from typing import Optional
+from app.models.common_model import CheckDate
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound
 from app.models.inquiry_model import (InquiryForm, ResponseInquiry,
@@ -17,24 +17,15 @@ from app.models.inquiry_model import (InquiryForm, ResponseInquiry,
 router = APIRouter()
 
 
-def check_data(category, detail):
-    """ 問い合わせフォームのデータに不備がないかを確認する """
-    if category not in Category.__members__.values():
-        raise HTTPException(status_code=400, detail="カテゴリは選択肢から選択してください")
-    if len(detail) > 256:
-        raise HTTPException(status_code=400, detail="詳細は256文字以内で入力してください")
-
-
 @router.post("/inquiries", status_code=201, response_model=ResponseInquiry)
 @login_required()
 def send_inquiry(param: InquiryForm,
                  db: Session = Depends(get_db),
                  token: str = Depends(oauth2_scheme)):
     try:
-        category = param.category.value
+        category = param.category
         detail = param.detail
         date = datetime.today()
-        check_data(category, detail)
         fetch_data = db.query(db_model.Inquiry).filter(
             db_model.Inquiry.category == category,
             db_model.Inquiry.detail == detail).one_or_none()
@@ -80,7 +71,8 @@ def get_inquiries(year: Optional[str] = None,
         # インプットに応じてsql文を作成
         sqlstatement = db.query(db_model.Inquiry)
         if year and month:
-            year_month = set_date_format(year, month)
+            CheckDate(year=year, month=month)
+            year_month = f"{year}-{month}"
             start_date = datetime(int(year), int(month), 1).date()
             if int(month) == 12:
                 end_date = datetime(int(year) + 1, 1, 1).date()
