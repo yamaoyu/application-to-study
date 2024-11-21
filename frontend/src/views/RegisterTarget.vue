@@ -7,19 +7,12 @@
     </div>
     <div>
       <label for="TargetTime">目標時間(Hour):</label>
-      <select id="TargetTime" v-model="TargetTime" required>
-        <option value="">-</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
-        <option value="7">7</option>
-        <option value="8">8</option>
-        <option value="9">9</option>
-        <option value="10">10</option>
+      <select v-model="TargetTime">
+        <option v-for="option in options" :key="option" :value="option">
+        {{ option }}
+        </option>
       </select>
+      <p>選択した目標時間: {{ TargetTime }}</p>
     </div>
     <button type="submit">登録</button>
   </form>
@@ -35,8 +28,15 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import { generateDropdownOptions } from "./lib/TimeDropdown";
 
 export default {
+  created() {
+        // 0.5 ~ 10まで、0.5単位で生成
+        this.options = generateDropdownOptions(0.5, 12, 0.5);
+    },
+
+
   setup() {
     const year = ref("")
     const month = ref("")
@@ -44,7 +44,7 @@ export default {
     const date = ref("")
     const message = ref("")
     const url = ref("")
-    const TargetTime = ref("")
+    const TargetTime = ref(null)
     const router = useRouter()
 
     const RegisterTarget = async() =>{
@@ -71,6 +71,8 @@ export default {
               {"path":"/login",
                 "query":{message:"再度ログインしてください"}
               })
+          }else if (error.response.status===422){
+            message.value = error.response.data.error
           }else if (error.response.status!==500){
             message.value = error.response.data.detail
           }else{
