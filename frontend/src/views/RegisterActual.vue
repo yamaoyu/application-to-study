@@ -7,19 +7,10 @@
     </div>
     <div>
       <label for="ActualTime">活動時間:</label>
-      <select id="ActualTime" v-model="ActualTime" required>
-        <option value="">-</option>
-        <option value="0">0</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
-        <option value="7">7</option>
-        <option value="8">8</option>
-        <option value="9">9</option>
-        <option value="10">10</option>
+      <select v-model="ActualTime">
+        <option v-for="option in options" :key="option" :value="option">
+        {{ option }}
+        </option>
       </select>
     </div>
     <button type="submit">登録</button>
@@ -36,8 +27,14 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import { generateDropdownOptions } from "./lib/TimeDropdown";
 
 export default {
+  created() {
+        // 0.0 ~ 10まで、0.5単位で生成
+        this.options = generateDropdownOptions(0.0, 12, 0.5);
+    },
+
   setup() {
     const year = ref("")
     const month = ref("")
