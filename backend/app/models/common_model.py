@@ -11,7 +11,7 @@ class CheckDate(BaseModel):
     @field_validator("year")
     def check_year(cls, year):
         if not (2024 <= year <= 2099):
-            raise ValueError("年は2024年以降を入力してください")
+            raise ValueError("年は2024~2099の範囲で入力してください")
         return year
 
     @field_validator("month")
@@ -22,11 +22,10 @@ class CheckDate(BaseModel):
 
     @model_validator(mode="after")
     def check_day(self):
-        print(self)
         if not self.day:
-            return self.day
+            return self
         try:
             datetime(year=self.year, month=self.month, day=self.day)
-            return self.day
+            return self
         except Exception:
             raise ValueError("日付が不正です")

@@ -41,6 +41,8 @@ def get_token(user: db_model, token_type: str, db=None):
     elif token_type == "refresh":
         return create_refresh_token({"sub": user.username,
                                      "role": user.role}, db=db)
+    else:
+        raise HTTPException(status_code=401, detail="無効なトークンタイプです")
 
 
 def verify_password(plain_password, hashed_password) -> bool:

@@ -18,8 +18,7 @@ class TargetTimeIn(BaseModel):
         if not (0.5 <= target_time <= 12):
             raise ValueError("目標時間は0.5~12.0の範囲で入力してください")
 
-        time_str = str(target_time)
-        if not re.match(r"^((1[0-2]|\d)\.[0|5])$", time_str):
+        if not re.match(r"^((1[0-2]|\d)\.[0|5])$", str(target_time)):
             raise ValueError("目標時間は0.5時間単位で入力してください")
 
         return target_time
@@ -33,12 +32,7 @@ class ActualTimeIn(BaseModel):
         if not (0.0 <= actual_time <= 12):
             raise ValueError("活動時間は0.0~12.0の範囲で入力してください")
 
-        time_str = str(actual_time)
-        if not re.match(r"^((1[0-2]|\d)\.[0|5])$", time_str):
+        if not re.match(r"^((1[0-2]|\d)\.[0|5])$", str(actual_time)):
             raise ValueError("活動時間は0.5時間単位で入力してください")
 
         return actual_time
-
-
-class RegisterSalary(BaseModel):
-    salary: float

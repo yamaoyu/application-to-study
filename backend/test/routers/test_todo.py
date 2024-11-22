@@ -109,6 +109,16 @@ def test_get_all_todo_without_login(client, get_headers):
     assert response.json() == {"detail": "Not authenticated"}
 
 
+def test_create_todo_with_invalid_date(client, get_headers):
+    """ 存在しない日付の場合 """
+    data = {"action": test_action, "username": test_username, "due": "2024-6-31"}
+    response = client.post("/todos",
+                           json=data,
+                           headers=get_headers)
+    assert response.status_code == 422
+    assert response.json() == {"error": "不正な日付です"}
+
+
 def test_get_todo_with_expired_token(client, get_headers):
     """ 期限の切れたトークンでタスクを取得しようとした場合 """
     def mock_create_expired_access_token(data, minutes):

@@ -43,8 +43,7 @@ def get_day_activities(year: int,
     except NoResultFound:
         raise HTTPException(status_code=404, detail=f"{date}の情報は未登録です")
     except ValidationError as validate_e:
-        error_msg = str(validate_e.errors()[0]["ctx"]["error"])
-        raise HTTPException(status_code=422, detail=error_msg)
+        raise HTTPException(status_code=422, detail=str(validate_e.errors()[0]["ctx"]["error"]))
     except Exception:
         logger.error(f"日別の活動実績の取得に失敗しました\n{traceback.format_exc()}")
         raise HTTPException(
@@ -83,8 +82,7 @@ def register_target_time(target: TargetTimeIn,
         raise HTTPException(
             status_code=400, detail=f"{date}の目標時間は既に登録済みです")
     except ValidationError as validate_e:
-        error_msg = str(validate_e.errors()[0]["ctx"]["error"])
-        raise HTTPException(status_code=422, detail=error_msg)
+        raise HTTPException(status_code=422, detail=str(validate_e.errors()[0]["ctx"]["error"]))
     except Exception:
         logger.error(f"目標時間の登録に失敗しました\n{traceback.format_exc()}")
         db.rollback()
@@ -126,6 +124,8 @@ def update_actual_time(actual: ActualTimeIn,
         raise http_e
     except NoResultFound:
         raise HTTPException(status_code=404, detail=f"先に{date}の目標を入力して下さい")
+    except ValidationError as validate_e:
+        raise HTTPException(status_code=422, detail=str(validate_e.errors()[0]["ctx"]["error"]))
     except Exception:
         logger.error(f"活動時間の登録に失敗しました\n{traceback.format_exc()}")
         db.rollback()
@@ -153,6 +153,8 @@ def finish_activity(year: int,
         raise http_e
     except NoResultFound:
         raise HTTPException(status_code=404, detail=f"{date}の情報は登録されていません")
+    except ValidationError as validate_e:
+        raise HTTPException(status_code=422, detail=str(validate_e.errors()[0]["ctx"]["error"]))
     except Exception:
         logger.error(f"活動終了処理に失敗しました\n{traceback.format_exc()}")
         raise HTTPException(
@@ -239,8 +241,7 @@ def get_month_activities(year: int,
         raise HTTPException(status_code=404,
                             detail=f"{year_month}の給料は登録されていません")
     except ValidationError as validate_e:
-        error_msg = str(validate_e.errors()[0]["ctx"]["error"])
-        raise HTTPException(status_code=422, detail=error_msg)
+        raise HTTPException(status_code=422, detail=str(validate_e.errors()[0]["ctx"]["error"]))
     except Exception:
         logger.error(f"月別の活動実績の取得に失敗しました\n{traceback.format_exc()}")
         raise HTTPException(

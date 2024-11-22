@@ -92,6 +92,16 @@ def test_register_target_out_of_range(client, get_headers):
     assert response.json() == {"error": "目標時間は0.5~12.0の範囲で入力してください"}
 
 
+def test_register_target_with_incorrect_hour(client, get_headers):
+    """ 0.5単位でない時間を入力した場合 """
+    data = {"target_time": 2.3}
+    response = client.post(f"/activities{test_date_path}/target",
+                           json=data,
+                           headers=get_headers)
+    assert response.status_code == 422
+    assert response.json() == {"error": "目標時間は0.5時間単位で入力してください"}
+
+
 def test_register_target_with_invalid_year(client, get_headers):
     """ 年が2024 <= year <= 2099ではない """
     data = {"target_time": 5.0}
@@ -99,7 +109,7 @@ def test_register_target_with_invalid_year(client, get_headers):
                            json=data,
                            headers=get_headers)
     assert response.status_code == 422
-    assert response.json() == {"detail": "年は2024年以降を入力してください"}
+    assert response.json() == {"detail": "年は2024~2099の範囲で入力してください"}
 
 
 def test_register_target_with_invalid_date(client, get_headers):
