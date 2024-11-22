@@ -8,6 +8,7 @@ from lib.log_conf import logger
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import ValidationError
 
 
 router = APIRouter()
@@ -20,17 +21,15 @@ def register_salary(year: int,
                     current_user: dict = Depends(get_current_user),
                     db: Session = Depends(get_db)):
     """  月収を登録する """
-    salary = income.salary
-    CheckDate(year=year, month=month)
-    year_month = f"{year}-{month}"
-    username = current_user['username']
-    if salary <= 0:
-        raise HTTPException(status_code=400, detail="正の数を入力して下さい")
-    data = db_model.Income(year_month=year_month,
-                           salary=salary,
-                           bonus=0,
-                           username=username)
     try:
+        salary = income.salary
+        CheckDate(year=year, month=month)
+        year_month = f"{year}-{month}"
+        username = current_user['username']
+        data = db_model.Income(year_month=year_month,
+                               salary=salary,
+                               bonus=0,
+                               username=username)
         db.add(data)
         db.commit()
         db.refresh(data)
@@ -42,6 +41,8 @@ def register_salary(year: int,
             raise HTTPException(status_code=400, detail="その月の月収は既に登録されています")
         raise HTTPException(
             status_code=400, detail="データの整合性エラーが発生しました。入力データを確認してください")
+    except ValidationError as validate_e:
+        raise HTTPException(status_code=422, detail=str(validate_e.errors()[0]["ctx"]["error"]))
     except Exception:
         logger.error(f"月収の登録処理中にエラーが発生しました\n{traceback.format_exc()}")
         db.rollback()
@@ -67,6 +68,8 @@ def get_monthly_income(year: int,
         return {"今月の詳細": result, "ボーナス換算後の月収": total_income}
     except NoResultFound:
         raise HTTPException(status_code=404, detail=f"{year_month}の月収は未登録です")
+    except ValidationError as validate_e:
+        raise HTTPException(status_code=422, detail=str(validate_e.errors()[0]["ctx"]["error"]))
     except Exception:
         logger.error(f"月収の取得処理中にエラーが発生しました\n{traceback.format_exc()}")
         raise HTTPException(
