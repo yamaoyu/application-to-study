@@ -61,11 +61,15 @@
               "path":"/home"})
           }
         } catch (error) {
-          // エラー処理（ユーザーへの通知など）
-          if (error.response.status!==500){
-            message.value = error.response.data.detail;
-          }else{
-            message.value = "ログインに失敗しました";
+          switch (error.response.status){
+            case 422:
+              message.value = error.response.data.error;
+              break;
+            case 500:
+              message.value =  "ログインに失敗しました"
+              break;
+            default:
+              message.value = error.response.data.detail;
           }
         }
       }

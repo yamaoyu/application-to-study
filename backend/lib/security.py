@@ -42,6 +42,7 @@ def get_token(user: db_model, token_type: str, db=None):
         return create_refresh_token({"sub": user.username,
                                      "role": user.role}, db=db)
     else:
+        logger.error(f"無効なトークンタイプ: {token_type}")
         raise HTTPException(status_code=401, detail="無効なトークンタイプです")
 
 

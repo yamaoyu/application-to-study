@@ -91,15 +91,21 @@ export default {
             activities.value = response.data.activity_list;
           }
       } catch (error){
-        if (error.response.status===401){
+        switch (error.response.status){
+            case 401:
             router.push(
               {"path":"/login",
                 "query":{message:"再度ログインしてください"}
               })
-          }else if (error.response.status!==500){
-            message.value = error.response.data.detail;
-          }else{
-            message.value = "情報の取得に失敗しました";
+              break;
+            case 422:
+              message.value = error.response.data.error;
+              break;
+            case 500:
+              message.value =  "情報の取得に失敗しました"
+              break;
+            default:
+              message.value = error.response.data.detail;
           }
       }
     }

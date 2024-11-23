@@ -40,16 +40,21 @@
             message.value = response.data
           }
         } catch (error) {
-          // エラー処理（ユーザーへの通知など）
-          if (error.response.status===401){
+          switch (error.response.status){
+            case 401:
             router.push(
               {"path":"/login",
                 "query":{message:"再度ログインしてください"}
               })
-          }else if (error.response.status!==500){
-            message.value = error.response.data.detail;
-          }else{
-            message.value = "問い合わせの送信に失敗しました";
+              break;
+            case 422:
+              message.value = error.response.data.error;
+              break;
+            case 500:
+              message.value =  "問い合わせの送信に失敗しました"
+              break;
+            default:
+              message.value = error.response.data.detail;
           }
         }
       }
