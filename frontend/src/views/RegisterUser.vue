@@ -46,11 +46,15 @@
             query : { message:response.data.message }})
           }
         } catch (error) {
-          // エラー処理（ユーザーへの通知など）
-          if (error.response.status!==500){
-            message.value = error.response.data.detail;
-          }else{
-            message.value = "ユーザー作成に失敗しました";
+          switch (error.response.status){
+            case 422:
+              message.value = error.response.data.error;
+              break;
+            case 500:
+              message.value =  "ユーザー作成に失敗しました"
+              break;
+            default:
+              message.value = error.response.data.detail;
           }
         }
       }

@@ -5,7 +5,7 @@ from lib.security import (get_password_hash, get_token, get_current_user,
 from db.database import get_db
 from lib.log_conf import logger
 from sqlalchemy.orm import Session
-from app.models.user_model import UserInfo, ResponseCreatedUser
+from app.models.user_model import RegisterUserInfo, ResponseCreatedUser, LoginUserInfo
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from fastapi import APIRouter, HTTPException, Depends
 
@@ -32,7 +32,7 @@ def authenticate_user(username: str, plain_password: str,
 
 
 @router.post("/users", response_model=ResponseCreatedUser, status_code=201)
-def create_user(user: UserInfo, db: Session = Depends(get_db)):
+def create_user(user: RegisterUserInfo, db: Session = Depends(get_db)):
     try:
         username = user.username
         plain_password = user.password
@@ -73,7 +73,7 @@ def create_user(user: UserInfo, db: Session = Depends(get_db)):
 
 @router.post("/admins", response_model=ResponseCreatedUser, status_code=201)
 @admin_only()
-def create_admin_user(user: UserInfo,
+def create_admin_user(user: RegisterUserInfo,
                       db: Session = Depends(get_db),
                       current_user: dict = Depends(get_current_user)):
     try:
@@ -114,7 +114,7 @@ def create_admin_user(user: UserInfo,
 
 
 @router.post("/login", status_code=200)
-def login(user_info: UserInfo,
+def login(user_info: LoginUserInfo,
           db: Session = Depends(get_db)):
     """ ユーザー操作用 """
     username = user_info.username

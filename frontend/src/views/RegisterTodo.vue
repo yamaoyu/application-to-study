@@ -11,7 +11,7 @@
       </div>
       <button type="submit">登録</button>
   </form>
-  <div>
+  <div style="white-space: pre-wrap;">
     <p v-if="message" class="message">{{ message }}</p>
   </div>
   <div>
@@ -38,19 +38,26 @@ export default {
                                             due: due.value
                                           })
           if (response.status===201){
-            message.value = response.data
+            message.value = [response.data.message + "\n",
+                            "内容:" + response.data.action + "\n",
+                            "期限:" + response.data.due].join("")
           }
         } catch (error) {
-          // エラー処理（ユーザーへの通知など）
-          if (error.response.status===401){
+          switch (error.response.status){
+            case 401:
             router.push(
               {"path":"/login",
                 "query":{message:"再度ログインしてください"}
               })
-          }else if (error.response.status!==500){
-            message.value = error.response.data.detail
-          }else{
-            message.value = "活動時間の登録に失敗しました";
+              break;
+            case 422:
+              message.value = error.response.data.error;
+              break;
+            case 500:
+              message.value =  "todoの登録に失敗しました"
+              break;
+            default:
+              message.value = error.response.data.detail;
           }
         }
       }

@@ -53,12 +53,14 @@ export default {
     const month = ref('')
     const MonthlyIncome = ref('')
     const message = ref('')
+    const url = ref('')
     const router = useRouter()
     
 
     const RegisterSalary = async() =>{
         try {
-          const response = await axios.post('http://localhost:8000/incomes', {
+          url.value = 'http://localhost:8000/incomes/'+ year.value + '/' + month.value;
+          const response = await axios.post(url.value, {
             year: year.value,
             month: month.value,
             salary: MonthlyIncome.value,
@@ -67,16 +69,21 @@ export default {
             message.value = response.data.message
           }
         } catch (error) {
-          // エラー処理（ユーザーへの通知など）
-          if (error.response.status===401){
+          switch (error.response.status){
+            case 401:
             router.push(
               {"path":"/login",
                 "query":{message:"再度ログインしてください"}
               })
-          }else if (error.response.status!==500){
-            message.value = error.response.data.detail;
-          }else{
-            message.value = "月収の登録に失敗しました";
+              break;
+            case 422:
+              message.value = error.response.data.error;
+              break;
+            case 500:
+              message.value =  "月収の登録に失敗しました"
+              break;
+            default:
+              message.value = error.response.data.detail;
           }
         }
       }
@@ -86,6 +93,7 @@ export default {
       month,
       MonthlyIncome,
       message,
+      url,
       RegisterSalary
     }
   }

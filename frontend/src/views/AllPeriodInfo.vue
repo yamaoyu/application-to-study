@@ -49,24 +49,30 @@ setup() {
                             `目標未達成日数:${response.data.fail_days}日`].join('');
         }
     } catch (error){
-        if (error.response.status===401){
-            router.push(
-            {"path":"/login",
-                "query":{message:"再度ログインしてください"}
-            })
-        }else if (error.response.status!==500){
-            message.value = error.response.data.detail;
-        }else{
-            message.value = "情報の取得に失敗しました";
-        }
+        switch (error.response.status){
+            case 401:
+                router.push(
+                    {"path":"/login",
+                    "query":{message:"再度ログインしてください"}
+                })
+                break;
+            case 422:
+                message.value = error.response.data.error;
+                break;
+            case 500:
+                message.value =  "情報の取得に失敗しました"
+                break;
+            default:
+                message.value = error.response.data.detail;
             }
+          }
         }
-    )
-      return {
+      )
+    return {
         message,
         activities
-      }
+        }
+     } 
     }
-  }
 
-  </script>
+</script>

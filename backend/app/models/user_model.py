@@ -2,7 +2,7 @@ from pydantic import BaseModel, ConfigDict, field_validator
 from typing import Optional
 
 
-class UserInfo(BaseModel):
+class RegisterUserInfo(BaseModel):
     username: str
     password: str
     email: Optional[str] = None
@@ -27,6 +27,11 @@ class UserInfo(BaseModel):
         return email
 
 
-class ResponseCreatedUser(UserInfo):
+class LoginUserInfo(BaseModel):
+    username: str
+    password: str
+
+
+class ResponseCreatedUser(RegisterUserInfo):
     model_config = ConfigDict(from_attributes=True)
     message: str
