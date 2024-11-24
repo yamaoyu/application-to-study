@@ -83,19 +83,24 @@ export default {
             ].join('');
           }
         } catch (act_err) {
-          switch (act_err.response.status){
-            case 401:
-              router.push(
-                {"path":"/login",
-                  "query":{message:"再度ログインしてください"}
-                })
-              break;
-            case 404:
-            case 500:
-              activity_msg.value = act_err.response.data.detail;
-              break;
-            default:
-              activity_msg.value = "情報の取得に失敗しました";
+          if (act_err.response){
+            switch (act_err.response.status){
+              case 401:
+                router.push(
+                  {"path":"/login",
+                    "query":{message:"再度ログインしてください"}
+                  })
+                break;
+              case 404:
+              case 500:
+                activity_msg.value = act_err.response.data.detail;
+                break;
+              default:
+                activity_msg.value = "情報の取得に失敗しました";}
+          } else if (act_err.request){
+            activity_msg.value =  "リクエストがサーバーに到達できませんでした"
+          } else {
+            activity_msg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
           }
         }
 
@@ -110,19 +115,24 @@ export default {
           ].join('');
           }
         } catch (earn_err) {
-          switch (earn_err.response.status){
-            case 401:
-              router.push(
-                {"path":"/login",
-                  "query":{message:"再度ログインしてください"}
-                })
-              break;
-            case 404:
-            case 500:
-              salary_msg.value = earn_err.response.data.detail;
-              break;
-            default:
-              salary_msg.value = "情報の取得に失敗しました";
+          if (earn_err.response){
+            switch (earn_err.response.status){
+              case 401:
+                router.push(
+                  {"path":"/login",
+                    "query":{message:"再度ログインしてください"}
+                  })
+                break;
+              case 404:
+              case 500:
+                salary_msg.value = earn_err.response.data.detail;
+                break;
+              default:
+                salary_msg.value = "情報の取得に失敗しました";}
+          } else if (earn_err.request){
+            salary_msg.value =  "リクエストがサーバーに到達できませんでした"
+          } else {
+            salary_msg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
           }
         }
 
@@ -134,20 +144,24 @@ export default {
             todos.value = todo_res.data;
           }
         } catch (todo_err) {
-          todos.value = "";
-          switch (todo_err.response.status){
-            case 401:
-            router.push(
-              {"path":"/login",
-                "query":{message:"再度ログインしてください"}
-              })
-              break;
-            case 404:
-            case 500:
-              todo_msg.value = todo_err.response.data.detail;
-              break;
-            default:
-              todo_msg.value = "情報の取得に失敗しました";
+          if (todo_err.response){
+            switch (todo_err.response.status){
+              case 401:
+              router.push(
+                {"path":"/login",
+                  "query":{message:"再度ログインしてください"}
+                })
+                break;
+              case 404:
+              case 500:
+                todo_msg.value = todo_err.response.data.detail;
+                break;
+              default:
+                todo_msg.value = "情報の取得に失敗しました";}
+          } else if (todo_err.request){
+            todo_msg.value =  "リクエストがサーバーに到達できませんでした"
+          } else {
+            todo_msg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
           }
         }
       }

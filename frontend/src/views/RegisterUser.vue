@@ -46,15 +46,20 @@
             query : { message:response.data.message }})
           }
         } catch (error) {
-          switch (error.response.status){
-            case 422:
-              message.value = error.response.data.error;
-              break;
-            case 500:
-              message.value =  "ユーザー作成に失敗しました"
-              break;
-            default:
-              message.value = error.response.data.detail;
+          if (error.response){
+            switch (error.response.status){
+              case 422:
+                message.value = error.response.data.error;
+                break;
+              case 500:
+                message.value =  "ユーザー作成に失敗しました"
+                break;
+              default:
+                message.value = error.response.data.detail;}
+          } else if (error.request){
+            message.value =  "リクエストがサーバーに到達できませんでした"
+          } else {
+            message.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
           }
         }
       }
