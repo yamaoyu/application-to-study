@@ -61,6 +61,7 @@
               "path":"/home"})
           }
         } catch (error) {
+        if (error.response){
           switch (error.response.status){
             case 422:
               message.value = error.response.data.error;
@@ -69,7 +70,11 @@
               message.value =  "ログインに失敗しました"
               break;
             default:
-              message.value = error.response.data.detail;
+              message.value = error.response.data.detail;}
+          } else if (error.request){
+            message.value =  "リクエストがサーバーに到達できませんでした"
+          } else {
+            message.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
           }
         }
       }
