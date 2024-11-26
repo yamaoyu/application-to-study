@@ -40,8 +40,7 @@ def send_inquiry(param: InquiryForm,
                                            date=date)
             db.add(insert_data)
             db.commit()
-            db.refresh(insert_data)
-            logger.info("問い合わせを受付")
+        logger.info("問い合わせを受付")
         return {
             "category": category,
             "detail": detail,
@@ -133,7 +132,6 @@ def edit_inquiry(id: int,
             inquiry.is_checked = is_checked
         db.add(inquiry)
         db.commit()
-        db.refresh(inquiry)
         return inquiry
     except NoResultFound:
         raise HTTPException(status_code=404,
