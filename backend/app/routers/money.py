@@ -32,7 +32,6 @@ def register_salary(year: int,
                                username=username)
         db.add(data)
         db.commit()
-        db.refresh(data)
         logger.info(f"{username}:{year_month}の月収を登録")
         return {"message": f"{year_month}の月収:{salary}万円"}
     except IntegrityError as sqlalchemy_error:

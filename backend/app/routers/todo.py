@@ -24,7 +24,6 @@ def create_todo(todo: Todo,
         data = db_model.Todo(action=action, username=username, due=due)
         db.add(data)
         db.commit()
-        db.refresh(data)
         logger.info(f"{username}がTodo作成 内容:{action}")
         return {"message": "以下の内容で作成しました", "action": action, "due": due}
     except IntegrityError as sqlalchemy_error:

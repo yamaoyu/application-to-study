@@ -44,7 +44,6 @@ def create_user(user: RegisterUserInfo, db: Session = Depends(get_db)):
             username=username, password=hash_password, email=email, role=role)
         db.add(form_data)
         db.commit()
-        db.refresh(form_data)
         logger.info(f"ユーザー作成:{username}")
         return {"username": username,
                 "password": len(plain_password) * "*",
@@ -86,7 +85,6 @@ def create_admin_user(user: RegisterUserInfo,
             email=email, role="admin")
         db.add(form_data)
         db.commit()
-        db.refresh(form_data)
         logger.info(f"ユーザー作成:{username}")
         return {"username": username,
                 "password": len(plain_password) * "*",

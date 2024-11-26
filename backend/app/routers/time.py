@@ -70,7 +70,6 @@ def register_target_time(target: TargetTimeIn,
             date=date, target_time=target_time, username=username)
         db.add(insert_data)
         db.commit()
-        db.refresh(insert_data)
         message = f"{date}の目標時間を{target_time}時間に設定しました"
         logger.info(f"{current_user['username']}が{date}の目標時間を登録")
         return {"date": date,
