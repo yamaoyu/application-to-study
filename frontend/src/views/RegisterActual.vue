@@ -1,6 +1,6 @@
 <template>
   <h3>活動時間の登録</h3>
-  <form @submit.prevent="RegisterTarget">
+  <form @submit.prevent="RegisterActual">
     <div>
       <label for="date">日付:</label>
       <input type="date" id="date" v-model="date" required>
@@ -8,7 +8,7 @@
     <div>
       <label for="ActualTime">活動時間:</label>
       <select v-model="ActualTime">
-        <option v-for="option in options" :key="option" :value="option">
+        <option v-for="option in timeOptions" :key="option" :value="option">
         {{ option }}
         </option>
       </select>
@@ -27,12 +27,12 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { generateDropdownOptions } from "./lib/TimeDropdown";
+import { generateTimeOptions } from "./lib/index";
 
 export default {
   created() {
         // 0.0 ~ 10まで、0.5単位で生成
-        this.options = generateDropdownOptions(0.0, 12, 0.5);
+        this.timeOptions = generateTimeOptions(0.0, 12, 0.5);
     },
 
   setup() {
@@ -45,7 +45,7 @@ export default {
     const ActualTime = ref("")
     const router = useRouter()
 
-    const RegisterTarget = async() =>{
+    const RegisterActual = async() =>{
         try {
           // 日付から年月日を取得
           const dateParts = date.value.split('-');
@@ -95,7 +95,7 @@ export default {
       message,
       ActualTime,
       url,
-      RegisterTarget
+      RegisterActual
     }
   }
 }

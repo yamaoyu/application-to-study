@@ -14,30 +14,17 @@
     <div>
       <label for="year">年:</label>
       <select id="year" v-model="year" required>
-        <option value="">-</option>
-        <option value="2024">2024</option>
-        <option value="2025">2025</option>
-        <option value="2026">2026</option>
-        <option value="2027">2027</option>
-        <option value="2028">2028</option>
+        <option v-for="year in yearOptions" :key="year">
+          {{ year }}
+        </option>
       </select>
     </div>
     <div>
       <label for="month">月:</label>
       <select id="month" v-model="month" required>
-        <option value="">-</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
-        <option value="7">7</option>
-        <option value="8">8</option>
-        <option value="9">9</option>
-        <option value="10">10</option>
-        <option value="11">11</option>
-        <option value="12">12</option>
+        <option v-for="month in monthOptions" :key="month">
+          {{ month }}
+        </option>
       </select>
     </div>
     <button type="submit">検索</button>
@@ -66,8 +53,16 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import { generateYearOptions } from './lib/index';
+import { generateMonthOptions } from './lib/index';
+
 
 export default {
+  created() {
+      this.yearOptions = generateYearOptions();
+      this.monthOptions = generateMonthOptions();
+    },
+
   setup() {
     const year = ref("")
     const month = ref("")
@@ -80,6 +75,8 @@ export default {
     const GetMonthlyInfo = async() =>{
       try{
           url.value = 'http://localhost:8000/activities/' + year.value + '/' + month.value;
+          console.log(year.value)
+          console.log(month.value)
           const response = await axios.get(url.value)
           if (response.status===200){
             message.value = [`合計:${response.data.total_monthly_income}万円\n`,

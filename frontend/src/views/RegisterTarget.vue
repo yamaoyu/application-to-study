@@ -8,7 +8,7 @@
     <div>
       <label for="TargetTime">目標時間(Hour):</label>
       <select v-model="TargetTime">
-        <option v-for="option in options" :key="option" :value="option">
+        <option v-for="option in timeOptions" :key="option" :value="option">
         {{ option }}
         </option>
       </select>
@@ -27,12 +27,12 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { generateDropdownOptions } from "./lib/TimeDropdown";
+import { generateTimeOptions } from "./lib/TimeDropdown";
 
 export default {
   created() {
         // 0.5 ~ 10まで、0.5単位で生成
-        this.options = generateDropdownOptions(0.5, 12, 0.5);
+        this.timeOptions = generateTimeOptions(0.5, 12, 0.5);
     },
 
 
