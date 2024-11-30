@@ -23,6 +23,7 @@
   import axios from 'axios'
   import { useRoute, useRouter } from 'vue-router';
   import { useStore } from 'vuex';
+  import { jwtDecode } from 'jwt-decode';
   
   export default {
     setup() {
@@ -52,10 +53,11 @@
           if (response.status===200){
               store.commit('SET_AUTH_DATA', {
               accessToken: response.data.access_token,
-              tokenType: response.data.token_type})
+              tokenType: response.data.token_type,
+              expire: jwtDecode(response.data.access_token).exp})
             
             // Axiosのデフォルトヘッダーにトークンを設定
-          axios.defaults.headers.common['Authorization'] = `${response.data.token_type} ${response.data.access_token}`
+            axios.defaults.headers.common['Authorization'] = `${response.data.token_type} ${response.data.access_token}`
 
             router.push({
               "path":"/home"})
