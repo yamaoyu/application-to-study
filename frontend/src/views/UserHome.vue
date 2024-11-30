@@ -5,7 +5,7 @@
   </div>
   <div style="white-space: pre-wrap;">
     <h3>今月の給料</h3>
-    <p v-if="salary_msg" class="salary_msg">{{ salary_msg }}</p>
+    <p v-if="income_msg" class="income_msg">{{ income_msg }}</p>
   </div>
   <div>
     <h3>Todo一覧</h3>
@@ -63,17 +63,16 @@ export default {
     const month = today.getMonth() + 1;
     const date = today.getDate();
     const activity_msg = ref("")
-    const salary_msg = ref("")
+    const income_msg = ref("")
     const todos = ref([])
     const todo_msg = ref("")
-    const url = ref("")
     const router = useRouter()
 
     onMounted( async() =>{
         // その日の活動実績を取得
         try {
-          url.value = 'http://localhost:8000/activities/' + year + '/' + month + '/' + date;
-          const activity_res = await axios.get(url.value)
+          const act_url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month + '/' + date;
+          const activity_res = await axios.get(act_url)
           if (activity_res.status===200){
             activity_msg.value = [activity_res.data.date,
                                   `\n目標時間:${activity_res.data.target_time}時間`,
@@ -106,17 +105,17 @@ export default {
 
         // その月の月収を取得
         try{
-          url.value = 'http://localhost:8000/incomes/' + year + '/' + month;
-          const earn_res = await axios.get(url.value)
+          const income_url = process.env.VUE_APP_BACKEND_URL + 'incomes/' + year + '/' + month;
+          const earn_res = await axios.get(income_url)
           if (earn_res.status===200){
-            salary_msg.value = [`今月の月収:${earn_res.data["今月の詳細"].salary}万円`,
+            income_msg.value = [`今月の月収:${earn_res.data["今月の詳細"].salary}万円`,
                                 `\n合計ボーナス:${(earn_res.data["今月の詳細"].bonus * 10000)}円`,
                                 `\nボーナス換算後の月収:${earn_res.data["ボーナス換算後の月収"]}万円`
           ].join('');
           }
-        } catch (earn_err) {
-          if (earn_err.response){
-            switch (earn_err.response.status){
+        } catch (income_err) {
+          if (income_err.response){
+            switch (income_err.response.status){
               case 401:
                 router.push(
                   {"path":"/login",
@@ -125,21 +124,21 @@ export default {
                 break;
               case 404:
               case 500:
-                salary_msg.value = earn_err.response.data.detail;
+                income_msg.value = income_err.response.data.detail;
                 break;
               default:
-                salary_msg.value = "情報の取得に失敗しました";}
-          } else if (earn_err.request){
-            salary_msg.value =  "リクエストがサーバーに到達できませんでした"
+                income_msg.value = "情報の取得に失敗しました";}
+          } else if (income_err.request){
+            income_msg.value =  "リクエストがサーバーに到達できませんでした"
           } else {
-            salary_msg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
+            income_msg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
           }
         }
 
         // そのユーザーの未完了のtodoを取得
         try{
-          url.value = 'http://localhost:8000/todos/?status=False'
-          const todo_res = await axios.get(url.value)
+          const todo_url = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
+          const todo_res = await axios.get(todo_url)
           if (todo_res.status===200){
             todos.value = todo_res.data;
           }
@@ -169,7 +168,7 @@ export default {
 
     return {
       activity_msg,
-      salary_msg,
+      income_msg,
       todos,
       todo_msg,
       year,

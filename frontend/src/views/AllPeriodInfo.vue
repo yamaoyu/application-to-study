@@ -31,15 +31,14 @@ import { useRouter } from 'vue-router';
 export default {
 setup() {
     const message = ref("")
-    const url = ref("")
     const router = useRouter()
     const activities = ref([])
 
 
     onMounted( async() =>{
     try{
-        url.value = 'http://localhost:8000/activities/total';
-        const response = await axios.get(url.value)
+        const url = process.env.VUE_APP_BACKEND_URL + 'activities/total';
+        const response = await axios.get(url)
         if (response.status===200){
             message.value = [`合計:${response.data.total_income}万円\n`,
                             `内訳\n`,

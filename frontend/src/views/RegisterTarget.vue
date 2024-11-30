@@ -42,7 +42,6 @@ export default {
     const day = ref("")
     const date = ref("")
     const message = ref("")
-    const url = ref("")
     const TargetTime = ref(null)
     const router = useRouter()
 
@@ -56,8 +55,8 @@ export default {
           // 月と日が一桁の場合、表記を変更 例)09→9
           month.value = parseInt(month.value, 10);
           day.value = parseInt(day.value, 10);
-          url.value = 'http://localhost:8000/activities/' + year.value + '/' + month.value + '/' + day.value + '/target';
-          const response = await axios.post(url.value, {
+          const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year.value + '/' + month.value + '/' + day.value + '/target';
+          const response = await axios.post(url, {
                                             target_time: Number(TargetTime.value)
                                           })
           if (response.status===201){
@@ -96,7 +95,6 @@ export default {
       date,
       message,
       TargetTime,
-      url,
       RegisterTarget
     }
   }

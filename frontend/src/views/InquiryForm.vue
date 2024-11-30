@@ -32,7 +32,8 @@
   
       const SendInquiry = async() => {
         try {
-          const response = await axios.post('http://localhost:8000/inquiries', {
+          const url = process.env.VUE_APP_BACKEND_URL + 'inquiries'
+          const response = await axios.post(url, {
             category: category.value,
             detail: detail.value,
           })
