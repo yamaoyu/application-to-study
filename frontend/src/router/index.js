@@ -10,6 +10,7 @@ import RegisterTodo from '../views/RegisterTodo.vue'
 import finishActivity from '../views/FinishActivity.vue'
 import InquiryForm from '../views/InquiryForm.vue'
 import AllPeriodInfo from '../views/AllPeriodInfo.vue'
+import store from '../store/index.js'
 
 const routes = [
   {
@@ -72,6 +73,21 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes
+})
+
+
+router.beforeEach(async (to) => {
+  if (
+    // make sure a token exists
+    (!store.getters.isAuthenticated ||
+    // make sure the token is not expired
+    store.getters.isExpired )&&
+    // ❗️ Avoid an infinite redirect
+    to.name !== 'Login'
+  ) {
+    // redirect the user to the login page
+    return { name: 'Login' }
+  }
 })
 
 export default router
