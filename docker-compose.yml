@@ -32,6 +32,8 @@ services:
       - "8080:8080"
     volumes:
       - ./frontend:/frontend
+    environment:
+      VUE_APP_BACKEND_URL: ${VUE_APP_BACKEND_URL}
     depends_on:
       - web
 

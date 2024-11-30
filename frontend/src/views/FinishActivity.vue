@@ -27,7 +27,6 @@ export default {
     const day = ref("")
     const date = ref("")
     const message = ref("")
-    const url = ref("")
     const router = useRouter()
 
     const FinishActivity = async() =>{
@@ -40,8 +39,8 @@ export default {
           // 月と日が一桁の場合、表記を変更 例)09→9
           month.value = parseInt(month.value, 10);
           day.value = parseInt(day.value, 10);
-          url.value = 'http://localhost:8000/activities/' + year.value + '/' + month.value + '/' + day.value + '/finish';
-          const response = await axios.put(url.value)
+          const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year.value + '/' + month.value + '/' + day.value + '/finish';
+          const response = await axios.put(url)
           if (response.status===200){
             message.value = response.data.message
           }
@@ -77,7 +76,6 @@ export default {
       day,
       date,
       message,
-      url,
       FinishActivity
     }
   }

@@ -47,14 +47,13 @@ export default {
     const month = ref('')
     const MonthlyIncome = ref('')
     const message = ref('')
-    const url = ref('')
     const router = useRouter()
     
 
     const RegisterSalary = async() =>{
         try {
-          url.value = 'http://localhost:8000/incomes/'+ year.value + '/' + month.value;
-          const response = await axios.post(url.value, {
+          const url = process.env.VUE_APP_BACKEND_URL + 'incomes/'+ year.value + '/' + month.value;
+          const response = await axios.post(url, {
             year: year.value,
             month: month.value,
             salary: MonthlyIncome.value,
@@ -92,7 +91,6 @@ export default {
       month,
       MonthlyIncome,
       message,
-      url,
       RegisterSalary
     }
   }

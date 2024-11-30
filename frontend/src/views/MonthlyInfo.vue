@@ -67,17 +67,14 @@ export default {
     const year = ref("")
     const month = ref("")
     const message = ref("")
-    const url = ref("")
     const router = useRouter()
     const activities = ref([])
 
 
     const GetMonthlyInfo = async() =>{
       try{
-          url.value = 'http://localhost:8000/activities/' + year.value + '/' + month.value;
-          console.log(year.value)
-          console.log(month.value)
-          const response = await axios.get(url.value)
+          const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year.value + '/' + month.value;
+          const response = await axios.get(url)
           if (response.status===200){
             message.value = [`合計:${response.data.total_monthly_income}万円\n`,
                             `内訳\n`,

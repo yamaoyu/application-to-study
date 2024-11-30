@@ -33,7 +33,8 @@ export default {
 
     const RegisterTodo = async() =>{
         try {
-          const response = await axios.post('http://localhost:8000/todos', {
+          const url = process.env.VUE_APP_BACKEND_URL + 'todos'
+          const response = await axios.post(url, {
                                             action: action.value,
                                             due: due.value
                                           })

@@ -35,7 +35,8 @@
   
       const CreateUser = async() => {
         try {
-          const response = await axios.post('http://localhost:8000/users', {
+          const url = process.env.VUE_APP_BACKEND_URL + '/users'
+          const response = await axios.post(url, {
             username: username.value,
             password: password.value,
             email: email.value
