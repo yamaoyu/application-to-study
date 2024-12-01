@@ -1,5 +1,5 @@
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, Depends
 from app.models.time_model import (
     TargetTimeIn, ActualTimeIn, RegisterActivities
@@ -211,9 +211,9 @@ def get_month_activities(year: int,
         # 検索範囲の指定
         start_date = datetime(year, month, 1).date()
         if month == 12:
-            end_date = datetime(year + 1, 1, 1).date()
+            end_date = datetime(year + 1, 1, 1).date() - timedelta(days=1)
         else:
-            end_date = datetime(year, month + 1, 1).date()
+            end_date = datetime(year, month + 1, 1).date() - timedelta(days=1)
 
         activities = db.query(db_model.Activity).filter(
             db_model.Activity.date.between(start_date, end_date),
