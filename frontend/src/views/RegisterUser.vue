@@ -35,12 +35,15 @@
   
       const CreateUser = async() => {
         try {
-          const url = process.env.VUE_APP_BACKEND_URL + '/users'
-          const response = await axios.post(url, {
-            username: username.value,
-            password: password.value,
-            email: email.value
-          })
+          const url = process.env.VUE_APP_BACKEND_URL + 'users'
+          const response = await axios.post(
+            url, 
+            {
+              username: username.value,
+              password: password.value,
+              email: email.value
+            }
+          )
           if (response.status===201){
             router.push({
             path:'/login', 

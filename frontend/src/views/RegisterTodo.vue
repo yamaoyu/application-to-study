@@ -23,6 +23,7 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import store from '@/store';
 
 export default {
   setup() {
@@ -34,10 +35,17 @@ export default {
     const RegisterTodo = async() =>{
         try {
           const url = process.env.VUE_APP_BACKEND_URL + 'todos'
-          const response = await axios.post(url, {
-                                            action: action.value,
-                                            due: due.value
-                                          })
+          const response = await axios.post(
+            url, 
+            {
+              action: action.value,
+              due: due.value
+            },
+            { 
+              headers: {
+              Authorization: `${store.state.tokenType} ${store.state.accessToken}`}
+            }
+          )
           if (response.status===201){
             message.value = [response.data.message + "\n",
                             "内容:" + response.data.action + "\n",

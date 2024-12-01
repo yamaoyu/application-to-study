@@ -55,6 +55,7 @@
 import { onMounted, ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import store from '@/store';
 
 export default {
   setup() {
@@ -72,7 +73,8 @@ export default {
         // その日の活動実績を取得
         try {
           const act_url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month + '/' + date;
-          const activity_res = await axios.get(act_url)
+          const activity_res = await axios.get(act_url,
+                                              {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
           if (activity_res.status===200){
             activity_msg.value = [activity_res.data.date,
                                   `\n目標時間:${activity_res.data.target_time}時間`,
@@ -106,7 +108,9 @@ export default {
         // その月の月収を取得
         try{
           const income_url = process.env.VUE_APP_BACKEND_URL + 'incomes/' + year + '/' + month;
-          const earn_res = await axios.get(income_url)
+          const earn_res = await axios.get(income_url,
+                                          {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}}
+          )
           if (earn_res.status===200){
             income_msg.value = [`今月の月収:${earn_res.data["今月の詳細"].salary}万円`,
                                 `\n合計ボーナス:${(earn_res.data["今月の詳細"].bonus * 10000)}円`,
@@ -138,7 +142,8 @@ export default {
         // そのユーザーの未完了のtodoを取得
         try{
           const todo_url = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
-          const todo_res = await axios.get(todo_url)
+          const todo_res = await axios.get(todo_url,
+                                          {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
           if (todo_res.status===200){
             todos.value = todo_res.data;
           }

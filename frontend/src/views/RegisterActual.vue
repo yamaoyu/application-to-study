@@ -28,6 +28,7 @@ import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { generateTimeOptions } from "./lib/index";
+import store from '@/store';
 
 export default {
   created() {
@@ -55,9 +56,9 @@ export default {
           month.value = parseInt(month.value, 10);
           day.value = parseInt(day.value, 10);
           const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year.value + '/' + month.value + '/' + day.value +  '/actual';
-          const response = await axios.put(url, {
-                                            actual_time: Number(ActualTime.value)
-                                          })
+          const response = await axios.put(url, 
+                                          {actual_time: Number(ActualTime.value)},
+                                          {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
           if (response.status===200){
             message.value = response.data.message
           }

@@ -55,6 +55,7 @@ import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { generateYearOptions } from './lib/index';
 import { generateMonthOptions } from './lib/index';
+import store from '@/store';
 
 
 export default {
@@ -74,7 +75,8 @@ export default {
     const GetMonthlyInfo = async() =>{
       try{
           const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year.value + '/' + month.value;
-          const response = await axios.get(url)
+          const response = await axios.get(url,
+                                          {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
           if (response.status===200){
             message.value = [`合計:${response.data.total_monthly_income}万円\n`,
                             `内訳\n`,
