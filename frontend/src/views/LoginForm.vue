@@ -57,8 +57,6 @@
               tokenType: response.data.token_type,
               expire: jwtDecode(response.data.access_token).exp})
             
-            // Axiosのデフォルトヘッダーにトークンを設定
-            axios.defaults.headers.common['Authorization'] = `${response.data.token_type} ${response.data.access_token}`
 
             router.push({
               "path":"/home"})

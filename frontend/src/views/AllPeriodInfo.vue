@@ -27,6 +27,7 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import store from '@/store';
 
 export default {
 setup() {
@@ -38,7 +39,8 @@ setup() {
     onMounted( async() =>{
     try{
         const url = process.env.VUE_APP_BACKEND_URL + 'activities/total';
-        const response = await axios.get(url)
+        const response = await axios.get(url,
+                                        {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
         if (response.status===200){
             message.value = [`合計:${response.data.total_income}万円\n`,
                             `内訳\n`,

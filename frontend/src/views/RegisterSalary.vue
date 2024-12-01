@@ -35,6 +35,7 @@ import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { generateYearOptions } from './lib/index';
 import { generateMonthOptions } from './lib/index';
+import store from '@/store';
 
 export default {
   created() {
@@ -53,16 +54,15 @@ export default {
     const RegisterSalary = async() =>{
         try {
           const url = process.env.VUE_APP_BACKEND_URL + 'incomes/'+ year.value + '/' + month.value;
-          const response = await axios.post(url, {
-            year: year.value,
-            month: month.value,
-            salary: MonthlyIncome.value,
-          })
+          const response = await axios.post(url, 
+                                            {salary: Number(MonthlyIncome.value)},
+                                            {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
           if (response.status===201){
             message.value = response.data.message
           }
         } catch (error) {
           if (error.response){
+            console.log(error.response.data)
             switch (error.response.status){
               case 401:
               router.push(

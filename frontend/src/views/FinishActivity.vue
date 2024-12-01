@@ -19,6 +19,7 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import store from '@/store';
 
 export default {
   setup() {
@@ -40,7 +41,10 @@ export default {
           month.value = parseInt(month.value, 10);
           day.value = parseInt(day.value, 10);
           const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year.value + '/' + month.value + '/' + day.value + '/finish';
-          const response = await axios.put(url)
+          // axiosのputの第二引数はリクエストボディとなるため{}を用意する。(リクエストボディで渡すデータはないため空)
+          const response = await axios.put(url,
+                                          {},
+                                          {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
           if (response.status===200){
             message.value = response.data.message
           }

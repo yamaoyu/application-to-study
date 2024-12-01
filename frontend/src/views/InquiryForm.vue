@@ -22,6 +22,7 @@
   import { ref } from 'vue'
   import axios from 'axios'
   import { useRouter } from 'vue-router';
+  import store from '@/store';
   
   export default {
     setup() {
@@ -33,10 +34,17 @@
       const SendInquiry = async() => {
         try {
           const url = process.env.VUE_APP_BACKEND_URL + 'inquiries'
-          const response = await axios.post(url, {
-            category: category.value,
-            detail: detail.value,
-          })
+          const response = await axios.post(
+            url, 
+            {
+              category: category.value,
+              detail: detail.value,
+            },
+            {
+              headers: {
+                Authorization: `${store.state.tokenType} ${store.state.accessToken}`}
+            }
+          )
           if (response.status===201){
             message.value = response.data
           }
