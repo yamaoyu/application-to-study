@@ -79,11 +79,12 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   if (
     // make sure a token exists
-    (!store.getters.isAuthenticated ||
+    (!store.getters.isToken ||
     // make sure the token is not expired
-    store.getters.isExpired )&&
-    // ❗️ Avoid an infinite redirect
-    to.name !== 'Login'
+    store.getters.isExpired)&&
+    // ❗️ except Login and RegisterUser
+    to.name !== 'Login' &&
+    to.name !== 'RegisterUser'
   ) {
     // redirect the user to the login page
     return { name: 'Login' }
