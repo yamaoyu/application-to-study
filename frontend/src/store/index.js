@@ -20,7 +20,7 @@ export default createStore({
   },
   actions: {},
   getters: {
-    isAuthenticated: state => !!state.accessToken,
+    isToken: state => !!state.accessToken,
     isExpired: state => {
       const currentTime = Date.now()
       if (currentTime/1000 <= state.expire){
