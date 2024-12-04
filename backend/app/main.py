@@ -32,21 +32,21 @@ def validation_exception_handler(request, exc):
         match exc.errors()[0]["type"]:
             case "float_parsing" | "int_parsing":
                 return JSONResponse(status_code=422,
-                                    content={"error": "数値を入力してください"})
+                                    content={"detail": "数値を入力してください"})
             case "string_type":
                 return JSONResponse(status_code=422,
-                                    content={"error": "文字列を入力してください"})
+                                    content={"detail": "文字列を入力してください"})
             case "date_from_datetime_parsing":
                 return JSONResponse(status_code=422,
-                                    content={"error": "不正な日付です"})
+                                    content={"detail": "不正な日付です"})
             case "missing":
                 return JSONResponse(status_code=422,
-                                    content={"error": "入力データが不足しています"})
+                                    content={"detail": "入力データが不足しています"})
             case "value_error":
                 return JSONResponse(status_code=422,
-                                    content={"error": str(exc.errors()[0]["ctx"]["error"])})
+                                    content={"detail": str(exc.errors()[0]["ctx"]["error"])})
             case _:
                 return JSONResponse(status_code=422,
-                                    content={"error": "入力データが正しくありません。入力データを確認してください"})
+                                    content={"detail": "入力データが正しくありません。入力データを確認してください"})
     else:
-        return JSONResponse(status_code=422, content={"error": "入力データが正しくありません。入力データを確認してください"})
+        return JSONResponse(status_code=422, content={"detail": "入力データが正しくありません。入力データを確認してください"})

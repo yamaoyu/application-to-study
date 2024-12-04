@@ -89,7 +89,7 @@ def test_register_target_out_of_range(client, get_headers):
                            json=data,
                            headers=get_headers)
     assert response.status_code == 422
-    assert response.json() == {"error": "目標時間は0.5~12.0の範囲で入力してください"}
+    assert response.json() == {"detail": "目標時間は0.5~12.0の範囲で入力してください"}
 
 
 def test_register_target_with_incorrect_hour(client, get_headers):
@@ -99,7 +99,7 @@ def test_register_target_with_incorrect_hour(client, get_headers):
                            json=data,
                            headers=get_headers)
     assert response.status_code == 422
-    assert response.json() == {"error": "目標時間は0.5時間単位で入力してください"}
+    assert response.json() == {"detail": "目標時間は0.5時間単位で入力してください"}
 
 
 def test_register_target_with_invalid_year(client, get_headers):
@@ -156,7 +156,7 @@ def test_register_actual_with_invalid_hour(client, get_headers):
                           json=data,
                           headers=get_headers)
     assert response.status_code == 422
-    assert response.json() == {"error": "活動時間は0.5時間単位で入力してください"}
+    assert response.json() == {"detail": "活動時間は0.5時間単位で入力してください"}
 
 
 def test_register_actual_after_finish(client, get_headers):
