@@ -59,7 +59,7 @@ setup() {
                 })
                 break;
             case 422:
-                message.value = error.response.data.error;
+                message.value = error.response.data.detail;
                 break;
             case 500:
                 message.value =  "情報の取得に失敗しました"

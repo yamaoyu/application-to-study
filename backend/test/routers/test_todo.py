@@ -116,7 +116,7 @@ def test_create_todo_with_invalid_date(client, get_headers):
                            json=data,
                            headers=get_headers)
     assert response.status_code == 422
-    assert response.json() == {"error": "不正な日付です"}
+    assert response.json() == {"detail": "不正な日付です"}
 
 
 def test_get_todo_with_expired_token(client, get_headers):

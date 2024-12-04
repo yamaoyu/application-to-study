@@ -65,7 +65,7 @@
         if (error.response){
           switch (error.response.status){
             case 422:
-              message.value = error.response.data.error;
+              message.value = error.response.data.detail;
               break;
             case 500:
               message.value =  "ログインに失敗しました"
