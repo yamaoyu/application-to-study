@@ -3,4 +3,4 @@ WORKDIR /backend
 COPY ./requirements-dev.txt requirements-dev.txt
 RUN pip install --no-cache-dir --upgrade -r requirements-dev.txt
 COPY . .
-CMD [ "sh", "settings.sh" ]
+CMD [ "bash", "backend_settings.sh" ]

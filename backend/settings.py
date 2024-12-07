@@ -1,10 +1,7 @@
 import os
-from dotenv import load_dotenv
 from lib.security import get_password_hash
 from db.database import SessionLocal
 from db import db_model
-
-load_dotenv()
 
 BASE_URL = os.getenv("BASE_URL")
 APP_ADMIN_USER = os.getenv("APP_ADMIN_USER")
