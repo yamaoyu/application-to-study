@@ -6,9 +6,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from db.database import Base, get_db
 from app.main import app
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
 MYSQL_ROOT_PASSWORD = os.getenv("MYSQL_ROOT_PASSWORD")
@@ -16,10 +13,7 @@ MYSQL_HOST = os.getenv("MYSQL_HOST")
 TEST_MYSQL_DATABASE = os.getenv("TEST_MYSQL_DATABASE")
 TEST_DATABASE_URL = f"mysql+pymysql://root:{
     MYSQL_ROOT_PASSWORD}@{MYSQL_HOST}/{TEST_MYSQL_DATABASE}"
-SECRET_KEY = os.getenv(
-    "SECRET_KEY",
-    "ecd518ef9af267a68cd92ae2ba3e8570eae25c713a84dedf0b96066e7d73d205"
-)
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
 engine = create_engine(TEST_DATABASE_URL, poolclass=NullPool)
