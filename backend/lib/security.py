@@ -16,6 +16,9 @@ from jose import jwt, JWTError, ExpiredSignatureError
 # openssl rand -hex 32
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
+# .envに定義したものは文字列として読み込まれるようなのでint型へ変換する
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
+REFRESH_TOKEN_EXPIRE_WEEKS = int(os.getenv("REFRESH_TOKEN_EXPIRE_WEEKS"))
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
@@ -56,7 +59,6 @@ def get_password_hash(password) -> str:
 
 def create_access_token(data: dict,
                         expires_delta: Union[timedelta, None] = None):
-    ACCESS_TOKEN_EXPIRE_MINUTES = 30
     try:
         to_encode = data.copy()
         if expires_delta:
@@ -65,13 +67,7 @@ def create_access_token(data: dict,
             expire = datetime.now(timezone.utc) + \
                 timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         to_encode.update({"exp": expire})
-        if SECRET_KEY and ALGORITHM:
-            return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-        else:
-            logger.error("未設定の環境変数\n"
-                         f"SECRET_KEY:{SECRET_KEY is not None}, ALGORITHM: {ALGORITHM is not None}")
-            raise HTTPException(status_code=400,
-                                detail="トークンの作成に失敗しました")
+        return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     except HTTPException as http_e:
         raise http_e
     except Exception:
@@ -82,7 +78,6 @@ def create_access_token(data: dict,
 def create_refresh_token(data: dict,
                          expires_delta: Union[timedelta, None] = None,
                          db: Session = Depends(get_db)):
-    REFRESH_TOKEN_EXPIRE_WEEKS = 2
     try:
         to_encode = data.copy()
         if expires_delta:
@@ -91,12 +86,7 @@ def create_refresh_token(data: dict,
             expire = datetime.now(timezone.utc) + \
                 timedelta(weeks=REFRESH_TOKEN_EXPIRE_WEEKS)
         to_encode.update({"exp": expire})
-        if SECRET_KEY and ALGORITHM:
-            refresh_token = jwt.encode(
-                to_encode, SECRET_KEY, algorithm=ALGORITHM)
-        else:
-            raise HTTPException(status_code=400,
-                                detail="SECRET_KEYかALGORITHMが環境変数に設定されていません")
+        refresh_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         # トークンが既に存在するか確認(リフレッシュトークンは1ユーザーに1つ)
         existing_token = db.query(db_model.Token).filter(
             db_model.Token.username == data["sub"]).one_or_none()
@@ -125,9 +115,6 @@ def create_refresh_token(data: dict,
 def get_current_user(token: str = Depends(oauth2_scheme),
                      db: Session = Depends(get_db)):
     try:
-        if not SECRET_KEY or not ALGORITHM:
-            raise HTTPException(status_code=500,
-                                detail="環境変数にSECRET_KEYまたはALGORITHMが設定されていません")
         payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
         username = payload.get("sub")
         if username is None:
@@ -171,9 +158,6 @@ def login_required():
             try:
                 token = kwargs["token"]
                 db = kwargs["db"]
-                if not SECRET_KEY or not ALGORITHM:
-                    raise HTTPException(status_code=500,
-                                        detail="SECRET_KEYかALGORITHMが環境変数に設定されていません")
                 payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
                 username = payload.get("sub")
                 if username is None:
