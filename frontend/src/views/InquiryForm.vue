@@ -1,5 +1,5 @@
 <template>
-  <form @submit.prevent="SendInquiry">
+  <form @submit.prevent="sendInquiry">
     <div>
       <label for="category">カテゴリ:</label><br>
       <input type="radio" id="category-request" value="要望" v-model="category" required>要望
@@ -31,7 +31,7 @@
       const message = ref('')
       const router = useRouter()
   
-      const SendInquiry = async() => {
+      const sendInquiry = async() => {
         try {
           const url = process.env.VUE_APP_BACKEND_URL + 'inquiries'
           const response = await axios.post(
@@ -77,7 +77,7 @@
         category,
         detail,
         message,
-        SendInquiry
+        sendInquiry
       }
     }
   }

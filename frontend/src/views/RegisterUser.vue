@@ -1,5 +1,5 @@
 <template>
-  <form @submit.prevent="CreateUser">
+  <form @submit.prevent="createUser">
     <div>
       <label for="username">ユーザー名:</label>
       <input type="text" id="username" v-model="username" required>
@@ -33,7 +33,7 @@
       const message = ref('')
       const router = useRouter()
   
-      const CreateUser = async() => {
+      const createUser = async() => {
         try {
           const url = process.env.VUE_APP_BACKEND_URL + 'users'
           const response = await axios.post(
@@ -73,7 +73,7 @@
         password,
         email,
         message,
-        CreateUser
+        createUser
       }
     }
   }

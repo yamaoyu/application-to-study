@@ -1,6 +1,6 @@
 <template>
   <h3>活動時間の登録</h3>
-  <form @submit.prevent="RegisterActual">
+  <form @submit.prevent="registerActual">
     <div>
       <label for="date">日付:</label>
       <input type="date" id="date" v-model="date" required>
@@ -45,7 +45,7 @@ export default {
     const ActualTime = ref("")
     const router = useRouter()
 
-    const RegisterActual = async() =>{
+    const registerActual = async() =>{
         try {
           // 日付から年月日を取得
           const dateParts = date.value.split('-');
@@ -94,7 +94,7 @@ export default {
       date,
       message,
       ActualTime,
-      RegisterActual
+      registerActual
     }
   }
 }

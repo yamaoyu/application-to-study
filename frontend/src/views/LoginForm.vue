@@ -1,5 +1,5 @@
 <template>
-  <form @submit.prevent="UserLogin">
+  <form @submit.prevent="userLogin">
     <div>
       <label for="username">ユーザー名:</label>
       <input type="text" id="username" v-model="username" required>
@@ -43,7 +43,7 @@
         }
       })
   
-      const UserLogin = async() => {
+      const userLogin = async() => {
         try {
           const url = process.env.VUE_APP_BACKEND_URL + "login"
           const response = await axios.post(url, {
@@ -84,7 +84,7 @@
         username,
         password,
         message,
-        UserLogin
+        userLogin
       }
     }
   }
