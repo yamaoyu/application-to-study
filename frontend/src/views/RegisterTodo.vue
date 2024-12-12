@@ -1,6 +1,6 @@
 <template>
   <h3>Todoの登録</h3>
-  <form @submit.prevent="RegisterTodo">
+  <form @submit.prevent="registerTodo">
       <div>
         <label for="action">Todo:</label>
         <input type="text" id="action" v-model="action" required>
@@ -32,7 +32,7 @@ export default {
     const due = ref("")
     const router = useRouter()
 
-    const RegisterTodo = async() =>{
+    const registerTodo = async() =>{
         try {
           const url = process.env.VUE_APP_BACKEND_URL + 'todos'
           const response = await axios.post(
@@ -80,7 +80,7 @@ export default {
       message,
       action,
       due,
-      RegisterTodo
+      registerTodo
     }
   }
 }

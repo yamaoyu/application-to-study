@@ -1,6 +1,6 @@
 <template>
   <h3>月収の登録</h3>
-  <form @submit.prevent="RegisterSalary">
+  <form @submit.prevent="registerSalary">
     <div>
       <label for="year">年:</label>
       <select v-model="year" required>
@@ -51,7 +51,7 @@ export default {
     const router = useRouter()
     
 
-    const RegisterSalary = async() =>{
+    const registerSalary = async() =>{
         try {
           const url = process.env.VUE_APP_BACKEND_URL + 'incomes/'+ year.value + '/' + month.value;
           const response = await axios.post(url, 
@@ -91,7 +91,7 @@ export default {
       month,
       MonthlyIncome,
       message,
-      RegisterSalary
+      registerSalary
     }
   }
 }

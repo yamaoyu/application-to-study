@@ -1,6 +1,6 @@
 <template>
   <h3>活動を終了</h3>
-  <form @submit.prevent="FinishActivity">
+  <form @submit.prevent="finishActivity">
     <div>
       <label for="date">日付:</label>
       <input type="date" id="date" v-model="date" required>
@@ -30,7 +30,7 @@ export default {
     const message = ref("")
     const router = useRouter()
 
-    const FinishActivity = async() =>{
+    const finishActivity = async() =>{
         try {
           // 日付から年月日を取得
           const dateParts = date.value.split('-');
@@ -80,7 +80,7 @@ export default {
       day,
       date,
       message,
-      FinishActivity
+      finishActivity
     }
   }
 }

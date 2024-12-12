@@ -1,6 +1,6 @@
 <template>
   <h3>目標時間の登録</h3>
-  <form @submit.prevent="RegisterTarget">
+  <form @submit.prevent="registerTarget">
     <div>
       <label for="date">日付:</label>
       <input type="date" id="date" v-model="date" required>
@@ -46,7 +46,7 @@ export default {
     const TargetTime = ref(null)
     const router = useRouter()
 
-    const RegisterTarget = async() =>{
+    const registerTarget = async() =>{
         try {
           // 日付から年月日を取得
           const dateParts = date.value.split('-');
@@ -96,7 +96,7 @@ export default {
       date,
       message,
       TargetTime,
-      RegisterTarget
+      registerTarget
     }
   }
 }
