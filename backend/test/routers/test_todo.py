@@ -11,7 +11,7 @@ test_due = "2024-11-10"
 
 
 def setup_create_todo(client, get_headers):
-    data = {"action": test_action, "username": test_username, "due": test_due}
+    data = {"action": test_action, "due": test_due}
     client.post("/todos", json=data, headers=get_headers)
 
 
@@ -38,7 +38,7 @@ def setup_login(client):
 
 
 def test_create_todo(client, get_headers):
-    data = {"action": test_action, "username": test_username, "due": test_due}
+    data = {"action": test_action, "due": test_due}
     response = client.post("/todos", json=data, headers=get_headers)
     assert response.status_code == 201
     assert response.json() == {"message": "以下の内容で作成しました",
@@ -71,7 +71,7 @@ def test_create_todo_with_expired_token(client):
 def test_create_todo_with_same_content(client, get_headers):
     """ 同じ内容を登録した場合 """
     setup_create_todo(client, get_headers)
-    data = {"action": test_action, "username": test_username, "due": test_due}
+    data = {"action": test_action, "due": test_due}
     response = client.post("/todos", json=data, headers=get_headers)
     assert response.status_code == 400
     assert response.json() == {"detail": "既に登録されている内容です"}
@@ -91,7 +91,7 @@ def test_get_all_todo(client, get_headers):
 def test_get_all_incomplete_todo(client, get_headers):
     setup_create_todo(client, get_headers)
     setup_finish_todo(client, get_headers)
-    data = {"action": "test_2", "username": test_username, "due": test_due}
+    data = {"action": "test_2", "due": test_due}
     client.post("/todos", json=data, headers=get_headers)
     response = client.get("/todos?status=False", headers=get_headers)
     assert response.status_code == 200
@@ -111,7 +111,7 @@ def test_get_all_todo_without_login(client, get_headers):
 
 def test_create_todo_with_invalid_date(client, get_headers):
     """ 存在しない日付の場合 """
-    data = {"action": test_action, "username": test_username, "due": "2024-6-31"}
+    data = {"action": test_action, "due": "2024-6-31"}
     response = client.post("/todos",
                            json=data,
                            headers=get_headers)

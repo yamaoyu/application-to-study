@@ -26,8 +26,7 @@ def setup_create_another_user(client):
 
 def setup_login(client):
     user_info = {"username": another_test_user,
-                 "password": test_password,
-                 "email": "another_test@test.com"}
+                 "password": test_password}
     response = client.post("/login", json=user_info)
     access_token = response.json()["access_token"]
     return access_token
