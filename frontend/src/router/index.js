@@ -10,6 +10,7 @@ import RegisterTodo from '../views/RegisterTodo.vue'
 import finishActivity from '../views/FinishActivity.vue'
 import InquiryForm from '../views/InquiryForm.vue'
 import AllPeriodInfo from '../views/AllPeriodInfo.vue'
+import EditTodo from '../views/EditTodo.vue'
 import store from '../store/index.js'
 
 const routes = [
@@ -67,6 +68,11 @@ const routes = [
     path:"/view/all-activities",
     name:"AllPeriodInfo",
     component:AllPeriodInfo
+  },
+  {
+    path:"/edit/todo",
+    name:"EditTodo",
+    component:EditTodo
   }
 ]
 
