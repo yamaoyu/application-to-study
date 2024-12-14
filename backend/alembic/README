@@ -1,0 +1,42 @@
+Generic single-database configuration.
+## 概要
+"study_app"と"test_study_app"の2つのテーブルをのバージョンを管理する。
+"test_study_app"はpytestにて自動テストを実行する時のみに使用するテーブルであり、"study_app"と定義は全く同じ。
+しかし、"test_study_app"のテーブルはテスト実行時に作成され、終了時に削除される。
+そのため、alembicコマンドでDBを管理する対象は"study_app"のみとなる。
+
+## 設定手順　
+### 1.Alembic環境の作成
+手動で実行することはなく、settings.shにてalembicフォルダがない場合は自動で"alembic init alembic"が実行される。
+
+### 2. revisionの作成
+#### dockerを使用しない場合の例
+'''
+alembic revision (--autogenerate) -m "メッセージ"
+'''
+
+#### dockerを使用する場合の例
+
+'''
+docker-compose exec web alembic revision (--autogenerate) -m "メッセージ"
+'''
+
+「--autogenerate」は自動でコマンドを作成する場合に使用する。
+手動でコマンドを作成する場合はなしで実行する。
+
+### 3."2"で作成したスクリプトをDBへ反映
+alembic.iniでは"sqlalchemy.url = mysql+pymysql://%(MYSQL_USER)s:%(MYSQL_PASSWORD)s@%(MYSQL_HOST)s/%(MYSQL_DATABASE)s"となっており、環境変数を使用している。
+環境変数は.envに設定された値を読み込んでいる。
+#### dockerを使用しない場合の例
+'''
+alembic upgrade head
+'''
+
+#### dockerを使用する場合の例
+'''
+docker-compose exec web alembic upgrade head
+'''
+
+### その他
+コンテナを再作成せずに、環境変数を設定したい/環境変数の値をコンテナ作成時の値とは変更したい場合、
+dockerを使用していない場合は「export」を使用し、使用する場合は「-e MYSQL_USER="xx"」のように設定する。

@@ -1,28 +1,38 @@
-from pydantic import BaseModel
+import re
+from pydantic import BaseModel, Field, field_validator
 
 
-class DateIn(BaseModel):
+class RegisterActivities(BaseModel):
     date: str
+    target_time: float
+    actual_time: float
+    is_achieved: bool
+    message: str
 
 
 class TargetTimeIn(BaseModel):
-    date: str
-    target_time: int
+    target_time: float
 
+    @field_validator("target_time")
+    def validate_target_time(cls, target_time):
+        if not (0.5 <= target_time <= 12):
+            raise ValueError("目標時間は0.5~12.0の範囲で入力してください")
 
-class ResponseTargetTime(TargetTimeIn):
-    message: str
+        if not re.match(r"^((1[0-2]|\d)\.[0|5])$", str(target_time)):
+            raise ValueError("目標時間は0.5時間単位で入力してください")
+
+        return target_time
 
 
 class ActualTimeIn(BaseModel):
-    date: str
-    actual_time: int
+    actual_time: float = Field(ge=0.0, le=12.0)
 
+    @field_validator("actual_time")
+    def validate_actual_time(cls, actual_time):
+        if not (0.0 <= actual_time <= 12):
+            raise ValueError("活動時間は0.0~12.0の範囲で入力してください")
 
-class ResponseStudyTime(ActualTimeIn):
-    target_time: int
-    message: str
+        if not re.match(r"^((1[0-2]|\d)\.[0|5])$", str(actual_time)):
+            raise ValueError("活動時間は0.5時間単位で入力してください")
 
-
-class RegisterSalary(BaseModel):
-    salary: int
+        return actual_time

@@ -1,8 +1,0 @@
-fastapi[all]
-pytz
-sqlalchemy
-pymysql
-python-jose[cryptography]
-pytest
-passlib[bcrypt]
-python-multipart
