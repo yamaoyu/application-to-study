@@ -190,10 +190,11 @@ def test_delete_todo_not_exist(client, get_headers):
 
 def test_edit_todo(client, get_headers):
     setup_create_todo(client, get_headers)
-    data = {"action": "new action", "due": test_due}
+    data = {"action": "new action", "due": "2024-11-11"}
     response = client.put("/todos/1", json=data, headers=get_headers)
     assert response.status_code == 200
-    assert response.json() == {"message": f"更新後のタスク:{data['action']}"}
+    assert response.json() == {"message": "Todoを更新しました",
+                               "action": "new action", "due": "2024-11-11"}
 
 
 def test_edit_todo_by_another_user(client, get_headers):
