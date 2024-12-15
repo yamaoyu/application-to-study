@@ -11,3 +11,4 @@ backend/app/__pycache__
 temp
 backend/.pytest_cache
 backend/log
+ansible/ansible_vault_pass.txt

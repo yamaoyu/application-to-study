@@ -1,0 +1,18 @@
+- name: Study App
+  hosts: server1
+  tasks:
+  - name: docker起動用のディレクトリを作成
+    file:
+      path: "{{ dest_path }}"
+      state: directory
+      owner: "{{ ansible_user }}"
+      group: "{{ ansible_user }}"
+      mode: '0755'
+    become: true
+
+  - name: gitリポジトリ作成
+    ansible.builtin.git:
+      repo: "{{ repo_url }}"
+      dest: "{{ dest_path }}"
+    become: false
+    # become_flags: '-E'
