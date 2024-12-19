@@ -4,6 +4,7 @@
     <div>
       <label for="date">日付:</label>
       <input type="date" id="date" v-model="date" required>
+      <input type="button" value="今日" @click="insertDate">
     </div>
     <div>
       <label for="TargetTime">目標時間(Hour):</label>
@@ -45,6 +46,12 @@ export default {
     const message = ref("")
     const TargetTime = ref(null)
     const router = useRouter()
+
+    const insertDate = async() =>{
+      const today = new Date()
+      date.value = `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`
+      console.log(date)
+    }
 
     const registerTarget = async() =>{
         try {
@@ -96,7 +103,8 @@ export default {
       date,
       message,
       TargetTime,
-      registerTarget
+      registerTarget,
+      insertDate
     }
   }
 }
