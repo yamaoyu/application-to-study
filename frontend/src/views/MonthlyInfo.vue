@@ -18,6 +18,7 @@
           {{ year }}
         </option>
       </select>
+      <input type="button" value="今年" @click="insertThisYear">
     </div>
     <div>
       <label for="month">月:</label>
@@ -26,6 +27,7 @@
           {{ month }}
         </option>
       </select>
+      <input type="button" value="今月" @click="insertThisMonth">
     </div>
     <button type="submit">検索</button>
   </form>
@@ -71,6 +73,13 @@ export default {
     const router = useRouter()
     const activities = ref([])
 
+    const insertThisYear = async() =>{
+      year.value = new Date().getFullYear()
+    }
+
+    const insertThisMonth = async() =>{
+      month.value = new Date().getMonth()+1
+    }
 
     const GetMonthlyInfo = async() =>{
       try{
@@ -116,6 +125,8 @@ export default {
       year,
       month,
       activities,
+      insertThisYear,
+      insertThisMonth,
       GetMonthlyInfo
     }
   }

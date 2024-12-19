@@ -8,6 +8,7 @@
           {{ year }}
         </option>
       </select>
+      <input type="button" value="今年" @click="insertThisYear">
     </div>
     <div>
       <label for="month">月:</label>
@@ -16,6 +17,7 @@
           {{ month }}
         </option>
       </select>
+      <input type="button" value="今月" @click="insertThisMonth">
     </div>
     <div>
       <label for="MonthlyIncome">月収(万):</label>
@@ -49,6 +51,14 @@ export default {
     const MonthlyIncome = ref('')
     const message = ref('')
     const router = useRouter()
+
+    const insertThisYear = async() =>{
+      year.value = new Date().getFullYear()
+    }
+
+    const insertThisMonth = async() =>{
+      month.value = new Date().getMonth()+1
+    }
     
 
     const registerSalary = async() =>{
@@ -91,6 +101,8 @@ export default {
       month,
       MonthlyIncome,
       message,
+      insertThisYear,
+      insertThisMonth,
       registerSalary
     }
   }

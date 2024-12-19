@@ -4,6 +4,7 @@
     <div>
       <label for="date">日付:</label>
       <input type="date" id="date" v-model="date" required>
+      <input type="button" value="今日" @click="insertToday">
     </div>
     <button type="submit">終了</button>
   </form>
@@ -29,6 +30,12 @@ export default {
     const date = ref("")
     const message = ref("")
     const router = useRouter()
+
+    const insertToday = async() =>{
+      const today = new Date()
+      date.value = `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`
+      console.log(date)
+    }
 
     const finishActivity = async() =>{
         try {
@@ -80,6 +87,7 @@ export default {
       day,
       date,
       message,
+      insertToday,
       finishActivity
     }
   }
