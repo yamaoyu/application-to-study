@@ -53,7 +53,7 @@
 import { onMounted, ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import store from '@/store';
+import { useStore } from 'vuex';
 
 export default {
   setup() {
@@ -66,6 +66,8 @@ export default {
     const todos = ref([])
     const todo_msg = ref("")
     const router = useRouter()
+    const store = useStore()
+
 
     const deleteTodo = async(todoId) =>{
       try {
@@ -147,7 +149,8 @@ export default {
     }
 
     const editTodo = async(todoInfo) =>{
-      router.push({"name":"EditTodo", "query":{todoInfo:JSON.stringify(todoInfo)}}
+      store.commit('moduleTodo/editTodoInfo', JSON.stringify(todoInfo))
+      router.push({"name":"EditTodo"}
       )
     }
 

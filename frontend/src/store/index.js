@@ -1,10 +1,11 @@
 import { createStore } from 'vuex'
+import { moduleTodo } from './modules/todo'
 
 export default createStore({
   state: {
     accessToken: null,
     tokenType: null,
-    expire: null
+    expire: null,
   },
   mutations: {
     SET_AUTH_DATA(state, { accessToken, tokenType, expire }) {
@@ -16,7 +17,7 @@ export default createStore({
       state.accessToken = null
       state.tokenType = null
       state.expire = null
-    }
+    },
   },
   actions: {},
   getters: {
@@ -37,5 +38,8 @@ export default createStore({
         return '登録なし'
       }
     }
+  },
+  modules: {
+    moduleTodo: moduleTodo
   }
 })

@@ -22,7 +22,7 @@
 <script>
 import { onMounted, ref } from 'vue';
 import axios from 'axios';
-import { useRouter, useRoute } from 'vue-router';
+import { useRouter } from 'vue-router';
 import store from '@/store';
 
 export default {
@@ -31,8 +31,8 @@ export default {
     const action = ref("")
     const due = ref()
     const router = useRouter()
-    const route = useRoute()
-    const todoInfo = JSON.parse(route.query.todoInfo)
+    const todoInfo =  JSON.parse(store.state.moduleTodo.todoInfo)
+    console.log(todoInfo.action)
 
     const editTodo = async() =>{
       try{
@@ -71,7 +71,7 @@ export default {
       }
 
     onMounted( async() =>{
-      if (route.query.todoInfo){
+      if (todoInfo){
         action.value = todoInfo.action
         due.value = todoInfo.due
       }
