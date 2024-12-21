@@ -50,7 +50,6 @@ export default {
     const insertDate = async() =>{
       const today = new Date()
       date.value = `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`
-      console.log(date)
     }
 
     const registerTarget = async() =>{
@@ -66,7 +65,7 @@ export default {
           const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year.value + '/' + month.value + '/' + day.value + '/target';
           const response = await axios.post(url, 
                                           {target_time: Number(TargetTime.value)},
-                                          {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
+                                          {headers: {Authorization:  `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}})
           if (response.status===201){
             message.value = response.data.message
           }

@@ -8,6 +8,7 @@
       <div>
         <label for="due">期限:</label>
         <input type="date" id="date" v-model="due" required>
+        <input type="button" value="今日" @click="insertToday">
       </div>
       <button type="submit">登録</button>
   </form>
@@ -32,6 +33,11 @@ export default {
     const due = ref("")
     const router = useRouter()
 
+    const insertToday = async() =>{
+      const today = new Date()
+      due.value = `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`
+    }
+
     const registerTodo = async() =>{
         try {
           const url = process.env.VUE_APP_BACKEND_URL + 'todos'
@@ -43,7 +49,7 @@ export default {
             },
             { 
               headers: {
-              Authorization: `${store.state.tokenType} ${store.state.accessToken}`}
+              Authorization:  `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}
             }
           )
           if (response.status===201){
@@ -80,6 +86,7 @@ export default {
       message,
       action,
       due,
+      insertToday,
       registerTodo
     }
   }

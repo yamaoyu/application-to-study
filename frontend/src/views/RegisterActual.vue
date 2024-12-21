@@ -49,7 +49,6 @@ export default {
     const insertToday = async() =>{
       const today = new Date()
       date.value = `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`
-      console.log(date)
     }
 
     const registerActual = async() =>{
@@ -65,7 +64,7 @@ export default {
           const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year.value + '/' + month.value + '/' + day.value +  '/actual';
           const response = await axios.put(url, 
                                           {actual_time: Number(ActualTime.value)},
-                                          {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
+                                          {headers: {Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}})
           if (response.status===200){
             message.value = response.data.message
           }

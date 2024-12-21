@@ -42,7 +42,7 @@
             },
             {
               headers: {
-                Authorization: `${store.state.tokenType} ${store.state.accessToken}`}
+                Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}
             }
           )
           if (response.status===201){
