@@ -76,14 +76,14 @@ export default {
             delete_url, 
             { 
               headers: {
-              Authorization: `${store.state.tokenType} ${store.state.accessToken}`}
+              Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}
             }
           )
-          if (response.status===204){
+        if (response.status===204){
             // 削除に成功したらtodoを更新する
             const todo_url = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
             const todo_res = await axios.get(todo_url,
-                                          {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
+                                          {headers: {Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}})
             todos.value = todo_res.data;
           }
       } catch (error) {
@@ -116,14 +116,14 @@ export default {
             {},
             { 
               headers: {
-              Authorization: `${store.state.tokenType} ${store.state.accessToken}`}
+              Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}
             }
           )
-          if (response.status===200){
+        if (response.status===200){
             // ステータスを終了にしたらtodoを更新する
             const todo_url = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
             const todo_res = await axios.get(todo_url,
-                                          {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
+                                          {headers: {Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}})
             todos.value = todo_res.data;
           }
       } catch (error) {
@@ -159,7 +159,7 @@ export default {
         try {
           const act_url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month + '/' + date;
           const activity_res = await axios.get(act_url,
-                                              {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
+                                              {headers: {Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}})
           if (activity_res.status===200){
             activity_msg.value = [activity_res.data.date,
                                   `\n目標時間:${activity_res.data.target_time}時間`,
@@ -194,7 +194,7 @@ export default {
         try{
           const income_url = process.env.VUE_APP_BACKEND_URL + 'incomes/' + year + '/' + month;
           const earn_res = await axios.get(income_url,
-                                          {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}}
+                                          {headers: {Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}}
           )
           if (earn_res.status===200){
             income_msg.value = [`今月の月収:${earn_res.data["今月の詳細"].salary}万円`,
@@ -228,8 +228,8 @@ export default {
         try{
           const todo_url = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
           const todo_res = await axios.get(todo_url,
-                                          {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
-          if (todo_res.status===200){
+                                          {headers: {Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}})
+          if (todo_res.status==200){
             todos.value = todo_res.data;
           }
         } catch (todo_err) {

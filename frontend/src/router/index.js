@@ -85,9 +85,9 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   if (
     // make sure a token exists
-    (!store.getters.isToken ||
+    (!store.getters["authenticateModule/isToken"] ||
     // make sure the token is not expired
-    store.getters.isExpired)&&
+    store.getters["authenticateModule/isExpired"])&&
     // ❗️ except Login and RegisterUser
     to.name !== 'Login' &&
     to.name !== 'RegisterUser'

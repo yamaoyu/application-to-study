@@ -66,13 +66,12 @@ export default {
           const url = process.env.VUE_APP_BACKEND_URL + 'incomes/'+ year.value + '/' + month.value;
           const response = await axios.post(url, 
                                             {salary: Number(MonthlyIncome.value)},
-                                            {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
+                                            {headers: {Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}})
           if (response.status===201){
             message.value = response.data.message
           }
         } catch (error) {
           if (error.response){
-            console.log(error.response.data)
             switch (error.response.status){
               case 401:
               router.push(

@@ -85,7 +85,7 @@ export default {
       try{
           const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year.value + '/' + month.value;
           const response = await axios.get(url,
-                                          {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
+                                          {headers: {Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}})
           if (response.status===200){
             message.value = [`合計:${response.data.total_monthly_income}万円\n`,
                             `内訳\n`,

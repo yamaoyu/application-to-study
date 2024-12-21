@@ -52,11 +52,10 @@
           })
           // ここでログイン後の処理を行う（例：トークンの保存、ページ遷移など）
           if (response.status===200){
-              store.commit('SET_AUTH_DATA', {
+              store.commit('authenticateModule/SET_AUTH_DATA', {
               accessToken: response.data.access_token,
               tokenType: response.data.token_type,
               expire: jwtDecode(response.data.access_token).exp})
-            
 
             router.push({
               "path":"/home"})

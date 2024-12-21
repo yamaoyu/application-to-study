@@ -32,14 +32,13 @@ export default {
     const due = ref()
     const router = useRouter()
     const todoInfo =  JSON.parse(store.state.moduleTodo.todoInfo)
-    console.log(todoInfo.action)
 
     const editTodo = async() =>{
       try{
           const url = process.env.VUE_APP_BACKEND_URL + 'todos/' + todoInfo.todo_id
           const response = await axios.put(url,
                                           {action: action.value, due:due.value},
-                                          {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
+                                          {headers: {Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}})
           if (response.status===200){
             message.value = [
               response.data.message,

@@ -34,7 +34,6 @@ export default {
     const insertToday = async() =>{
       const today = new Date()
       date.value = `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`
-      console.log(date)
     }
 
     const finishActivity = async() =>{
@@ -51,7 +50,7 @@ export default {
           // axiosのputの第二引数はリクエストボディとなるため{}を用意する。(リクエストボディで渡すデータはないため空)
           const response = await axios.put(url,
                                           {},
-                                          {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
+                                          {headers: {Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}})
           if (response.status===200){
             message.value = response.data.message
           }
