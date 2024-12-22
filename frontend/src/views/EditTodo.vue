@@ -11,7 +11,7 @@
       </div>
       <button type="submit">更新</button>
   </form>
-  <div style="white-space: pre-wrap;">
+  <div>
     <p v-if="message" class="message">{{ message }}</p>
   </div>
   <div>

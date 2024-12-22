@@ -12,7 +12,7 @@
     </div>
     <button type="submit">送信</button>
   </form>
-  <p v-if="message" class="message" style="white-space: pre-wrap;" >{{ message }}</p>
+  <p v-if="message" class="message">{{ message }}</p>
   <div>
     <router-link to="/home">ホームへ戻る</router-link>
   </div>

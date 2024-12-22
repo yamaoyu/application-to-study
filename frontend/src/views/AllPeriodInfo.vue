@@ -1,5 +1,5 @@
 <template>
-<div style="white-space: pre-wrap;" v-if="message" class="message">
+<div v-if="message" class="message">
     <h3>全期間の活動実績</h3>
     <p v-if="message" class="message">{{ message }}</p>
 </div>
