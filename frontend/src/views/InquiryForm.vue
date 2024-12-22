@@ -12,7 +12,7 @@
     </div>
     <button type="submit">送信</button>
   </form>
-  <p v-if="message" class="message">{{ message }}</p>
+  <p v-if="message" class="message" style="white-space: pre-wrap;" >{{ message }}</p>
   <div>
     <router-link to="/home">ホームへ戻る</router-link>
   </div>
@@ -46,7 +46,9 @@
             }
           )
           if (response.status===201){
-            message.value = response.data
+            message.value = ["以下の内容で受け付けました\n",
+                            `カテゴリ:${response.data.category}\n`,
+                            `内容:${response.data.detail}`].join('');
           }
         } catch (error) {
           if (error.response){

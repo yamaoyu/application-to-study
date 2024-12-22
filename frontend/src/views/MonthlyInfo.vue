@@ -5,9 +5,11 @@
   </div>
   <div v-if="activities.length > 0" class="activities">
     <h3>活動状況(日別)</h3>
-    <ul v-for="(activity, index) in activities" :key="index" class="activity">
-      <p>{{ activity.date }}</p>
-      <p>目標時間:{{ activity.target_time }}時間 活動時間:{{ activity.actual_time }}時間 ステータス:{{ activity.is_achieved }}</p>
+    <ul>
+      <li v-for="(activity, index) in activities" :key="index" class="activity">
+        <p>{{ activity.date }}</p>
+        <p>目標:{{ activity.target_time }}時間 実績:{{ activity.actual_time }}時間 ステータス:{{ activity.is_achieved }}</p>
+      </li>
     </ul>
   </div>
   <form @submit.prevent="GetMonthlyInfo">
@@ -93,6 +95,15 @@ export default {
                             `ボーナス合計:${response.data.total_bonus}万円\n`,
                             `目標達成日数:${response.data.success_days}日\n`,
                             `目標未達成日数:${response.data.fail_days}日`].join('');
+            //  is_achievedを真偽値からテキストに変換
+            for (const activity of response.data.activity_list){
+              if (activity.is_achieved){
+                activity.is_achieved = "達成"
+              } else {
+                activity.is_achieved = "未達成"
+              }
+            }
+
             activities.value = response.data.activity_list;
           }
       } catch (error){
