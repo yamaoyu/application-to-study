@@ -14,5 +14,9 @@
     ansible.builtin.git:
       repo: "{{ repo_url }}"
       dest: "{{ dest_path }}"
-    become: false
-    # become_flags: '-E'
+    become_flags: '-E'
+
+  - name: .envの設定
+    ansible.builtin.copy:
+      dest: "{{ env_vars_dest }}"
+      src: "{{ env_vars_src }}"
