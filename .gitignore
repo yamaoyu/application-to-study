@@ -12,3 +12,6 @@ temp
 backend/.pytest_cache
 backend/log
 ansible/ansible_vault_pass.txt
+ansible/group_vars/
+ansible/host_vars/
+ansible/env_vars/
