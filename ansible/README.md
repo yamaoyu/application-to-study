@@ -8,6 +8,8 @@
 ## 実行条件
 - sudoができるユーザーであること
 - ansibleで使用するユーザーの作成、sshキーの作成、sshキーのgithubへの追加が実施済みであること
+- 以下のコレクションがコントロールノードにインストールされていること
+  - ansible-galaxy collection install community.general
 
 ## 実行準備
 ### groups_varsの設定
