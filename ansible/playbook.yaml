@@ -1,9 +1,14 @@
 - name: Study App
   hosts: server1
   tasks:
+  - name: タイムゾーンをAsia/Tokyoに設定
+    become: true
+    community.general.timezone:
+      name: Asia/Tokyo
+
   - name: docker起動用のディレクトリを作成
     file:
-      path: "{{ dest_path }}"
+      path: "{{ app_root_dir }}"
       state: directory
       owner: "{{ ansible_user }}"
       group: "{{ ansible_user }}"
@@ -13,7 +18,7 @@
   - name: gitリポジトリ作成
     ansible.builtin.git:
       repo: "{{ repo_url }}"
-      dest: "{{ dest_path }}"
+      dest: "{{ app_root_dir }}"
     become_flags: '-E'
 
   - name: .envの設定
