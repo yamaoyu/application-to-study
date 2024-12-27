@@ -25,3 +25,38 @@
     ansible.builtin.copy:
       dest: "{{ env_vars_dest }}"
       src: "{{ env_vars_src }}"
+
+  - name: dockerインストールに必要なパッケージをインストール
+    become: true
+    ansible.builtin.apt:
+      name:
+        - apt-transport-https 
+        - ca-certificates
+        - curl
+        - gnupg
+        - software-properties-common
+      state: present
+      update_cache: true
+
+  - name: dockerのGPGキーを追加
+    become: true
+    ansible.builtin.apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+
+  - name: ubuntu向けのdockerリポジトリを追加
+    become: true
+    ansible.builtin.apt_repository:
+      repo: "deb [arch=arm64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+      state: present
+
+  - name: dockerインストール
+    become: true
+    ansible.builtin.apt:
+      name:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+        - docker-compose-plugin
+      state: present
+      update_cache: true
