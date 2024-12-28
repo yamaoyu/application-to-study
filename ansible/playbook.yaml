@@ -1,6 +1,24 @@
 - name: Study App
   hosts: server1
   tasks:
+  - name: hwclockのインストール
+    become: true
+    ansible.builtin.apt:
+      name:
+        - util-linux-extra
+
+  - name: NTPとシステムクロックの同期
+    become: true
+    command: timedatectl set-ntp true
+
+  - name: NTPサーバー再起動
+    become: true
+    command:  systemctl restart systemd-timesyncd
+
+  - name: ハードウェアクロックとシステムクロックの同期
+    become: true
+    command: hwclock --systohc
+
   - name: タイムゾーンをAsia/Tokyoに設定
     become: true
     community.general.timezone:
@@ -47,7 +65,7 @@
   - name: ubuntu向けのdockerリポジトリを追加
     become: true
     ansible.builtin.apt_repository:
-      repo: "deb [arch=arm64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+      repo: "deb {{ architecture }} https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
       state: present
 
   - name: dockerインストール
@@ -60,3 +78,4 @@
         - docker-compose-plugin
       state: present
       update_cache: true
+
