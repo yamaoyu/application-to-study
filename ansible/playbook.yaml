@@ -37,6 +37,7 @@
     ansible.builtin.git:
       repo: "{{ repo_url }}"
       dest: "{{ app_root_dir }}"
+      version: "{{ branch }}"
     become_flags: '-E'
 
   - name: .envの設定
@@ -79,3 +80,27 @@
       state: present
       update_cache: true
 
+  - name: dockerグループにユーザーを追加
+    become: true
+    ansible.builtin.user:
+      name: "{{ ansible_user }}"
+      append: true
+      groups: docker
+
+  - name: vueで使用する画像をコピー
+    ansible.builtin.copy:
+      dest: "{{ img_dest }}"
+      src: "{{ img_src }}"
+
+  - name: 既存のdocker削除
+    community.docker.docker_compose_v2:
+      project_src: "{{ app_root_dir }}"
+      state: absent
+
+  - name: docker起動
+    community.docker.docker_compose_v2:
+      project_src: "{{ app_root_dir }}"
+      state: present
+      build: always
+      env_files: .env
+      files: docker-compose.yml
