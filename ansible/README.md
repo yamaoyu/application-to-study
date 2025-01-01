@@ -1,15 +1,31 @@
 ## 実行内容
 - アプリ実行ディレクトリ作成
 - gitリポジトリ作成
-- 環境変数設定
+- 環境変数を規定ファイルに設定していること
 - dockerインストール
 - docker起動
+- フロントエンドで使用する画像が実行マシンにあること
 
 ## 実行条件
 - sudoができるユーザーであること
 - ansibleで使用するユーザーの作成、sshキーの作成、sshキーのgithubへの追加が実施済みであること
 - 以下のコレクションがコントロールノードにインストールされていること
   - ansible-galaxy collection install community.general
+  - ansible-galaxy collection install community.docker
+
+## 環境変数について
+1. env_vars
+
+   アプリ実行に必要な環境変数
+
+2. group_vars
+   
+   複数ホストで共通して使用する環境変数
+
+3. host_vars
+   
+   ホスト固有の環境変数
+
 
 ## 実行準備
 ### groups_varsの設定
@@ -52,7 +68,6 @@
       ```
     ansible-vault encrypt env_vars/.env.serverX --vault-password-file ansible_vault_pass.txt
     ```
-
 
 復号時はencrypt→decryptに変更して実行する
 
