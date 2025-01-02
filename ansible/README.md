@@ -12,6 +12,7 @@
 - 以下のコレクションがコントロールノードにインストールされていること
   - ansible-galaxy collection install community.general
   - ansible-galaxy collection install community.docker
+- ansibleディレクトリにansible_vault_pass.txtを作成し、ansible valutのパスワードを記載する
 
 ## 環境変数について
 1. env_vars
@@ -78,6 +79,7 @@ playbookのあるディレクトリへ移動する
 ### playbookの実行
 playbook実行時は以下を実行する
 ```
-ansible-playbook -i inventory.yaml playbook.yaml --vault-password-file ansible_vault_pass.txt --ask-become-pass
+ansible-playbook -i inventory.yaml playbook.yaml --vault-password-file ansible_vault_pass.txt --ask-become-pass　(--limit ホスト名)
 ```
 ansible_userのパスワードを聞かれるため、それを入力するとansibleが起動される
+limitオプションは対象となるマネージドノードを制限する時に使用する

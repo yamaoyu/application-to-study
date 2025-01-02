@@ -1,5 +1,5 @@
 - name: Study App
-  hosts: server1
+  hosts: webservers
   tasks:
   - name: hwclockのインストール
     become: true
