@@ -7,22 +7,38 @@
       name:
         - util-linux-extra
 
+  - name: NTPサーバーとシステムクロックの同期確認
+    command: timedatectl show --property=NTPSynchronized --value
+    register: timedatectl_status
+    changed_when: false
+
   - name: NTPとシステムクロックの同期
     become: true
     command: timedatectl set-ntp true
+    when: timedatectl_status.stdout != 'yes'
 
   - name: NTPサーバー再起動
     become: true
-    command:  systemctl restart systemd-timesyncd
+    systemd:
+      name: "{{ ntp_service_name }}" 
+      state: restarted
+    when: timedatectl_status.stdout != 'yes'
 
   - name: ハードウェアクロックとシステムクロックの同期
     become: true
     command: hwclock --systohc
+    when: timedatectl_status.stdout != 'yes'
+
+  - name: タイムゾーン確認
+    shell: LANG=C timedatectl
+    register: timezone
+    changed_when: False
 
   - name: タイムゾーンをAsia/Tokyoに設定
     become: true
     community.general.timezone:
       name: Asia/Tokyo
+    when: not "Asia/Tokyo" in timezone.stdout
 
   - name: docker起動用のディレクトリを作成
     file:
@@ -92,10 +108,16 @@
       dest: "{{ img_dest }}"
       src: "{{ img_src }}"
 
-  - name: 既存のdocker削除
+  - name: dockerコンテナの存在確認
+    command: "docker compose -f {{ app_root_dir }}/docker-compose.yml ps -a"
+    register: compose_status
+    changed_when: false
+
+  - name: 既存のdockerコンテナ削除
     community.docker.docker_compose_v2:
       project_src: "{{ app_root_dir }}"
       state: absent
+    when: compose_status.stdout != "NAME      IMAGE     COMMAND   SERVICE   CREATED   STATUS    PORTS"
 
   - name: docker起動
     community.docker.docker_compose_v2:
