@@ -1,0 +1,128 @@
+- name: Study App
+  hosts: webservers
+  tasks:
+  - name: hwclockのインストール
+    become: true
+    ansible.builtin.apt:
+      name:
+        - util-linux-extra
+
+  - name: NTPサーバーとシステムクロックの同期確認
+    command: timedatectl show --property=NTPSynchronized --value
+    register: timedatectl_status
+    changed_when: false
+
+  - name: NTPとシステムクロックの同期
+    become: true
+    command: timedatectl set-ntp true
+    when: timedatectl_status.stdout != 'yes'
+
+  - name: NTPサーバー再起動
+    become: true
+    systemd:
+      name: "{{ ntp_service_name }}" 
+      state: restarted
+    when: timedatectl_status.stdout != 'yes'
+
+  - name: ハードウェアクロックとシステムクロックの同期
+    become: true
+    command: hwclock --systohc
+    when: timedatectl_status.stdout != 'yes'
+
+  - name: タイムゾーン確認
+    shell: LANG=C timedatectl
+    register: timezone
+    changed_when: False
+
+  - name: タイムゾーンをAsia/Tokyoに設定
+    become: true
+    community.general.timezone:
+      name: Asia/Tokyo
+    when: not "Asia/Tokyo" in timezone.stdout
+
+  - name: docker起動用のディレクトリを作成
+    file:
+      path: "{{ app_root_dir }}"
+      state: directory
+      owner: "{{ ansible_user }}"
+      group: "{{ ansible_user }}"
+      mode: '0755'
+    become: true
+
+  - name: gitリポジトリ作成
+    ansible.builtin.git:
+      repo: "{{ repo_url }}"
+      dest: "{{ app_root_dir }}"
+      version: "{{ branch }}"
+    become_flags: '-E'
+
+  - name: .envの設定
+    ansible.builtin.copy:
+      dest: "{{ env_vars_dest }}"
+      src: "{{ env_vars_src }}"
+
+  - name: dockerインストールに必要なパッケージをインストール
+    become: true
+    ansible.builtin.apt:
+      name:
+        - apt-transport-https 
+        - ca-certificates
+        - curl
+        - gnupg
+        - software-properties-common
+      state: present
+      update_cache: true
+
+  - name: dockerのGPGキーを追加
+    become: true
+    ansible.builtin.apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+
+  - name: ubuntu向けのdockerリポジトリを追加
+    become: true
+    ansible.builtin.apt_repository:
+      repo: "deb {{ architecture }} https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+      state: present
+
+  - name: dockerインストール
+    become: true
+    ansible.builtin.apt:
+      name:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+        - docker-compose-plugin
+      state: present
+      update_cache: true
+
+  - name: dockerグループにユーザーを追加
+    become: true
+    ansible.builtin.user:
+      name: "{{ ansible_user }}"
+      append: true
+      groups: docker
+
+  - name: vueで使用する画像をコピー
+    ansible.builtin.copy:
+      dest: "{{ img_dest }}"
+      src: "{{ img_src }}"
+
+  - name: dockerコンテナの存在確認
+    command: "docker compose -f {{ app_root_dir }}/docker-compose.yml ps -a"
+    register: compose_status
+    changed_when: false
+
+  - name: 既存のdockerコンテナ削除
+    community.docker.docker_compose_v2:
+      project_src: "{{ app_root_dir }}"
+      state: absent
+    when: compose_status.stdout != "NAME      IMAGE     COMMAND   SERVICE   CREATED   STATUS    PORTS"
+
+  - name: docker起動
+    community.docker.docker_compose_v2:
+      project_src: "{{ app_root_dir }}"
+      state: present
+      build: always
+      env_files: .env
+      files: docker-compose.yml
