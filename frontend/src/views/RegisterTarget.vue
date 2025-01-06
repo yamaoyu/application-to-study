@@ -49,7 +49,10 @@ export default {
 
     const insertDate = async() =>{
       const today = new Date()
-      date.value = `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`
+      const year = today.getFullYear()
+      const month = `${today.getMonth()+1}`.padStart(2, '0')
+      const day = `${today.getDate()}`.padStart(2, '0')
+      date.value = `${year}-${month}-${day}`
     }
 
     const registerTarget = async() =>{

@@ -35,7 +35,10 @@ export default {
 
     const insertToday = async() =>{
       const today = new Date()
-      due.value = `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`
+      const year = today.getFullYear()
+      const month = `${today.getMonth()+1}`.padStart(2, '0')
+      const day = `${today.getDate()}`.padStart(2, '0')
+      due.value = `${year}-${month}-${day}`
     }
 
     const registerTodo = async() =>{
