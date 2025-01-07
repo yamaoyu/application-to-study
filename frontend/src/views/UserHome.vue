@@ -53,7 +53,8 @@
 import { onMounted, ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { useStore } from 'vuex';
+import { useAuthStore } from '@/store/authenticate';
+import { useTodoStore } from '@/store/todo';
 
 export default {
   setup() {
@@ -66,7 +67,8 @@ export default {
     const todos = ref([])
     const todo_msg = ref("")
     const router = useRouter()
-    const store = useStore()
+    const authStore = useAuthStore()
+    const todoStore = useTodoStore()
 
 
     const deleteTodo = async(todoId) =>{
@@ -76,14 +78,14 @@ export default {
             delete_url, 
             { 
               headers: {
-              Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}
+              Authorization: authStore.getAuthHeader}
             }
           )
         if (response.status===204){
             // 削除に成功したらtodoを更新する
             const todo_url = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
             const todo_res = await axios.get(todo_url,
-                                          {headers: {Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}})
+                                          {headers: {Authorization: authStore.getAuthHeader}})
             todos.value = todo_res.data;
           }
       } catch (error) {
@@ -116,14 +118,14 @@ export default {
             {},
             { 
               headers: {
-              Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}
+              Authorization: authStore.getAuthHeader}
             }
           )
         if (response.status===200){
             // ステータスを終了にしたらtodoを更新する
             const todo_url = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
             const todo_res = await axios.get(todo_url,
-                                          {headers: {Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}})
+                                          {headers: {Authorization: authStore.getAuthHeader}})
             todos.value = todo_res.data;
           }
       } catch (error) {
@@ -149,7 +151,7 @@ export default {
     }
 
     const editTodo = async(todoInfo) =>{
-      store.commit('moduleTodo/editTodoInfo', JSON.stringify(todoInfo))
+      todoStore.saveTodo(todoInfo["todo_id"], todoInfo["action"], todoInfo["due"])
       router.push({"name":"EditTodo"}
       )
     }
@@ -159,7 +161,7 @@ export default {
         try {
           const act_url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month + '/' + date;
           const activity_res = await axios.get(act_url,
-                                              {headers: {Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}})
+                                              {headers: {Authorization: authStore.getAuthHeader}})
           if (activity_res.status===200){
             activity_msg.value = [activity_res.data.date,
                                   `\n目標時間:${activity_res.data.target_time}時間`,
@@ -194,7 +196,7 @@ export default {
         try{
           const income_url = process.env.VUE_APP_BACKEND_URL + 'incomes/' + year + '/' + month;
           const earn_res = await axios.get(income_url,
-                                          {headers: {Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}}
+                                          {headers: {Authorization: authStore.getAuthHeader}}
           )
           if (earn_res.status===200){
             income_msg.value = [`今月の月収:${earn_res.data["今月の詳細"].salary}万円`,
@@ -228,7 +230,7 @@ export default {
         try{
           const todo_url = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
           const todo_res = await axios.get(todo_url,
-                                          {headers: {Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}})
+                                          {headers: {Authorization: authStore.getAuthHeader}})
           if (todo_res.status==200){
             todos.value = todo_res.data;
           }

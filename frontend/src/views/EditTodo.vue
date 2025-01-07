@@ -23,7 +23,8 @@
 import { onMounted, ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import store from '@/store';
+import { useAuthStore } from '@/store/authenticate';
+import { useTodoStore } from '@/store/todo';
 
 export default {
   setup() {
@@ -31,14 +32,15 @@ export default {
     const action = ref("")
     const due = ref()
     const router = useRouter()
-    const todoInfo =  JSON.parse(store.state.moduleTodo.todoInfo)
+    const authStore = useAuthStore()
+    const todoStore = useTodoStore()
 
     const editTodo = async() =>{
       try{
-          const url = process.env.VUE_APP_BACKEND_URL + 'todos/' + todoInfo.todo_id
+          const url = process.env.VUE_APP_BACKEND_URL + 'todos/' + todoStore.todoId
           const response = await axios.put(url,
                                           {action: action.value, due:due.value},
-                                          {headers: {Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}})
+                                          {headers: {Authorization: authStore.getAuthHeader}})
           if (response.status===200){
             message.value = [
               response.data.message,
@@ -70,10 +72,8 @@ export default {
       }
 
     onMounted( async() =>{
-      if (todoInfo){
-        action.value = todoInfo.action
-        due.value = todoInfo.due
-      }
+        action.value = todoStore.action
+        due.value = todoStore.due
     }
 
     )
@@ -82,7 +82,7 @@ export default {
       message,
       action,
       due,
-      todoInfo,
+      todoStore,
       editTodo
     }
   }

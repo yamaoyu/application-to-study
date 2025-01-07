@@ -27,20 +27,21 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import store from '@/store';
+import { useAuthStore } from '@/store/authenticate';
 
 export default {
 setup() {
     const message = ref("")
     const router = useRouter()
     const activities = ref([])
+    const authStore = useAuthStore()
 
 
     onMounted( async() =>{
     try{
         const url = process.env.VUE_APP_BACKEND_URL + 'activities/total';
         const response = await axios.get(url,
-                                        {headers: {Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}})
+                                        {headers: {Authorization: authStore.getAuthHeader}})
         if (response.status===200){
             message.value = [`合計:${response.data.total_income}万円\n`,
                             `内訳\n`,

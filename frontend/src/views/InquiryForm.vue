@@ -22,7 +22,7 @@
   import { ref } from 'vue'
   import axios from 'axios'
   import { useRouter } from 'vue-router';
-  import store from '@/store';
+  import { useAuthStore } from '@/store/authenticate';
   
   export default {
     setup() {
@@ -30,6 +30,7 @@
       const detail = ref('')
       const message = ref('')
       const router = useRouter()
+      const authStore = useAuthStore()
   
       const sendInquiry = async() => {
         try {
@@ -42,7 +43,7 @@
             },
             {
               headers: {
-                Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}
+                Authorization: authStore.getAuthHeader}
             }
           )
           if (response.status===201){
