@@ -20,7 +20,7 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import store from '@/store';
+import { useAuthStore } from '@/store/authenticate';
 
 export default {
   setup() {
@@ -30,6 +30,7 @@ export default {
     const date = ref("")
     const message = ref("")
     const router = useRouter()
+    const authStore = useAuthStore()
 
     const insertToday = async() =>{
       const today = new Date()
@@ -53,7 +54,7 @@ export default {
           // axiosのputの第二引数はリクエストボディとなるため{}を用意する。(リクエストボディで渡すデータはないため空)
           const response = await axios.put(url,
                                           {},
-                                          {headers: {Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}})
+                                          {headers: {Authorization: authStore.getAuthHeader}})
           if (response.status===200){
             message.value = response.data.message
           }

@@ -29,7 +29,7 @@ import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { generateTimeOptions } from "./lib/TimeDropdown";
-import store from '@/store';
+import { useAuthStore } from '@/store/authenticate';
 
 export default {
   created() {
@@ -46,6 +46,7 @@ export default {
     const message = ref("")
     const TargetTime = ref(null)
     const router = useRouter()
+    const authStore = useAuthStore()
 
     const insertDate = async() =>{
       const today = new Date()
@@ -68,7 +69,7 @@ export default {
           const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year.value + '/' + month.value + '/' + day.value + '/target';
           const response = await axios.post(url, 
                                           {target_time: Number(TargetTime.value)},
-                                          {headers: {Authorization:  `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}})
+                                          {headers: {Authorization: authStore.getAuthHeader}})
           if (response.status===201){
             message.value = response.data.message
           }

@@ -37,7 +37,7 @@ import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { generateYearOptions } from './lib/index';
 import { generateMonthOptions } from './lib/index';
-import store from '@/store';
+import { useAuthStore } from '@/store/authenticate';
 
 export default {
   created() {
@@ -51,6 +51,7 @@ export default {
     const MonthlyIncome = ref('')
     const message = ref('')
     const router = useRouter()
+    const authStore = useAuthStore()
 
     const insertThisYear = async() =>{
       year.value = new Date().getFullYear()
@@ -66,7 +67,7 @@ export default {
           const url = process.env.VUE_APP_BACKEND_URL + 'incomes/'+ year.value + '/' + month.value;
           const response = await axios.post(url, 
                                             {salary: Number(MonthlyIncome.value)},
-                                            {headers: {Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}})
+                                            {headers: {Authorization: authStore.getAuthHeader}})
           if (response.status===201){
             message.value = response.data.message
           }

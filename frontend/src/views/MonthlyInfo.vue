@@ -59,7 +59,7 @@ import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { generateYearOptions } from './lib/index';
 import { generateMonthOptions } from './lib/index';
-import store from '@/store';
+import { useAuthStore } from '@/store/authenticate';
 import "../assets/styles/common.css"
 
 
@@ -75,6 +75,7 @@ export default {
     const message = ref("")
     const router = useRouter()
     const activities = ref([])
+    const authStore = useAuthStore()
 
     const insertThisYear = async() =>{
       year.value = new Date().getFullYear()
@@ -88,7 +89,7 @@ export default {
       try{
           const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year.value + '/' + month.value;
           const response = await axios.get(url,
-                                          {headers: {Authorization: `${store.state.authenticateModule["tokenType"]} ${store.state.authenticateModule["accessToken"]}`}})
+                                          {headers: {Authorization: authStore.getAuthHeader}})
           if (response.status===200){
             message.value = [`合計:${response.data.total_monthly_income}万円\n`,
                             `内訳\n`,
