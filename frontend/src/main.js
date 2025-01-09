@@ -12,15 +12,14 @@ createApp(App).use(router).use(pinia).mount('#app')
 const authStore = useAuthStore()
 router.beforeEach(async (to) => {
   if (
-    // make sure a token exists
+    // トークンがあることを確認
     (!authStore.isToken||
-    // make sure the token is not expired
+    // トークンの期限を確認
     authStore.isExpired())&&
-    // ❗️ except Login and RegisterUser
+    // 遷移先がログインページとユーザー登録ページは除く
     to.name !== 'Login' &&
     to.name !== 'RegisterUser'
   ) {
-    // redirect the user to the login page
     return { name: 'Login' }
   }
 })
