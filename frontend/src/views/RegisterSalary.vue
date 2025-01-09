@@ -20,8 +20,9 @@
       <input type="button" value="今月" @click="insertThisMonth">
     </div>
     <div>
-      <label for="MonthlyIncome">月収(万):</label>
-      <input type="number" id="MonthlyIncome" v-model="MonthlyIncome" required>
+      <label for="monthlyIncome">月収(万):</label>
+      <input type="number" id="monthlyIncome" v-model="monthlyIncome" required>
+      <input type="button" value="先月の給料" @click="insertPreviousSalary">
     </div>
     <button type="submit">登録</button>
   </form>
@@ -48,7 +49,7 @@ export default {
   setup() {
     const year = ref('')
     const month = ref('')
-    const MonthlyIncome = ref('')
+    const monthlyIncome = ref('')
     const message = ref('')
     const router = useRouter()
     const authStore = useAuthStore()
@@ -61,12 +62,40 @@ export default {
       month.value = new Date().getMonth()+1
     }
     
+    const insertPreviousSalary = async() =>{
+      // 先月の年収を取得
+      const date = new Date()
+      let prevYear = date.getFullYear()
+      // 先月のデータを取得するため+1しない
+      let prevMonth = date.getMonth()
+      if (date.getMonth() == 0){
+        prevYear = date.getFullYear() - 1
+        prevMonth = 12
+      } 
+      try {
+        const url = process.env.VUE_APP_BACKEND_URL + 'incomes/' + prevYear + '/' + prevMonth;
+        const response = await axios.get(url, {headers: {Authorization: authStore.getAuthHeader}})
+        if (response.status===200){
+          monthlyIncome.value = response.data["今月の詳細"].salary
+        } else {
+          message.value = "先月の月収を取得できませんでした"
+        }
+      } catch (error) {
+        switch (error.response.status){
+          case 404:
+            message.value = "先月の月収は登録されていません"
+            break;
+          default:
+            message.value = "先月の月収を取得できませんでした";
+        }
+      }
+    }
 
     const registerSalary = async() =>{
         try {
           const url = process.env.VUE_APP_BACKEND_URL + 'incomes/'+ year.value + '/' + month.value;
           const response = await axios.post(url, 
-                                            {salary: Number(MonthlyIncome.value)},
+                                            {salary: Number(monthlyIncome.value)},
                                             {headers: {Authorization: authStore.getAuthHeader}})
           if (response.status===201){
             message.value = response.data.message
@@ -99,12 +128,14 @@ export default {
     return {
       year,
       month,
-      MonthlyIncome,
+      monthlyIncome,
       message,
       insertThisYear,
       insertThisMonth,
+      insertPreviousSalary,
       registerSalary
     }
   }
 }
+
 </script>
