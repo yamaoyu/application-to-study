@@ -3,7 +3,7 @@
   <form @submit.prevent="editTodo">
       <div>
         <label for="action">Todo:</label>
-        <textarea name="action" id="action" for="action" v-model="action"></textarea>
+        <textarea name="action" id="action" for="action" v-model="action" required></textarea>
       </div>
       <div>
         <label for="due">期限:</label>
