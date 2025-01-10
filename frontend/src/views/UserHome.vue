@@ -72,10 +72,22 @@ export default {
 
     const updateTodos = async() =>{
       // todo更新後、データを更新する
-      const todo_url = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
-      const todo_res = await axios.get(todo_url,
-                                    {headers: {Authorization: authStore.getAuthHeader}})
-      todos.value = todo_res.data;
+      try {
+        const todo_url = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
+        const todo_res = await axios.get(todo_url,
+                                      {headers: {Authorization: authStore.getAuthHeader}})
+        todos.value = todo_res.data;
+      } catch (todo_err){
+        switch (todo_err.response.status){
+          case 404:
+          case 500:
+            todos.value = []
+            todo_msg.value = todo_err.response.data.detail;
+            break
+          default:
+            todo_msg.value = "todoの取得に失敗しました"
+        }
+      }
     }
 
 
@@ -90,7 +102,7 @@ export default {
             }
           )
         if (response.status===204){
-            await updateTodos()
+            await updateTodos();
           }
       } catch (error) {
           if (error.response){
@@ -126,7 +138,7 @@ export default {
             }
           )
         if (response.status===200){
-            await updateTodos()
+            await updateTodos();
           }
       } catch (error) {
           if (error.response){

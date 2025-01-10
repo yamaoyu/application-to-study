@@ -60,6 +60,9 @@ export default {
             message.value = [response.data.message + "\n",
                             "内容:" + response.data.action + "\n",
                             "期限:" + response.data.due].join("")
+            // フィールドをクリア
+            action.value = ""
+            due.value = ""
           }
         } catch (error) {
           if (error.response){
