@@ -70,6 +70,14 @@ export default {
     const authStore = useAuthStore()
     const todoStore = useTodoStore()
 
+    const updateTodos = async() =>{
+      // todo更新後、データを更新する
+      const todo_url = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
+      const todo_res = await axios.get(todo_url,
+                                    {headers: {Authorization: authStore.getAuthHeader}})
+      todos.value = todo_res.data;
+    }
+
 
     const deleteTodo = async(todoId) =>{
       try {
@@ -82,11 +90,7 @@ export default {
             }
           )
         if (response.status===204){
-            // 削除に成功したらtodoを更新する
-            const todo_url = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
-            const todo_res = await axios.get(todo_url,
-                                          {headers: {Authorization: authStore.getAuthHeader}})
-            todos.value = todo_res.data;
+            await updateTodos()
           }
       } catch (error) {
           if (error.response){
@@ -122,11 +126,7 @@ export default {
             }
           )
         if (response.status===200){
-            // ステータスを終了にしたらtodoを更新する
-            const todo_url = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
-            const todo_res = await axios.get(todo_url,
-                                          {headers: {Authorization: authStore.getAuthHeader}})
-            todos.value = todo_res.data;
+            await updateTodos()
           }
       } catch (error) {
           if (error.response){
@@ -266,6 +266,7 @@ export default {
       year,
       month,
       date,
+      updateTodos,
       deleteTodo,
       finishTodo,
       editTodo
