@@ -46,6 +46,10 @@
   <div>
     <router-link to="/register/inquiry">問い合わせ</router-link>
   </div>
+  <div>
+    <input type="button" value="ログアウト" @click="logout()">
+    <p v-if="logout_msg" class="logout_msg">{{ logout_msg }}</p>
+  </div>
 </template>
 
 
@@ -69,6 +73,7 @@ export default {
     const router = useRouter()
     const authStore = useAuthStore()
     const todoStore = useTodoStore()
+    const logout_msg = ref("")
 
     const updateTodos = async() =>{
       // todo更新後、データを更新する
@@ -166,6 +171,40 @@ export default {
       todoStore.saveTodo(todoInfo["todo_id"], todoInfo["action"], todoInfo["due"])
       router.push({"name":"EditTodo"}
       )
+    }
+
+    const logout = async() =>{
+      try{
+        const logout_url = process.env.VUE_APP_BACKEND_URL + 'logout'
+        const logout_res = await axios.delete(logout_url, {headers: {Authorization: authStore.getAuthHeader}})
+        if (logout_res.status===200){
+          authStore.clearAuthData()
+          router.push(
+                  {"path":"/login",
+                    "query":{message:"ログアウトしました"}
+                  })
+        }
+      } catch(logout_err){
+        if (logout_err.response){
+            switch (logout_err.response.status){
+              case 401:
+                router.push(
+                  {"path":"/login",
+                    "query":{message:"再度ログインしてください"}
+                  })
+                break;
+              case 404:
+              case 500:
+                logout_msg.value = logout_err.response.data.detail;
+                break;
+              default:
+                logout_msg.value = "ログアウトに失敗しました";}
+          } else if (logout_err.request){
+            logout_msg.value =  "リクエストがサーバーに到達できませんでした"
+          } else {
+            logout_msg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
+          }
+      }
     }
 
     onMounted( async() =>{
@@ -275,13 +314,15 @@ export default {
       income_msg,
       todos,
       todo_msg,
+      logout_msg,
       year,
       month,
       date,
       updateTodos,
       deleteTodo,
       finishTodo,
-      editTodo
+      editTodo,
+      logout
     }
   }
 }
