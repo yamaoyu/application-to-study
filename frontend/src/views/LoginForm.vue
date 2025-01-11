@@ -22,7 +22,7 @@
   import { ref, onMounted } from 'vue'
   import axios from 'axios'
   import { useRoute, useRouter } from 'vue-router';
-  import { useStore } from 'vuex';
+  import { useAuthStore } from '@/store/authenticate';
   import { jwtDecode } from 'jwt-decode';
   
   export default {
@@ -32,7 +32,7 @@
       const message = ref('')
       const router =  useRouter()
       const route = useRoute()
-      const store = useStore()
+      const authStore = useAuthStore()
 
 
       onMounted(() => {
@@ -52,11 +52,10 @@
           })
           // ここでログイン後の処理を行う（例：トークンの保存、ページ遷移など）
           if (response.status===200){
-              store.commit('SET_AUTH_DATA', {
-              accessToken: response.data.access_token,
-              tokenType: response.data.token_type,
-              expire: jwtDecode(response.data.access_token).exp})
-            
+              authStore.setAuthData(
+              response.data.access_token,
+              response.data.token_type,
+              jwtDecode(response.data.access_token).exp)
 
             router.push({
               "path":"/home"})

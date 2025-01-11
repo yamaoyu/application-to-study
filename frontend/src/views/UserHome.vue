@@ -10,8 +10,13 @@
   <div>
     <h3>Todo一覧</h3>
     <template v-if="todos.length">
-      <ul v-for="(todo, index) in todos" :key="index" class="todo-item">
-        <li v-if="todo.action" class="todos">{{ index + 1 }}: {{ todo.action }} (期限: {{ todo.due }})</li>
+      <ul>
+        <li v-for="(todo, index) in todos" :key="index" class="todo-item">
+          {{ index + 1 }}: {{ todo.action }} (期限: {{ todo.due }})
+          <input type="button" value="編集" @click="editTodo(todo)">
+          <input type="button" value="終了" @click="finishTodo(todo.todo_id)">
+          <input type="button" value="削除" @click="deleteTodo(todo.todo_id)">
+        </li>
       </ul>
     </template>
     <p v-else>{{ todo_msg }}</p>
@@ -43,19 +48,13 @@
   </div>
 </template>
 
-<style scoped>
-.todo-item {
-  margin: 0; /* 要素間の余白を削除 */
-  padding: 0;
-  line-height: 1.5; /* 行の高さを調整 */
-}
-</style>
 
 <script>
 import { onMounted, ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import store from '@/store';
+import { useAuthStore } from '@/store/authenticate';
+import { useTodoStore } from '@/store/todo';
 
 export default {
   setup() {
@@ -68,13 +67,101 @@ export default {
     const todos = ref([])
     const todo_msg = ref("")
     const router = useRouter()
+    const authStore = useAuthStore()
+    const todoStore = useTodoStore()
+
+    const updateTodos = async() =>{
+      // todo更新後、データを更新する
+      const todo_url = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
+      const todo_res = await axios.get(todo_url,
+                                    {headers: {Authorization: authStore.getAuthHeader}})
+      todos.value = todo_res.data;
+    }
+
+
+    const deleteTodo = async(todoId) =>{
+      try {
+          const delete_url = process.env.VUE_APP_BACKEND_URL + 'todos/' + todoId
+          const response = await axios.delete(
+            delete_url, 
+            { 
+              headers: {
+              Authorization: authStore.getAuthHeader}
+            }
+          )
+        if (response.status===204){
+            await updateTodos()
+          }
+      } catch (error) {
+          if (error.response){
+            switch (error.response.status){
+              case 401:
+              router.push(
+                {"path":"/login",
+                  "query":{message:"再度ログインしてください"}
+                })
+                break;
+              case 500:
+                todo_msg.value =  "todoの削除に失敗しました"
+                break;
+              default:
+                todo_msg.value = error.response.data.detail;}
+          } else if (error.request){
+            todo_msg.value =  "リクエストがサーバーに到達できませんでした"
+          } else {
+            todo_msg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
+          }
+        }
+    }
+
+    const finishTodo = async(todoId) =>{
+      try {
+          const finish_url = process.env.VUE_APP_BACKEND_URL + 'todos/finish/' + todoId
+          const response = await axios.put(
+            finish_url, 
+            {},
+            { 
+              headers: {
+              Authorization: authStore.getAuthHeader}
+            }
+          )
+        if (response.status===200){
+            await updateTodos()
+          }
+      } catch (error) {
+          if (error.response){
+            switch (error.response.status){
+              case 401:
+              router.push(
+                {"path":"/login",
+                  "query":{message:"再度ログインしてください"}
+                })
+                break;
+              case 500:
+                todo_msg.value =  "todoの削除に失敗しました"
+                break;
+              default:
+                todo_msg.value = error.response.data.detail;}
+          } else if (error.request){
+            todo_msg.value =  "リクエストがサーバーに到達できませんでした"
+          } else {
+            todo_msg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
+          }
+        }
+    }
+
+    const editTodo = async(todoInfo) =>{
+      todoStore.saveTodo(todoInfo["todo_id"], todoInfo["action"], todoInfo["due"])
+      router.push({"name":"EditTodo"}
+      )
+    }
 
     onMounted( async() =>{
         // その日の活動実績を取得
         try {
           const act_url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month + '/' + date;
           const activity_res = await axios.get(act_url,
-                                              {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
+                                              {headers: {Authorization: authStore.getAuthHeader}})
           if (activity_res.status===200){
             activity_msg.value = [activity_res.data.date,
                                   `\n目標時間:${activity_res.data.target_time}時間`,
@@ -109,7 +196,7 @@ export default {
         try{
           const income_url = process.env.VUE_APP_BACKEND_URL + 'incomes/' + year + '/' + month;
           const earn_res = await axios.get(income_url,
-                                          {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}}
+                                          {headers: {Authorization: authStore.getAuthHeader}}
           )
           if (earn_res.status===200){
             income_msg.value = [`今月の月収:${earn_res.data["今月の詳細"].salary}万円`,
@@ -143,8 +230,8 @@ export default {
         try{
           const todo_url = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
           const todo_res = await axios.get(todo_url,
-                                          {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
-          if (todo_res.status===200){
+                                          {headers: {Authorization: authStore.getAuthHeader}})
+          if (todo_res.status==200){
             todos.value = todo_res.data;
           }
         } catch (todo_err) {
@@ -178,8 +265,23 @@ export default {
       todo_msg,
       year,
       month,
-      date
+      date,
+      updateTodos,
+      deleteTodo,
+      finishTodo,
+      editTodo
     }
   }
 }
 </script>
+
+<style>
+li{
+  list-style: none;
+}
+.todo-item {
+  margin: 0; /* 要素間の余白を削除 */
+  padding: 0;
+  line-height: 1.5; /* 行の高さを調整 */
+}
+</style>

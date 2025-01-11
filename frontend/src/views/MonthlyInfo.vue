@@ -1,13 +1,15 @@
 <template>
-  <div style="white-space: pre-wrap;" v-if="message" class="message">
+  <div v-if="message" class="message">
     <h3>月ごとの活動実績</h3>
     <p v-if="message" class="message">{{ message }}</p>
   </div>
   <div v-if="activities.length > 0" class="activities">
     <h3>活動状況(日別)</h3>
-    <ul v-for="(activity, index) in activities" :key="index" class="activity">
-      <p>{{ activity.date }}</p>
-      <p>目標時間:{{ activity.target_time }}時間 活動時間:{{ activity.actual_time }}時間 ステータス:{{ activity.is_achieved }}</p>
+    <ul>
+      <li v-for="(activity, index) in activities" :key="index" class="activity">
+        <p>{{ activity.date }}</p>
+        <p>目標:{{ activity.target_time }}時間 実績:{{ activity.actual_time }}時間 ステータス:{{ activity.is_achieved }}</p>
+      </li>
     </ul>
   </div>
   <form @submit.prevent="GetMonthlyInfo">
@@ -18,6 +20,7 @@
           {{ year }}
         </option>
       </select>
+      <input type="button" value="今年" @click="insertThisYear">
     </div>
     <div>
       <label for="month">月:</label>
@@ -26,6 +29,7 @@
           {{ month }}
         </option>
       </select>
+      <input type="button" value="今月" @click="insertThisMonth">
     </div>
     <button type="submit">検索</button>
   </form>
@@ -55,7 +59,8 @@ import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { generateYearOptions } from './lib/index';
 import { generateMonthOptions } from './lib/index';
-import store from '@/store';
+import { useAuthStore } from '@/store/authenticate';
+import "../assets/styles/common.css"
 
 
 export default {
@@ -70,13 +75,21 @@ export default {
     const message = ref("")
     const router = useRouter()
     const activities = ref([])
+    const authStore = useAuthStore()
 
+    const insertThisYear = async() =>{
+      year.value = new Date().getFullYear()
+    }
+
+    const insertThisMonth = async() =>{
+      month.value = new Date().getMonth()+1
+    }
 
     const GetMonthlyInfo = async() =>{
       try{
           const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year.value + '/' + month.value;
           const response = await axios.get(url,
-                                          {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
+                                          {headers: {Authorization: authStore.getAuthHeader}})
           if (response.status===200){
             message.value = [`合計:${response.data.total_monthly_income}万円\n`,
                             `内訳\n`,
@@ -84,6 +97,15 @@ export default {
                             `ボーナス合計:${response.data.total_bonus}万円\n`,
                             `目標達成日数:${response.data.success_days}日\n`,
                             `目標未達成日数:${response.data.fail_days}日`].join('');
+            //  is_achievedを真偽値からテキストに変換
+            for (const activity of response.data.activity_list){
+              if (activity.is_achieved){
+                activity.is_achieved = "達成"
+              } else {
+                activity.is_achieved = "未達成"
+              }
+            }
+
             activities.value = response.data.activity_list;
           }
       } catch (error){
@@ -116,6 +138,8 @@ export default {
       year,
       month,
       activities,
+      insertThisYear,
+      insertThisMonth,
       GetMonthlyInfo
     }
   }

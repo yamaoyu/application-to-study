@@ -4,6 +4,7 @@
     <div>
       <label for="date">日付:</label>
       <input type="date" id="date" v-model="date" required>
+      <input type="button" value="今日" @click="insertDate">
     </div>
     <div>
       <label for="TargetTime">目標時間(Hour):</label>
@@ -28,7 +29,7 @@ import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { generateTimeOptions } from "./lib/TimeDropdown";
-import store from '@/store';
+import { useAuthStore } from '@/store/authenticate';
 
 export default {
   created() {
@@ -45,6 +46,15 @@ export default {
     const message = ref("")
     const TargetTime = ref(null)
     const router = useRouter()
+    const authStore = useAuthStore()
+
+    const insertDate = async() =>{
+      const today = new Date()
+      const year = today.getFullYear()
+      const month = `${today.getMonth()+1}`.padStart(2, '0')
+      const day = `${today.getDate()}`.padStart(2, '0')
+      date.value = `${year}-${month}-${day}`
+    }
 
     const registerTarget = async() =>{
         try {
@@ -59,7 +69,7 @@ export default {
           const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year.value + '/' + month.value + '/' + day.value + '/target';
           const response = await axios.post(url, 
                                           {target_time: Number(TargetTime.value)},
-                                          {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
+                                          {headers: {Authorization: authStore.getAuthHeader}})
           if (response.status===201){
             message.value = response.data.message
           }
@@ -96,7 +106,8 @@ export default {
       date,
       message,
       TargetTime,
-      registerTarget
+      registerTarget,
+      insertDate
     }
   }
 }

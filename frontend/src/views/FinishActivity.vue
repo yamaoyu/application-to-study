@@ -4,6 +4,7 @@
     <div>
       <label for="date">日付:</label>
       <input type="date" id="date" v-model="date" required>
+      <input type="button" value="今日" @click="insertToday">
     </div>
     <button type="submit">終了</button>
   </form>
@@ -19,7 +20,7 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import store from '@/store';
+import { useAuthStore } from '@/store/authenticate';
 
 export default {
   setup() {
@@ -29,6 +30,15 @@ export default {
     const date = ref("")
     const message = ref("")
     const router = useRouter()
+    const authStore = useAuthStore()
+
+    const insertToday = async() =>{
+      const today = new Date()
+      const year = today.getFullYear()
+      const month = `${today.getMonth()+1}`.padStart(2, '0')
+      const day = `${today.getDate()}`.padStart(2, '0')
+      date.value = `${year}-${month}-${day}`
+    }
 
     const finishActivity = async() =>{
         try {
@@ -44,7 +54,7 @@ export default {
           // axiosのputの第二引数はリクエストボディとなるため{}を用意する。(リクエストボディで渡すデータはないため空)
           const response = await axios.put(url,
                                           {},
-                                          {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
+                                          {headers: {Authorization: authStore.getAuthHeader}})
           if (response.status===200){
             message.value = response.data.message
           }
@@ -80,6 +90,7 @@ export default {
       day,
       date,
       message,
+      insertToday,
       finishActivity
     }
   }

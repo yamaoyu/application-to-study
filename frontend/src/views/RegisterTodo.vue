@@ -8,6 +8,7 @@
       <div>
         <label for="due">期限:</label>
         <input type="date" id="date" v-model="due" required>
+        <input type="button" value="今日" @click="insertToday">
       </div>
       <button type="submit">登録</button>
   </form>
@@ -23,7 +24,7 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import store from '@/store';
+import { useAuthStore } from '@/store/authenticate';
 
 export default {
   setup() {
@@ -31,6 +32,15 @@ export default {
     const action = ref("")
     const due = ref("")
     const router = useRouter()
+    const authStore = useAuthStore()
+
+    const insertToday = async() =>{
+      const today = new Date()
+      const year = today.getFullYear()
+      const month = `${today.getMonth()+1}`.padStart(2, '0')
+      const day = `${today.getDate()}`.padStart(2, '0')
+      due.value = `${year}-${month}-${day}`
+    }
 
     const registerTodo = async() =>{
         try {
@@ -43,7 +53,7 @@ export default {
             },
             { 
               headers: {
-              Authorization: `${store.state.tokenType} ${store.state.accessToken}`}
+              Authorization:  authStore.getAuthHeader}
             }
           )
           if (response.status===201){
@@ -80,6 +90,7 @@ export default {
       message,
       action,
       due,
+      insertToday,
       registerTodo
     }
   }

@@ -123,7 +123,7 @@ def edit_todo(todo_id: int,
         todo.due = due
         db.commit()
         logger.info(f"{current_user['username']}がTodoを編集 ID:{todo.todo_id}")
-        return {"message": f"更新後のタスク:{action}"}
+        return {"message": "Todoを更新しました", "action": action, "due": due}
     except NoResultFound:
         raise HTTPException(status_code=404,
                             detail=f"id:{todo_id}のデータは登録されていません")

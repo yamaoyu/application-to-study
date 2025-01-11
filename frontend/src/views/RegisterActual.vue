@@ -4,6 +4,7 @@
     <div>
       <label for="date">日付:</label>
       <input type="date" id="date" v-model="date" required>
+      <input type="button" value="今日" @click="insertToday">
     </div>
     <div>
       <label for="ActualTime">活動時間:</label>
@@ -28,7 +29,7 @@ import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { generateTimeOptions } from "./lib/index";
-import store from '@/store';
+import { useAuthStore } from '@/store/authenticate';
 
 export default {
   created() {
@@ -44,6 +45,15 @@ export default {
     const message = ref("")
     const ActualTime = ref("")
     const router = useRouter()
+    const authStore = useAuthStore()
+
+    const insertToday = async() =>{
+      const today = new Date()
+      const year = today.getFullYear()
+      const month = `${today.getMonth()+1}`.padStart(2, '0')
+      const day = `${today.getDate()}`.padStart(2, '0')
+      date.value = `${year}-${month}-${day}`
+    }
 
     const registerActual = async() =>{
         try {
@@ -58,7 +68,7 @@ export default {
           const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year.value + '/' + month.value + '/' + day.value +  '/actual';
           const response = await axios.put(url, 
                                           {actual_time: Number(ActualTime.value)},
-                                          {headers: {Authorization: `${store.state.tokenType} ${store.state.accessToken}`}})
+                                          {headers: {Authorization: authStore.getAuthHeader}})
           if (response.status===200){
             message.value = response.data.message
           }
@@ -94,7 +104,8 @@ export default {
       date,
       message,
       ActualTime,
-      registerActual
+      registerActual,
+      insertToday
     }
   }
 }

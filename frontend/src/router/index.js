@@ -10,7 +10,7 @@ import RegisterTodo from '../views/RegisterTodo.vue'
 import finishActivity from '../views/FinishActivity.vue'
 import InquiryForm from '../views/InquiryForm.vue'
 import AllPeriodInfo from '../views/AllPeriodInfo.vue'
-import store from '../store/index.js'
+import EditTodo from '../views/EditTodo.vue'
 
 const routes = [
   {
@@ -67,6 +67,11 @@ const routes = [
     path:"/view/all-activities",
     name:"AllPeriodInfo",
     component:AllPeriodInfo
+  },
+  {
+    path:"/edit/todo",
+    name:"EditTodo",
+    component:EditTodo
   }
 ]
 
@@ -75,20 +80,5 @@ const router = createRouter({
   routes
 })
 
-
-router.beforeEach(async (to) => {
-  if (
-    // make sure a token exists
-    (!store.getters.isToken ||
-    // make sure the token is not expired
-    store.getters.isExpired)&&
-    // ❗️ except Login and RegisterUser
-    to.name !== 'Login' &&
-    to.name !== 'RegisterUser'
-  ) {
-    // redirect the user to the login page
-    return { name: 'Login' }
-  }
-})
 
 export default router
