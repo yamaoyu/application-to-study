@@ -140,14 +140,12 @@ def login(user_info: LoginUserInfo,
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.put("/logout", status_code=200)
+@router.delete("/logout", status_code=200)
 def logout(current_user: dict = Depends(get_current_user),
            db: Session = Depends(get_db)):
     try:
         username = current_user['username']
-        token = db.query(db_model.Token).filter(
-            db_model.Token.username == username).one()
-        token.status = False
+        db.query(db_model.Token).filter(db_model.Token.username == username).delete()
         db.commit()
         logger.info(f"{username}がログアウト")
         return {"message": f"{username}がログアウト"}
