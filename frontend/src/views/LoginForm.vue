@@ -49,6 +49,8 @@
           const response = await axios.post(url, {
             username: username.value,
             password: password.value,
+          }, {
+            withCredentials: true
           })
           // ここでログイン後の処理を行う（例：トークンの保存、ページ遷移など）
           if (response.status===200){
@@ -77,8 +79,7 @@
             message.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
           }
         }
-      }
-  
+      }  
       return {
         username,
         password,

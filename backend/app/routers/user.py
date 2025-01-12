@@ -7,7 +7,7 @@ from lib.log_conf import logger
 from sqlalchemy.orm import Session
 from app.models.user_model import RegisterUserInfo, ResponseCreatedUser, LoginUserInfo
 from sqlalchemy.exc import IntegrityError, NoResultFound
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Response
 
 
 router = APIRouter()
@@ -113,7 +113,8 @@ def create_admin_user(user: RegisterUserInfo,
 
 @router.post("/login", status_code=200)
 def login(user_info: LoginUserInfo,
-          db: Session = Depends(get_db)):
+          db: Session = Depends(get_db),
+          response: Response = Response()):
     """ ユーザー操作用 """
     username = user_info.username
     plain_password = user_info.password
@@ -123,8 +124,8 @@ def login(user_info: LoginUserInfo,
         is_password = verify_password(plain_password, user.password)
         if not is_password:
             raise HTTPException(status_code=401, detail="パスワードが正しくありません")
-        access_token = get_token(user, token_type="access")
-        refresh_token = get_token(user, token_type="refresh", db=db)
+        access_token = get_token(user, token_type="access", response=response)
+        refresh_token = get_token(user, token_type="refresh", response=response, db=db)
         logger.info(f"{username}がログイン")
         return {"access_token": access_token,
                 "token_type": "Bearer",
