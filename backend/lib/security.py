@@ -5,7 +5,7 @@ from typing import Union
 from functools import wraps
 from datetime import datetime, timedelta, timezone
 from fastapi.security import OAuth2PasswordBearer
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Response
 from db import db_model
 from db.database import get_db
 from lib.log_conf import logger
@@ -37,13 +37,13 @@ def get_user(username: str, db: Session = Depends(get_db)):
     return user
 
 
-def get_token(user: db_model, token_type: str, db=None):
+def get_token(user: db_model, token_type: str, response: Response, db=None):
     if token_type == "access":
         return create_access_token({"sub": user.username,
-                                    "role": user.role})
+                                    "role": user.role}, response=response)
     elif token_type == "refresh":
         return create_refresh_token({"sub": user.username,
-                                     "role": user.role}, db=db)
+                                     "role": user.role}, response=response, db=db)
     else:
         logger.error(f"無効なトークンタイプ: {token_type}")
         raise HTTPException(status_code=401, detail="無効なトークンタイプです")
@@ -58,6 +58,7 @@ def get_password_hash(password) -> str:
 
 
 def create_access_token(data: dict,
+                        response: Response,
                         expires_delta: Union[timedelta, None] = None):
     try:
         to_encode = data.copy()
@@ -67,7 +68,14 @@ def create_access_token(data: dict,
             expire = datetime.now(timezone.utc) + \
                 timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         to_encode.update({"exp": expire})
-        return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+        access_token = jwt.encode(
+            to_encode, SECRET_KEY, algorithm=ALGORITHM)
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            expires=expire)
+        return access_token
     except HTTPException as http_e:
         raise http_e
     except Exception:
@@ -76,6 +84,7 @@ def create_access_token(data: dict,
 
 
 def create_refresh_token(data: dict,
+                         response: Response,
                          expires_delta: Union[timedelta, None] = None,
                          db: Session = Depends(get_db)):
     try:
@@ -95,15 +104,19 @@ def create_refresh_token(data: dict,
             existing_token.token = refresh_token
             existing_token.expires_at = expire
             existing_token.status = True
-            db.commit()
         # トークンが存在しない場合は、新規作成
         else:
             new_token = db_model.Token(token=refresh_token,
                                        username=data["sub"],
                                        expires_at=expire)
             db.add(new_token)
-            db.commit()
-            db.refresh(new_token)
+        db.commit()
+        response.set_cookie(
+            key="refresh_token",
+            value=refresh_token,
+            secure=False,
+            httponly=True,
+            expires=expire)
         return refresh_token
     except HTTPException as http_e:
         raise http_e
