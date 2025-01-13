@@ -37,10 +37,10 @@ def get_user(username: str, db: Session = Depends(get_db)):
     return user
 
 
-def get_token(user: db_model, token_type: str, response: Response, db=None):
+def get_token(user: db_model, token_type: str, response: Response = None, db=None):
     if token_type == "access":
         return create_access_token({"sub": user.username,
-                                    "role": user.role}, response=response)
+                                    "role": user.role})
     elif token_type == "refresh":
         return create_refresh_token({"sub": user.username,
                                      "role": user.role}, response=response, db=db)
@@ -58,7 +58,6 @@ def get_password_hash(password) -> str:
 
 
 def create_access_token(data: dict,
-                        response: Response,
                         expires_delta: Union[timedelta, None] = None):
     try:
         to_encode = data.copy()
@@ -70,11 +69,6 @@ def create_access_token(data: dict,
         to_encode.update({"exp": expire})
         access_token = jwt.encode(
             to_encode, SECRET_KEY, algorithm=ALGORITHM)
-        response.set_cookie(
-            key="access_token",
-            value=access_token,
-            httponly=True,
-            expires=expire)
         return access_token
     except HTTPException as http_e:
         raise http_e
