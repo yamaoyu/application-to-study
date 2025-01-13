@@ -176,7 +176,11 @@ export default {
     const logout = async() =>{
       try{
         const logout_url = process.env.VUE_APP_BACKEND_URL + 'logout'
-        const logout_res = await axios.delete(logout_url, {headers: {Authorization: authStore.getAuthHeader}})
+        const logout_res = await axios.delete(logout_url, 
+        {
+          headers: {Authorization: authStore.getAuthHeader},
+          withCredentials: true
+        })
         if (logout_res.status===200){
           authStore.clearAuthData()
           router.push(
