@@ -1,13 +1,13 @@
 import traceback
 from db import db_model
 from lib.security import (get_password_hash, get_token, get_current_user,
-                          admin_only, verify_password)
+                          admin_only, verify_password, verify_refresh_token)
 from db.database import get_db
 from lib.log_conf import logger
 from sqlalchemy.orm import Session
 from app.models.user_model import RegisterUserInfo, ResponseCreatedUser, LoginUserInfo
 from sqlalchemy.exc import IntegrityError, NoResultFound
-from fastapi import APIRouter, HTTPException, Depends, Response
+from fastapi import APIRouter, HTTPException, Depends, Response, Cookie
 
 
 router = APIRouter()
@@ -116,7 +116,6 @@ def create_admin_user(user: RegisterUserInfo,
 def login(user_info: LoginUserInfo,
           db: Session = Depends(get_db),
           response: Response = response):
-    """ ユーザー操作用 """
     username = user_info.username
     plain_password = user_info.password
     try:
@@ -146,7 +145,6 @@ def login(user_info: LoginUserInfo,
 def logout(current_user: dict = Depends(get_current_user),
            db: Session = Depends(get_db),
            response: Response = response):
-    """ ユーザー操作用 """
     try:
         username = current_user['username']
         db.query(db_model.Token).filter(db_model.Token.username == username).delete()
@@ -159,5 +157,29 @@ def logout(current_user: dict = Depends(get_current_user),
                             detail=f"{username}は登録されていません")
     except Exception:
         logger.error(f"ログイン処理に失敗しました\n{traceback.format_exc()}")
+        raise HTTPException(
+            status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
+
+
+@router.get("/token", status_code=200)
+def regenerate_access_token(refresh_token: str = Cookie(default=None),
+                            db: Session = Depends(get_db)):
+    """ アクセストークンの期限が切れている場合、リフレッシュトークンを使ってアクセストークンを再発行する """
+    try:
+        current_user = get_current_user(refresh_token, db=db)
+        user = db.query(db_model.User).filter(
+            db_model.User.username == current_user["username"]).one()
+        if not user:
+            raise HTTPException(status_code=404,
+                                detail="再度ログインしてください")
+        if verify_refresh_token(refresh_token, db=db):
+            return {"access_token": get_token(user, token_type="access"),
+                    "token_type": "Bearer"}
+        else:
+            raise HTTPException(status_code=401, detail="再度ログインしてください")
+    except HTTPException as http_e:
+        raise http_e
+    except Exception:
+        logger.error(f"トークンの再発行に失敗しました\n{traceback.format_exc()}")
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
