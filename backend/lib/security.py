@@ -3,7 +3,7 @@ import traceback
 from passlib.context import CryptContext
 from typing import Union
 from functools import wraps
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status, Response
 from db import db_model
@@ -117,6 +117,30 @@ def create_refresh_token(data: dict,
     except Exception:
         logger.error(f"リフレッシュトークンの作成中にエラーが発生しました\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="トークンの作成に失敗しました")
+
+
+def verify_refresh_token(refresh_token: str, db: Session = Depends(get_db)):
+    """ リフレッシュトークンを検証する """
+    try:
+        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=ALGORITHM)
+        username = payload.get("sub")
+        if username is None:
+            return False
+        user = get_user(username, db)
+        if not user:
+            return False
+        fetch_token = db.query(db_model.Token).filter(
+            db_model.Token.username == username).one_or_none()
+        if not fetch_token:
+            return False
+        if fetch_token.expires_at < date.today():
+            return False
+        if refresh_token != fetch_token.token:
+            return False
+        return True
+    except Exception:
+        logger.error(f"リフレッシュトークンの検証中にエラーが発生しました\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail="リフレッシュトークンの検証に失敗しました")
 
 
 def get_current_user(token: str = Depends(oauth2_scheme),
