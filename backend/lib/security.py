@@ -97,7 +97,6 @@ def create_refresh_token(data: dict,
         if existing_token:
             existing_token.token = refresh_token
             existing_token.expires_at = expire
-            existing_token.status = True
         # トークンが存在しない場合は、新規作成
         else:
             new_token = db_model.Token(token=refresh_token,
