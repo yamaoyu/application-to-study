@@ -19,7 +19,11 @@ router.beforeEach(async (to) => {
     if (!authStore.isToken || authStore.isExpired()) {
       // リフレッシュトークンの検証
       try{
-        const response = await axios.get(process.env.VUE_APP_BACKEND_URL + "token", {withCredentials: true})
+        const device = navigator.userAgentData?.platform || "unknown";
+        const response = await axios.post(
+          process.env.VUE_APP_BACKEND_URL + "token", 
+          { device: device },
+          { withCredentials: true })
         if (response.status === 200) {
           // トークンの更新
           await authStore.setAuthData(
