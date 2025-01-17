@@ -30,8 +30,13 @@ class RegisterUserInfo(BaseModel):
 class LoginUserInfo(BaseModel):
     username: str
     password: str
+    device: str
 
 
 class ResponseCreatedUser(RegisterUserInfo):
     model_config = ConfigDict(from_attributes=True)
     message: str
+
+
+class DeviceInfo(BaseModel):
+    device: str

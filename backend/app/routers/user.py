@@ -5,7 +5,7 @@ from lib.security import (get_password_hash, get_token, get_current_user,
 from db.database import get_db
 from lib.log_conf import logger
 from sqlalchemy.orm import Session
-from app.models.user_model import RegisterUserInfo, ResponseCreatedUser, LoginUserInfo
+from app.models.user_model import RegisterUserInfo, ResponseCreatedUser, LoginUserInfo, DeviceInfo
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from fastapi import APIRouter, HTTPException, Depends, Response, Cookie
 
@@ -118,6 +118,7 @@ def login(user_info: LoginUserInfo,
           response: Response = response):
     username = user_info.username
     plain_password = user_info.password
+    device = user_info.device
     try:
         user = db.query(db_model.User).filter(
             db_model.User.username == username).one()
@@ -125,7 +126,8 @@ def login(user_info: LoginUserInfo,
         if not is_password:
             raise HTTPException(status_code=401, detail="パスワードが正しくありません")
         access_token = get_token(user, token_type="access")
-        refresh_token = get_token(user, token_type="refresh", response=response, db=db)
+        refresh_token = get_token(user, token_type="refresh",
+                                  response=response, db=db, device=device)
         logger.info(f"{username}がログイン")
         return {"access_token": access_token,
                 "token_type": "Bearer",
@@ -161,8 +163,9 @@ def logout(current_user: dict = Depends(get_current_user),
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.get("/token", status_code=200)
-def regenerate_access_token(refresh_token: str = Cookie(default=None),
+@router.post("/token", status_code=200)
+def regenerate_access_token(device_info: DeviceInfo,
+                            refresh_token: str = Cookie(default=None),
                             db: Session = Depends(get_db)):
     """ アクセストークンの期限が切れている場合、リフレッシュトークンを使ってアクセストークンを再発行する """
     try:
@@ -172,11 +175,11 @@ def regenerate_access_token(refresh_token: str = Cookie(default=None),
         if not user:
             raise HTTPException(status_code=404,
                                 detail="再度ログインしてください")
-        if verify_refresh_token(refresh_token, db=db):
+        if verify_refresh_token(refresh_token, device_info.device, db=db):
             return {"access_token": get_token(user, token_type="access"),
                     "token_type": "Bearer"}
         else:
-            raise HTTPException(status_code=401, detail="再度ログインしてください")
+            raise HTTPException(status_code=401)
     except HTTPException as http_e:
         raise http_e
     except Exception:

@@ -37,13 +37,13 @@ def get_user(username: str, db: Session = Depends(get_db)):
     return user
 
 
-def get_token(user: db_model, token_type: str, response: Response = None, db=None):
+def get_token(user: db_model, token_type: str, response: Response = None, db=None, device: str = None):
     if token_type == "access":
         return create_access_token({"sub": user.username,
                                     "role": user.role})
     elif token_type == "refresh":
         return create_refresh_token({"sub": user.username,
-                                     "role": user.role}, response=response, db=db)
+                                     "role": user.role}, response=response, db=db, device=device)
     else:
         logger.error(f"無効なトークンタイプ: {token_type}")
         raise HTTPException(status_code=401, detail="無効なトークンタイプです")
@@ -80,7 +80,8 @@ def create_access_token(data: dict,
 def create_refresh_token(data: dict,
                          response: Response,
                          expires_delta: Union[timedelta, None] = None,
-                         db: Session = Depends(get_db)):
+                         db: Session = Depends(get_db),
+                         device: str = None):
     try:
         to_encode = data.copy()
         if expires_delta:
@@ -92,15 +93,18 @@ def create_refresh_token(data: dict,
         refresh_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         # トークンが既に存在するか確認(リフレッシュトークンは1ユーザーに1つ)
         existing_token = db.query(db_model.Token).filter(
-            db_model.Token.username == data["sub"]).one_or_none()
+            db_model.Token.username == data["sub"],
+            db_model.Token.device == device).one_or_none()
         # 既存のトークンがある場合は、トークンを更新
         if existing_token:
             existing_token.token = refresh_token
             existing_token.expires_at = expire
+            existing_token.device = device
         # トークンが存在しない場合は、新規作成
         else:
             new_token = db_model.Token(token=refresh_token,
                                        username=data["sub"],
+                                       device=device,
                                        expires_at=expire)
             db.add(new_token)
         db.commit()
@@ -118,7 +122,7 @@ def create_refresh_token(data: dict,
         raise HTTPException(status_code=500, detail="トークンの作成に失敗しました")
 
 
-def verify_refresh_token(refresh_token: str, db: Session = Depends(get_db)):
+def verify_refresh_token(refresh_token: str, device: str, db: Session = Depends(get_db)):
     """ リフレッシュトークンを検証する """
     try:
         payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=ALGORITHM)
@@ -129,7 +133,7 @@ def verify_refresh_token(refresh_token: str, db: Session = Depends(get_db)):
         if not user:
             return False
         fetch_token = db.query(db_model.Token).filter(
-            db_model.Token.username == username).one_or_none()
+            db_model.Token.username == username, db_model.Token.device == device).one_or_none()
         if not fetch_token:
             return False
         if fetch_token.expires_at < date.today():

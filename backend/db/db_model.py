@@ -57,6 +57,7 @@ class User(Base):
 class Token(Base):
     __tablename__ = "tokens"
     username = Column(VARCHAR(16), ForeignKey("users.username"), primary_key=True)
+    device = Column(VARCHAR(16), nullable=False)
     token = Column(VARCHAR(256))
     expires_at = Column(Date, nullable=False)
 
