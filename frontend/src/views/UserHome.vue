@@ -175,12 +175,18 @@ export default {
 
     const logout = async() =>{
       try{
+        // デバイス情報を取得 HTTPSにするまでの一時的な対応としてplatform(非推奨)を使用
+        const device = navigator.platform || "unknown";
         const logout_url = process.env.VUE_APP_BACKEND_URL + 'logout'
-        const logout_res = await axios.delete(logout_url, 
-        {
-          headers: {Authorization: authStore.getAuthHeader},
-          withCredentials: true
-        })
+        const logout_res = await axios.post(logout_url, 
+              {
+                device: device
+              },
+              {
+                headers: {Authorization: authStore.getAuthHeader},
+                withCredentials: true
+              }
+        )
         if (logout_res.status===200){
           authStore.clearAuthData()
           router.push(
