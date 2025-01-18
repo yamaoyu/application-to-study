@@ -45,7 +45,8 @@
   
       const userLogin = async() => {
         try {
-          const device = navigator.userAgentData?.platform || "unknown";
+          // デバイス情報を取得 HTTPSにするまでの一時的な対応としてplatform(非推奨)を使用
+          const device = navigator?.platform || "unknown";
           const url = process.env.VUE_APP_BACKEND_URL + "login"
           const response = await axios.post(url, {
             username: username.value,

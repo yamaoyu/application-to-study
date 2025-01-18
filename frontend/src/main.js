@@ -19,7 +19,8 @@ router.beforeEach(async (to) => {
     if (!authStore.isToken || authStore.isExpired()) {
       // リフレッシュトークンの検証
       try{
-        const device = navigator.userAgentData?.platform || "unknown";
+        // デバイス情報を取得 HTTPSにするまでの一時的な対応としてplatform(非推奨)を使用
+        const device = navigator.platform || "unknown";
         const response = await axios.post(
           process.env.VUE_APP_BACKEND_URL + "token", 
           { device: device },
