@@ -1,6 +1,6 @@
 from unittest.mock import patch
 from datetime import timedelta
-from conftest import test_username
+from conftest import test_username, test_device
 from lib.security import create_access_token
 
 # テストで使用する変数
@@ -26,7 +26,8 @@ def setup_create_another_user(client):
 
 def setup_login(client):
     user_info = {"username": another_test_user,
-                 "password": test_password}
+                 "password": test_password,
+                 "device": test_device}
     response = client.post("/login", json=user_info)
     access_token = response.json()["access_token"]
     return access_token
