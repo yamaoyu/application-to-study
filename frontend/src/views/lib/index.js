@@ -1,9 +1,11 @@
-import { generateYearOptions } from "./dateUtils";
-import { generateMonthOptions } from "./dateUtils";
+import { generateYearOptions, generateMonthOptions, changeDate, changeMonth, changeYear } from "./dateUtils";
 import { generateTimeOptions } from "./TimeDropdown";
 
 export {
     generateYearOptions, 
     generateMonthOptions, 
-    generateTimeOptions
+    generateTimeOptions,
+    changeDate,
+    changeMonth,
+    changeYear
 }

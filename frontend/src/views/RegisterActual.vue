@@ -5,6 +5,8 @@
       <label for="date">日付:</label>
       <input type="date" id="date" v-model="date" required>
       <input type="button" value="今日" @click="insertToday">
+      <input type="button" value="-1" @click="decreaseOneDay">
+      <input type="button" value="+1" @click="increaseOneDay">
     </div>
     <div>
       <label for="ActualTime">活動時間:</label>
@@ -28,7 +30,7 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { generateTimeOptions } from "./lib/index";
+import { generateTimeOptions, changeDate } from "./lib/index";
 import { useAuthStore } from '@/store/authenticate';
 
 export default {
@@ -46,14 +48,7 @@ export default {
     const ActualTime = ref("")
     const router = useRouter()
     const authStore = useAuthStore()
-
-    const insertToday = async() =>{
-      const today = new Date()
-      const year = today.getFullYear()
-      const month = `${today.getMonth()+1}`.padStart(2, '0')
-      const day = `${today.getDate()}`.padStart(2, '0')
-      date.value = `${year}-${month}-${day}`
-    }
+    const { insertToday, decreaseOneDay, increaseOneDay } = changeDate(date, message);
 
     const registerActual = async() =>{
         try {
@@ -105,7 +100,9 @@ export default {
       message,
       ActualTime,
       registerActual,
-      insertToday
+      insertToday,
+      decreaseOneDay,
+      increaseOneDay,
     }
   }
 }

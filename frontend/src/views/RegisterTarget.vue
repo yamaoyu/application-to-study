@@ -4,7 +4,9 @@
     <div>
       <label for="date">日付:</label>
       <input type="date" id="date" v-model="date" required>
-      <input type="button" value="今日" @click="insertDate">
+      <input type="button" value="今日" @click="insertToday">
+      <input type="button" value="-1" @click="decreaseOneDay">
+      <input type="button" value="+1" @click="increaseOneDay">
     </div>
     <div>
       <label for="TargetTime">目標時間(Hour):</label>
@@ -28,8 +30,8 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { generateTimeOptions } from "./lib/TimeDropdown";
 import { useAuthStore } from '@/store/authenticate';
+import { generateTimeOptions, changeDate } from "./lib/index";
 
 export default {
   created() {
@@ -47,14 +49,7 @@ export default {
     const TargetTime = ref(null)
     const router = useRouter()
     const authStore = useAuthStore()
-
-    const insertDate = async() =>{
-      const today = new Date()
-      const year = today.getFullYear()
-      const month = `${today.getMonth()+1}`.padStart(2, '0')
-      const day = `${today.getDate()}`.padStart(2, '0')
-      date.value = `${year}-${month}-${day}`
-    }
+    const { insertToday, decreaseOneDay, increaseOneDay } = changeDate(date, message);
 
     const registerTarget = async() =>{
         try {
@@ -107,7 +102,9 @@ export default {
       message,
       TargetTime,
       registerTarget,
-      insertDate
+      insertToday,
+      decreaseOneDay,
+      increaseOneDay,
     }
   }
 }

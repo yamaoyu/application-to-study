@@ -9,6 +9,8 @@
         </option>
       </select>
       <input type="button" value="今年" @click="insertThisYear">
+      <input type="button" value="-1" @click="decreaseOneYear">
+      <input type="button" value="+1" @click="increaseOneYear">
     </div>
     <div>
       <label for="month">月:</label>
@@ -18,6 +20,8 @@
         </option>
       </select>
       <input type="button" value="今月" @click="insertThisMonth">
+      <input type="button" value="-1" @click="decreaseOneMonth">
+      <input type="button" value="+1" @click="increaseOneMonth">
     </div>
     <div>
       <label for="monthlyIncome">月収(万):</label>
@@ -36,8 +40,7 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { generateYearOptions } from './lib/index';
-import { generateMonthOptions } from './lib/index';
+import { generateYearOptions, generateMonthOptions, changeMonth, changeYear } from './lib/index';
 import { useAuthStore } from '@/store/authenticate';
 
 export default {
@@ -53,14 +56,8 @@ export default {
     const message = ref('')
     const router = useRouter()
     const authStore = useAuthStore()
-
-    const insertThisYear = async() =>{
-      year.value = new Date().getFullYear()
-    }
-
-    const insertThisMonth = async() =>{
-      month.value = new Date().getMonth()+1
-    }
+    const { insertThisYear, decreaseOneYear, increaseOneYear } = changeYear(year, message);
+    const { insertThisMonth, decreaseOneMonth, increaseOneMonth } = changeMonth(month, year, message);
     
     const insertPreviousSalary = async() =>{
       // 先月の年収を取得
@@ -133,7 +130,11 @@ export default {
       insertThisYear,
       insertThisMonth,
       insertPreviousSalary,
-      registerSalary
+      registerSalary,
+      decreaseOneYear,
+      increaseOneYear,
+      decreaseOneMonth,
+      increaseOneMonth
     }
   }
 }
