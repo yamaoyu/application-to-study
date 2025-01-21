@@ -15,6 +15,10 @@
         {{ option }}
         </option>
       </select>
+      <input type="button" value="-0.5" @click="decreaseHalfHour">
+      <input type="button" value="+0.5" @click="increaseHalfHour">
+      <input type="button" value="-2" @click="decreaseTwoHour">
+      <input type="button" value="+2" @click="increaseTwoHour">
     </div>
     <button type="submit">登録</button>
   </form>
@@ -31,25 +35,21 @@ import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
-import { generateTimeOptions, changeDate } from "./lib/index";
+import { generateTimeOptions, changeDate, changeTime } from "./lib/index";
 
 export default {
-  created() {
-        // 0.5 ~ 10まで、0.5単位で生成
-        this.timeOptions = generateTimeOptions(0.5, 12, 0.5);
-    },
-
-
   setup() {
     const year = ref("")
     const month = ref("")
     const day = ref("")
     const date = ref("")
     const message = ref("")
-    const TargetTime = ref(null)
+    const timeOptions = generateTimeOptions(0.5, 12, 0.5);
+    const TargetTime = ref(timeOptions[0]);
     const router = useRouter()
     const authStore = useAuthStore()
     const { insertToday, decreaseOneDay, increaseOneDay } = changeDate(date, message);
+    const { increaseHalfHour, decreaseHalfHour, increaseTwoHour, decreaseTwoHour } = changeTime(TargetTime, timeOptions, message);
 
     const registerTarget = async() =>{
         try {
@@ -100,11 +100,16 @@ export default {
       day,
       date,
       message,
+      timeOptions,
       TargetTime,
       registerTarget,
       insertToday,
       decreaseOneDay,
       increaseOneDay,
+      increaseHalfHour,
+      decreaseHalfHour,
+      increaseTwoHour,
+      decreaseTwoHour
     }
   }
 }
