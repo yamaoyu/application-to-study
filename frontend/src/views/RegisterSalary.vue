@@ -9,6 +9,8 @@
         </option>
       </select>
       <input type="button" value="今年" @click="insertThisYear">
+      <input type="button" value="-1" @click="decreaseOneYear">
+      <input type="button" value="+1" @click="increaseOneYear">
     </div>
     <div>
       <label for="month">月:</label>
@@ -18,6 +20,8 @@
         </option>
       </select>
       <input type="button" value="今月" @click="insertThisMonth">
+      <input type="button" value="-1" @click="decreaseOneMonth">
+      <input type="button" value="+1" @click="increaseOneMonth">
     </div>
     <div>
       <label for="monthlyIncome">月収(万):</label>
@@ -39,6 +43,7 @@ import { useRouter } from 'vue-router';
 import { generateYearOptions } from './lib/index';
 import { generateMonthOptions } from './lib/index';
 import { useAuthStore } from '@/store/authenticate';
+import { getNextYear, getPreviousYear, getNextMonth, getPreviousMonth } from './lib/dateUtils';
 
 export default {
   created() {
@@ -60,6 +65,50 @@ export default {
 
     const insertThisMonth = async() =>{
       month.value = new Date().getMonth()+1
+    }
+
+    const decreaseOneYear = async() => {
+      if (year.value) {
+        year.value = getPreviousYear(year.value);
+        message.value = "";
+      } else {
+        message.value = "年が指定されていません"
+      }
+    }
+
+    const increaseOneYear = async() => {
+      if (year.value) {
+        year.value = getNextYear(year.value);
+        message.value = "";
+      } else {
+        message.value = "年が指定されていません"
+      }
+    }
+
+    const decreaseOneMonth = async() => {
+      if (month.value) {
+        month.value = getPreviousMonth(month.value);
+        if (month.value < 1) {
+          month.value = 12;
+          year.value = getPreviousYear(year.value);
+        }
+        message.value = "";
+      } else {
+        message.value = "月が指定されていません"
+      }
+    }
+
+    const increaseOneMonth = async() => {
+      if (month.value) {
+        month.value = getNextMonth(month.value);
+        if (month.value > 12) {
+          month.value = 1;
+          year.value = getNextYear(year.value);
+        }
+        message.value = "";
+      } else {
+        message.value = "月が指定されていません"
+      }
     }
     
     const insertPreviousSalary = async() =>{
@@ -133,7 +182,11 @@ export default {
       insertThisYear,
       insertThisMonth,
       insertPreviousSalary,
-      registerSalary
+      registerSalary,
+      decreaseOneYear,
+      increaseOneYear,
+      decreaseOneMonth,
+      increaseOneMonth
     }
   }
 }

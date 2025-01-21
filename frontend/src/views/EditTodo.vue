@@ -8,6 +8,9 @@
       <div>
         <label for="due">期限:</label>
         <input type="date" id="date" v-model="due" required>
+        <input type="button" value="今日" @click="insertToday">
+        <input type="button" value="-1" @click="decreaseOneDay">
+        <input type="button" value="+1" @click="increaseOneDay">
       </div>
       <button type="submit">更新</button>
   </form>
@@ -25,6 +28,7 @@ import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
 import { useTodoStore } from '@/store/todo';
+import { getToday, getNextDay, getPreviousDay } from './lib/dateUtils';
 
 export default {
   setup() {
@@ -34,6 +38,28 @@ export default {
     const router = useRouter()
     const authStore = useAuthStore()
     const todoStore = useTodoStore()
+
+    const insertToday = async() =>{
+      due.value = getToday();
+    }
+
+    const decreaseOneDay = async() => {
+      if (due.value) {
+        due.value = getPreviousDay(due.value);
+        message.value = "";
+      } else {
+        message.value = "日付が指定されていません";
+      }
+    }
+
+    const increaseOneDay = async() => {
+      if (due.value !== '') {
+        due.value = getNextDay(due.value);
+        message.value = "";
+      } else{
+        message.value = "日付が指定されていません";
+      }
+    }
 
     const editTodo = async() =>{
       try{
@@ -83,6 +109,9 @@ export default {
       action,
       due,
       todoStore,
+      insertToday,
+      increaseOneDay,
+      decreaseOneDay,
       editTodo
     }
   }

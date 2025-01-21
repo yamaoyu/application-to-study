@@ -4,7 +4,9 @@
     <div>
       <label for="date">日付:</label>
       <input type="date" id="date" v-model="date" required>
-      <input type="button" value="今日" @click="insertDate">
+      <input type="button" value="今日" @click="insertToday">
+      <input type="button" value="-1" @click="decreaseOneDay">
+      <input type="button" value="+1" @click="increaseOneDay">
     </div>
     <div>
       <label for="TargetTime">目標時間(Hour):</label>
@@ -28,8 +30,9 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { generateTimeOptions } from "./lib/TimeDropdown";
 import { useAuthStore } from '@/store/authenticate';
+import { generateTimeOptions } from "./lib/TimeDropdown";
+import { getToday, getNextDay, getPreviousDay } from './lib/dateUtils';
 
 export default {
   created() {
@@ -48,12 +51,26 @@ export default {
     const router = useRouter()
     const authStore = useAuthStore()
 
-    const insertDate = async() =>{
-      const today = new Date()
-      const year = today.getFullYear()
-      const month = `${today.getMonth()+1}`.padStart(2, '0')
-      const day = `${today.getDate()}`.padStart(2, '0')
-      date.value = `${year}-${month}-${day}`
+    const insertToday = async() =>{
+      date.value = getToday();
+    }
+
+    const decreaseOneDay = async() => {
+      if (date.value) {
+        date.value = getPreviousDay(date.value);
+        message.value = "";
+      } else {
+        message.value = "日付が指定されていません";
+      }
+    }
+
+    const increaseOneDay = async() => {
+      if (date.value !== '') {
+        date.value = getNextDay(date.value);
+        message.value = "";
+      } else{
+        message.value = "日付が指定されていません";
+      }
     }
 
     const registerTarget = async() =>{
@@ -107,7 +124,9 @@ export default {
       message,
       TargetTime,
       registerTarget,
-      insertDate
+      insertToday,
+      decreaseOneDay,
+      increaseOneDay
     }
   }
 }

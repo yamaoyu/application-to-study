@@ -5,6 +5,8 @@
       <label for="date">日付:</label>
       <input type="date" id="date" v-model="date" required>
       <input type="button" value="今日" @click="insertToday">
+      <input type="button" value="-1" @click="decreaseOneDay">
+      <input type="button" value="+1" @click="increaseOneDay">
     </div>
     <button type="submit">終了</button>
   </form>
@@ -21,6 +23,7 @@ import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
+import { getToday, getNextDay, getPreviousDay } from './lib/dateUtils';
 
 export default {
   setup() {
@@ -33,11 +36,25 @@ export default {
     const authStore = useAuthStore()
 
     const insertToday = async() =>{
-      const today = new Date()
-      const year = today.getFullYear()
-      const month = `${today.getMonth()+1}`.padStart(2, '0')
-      const day = `${today.getDate()}`.padStart(2, '0')
-      date.value = `${year}-${month}-${day}`
+      date.value = getToday();
+    }
+
+    const decreaseOneDay = async() => {
+      if (date.value) {
+        date.value = getPreviousDay(date.value);
+        message.value = "";
+      } else {
+        message.value = "日付が指定されていません";
+      }
+    }
+
+    const increaseOneDay = async() => {
+      if (date.value !== '') {
+        date.value = getNextDay(date.value);
+        message.value = "";
+      } else{
+        message.value = "日付が指定されていません";
+      }
     }
 
     const finishActivity = async() =>{
@@ -91,7 +108,9 @@ export default {
       date,
       message,
       insertToday,
-      finishActivity
+      finishActivity,
+      decreaseOneDay,
+      increaseOneDay
     }
   }
 }
