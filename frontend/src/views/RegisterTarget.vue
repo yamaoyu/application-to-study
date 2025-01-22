@@ -15,6 +15,8 @@
         {{ option }}
         </option>
       </select>
+      <input type="button" value="-0.5" @click="decreaseOneHour">
+      <input type="button" value="+0.5" @click="increaseOneHour">
     </div>
     <button type="submit">登録</button>
   </form>
@@ -35,21 +37,17 @@ import { generateTimeOptions } from "./lib/TimeDropdown";
 import { getToday, getNextDay, getPreviousDay } from './lib/dateUtils';
 
 export default {
-  created() {
-        // 0.5 ~ 10まで、0.5単位で生成
-        this.timeOptions = generateTimeOptions(0.5, 12, 0.5);
-    },
-
-
   setup() {
     const year = ref("")
     const month = ref("")
     const day = ref("")
     const date = ref("")
     const message = ref("")
-    const TargetTime = ref(null)
+    const timeOptions = generateTimeOptions(0.5, 12, 0.5);
+    const TargetTime = ref(timeOptions[0]);
     const router = useRouter()
     const authStore = useAuthStore()
+
 
     const insertToday = async() =>{
       date.value = getToday();
@@ -71,6 +69,16 @@ export default {
       } else{
         message.value = "日付が指定されていません";
       }
+    }
+
+    const increaseOneHour = async() => {
+      const currentIndex = timeOptions.indexOf(TargetTime.value);
+      TargetTime.value = timeOptions[currentIndex + 1];
+    }
+
+    const decreaseOneHour = async() => {
+      const currentIndex = timeOptions.indexOf(TargetTime.value);
+      TargetTime.value = timeOptions[currentIndex - 1];
     }
 
     const registerTarget = async() =>{
@@ -122,11 +130,14 @@ export default {
       day,
       date,
       message,
+      timeOptions,
       TargetTime,
       registerTarget,
       insertToday,
       decreaseOneDay,
-      increaseOneDay
+      increaseOneDay,
+      increaseOneHour,
+      decreaseOneHour
     }
   }
 }

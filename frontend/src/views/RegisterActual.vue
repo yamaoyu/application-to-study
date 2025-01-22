@@ -15,6 +15,8 @@
         {{ option }}
         </option>
       </select>
+      <input type="button" value="-0.5" @click="decreaseHalfHour">
+      <input type="button" value="+0.5" @click="increaseHalfHour">
     </div>
     <button type="submit">登録</button>
   </form>
@@ -35,18 +37,14 @@ import { useAuthStore } from '@/store/authenticate';
 import { getToday, getNextDay, getPreviousDay } from './lib/dateUtils';
 
 export default {
-  created() {
-        // 0.0 ~ 10まで、0.5単位で生成
-        this.timeOptions = generateTimeOptions(0.0, 12, 0.5);
-    },
-
   setup() {
     const year = ref("")
     const month = ref("")
     const day = ref("")
     const date = ref("")
     const message = ref("")
-    const ActualTime = ref("")
+    const timeOptions = generateTimeOptions(0.0, 12, 0.5);
+    const ActualTime = ref(timeOptions[0])
     const router = useRouter()
     const authStore = useAuthStore()
 
@@ -72,6 +70,19 @@ export default {
       }
     }
 
+    const increaseHalfHour = async() => {
+      const currentIndex = timeOptions.indexOf(ActualTime.value)
+      if (currentIndex < timeOptions.length - 1) {
+        ActualTime.value = timeOptions[currentIndex + 1]
+      }
+    }
+
+    const decreaseHalfHour = async() => {
+      const currentIndex = timeOptions.indexOf(ActualTime.value)
+      if (currentIndex > 0) {
+        ActualTime.value = timeOptions[currentIndex - 1]
+      }
+    }
 
     const registerActual = async() =>{
         try {
@@ -121,11 +132,14 @@ export default {
       day,
       date,
       message,
+      timeOptions,
       ActualTime,
       registerActual,
       insertToday,
       decreaseOneDay,
-      increaseOneDay
+      increaseOneDay,
+      increaseHalfHour,
+      decreaseHalfHour
     }
   }
 }
