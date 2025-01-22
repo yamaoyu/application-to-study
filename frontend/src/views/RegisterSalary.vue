@@ -25,8 +25,10 @@
     </div>
     <div>
       <label for="monthlyIncome">月収(万):</label>
-      <input type="number" id="monthlyIncome" v-model="monthlyIncome" required>
+      <input type="number" id="monthlyIncome" v-model="monthlyIncome" required min="0">
       <input type="button" value="先月の給料" @click="insertPreviousSalary">
+      <input type="button" value="-1" @click="monthlyIncome--">
+      <input type="button" value="+1" @click="monthlyIncome++">
     </div>
     <button type="submit">登録</button>
   </form>
