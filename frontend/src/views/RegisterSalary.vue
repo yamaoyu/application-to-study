@@ -25,8 +25,12 @@
     </div>
     <div>
       <label for="monthlyIncome">月収(万):</label>
-      <input type="number" id="monthlyIncome" v-model="monthlyIncome" required>
+      <input type="number" id="monthlyIncome" v-model="monthlyIncome" required min="0" max="999">
       <input type="button" value="先月の給料" @click="insertPreviousSalary">
+      <input type="button" value="-1" @click="updateSalary(-1)">
+      <input type="button" value="+1" @click="updateSalary(1)">
+      <input type="button" value="-5" @click="updateSalary(-5)">
+      <input type="button" value="+5" @click="updateSalary(5)">
     </div>
     <button type="submit">登録</button>
   </form>
@@ -88,6 +92,14 @@ export default {
       }
     }
 
+    const updateSalary = async(step) =>{
+      if (step > 0 && monthlyIncome.value + step < 999){
+        monthlyIncome.value += step
+      } else if (step < 0 && monthlyIncome.value + step >= 0) {
+        monthlyIncome.value += step
+      }
+    }
+
     const registerSalary = async() =>{
         try {
           const url = process.env.VUE_APP_BACKEND_URL + 'incomes/'+ year.value + '/' + month.value;
@@ -130,6 +142,7 @@ export default {
       insertThisYear,
       insertThisMonth,
       insertPreviousSalary,
+      updateSalary,
       registerSalary,
       decreaseOneYear,
       increaseOneYear,
