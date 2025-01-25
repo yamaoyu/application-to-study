@@ -27,7 +27,7 @@ import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
-import { getToday, getNextDay, getPreviousDay } from './lib/dateUtils';
+import { changeDate } from './lib/dateUtils';
 
 export default {
   setup() {
@@ -36,28 +36,7 @@ export default {
     const due = ref("")
     const router = useRouter()
     const authStore = useAuthStore()
-
-    const insertToday = async() =>{
-      due.value = getToday();
-    }
-
-    const decreaseOneDay = async() => {
-      if (due.value) {
-        due.value = getPreviousDay(due.value);
-        message.value = "";
-      } else {
-        message.value = "日付が指定されていません";
-      }
-    }
-
-    const increaseOneDay = async() => {
-      if (due.value !== '') {
-        due.value = getNextDay(due.value);
-        message.value = "";
-      } else{
-        message.value = "日付が指定されていません";
-      }
-    }
+    const { insertToday, decreaseOneDay, increaseOneDay } = changeDate(due, message);
 
     const registerTodo = async() =>{
         try {

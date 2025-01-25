@@ -23,7 +23,7 @@ import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
-import { getToday, getNextDay, getPreviousDay } from './lib/dateUtils';
+import { changeDate } from './lib/dateUtils';
 
 export default {
   setup() {
@@ -34,28 +34,7 @@ export default {
     const message = ref("")
     const router = useRouter()
     const authStore = useAuthStore()
-
-    const insertToday = async() =>{
-      date.value = getToday();
-    }
-
-    const decreaseOneDay = async() => {
-      if (date.value) {
-        date.value = getPreviousDay(date.value);
-        message.value = "";
-      } else {
-        message.value = "日付が指定されていません";
-      }
-    }
-
-    const increaseOneDay = async() => {
-      if (date.value !== '') {
-        date.value = getNextDay(date.value);
-        message.value = "";
-      } else{
-        message.value = "日付が指定されていません";
-      }
-    }
+    const { insertToday, decreaseOneDay, increaseOneDay } = changeDate(date, message);
 
     const finishActivity = async() =>{
         try {

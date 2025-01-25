@@ -65,7 +65,7 @@ import { generateYearOptions } from './lib/index';
 import { generateMonthOptions } from './lib/index';
 import { useAuthStore } from '@/store/authenticate';
 import "../assets/styles/common.css"
-import { getNextYear, getPreviousYear, getNextMonth, getPreviousMonth } from './lib/dateUtils';
+import { changeMonth, changeYear } from './lib/dateUtils';
 
 
 export default {
@@ -81,58 +81,8 @@ export default {
     const router = useRouter()
     const activities = ref([])
     const authStore = useAuthStore()
-
-    const insertThisYear = async() =>{
-      year.value = new Date().getFullYear()
-    }
-
-    const insertThisMonth = async() =>{
-      month.value = new Date().getMonth()+1
-    }
-
-    const decreaseOneYear = async() => {
-      if (year.value) {
-        year.value = getPreviousYear(year.value);
-        message.value = "";
-      } else {
-        message.value = "年が指定されていません"
-      }
-    }
-
-    const increaseOneYear = async() => {
-      if (year.value) {
-        year.value = getNextYear(year.value);
-        message.value = "";
-      } else {
-        message.value = "年が指定されていません"
-      }
-    }
-
-    const decreaseOneMonth = async() => {
-      if (month.value) {
-        message.value = "";
-        month.value = getPreviousMonth(month.value);
-        if (month.value < 1) {
-          month.value = 12;
-          year.value = getPreviousYear(year.value);
-        }
-      } else {
-        message.value = "月が指定されていません"
-      }
-    }
-
-    const increaseOneMonth = async() => {
-      if (month.value) {
-        message.value = "";
-        month.value = getNextMonth(month.value);
-        if (month.value > 12) {
-          month.value = 1;
-          year.value = getNextYear(year.value);
-        }
-      } else {
-        message.value = "月が指定されていません"
-      }
-    }
+    const { insertThisYear, decreaseOneYear, increaseOneYear } = changeYear(year, message);
+    const { insertThisMonth, decreaseOneMonth, increaseOneMonth } = changeMonth(month, year, message);
 
     const GetMonthlyInfo = async() =>{
       try{
