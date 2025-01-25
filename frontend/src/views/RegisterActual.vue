@@ -32,9 +32,8 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { generateTimeOptions } from "./lib/index";
+import { generateTimeOptions, changeDate, changeTime } from "./lib/index";
 import { useAuthStore } from '@/store/authenticate';
-import { changeDate } from './lib/dateUtils';
 
 export default {
   setup() {
@@ -48,20 +47,7 @@ export default {
     const router = useRouter()
     const authStore = useAuthStore()
     const { insertToday, decreaseOneDay, increaseOneDay } = changeDate(date, message);
-
-    const increaseHalfHour = async() => {
-      const currentIndex = timeOptions.indexOf(ActualTime.value)
-      if (currentIndex < timeOptions.length - 1) {
-        ActualTime.value = timeOptions[currentIndex + 1]
-      }
-    }
-
-    const decreaseHalfHour = async() => {
-      const currentIndex = timeOptions.indexOf(ActualTime.value)
-      if (currentIndex > 0) {
-        ActualTime.value = timeOptions[currentIndex - 1]
-      }
-    }
+    const { decreaseHalfHour, increaseHalfHour } = changeTime(ActualTime, timeOptions);
 
     const registerActual = async() =>{
         try {

@@ -61,11 +61,9 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { generateYearOptions } from './lib/index';
-import { generateMonthOptions } from './lib/index';
+import { generateYearOptions, generateMonthOptions, changeMonth, changeYear } from './lib/index';
 import { useAuthStore } from '@/store/authenticate';
 import "../assets/styles/common.css"
-import { changeMonth, changeYear } from './lib/dateUtils';
 
 
 export default {

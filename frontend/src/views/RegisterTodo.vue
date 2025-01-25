@@ -27,7 +27,7 @@ import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
-import { changeDate } from './lib/dateUtils';
+import { changeDate } from './lib/index';
 
 export default {
   setup() {
