@@ -12,22 +12,23 @@ createApp(App).use(router).use(pinia).mount('#app')
 
 // トークンが無効、もしくはない場合はログインページとユーザー登録ページ以外は開けないようにする
 const authStore = useAuthStore()
+const ALLOWED_ROUTES = ['Login', 'RegisterUser']
+const BACKEND_URL = process.env.VUE_APP_BACKEND_URL
 
-const allowedRoutes = ['Login', 'RegisterUser']
 
 const verfiyRefreshToken = async () => {
     // デバイス情報を取得 HTTPSにするまでの一時的な対応としてplatform(非推奨)を使用
   const device = navigator.platform || "unknown";
-  const response = await axios.post(
-    process.env.VUE_APP_BACKEND_URL + "token",
+  const response = await axios.post(BACKEND_URL + "token",
     { device: device },
     { withCredentials: true })
   return response
 }
 
+
 router.beforeEach(async (to) => {
   // 遷移先がログインページとユーザー登録ページ以外の場合
-  if (allowedRoutes.includes(to.name)) {
+  if (ALLOWED_ROUTES.includes(to.name)) {
     return
   }
   // トークンがない、もしくは期限切れの場合
@@ -41,8 +42,6 @@ router.beforeEach(async (to) => {
           response.data.access_token,
           response.data.token_type,
           jwtDecode(response.data.access_token).exp)
-      } else {
-        return { name: 'Login' }
       }
     } catch(error){
       return { name: 'Login' }
