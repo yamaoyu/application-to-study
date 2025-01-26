@@ -1,5 +1,5 @@
 import pytest
-from conftest import test_username, test_plain_password, SECRET_KEY
+from conftest import test_username, test_plain_password, test_device, SECRET_KEY, ALGORITHM
 from jose import jwt
 
 
@@ -58,19 +58,20 @@ def test_register_with_duplicate_user_name(client):
 
 def test_login(client):
     user_info = {"username": test_username,
-                 "password": test_plain_password}
+                 "password": test_plain_password,
+                 "device": test_device}
     response = client.post("/login", json=user_info)
     access_token = response.json()["access_token"]
     refresh_token = response.json()["refresh_token"]
     assert response.status_code == 200
     assert response.json()["token_type"] == "Bearer"
-    # HS256により作成されるトークンは最低100文字
+    # 作成されるトークンは最低100文字
     assert len(access_token) >= 100
     assert len(refresh_token) >= 100
     try:
         for token in [access_token, refresh_token]:
             decoded_token = jwt.decode(
-                token, SECRET_KEY, algorithms=['HS256'])
+                token, SECRET_KEY, ALGORITHM)
             assert "sub" in decoded_token
             assert decoded_token["sub"] == "testuser"
     except jwt.JWTError as e:
@@ -80,7 +81,8 @@ def test_login(client):
 def test_login_with_invalid_password(client):
     """パスワードを間違えた場合"""
     user_info = {"username": test_username,
-                 "password": "invalid_password"}
+                 "password": "invalid_password",
+                 "device": test_device}
     response = client.post("/login", json=user_info)
     assert response.status_code == 401
     assert response.json() == {
@@ -91,12 +93,29 @@ def test_login_with_invalid_password(client):
 def test_login_not_registered_user(client):
     """登録されていないユーザーでログイン"""
     user_info = {"username": "test",
-                 "password": "testpassword"}
+                 "password": "testpassword",
+                 "device": test_device}
     response = client.post("/login", json=user_info)
     assert response.status_code == 404
 
 
 def test_logout(client, get_headers):
-    response = client.put("/logout", headers=get_headers)
+    device_info = {"device": test_device}
+    response = client.post("/logout", json=device_info, headers=get_headers)
     assert response.status_code == 200
     assert response.json() == {"message": f"{test_username}がログアウト"}
+
+
+def test_regenerate_token(client, get_headers):
+    device_info = {"device": test_device}
+    response = client.post("/token", json=device_info, headers=get_headers)
+    access_token = response.json()["access_token"]
+    assert response.status_code == 200
+    assert response.json()["token_type"] == "Bearer"
+    assert len(access_token) >= 100
+    try:
+        decoded_token = jwt.decode(access_token, SECRET_KEY, ALGORITHM)
+        assert "sub" in decoded_token
+        assert decoded_token["sub"] == "testuser"
+    except jwt.JWTError as e:
+        pytest.fail(f"Invalid JWT token {str(e)}")

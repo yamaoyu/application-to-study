@@ -1,5 +1,5 @@
 from sqlalchemy import (Column, Integer, Float, Date, Boolean, Enum,
-                        CHAR, VARCHAR, ForeignKey, UniqueConstraint)
+                        CHAR, VARCHAR, ForeignKey, UniqueConstraint, PrimaryKeyConstraint)
 from sqlalchemy.orm import relationship
 from db.database import Base, engine
 
@@ -56,10 +56,12 @@ class User(Base):
 
 class Token(Base):
     __tablename__ = "tokens"
-    username = Column(VARCHAR(16), ForeignKey("users.username"), primary_key=True)
+    username = Column(VARCHAR(16), ForeignKey("users.username"), nullable=False)
+    device = Column(VARCHAR(16), nullable=False)
     token = Column(VARCHAR(256))
     expires_at = Column(Date, nullable=False)
-    status = Column(Boolean, default=True)
+
+    __table_args__ = (PrimaryKeyConstraint(username, device),)
 
     user = relationship('User', back_populates='tokens')
 

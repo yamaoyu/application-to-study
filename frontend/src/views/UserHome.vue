@@ -46,6 +46,10 @@
   <div>
     <router-link to="/register/inquiry">問い合わせ</router-link>
   </div>
+  <div>
+    <input type="button" value="ログアウト" @click="logout()">
+    <p v-if="logout_msg" class="logout_msg">{{ logout_msg }}</p>
+  </div>
 </template>
 
 
@@ -69,13 +73,26 @@ export default {
     const router = useRouter()
     const authStore = useAuthStore()
     const todoStore = useTodoStore()
+    const logout_msg = ref("")
 
     const updateTodos = async() =>{
       // todo更新後、データを更新する
-      const todo_url = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
-      const todo_res = await axios.get(todo_url,
-                                    {headers: {Authorization: authStore.getAuthHeader}})
-      todos.value = todo_res.data;
+      try {
+        const todo_url = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
+        const todo_res = await axios.get(todo_url,
+                                      {headers: {Authorization: authStore.getAuthHeader}})
+        todos.value = todo_res.data;
+      } catch (todo_err){
+        switch (todo_err.response.status){
+          case 404:
+          case 500:
+            todos.value = []
+            todo_msg.value = todo_err.response.data.detail;
+            break
+          default:
+            todo_msg.value = "todoの取得に失敗しました"
+        }
+      }
     }
 
 
@@ -90,7 +107,7 @@ export default {
             }
           )
         if (response.status===204){
-            await updateTodos()
+            await updateTodos();
           }
       } catch (error) {
           if (error.response){
@@ -126,7 +143,7 @@ export default {
             }
           )
         if (response.status===200){
-            await updateTodos()
+            await updateTodos();
           }
       } catch (error) {
           if (error.response){
@@ -154,6 +171,50 @@ export default {
       todoStore.saveTodo(todoInfo["todo_id"], todoInfo["action"], todoInfo["due"])
       router.push({"name":"EditTodo"}
       )
+    }
+
+    const logout = async() =>{
+      try{
+        // デバイス情報を取得 HTTPSにするまでの一時的な対応としてplatform(非推奨)を使用
+        const device = navigator.platform || "unknown";
+        const logout_url = process.env.VUE_APP_BACKEND_URL + 'logout'
+        const logout_res = await axios.post(logout_url, 
+              {
+                device: device
+              },
+              {
+                headers: {Authorization: authStore.getAuthHeader},
+                withCredentials: true
+              }
+        )
+        if (logout_res.status===200){
+          authStore.clearAuthData()
+          router.push(
+                  {"path":"/login",
+                    "query":{message:"ログアウトしました"}
+                  })
+        }
+      } catch(logout_err){
+        if (logout_err.response){
+            switch (logout_err.response.status){
+              case 401:
+                router.push(
+                  {"path":"/login",
+                    "query":{message:"再度ログインしてください"}
+                  })
+                break;
+              case 404:
+              case 500:
+                logout_msg.value = logout_err.response.data.detail;
+                break;
+              default:
+                logout_msg.value = "ログアウトに失敗しました";}
+          } else if (logout_err.request){
+            logout_msg.value =  "リクエストがサーバーに到達できませんでした"
+          } else {
+            logout_msg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
+          }
+      }
     }
 
     onMounted( async() =>{
@@ -263,13 +324,15 @@ export default {
       income_msg,
       todos,
       todo_msg,
+      logout_msg,
       year,
       month,
       date,
       updateTodos,
       deleteTodo,
       finishTodo,
-      editTodo
+      editTodo,
+      logout
     }
   }
 }

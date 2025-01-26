@@ -3,9 +3,9 @@ import traceback
 from passlib.context import CryptContext
 from typing import Union
 from functools import wraps
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
 from fastapi.security import OAuth2PasswordBearer
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Response
 from db import db_model
 from db.database import get_db
 from lib.log_conf import logger
@@ -37,13 +37,13 @@ def get_user(username: str, db: Session = Depends(get_db)):
     return user
 
 
-def get_token(user: db_model, token_type: str, db=None):
+def get_token(user: db_model, token_type: str, response: Response = None, db=None, device: str = None):
     if token_type == "access":
         return create_access_token({"sub": user.username,
                                     "role": user.role})
     elif token_type == "refresh":
         return create_refresh_token({"sub": user.username,
-                                     "role": user.role}, db=db)
+                                     "role": user.role}, response=response, db=db, device=device)
     else:
         logger.error(f"無効なトークンタイプ: {token_type}")
         raise HTTPException(status_code=401, detail="無効なトークンタイプです")
@@ -67,7 +67,9 @@ def create_access_token(data: dict,
             expire = datetime.now(timezone.utc) + \
                 timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         to_encode.update({"exp": expire})
-        return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+        access_token = jwt.encode(
+            to_encode, SECRET_KEY, algorithm=ALGORITHM)
+        return access_token
     except HTTPException as http_e:
         raise http_e
     except Exception:
@@ -76,8 +78,10 @@ def create_access_token(data: dict,
 
 
 def create_refresh_token(data: dict,
+                         response: Response,
                          expires_delta: Union[timedelta, None] = None,
-                         db: Session = Depends(get_db)):
+                         db: Session = Depends(get_db),
+                         device: str = None):
     try:
         to_encode = data.copy()
         if expires_delta:
@@ -89,27 +93,57 @@ def create_refresh_token(data: dict,
         refresh_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         # トークンが既に存在するか確認(リフレッシュトークンは1ユーザーに1つ)
         existing_token = db.query(db_model.Token).filter(
-            db_model.Token.username == data["sub"]).one_or_none()
+            db_model.Token.username == data["sub"],
+            db_model.Token.device == device).one_or_none()
         # 既存のトークンがある場合は、トークンを更新
         if existing_token:
             existing_token.token = refresh_token
             existing_token.expires_at = expire
-            existing_token.status = True
-            db.commit()
+            existing_token.device = device
         # トークンが存在しない場合は、新規作成
         else:
             new_token = db_model.Token(token=refresh_token,
                                        username=data["sub"],
+                                       device=device,
                                        expires_at=expire)
             db.add(new_token)
-            db.commit()
-            db.refresh(new_token)
+        db.commit()
+        response.set_cookie(
+            key="refresh_token",
+            value=refresh_token,
+            secure=False,
+            httponly=True,
+            expires=expire)
         return refresh_token
     except HTTPException as http_e:
         raise http_e
     except Exception:
         logger.error(f"リフレッシュトークンの作成中にエラーが発生しました\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="トークンの作成に失敗しました")
+
+
+def verify_refresh_token(refresh_token: str, device: str, db: Session = Depends(get_db)):
+    """ リフレッシュトークンを検証する """
+    try:
+        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=ALGORITHM)
+        username = payload.get("sub")
+        if username is None:
+            return False
+        user = get_user(username, db)
+        if not user:
+            return False
+        fetch_token = db.query(db_model.Token).filter(
+            db_model.Token.username == username, db_model.Token.device == device).one_or_none()
+        if not fetch_token:
+            return False
+        if fetch_token.expires_at < date.today():
+            return False
+        if refresh_token != fetch_token.token:
+            return False
+        return True
+    except Exception:
+        logger.error(f"リフレッシュトークンの検証中にエラーが発生しました\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail="リフレッシュトークンの検証に失敗しました")
 
 
 def get_current_user(token: str = Depends(oauth2_scheme),

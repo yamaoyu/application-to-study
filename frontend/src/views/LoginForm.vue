@@ -45,10 +45,15 @@
   
       const userLogin = async() => {
         try {
+          // デバイス情報を取得 HTTPSにするまでの一時的な対応としてplatform(非推奨)を使用
+          const device = navigator?.platform || "unknown";
           const url = process.env.VUE_APP_BACKEND_URL + "login"
           const response = await axios.post(url, {
             username: username.value,
             password: password.value,
+            device: device
+          }, {
+            withCredentials: true
           })
           // ここでログイン後の処理を行う（例：トークンの保存、ページ遷移など）
           if (response.status===200){
@@ -72,13 +77,13 @@
             default:
               message.value = error.response.data.detail;}
           } else if (error.request){
+            console.log(error.request)
             message.value =  "リクエストがサーバーに到達できませんでした"
           } else {
             message.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
           }
         }
-      }
-  
+      }  
       return {
         username,
         password,
