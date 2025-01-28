@@ -9,6 +9,8 @@
         </option>
       </select>
       <input type="button" value="今年" @click="insertThisYear">
+      <input type="button" value="-1" @click="decreaseOneYear">
+      <input type="button" value="+1" @click="increaseOneYear">
     </div>
     <div>
       <label for="month">月:</label>
@@ -18,11 +20,17 @@
         </option>
       </select>
       <input type="button" value="今月" @click="insertThisMonth">
+      <input type="button" value="-1" @click="decreaseOneMonth">
+      <input type="button" value="+1" @click="increaseOneMonth">
     </div>
     <div>
       <label for="monthlyIncome">月収(万):</label>
-      <input type="number" id="monthlyIncome" v-model="monthlyIncome" required>
+      <input type="number" id="monthlyIncome" v-model="monthlyIncome" required min="0" max="999">
       <input type="button" value="先月の給料" @click="insertPreviousSalary">
+      <input type="button" value="-1" @click="updateSalary(-1)">
+      <input type="button" value="+1" @click="updateSalary(1)">
+      <input type="button" value="-5" @click="updateSalary(-5)">
+      <input type="button" value="+5" @click="updateSalary(5)">
     </div>
     <button type="submit">登録</button>
   </form>
@@ -36,8 +44,7 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { generateYearOptions } from './lib/index';
-import { generateMonthOptions } from './lib/index';
+import { generateYearOptions, generateMonthOptions, changeMonth, changeYear } from './lib/index';
 import { useAuthStore } from '@/store/authenticate';
 
 export default {
@@ -53,14 +60,8 @@ export default {
     const message = ref('')
     const router = useRouter()
     const authStore = useAuthStore()
-
-    const insertThisYear = async() =>{
-      year.value = new Date().getFullYear()
-    }
-
-    const insertThisMonth = async() =>{
-      month.value = new Date().getMonth()+1
-    }
+    const { insertThisYear, decreaseOneYear, increaseOneYear } = changeYear(year, message);
+    const { insertThisMonth, decreaseOneMonth, increaseOneMonth } = changeMonth(month, year, message);
     
     const insertPreviousSalary = async() =>{
       // 先月の年収を取得
@@ -88,6 +89,14 @@ export default {
           default:
             message.value = "先月の月収を取得できませんでした";
         }
+      }
+    }
+
+    const updateSalary = async(step) =>{
+      if (step > 0 && monthlyIncome.value + step < 999){
+        monthlyIncome.value += step
+      } else if (step < 0 && monthlyIncome.value + step >= 0) {
+        monthlyIncome.value += step
       }
     }
 
@@ -133,7 +142,12 @@ export default {
       insertThisYear,
       insertThisMonth,
       insertPreviousSalary,
-      registerSalary
+      updateSalary,
+      registerSalary,
+      decreaseOneYear,
+      increaseOneYear,
+      decreaseOneMonth,
+      increaseOneMonth
     }
   }
 }

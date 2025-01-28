@@ -9,6 +9,8 @@
         <label for="due">期限:</label>
         <input type="date" id="date" v-model="due" required>
         <input type="button" value="今日" @click="insertToday">
+        <input type="button" value="-1" @click="decreaseOneDay">
+        <input type="button" value="+1" @click="increaseOneDay">
       </div>
       <button type="submit">登録</button>
   </form>
@@ -25,6 +27,7 @@ import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
+import { changeDate } from './lib/index';
 
 export default {
   setup() {
@@ -33,14 +36,7 @@ export default {
     const due = ref("")
     const router = useRouter()
     const authStore = useAuthStore()
-
-    const insertToday = async() =>{
-      const today = new Date()
-      const year = today.getFullYear()
-      const month = `${today.getMonth()+1}`.padStart(2, '0')
-      const day = `${today.getDate()}`.padStart(2, '0')
-      due.value = `${year}-${month}-${day}`
-    }
+    const { insertToday, decreaseOneDay, increaseOneDay } = changeDate(due, message);
 
     const registerTodo = async() =>{
         try {
@@ -94,6 +90,8 @@ export default {
       action,
       due,
       insertToday,
+      increaseOneDay,
+      decreaseOneDay,
       registerTodo
     }
   }

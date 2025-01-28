@@ -5,6 +5,8 @@
       <label for="date">日付:</label>
       <input type="date" id="date" v-model="date" required>
       <input type="button" value="今日" @click="insertToday">
+      <input type="button" value="-1" @click="decreaseOneDay">
+      <input type="button" value="+1" @click="increaseOneDay">
     </div>
     <div>
       <label for="ActualTime">活動時間:</label>
@@ -13,6 +15,10 @@
         {{ option }}
         </option>
       </select>
+      <input type="button" value="-0.5" @click="decreaseHalfHour">
+      <input type="button" value="+0.5" @click="increaseHalfHour">
+      <input type="button" value="-2" @click="decreaseTwoHour">
+      <input type="button" value="+2" @click="increaseTwoHour">
     </div>
     <button type="submit">登録</button>
   </form>
@@ -28,32 +34,22 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { generateTimeOptions } from "./lib/index";
+import { generateTimeOptions, changeDate, changeTime } from "./lib/index";
 import { useAuthStore } from '@/store/authenticate';
 
 export default {
-  created() {
-        // 0.0 ~ 10まで、0.5単位で生成
-        this.timeOptions = generateTimeOptions(0.0, 12, 0.5);
-    },
-
   setup() {
     const year = ref("")
     const month = ref("")
     const day = ref("")
     const date = ref("")
     const message = ref("")
-    const ActualTime = ref("")
+    const timeOptions = generateTimeOptions(0.0, 12, 0.5);
+    const ActualTime = ref(timeOptions[0])
     const router = useRouter()
     const authStore = useAuthStore()
-
-    const insertToday = async() =>{
-      const today = new Date()
-      const year = today.getFullYear()
-      const month = `${today.getMonth()+1}`.padStart(2, '0')
-      const day = `${today.getDate()}`.padStart(2, '0')
-      date.value = `${year}-${month}-${day}`
-    }
+    const { insertToday, decreaseOneDay, increaseOneDay } = changeDate(date, message);
+    const { decreaseHalfHour, increaseHalfHour, increaseTwoHour, decreaseTwoHour } = changeTime(ActualTime, timeOptions, message);
 
     const registerActual = async() =>{
         try {
@@ -103,9 +99,16 @@ export default {
       day,
       date,
       message,
+      timeOptions,
       ActualTime,
       registerActual,
-      insertToday
+      insertToday,
+      decreaseOneDay,
+      increaseOneDay,
+      increaseHalfHour,
+      decreaseHalfHour,
+      increaseTwoHour,
+      decreaseTwoHour
     }
   }
 }

@@ -1,6 +1,6 @@
 <template>
-  <div v-if="message" class="message">
     <h3>月ごとの活動実績</h3>
+  <div v-if="message" class="message">
     <p v-if="message" class="message">{{ message }}</p>
   </div>
   <div v-if="activities.length > 0" class="activities">
@@ -21,6 +21,8 @@
         </option>
       </select>
       <input type="button" value="今年" @click="insertThisYear">
+      <input type="button" value="-1" @click="decreaseOneYear">
+      <input type="button" value="+1" @click="increaseOneYear">
     </div>
     <div>
       <label for="month">月:</label>
@@ -30,6 +32,8 @@
         </option>
       </select>
       <input type="button" value="今月" @click="insertThisMonth">
+      <input type="button" value="-1" @click="decreaseOneMonth">
+      <input type="button" value="+1" @click="increaseOneMonth">
     </div>
     <button type="submit">検索</button>
   </form>
@@ -57,8 +61,7 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { generateYearOptions } from './lib/index';
-import { generateMonthOptions } from './lib/index';
+import { generateYearOptions, generateMonthOptions, changeMonth, changeYear } from './lib/index';
 import { useAuthStore } from '@/store/authenticate';
 import "../assets/styles/common.css"
 
@@ -76,14 +79,8 @@ export default {
     const router = useRouter()
     const activities = ref([])
     const authStore = useAuthStore()
-
-    const insertThisYear = async() =>{
-      year.value = new Date().getFullYear()
-    }
-
-    const insertThisMonth = async() =>{
-      month.value = new Date().getMonth()+1
-    }
+    const { insertThisYear, decreaseOneYear, increaseOneYear } = changeYear(year, message);
+    const { insertThisMonth, decreaseOneMonth, increaseOneMonth } = changeMonth(month, year, message);
 
     const GetMonthlyInfo = async() =>{
       try{
@@ -140,7 +137,11 @@ export default {
       activities,
       insertThisYear,
       insertThisMonth,
-      GetMonthlyInfo
+      GetMonthlyInfo,
+      decreaseOneYear,
+      increaseOneYear,
+      decreaseOneMonth,
+      increaseOneMonth
     }
   }
 }
