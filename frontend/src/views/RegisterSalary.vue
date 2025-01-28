@@ -56,7 +56,7 @@ export default {
   setup() {
     const year = ref('')
     const month = ref('')
-    const monthlyIncome = ref('')
+    const monthlyIncome = ref(0)
     const message = ref('')
     const router = useRouter()
     const authStore = useAuthStore()
