@@ -282,7 +282,9 @@ def test_get_month_acitivities(client, get_headers):
     assert response.status_code == 200
     assert response.json() == {"total_monthly_income": total_monthly_income,
                                "salary": test_salary,
-                               "total_bonus": test_bonus,
+                               "pay_adjustment": test_bonus,
+                               "bonus": test_bonus,
+                               "penalty": 0,
                                "success_days": 1,
                                "fail_days": 0,
                                "activity_list": [{"activity_id": 1,
@@ -305,6 +307,8 @@ def test_get_all_acitivities(client, get_headers):
     assert response.status_code == 200
     assert response.json() == {"total_income": total_monthly_income,
                                "total_salary": test_salary,
+                               "pay_adjustment": test_bonus,
                                "total_bonus": test_bonus,
+                               "total_penalty": 0,
                                "success_days": 1,
                                "fail_days": 0}

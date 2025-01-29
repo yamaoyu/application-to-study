@@ -28,7 +28,6 @@ def register_salary(year: int,
         username = current_user['username']
         data = db_model.Income(year_month=year_month,
                                salary=salary,
-                               bonus=0,
                                username=username)
         db.add(data)
         db.commit()

@@ -91,7 +91,10 @@ export default {
             message.value = [`合計:${response.data.total_monthly_income}万円\n`,
                             `内訳\n`,
                             `月収:${response.data.salary}万円\n`,
-                            `ボーナス合計:${response.data.total_bonus}万円\n`,
+                            `ボーナス合計:${response.data.pay_adjustment}万円\n`,
+                            `ボーナス内訳\n`,
+                            `ボーナス:${response.data.bonus}万円\n`,
+                            `ペナルティ:${response.data.penalty}万円\n`,
                             `目標達成日数:${response.data.success_days}日\n`,
                             `目標未達成日数:${response.data.fail_days}日`].join('');
             //  is_achievedを真偽値からテキストに変換

@@ -166,19 +166,19 @@ def finish_activity(year: int,
 
         if activity.is_achieved:
             raise HTTPException(status_code=400, detail=f"{date}の実績は登録済みです")
-        # 達成している場合はEarningテーブルのボーナスを加算する。
+        # 達成している場合はincomesテーブルのボーナスを、達成していない場合はpenaltyを加算する。
+        salary = db.query(db_model.Income).filter(
+            db_model.Income.year_month == year_month,
+            db_model.Income.username == current_user["username"]).one()
         if actual_time >= target_time:
-            salary = db.query(db_model.Income).filter(
-                db_model.Income.year_month == year_month,
-                db_model.Income.username == current_user["username"]).one()
             activity.is_achieved = True
             message = "目標達成！ボーナス追加！"
             salary.bonus = float(salary.bonus) + 0.1
-        # 達成していない場合はEarningテーブルを更新しない
         else:
+            salary.penalty = float(salary.penalty) + 0.1
             activity.is_achieved = False
             diff = round((target_time - actual_time), 1)
-            message = f"{diff}時間足りませんでした"
+            message = f"{diff}時間足りませんでした。ペナルティ追加・・・"
         db.commit()
         logger.info(f"{current_user['username']}が{date}の活動を終了")
         return {
@@ -230,7 +230,9 @@ def get_month_activities(year: int,
         logger.info(f"{current_user['username']}が{year_month}の活動実績を取得")
         return {"total_monthly_income": total_monthly_income,
                 "salary": fetch_salary.salary,
-                "total_bonus": fetch_salary.bonus,
+                "pay_adjustment": fetch_salary.bonus - fetch_salary.penalty,
+                "bonus": fetch_salary.bonus,
+                "penalty": fetch_salary.penalty,
                 "success_days": len(success_days),
                 "fail_days": len(activities) - len(success_days),
                 "activity_list": activities}
@@ -266,12 +268,15 @@ def get_total_activity_result(db: Session = Depends(get_db),
                                 detail=f"{current_user['username']}の給料は登録されていません")
         total_salary = sum([earning.salary for earning in fetch_salaries])
         total_bonus = sum([earning.bonus for earning in fetch_salaries])
-        total_income = total_salary + total_bonus
+        total_penalty = sum([earning.penalty for earning in fetch_salaries])
+        total_income = total_salary + total_bonus - total_penalty
         success_days = [act for act in activities if act.is_achieved is True]
         logger.info(f"{current_user['username']}が全期間の活動実績を取得")
         return {"total_income": total_income,
                 "total_salary": total_salary,
+                "pay_adjustment": total_bonus - total_penalty,
                 "total_bonus": total_bonus,
+                "total_penalty": total_penalty,
                 "success_days": len(success_days),
                 "fail_days": len(activities) - len(success_days)}
     except HTTPException as http_e:

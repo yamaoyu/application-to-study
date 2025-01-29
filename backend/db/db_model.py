@@ -20,9 +20,10 @@ class Activity(Base):
 class Income(Base):
     __tablename__ = "incomes"
     income_id = Column(Integer, primary_key=True, autoincrement=True)
-    year_month = Column(CHAR(7))
-    salary = Column(Float(4, 1))
-    bonus = Column(Float(3, 1))
+    year_month = Column(CHAR(7), nullable=False)
+    salary = Column(Float(4, 1), nullable=False)
+    bonus = Column(Float(3, 1), server_default="0")
+    penalty = Column(Float(3, 1), server_default="0")
     username = Column(VARCHAR(16), ForeignKey("users.username"))
     __table_args__ = (UniqueConstraint(year_month, username),)
 
