@@ -8,8 +8,8 @@ class Activity(Base):
     __tablename__ = "activities"
     activity_id = Column(Integer, primary_key=True, autoincrement=True)
     date = Column(Date)
-    target_time = Column(Float(3, 1))
-    actual_time = Column(Float(3, 1), default=0)
+    target_time = Column(Float)
+    actual_time = Column(Float, default=0)
     is_achieved = Column(Boolean, default=False)
     username = Column(VARCHAR(16), ForeignKey("users.username"), nullable=False)
     __table_args__ = (UniqueConstraint(date, username),)
@@ -21,9 +21,9 @@ class Income(Base):
     __tablename__ = "incomes"
     income_id = Column(Integer, primary_key=True, autoincrement=True)
     year_month = Column(CHAR(7), nullable=False)
-    salary = Column(Float(4, 1), nullable=False)
-    bonus = Column(Float(3, 1), server_default="0")
-    penalty = Column(Float(3, 1), server_default="0")
+    salary = Column(Float, nullable=False)
+    bonus = Column(Float, server_default="0")
+    penalty = Column(Float, server_default="0")
     username = Column(VARCHAR(16), ForeignKey("users.username"))
     __table_args__ = (UniqueConstraint(year_month, username),)
 

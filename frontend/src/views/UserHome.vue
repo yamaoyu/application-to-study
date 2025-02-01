@@ -227,9 +227,15 @@ export default {
             activity_msg.value = [activity_res.data.date,
                                   `\n目標時間:${activity_res.data.target_time}時間`,
                                   `\n活動時間:${activity_res.data.actual_time}時間`,
-                                  `\nステータス:${activity_res.data.is_achieved}`,
-                                  `\nボーナス:${(activity_res.data.bonus * 10)}千円`
+                                  `\nステータス:${activity_res.data.is_achieved}`
             ].join('');
+            if (activity_res.data.is_achieved){
+              activity_msg.value += `\nボーナス:${activity_res.data.bonus}万円(${activity_res.data.bonus * 10000}円)`
+            } else if (activity_res.data.is_achieved === false && activity_res.data.target_time <= activity_res.data.actual_time) {
+              activity_msg.value += `\n目標達成!活動を終了してください\n確定後のボーナス:${activity_res.data.bonus}万円(${activity_res.data.bonus * 10000}円)`
+            } else {
+              activity_msg.value += `\nこのままだと、${activity_res.data.penalty}万円(${activity_res.data.penalty * 10000}円)のペナルティが発生`
+            }
           }
         } catch (act_err) {
           if (act_err.response){
@@ -260,8 +266,9 @@ export default {
                                           {headers: {Authorization: authStore.getAuthHeader}}
           )
           if (earn_res.status===200){
-            income_msg.value = [`今月の月収:${earn_res.data["今月の詳細"].salary}万円`,
-                                `\n合計ボーナス:${(earn_res.data["今月の詳細"].bonus * 10000)}円`,
+            income_msg.value = [`月収:${earn_res.data["今月の詳細"].salary}万円`,
+                                `\nボーナス:${(earn_res.data["今月の詳細"].bonus)}万円`,
+                                `\nペナルティ:${(earn_res.data["今月の詳細"].penalty)}万円`,
                                 `\nボーナス換算後の月収:${earn_res.data["ボーナス換算後の月収"]}万円`
           ].join('');
           }

@@ -5,7 +5,7 @@ from lib.security import create_access_token
 
 # セットアップ用変数
 test_salary = 23.0
-test_bonus = 0.1
+test_bonus = test_penalty = 0.58
 test_date_path = "/2024/5/5"
 test_date = "2024-5-5"
 test_year = "2024"
@@ -186,7 +186,7 @@ def test_finish_activity(client, get_headers):
         "target_time": 5.0,
         "actual_time": 5.0,
         "is_achieved": True,
-        "message": "目標達成！ボーナス追加！"}
+        "message": f"目標達成！{f"{test_bonus}万円({int(test_bonus * 10000)}円)"}ボーナス追加！"}
 
 
 def test_finish_activity_without_register_income(client, get_headers):
@@ -203,6 +203,7 @@ def test_finish_activity_without_register_income(client, get_headers):
 def test_get_day_activities_registered_target(client, get_headers):
     """ 目標時間登録まで行った日の情報を取得 """
     setup_target_time_for_test(client, get_headers)
+    setup_monthly_income_for_test(client, get_headers)
     date = test_date
     response = client.get(f"/activities{test_date_path}",
                           headers=get_headers)
@@ -211,13 +212,15 @@ def test_get_day_activities_registered_target(client, get_headers):
                                "target_time": 5.0,
                                "actual_time": 0,
                                "is_achieved": False,
-                               "bonus": 0}
+                               "bonus": 0,
+                               "penalty": test_penalty}
 
 
 def test_get_day_activities_registered_actual(client, get_headers):
     """ 活動時間登録まで行った日の情報を取得 """
     setup_target_time_for_test(client, get_headers)
     setup_actual_time_for_test(client, get_headers)
+    setup_monthly_income_for_test(client, get_headers)
     date = test_date
     response = client.get(f"/activities{test_date_path}",
                           headers=get_headers)
@@ -226,7 +229,8 @@ def test_get_day_activities_registered_actual(client, get_headers):
                                "target_time": 5.0,
                                "actual_time": 5.0,
                                "is_achieved": False,
-                               "bonus": 0}
+                               "bonus": test_bonus,
+                               "penalty": 0}
 
 
 def test_get_day_activities(client, get_headers):
@@ -243,7 +247,8 @@ def test_get_day_activities(client, get_headers):
                                "target_time": 5.0,
                                "actual_time": 5.0,
                                "is_achieved": True,
-                               "bonus": 0.1}
+                               "bonus": test_bonus,
+                               "penalty": 0}
 
 
 def test_get_day_activities_before_register_activity(client, get_headers):

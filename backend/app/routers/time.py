@@ -33,13 +33,20 @@ def get_day_activities(year: int,
         target_time = activity.target_time
         actual_time = activity.actual_time
         is_achieved = activity.is_achieved
-        bonus = 0.1 if is_achieved else 0.0
+
+        salary = db.query(db_model.Income).filter(
+            db_model.Income.year_month == f"{year}-{month}",
+            db_model.Income.username == current_user["username"]).one().salary
+
+        bonus = round(((salary / 200) * actual_time), 2)
+        penalty = 0 if is_achieved else round(((salary / 200) * (target_time - actual_time)), 2)
         logger.info(f"{current_user['username']}が{date}の活動実績を取得")
         return {"date": date,
                 "target_time": target_time,
                 "actual_time": actual_time,
                 "is_achieved": is_achieved,
-                "bonus": bonus}
+                "bonus": bonus,
+                "penalty": penalty}
     except NoResultFound:
         raise HTTPException(status_code=404, detail=f"{date}の情報は未登録です")
     except ValidationError as validate_e:
@@ -50,9 +57,9 @@ def get_day_activities(year: int,
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.post("/activities/{year}/{month}/{day}/target",
-             status_code=201,
-             response_model=RegisterActivities)
+@ router.post("/activities/{year}/{month}/{day}/target",
+              status_code=201,
+              response_model=RegisterActivities)
 def register_target_time(target: TargetTimeIn,
                          year: int,
                          month: int,
@@ -89,9 +96,9 @@ def register_target_time(target: TargetTimeIn,
                             detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.put("/activities/{year}/{month}/{day}/actual",
-            status_code=200,
-            response_model=RegisterActivities)
+@ router.put("/activities/{year}/{month}/{day}/actual",
+             status_code=200,
+             response_model=RegisterActivities)
 def update_actual_time(actual: ActualTimeIn,
                        year: int,
                        month: int,
@@ -132,9 +139,9 @@ def update_actual_time(actual: ActualTimeIn,
                             detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.put("/activities/{year}/{month}/{day}/finish",
-            status_code=200,
-            response_model=RegisterActivities)
+@ router.put("/activities/{year}/{month}/{day}/finish",
+             status_code=200,
+             response_model=RegisterActivities)
 def finish_activity(year: int,
                     month: int,
                     day: int,
@@ -167,18 +174,20 @@ def finish_activity(year: int,
         if activity.is_achieved:
             raise HTTPException(status_code=400, detail=f"{date}の実績は登録済みです")
         # 達成している場合はincomesテーブルのボーナスを、達成していない場合はpenaltyを加算する。
-        salary = db.query(db_model.Income).filter(
+        fetch_salary = db.query(db_model.Income).filter(
             db_model.Income.year_month == year_month,
             db_model.Income.username == current_user["username"]).one()
         if actual_time >= target_time:
             activity.is_achieved = True
-            message = "目標達成！ボーナス追加！"
-            salary.bonus = float(salary.bonus) + 0.1
+            bonus = round(((fetch_salary.salary / 200) * actual_time), 2)
+            fetch_salary.bonus += bonus
+            message = f"目標達成！{bonus}万円({int(bonus * 10000)}円)ボーナス追加！"
         else:
-            salary.penalty = float(salary.penalty) + 0.1
             activity.is_achieved = False
             diff = round((target_time - actual_time), 1)
-            message = f"{diff}時間足りませんでした。ペナルティ追加・・・"
+            penalty = round(((fetch_salary.salary / 200) * diff), 2)
+            fetch_salary.penalty += penalty
+            message = f"{diff}時間足りませんでした。{penalty}万円({int(penalty * 10000)}円)ペナルティ追加"
         db.commit()
         logger.info(f"{current_user['username']}が{date}の活動を終了")
         return {
@@ -199,7 +208,7 @@ def finish_activity(year: int,
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.get("/activities/{year}/{month}", status_code=200)
+@ router.get("/activities/{year}/{month}", status_code=200)
 def get_month_activities(year: int,
                          month: int,
                          db: Session = Depends(get_db),
@@ -230,7 +239,7 @@ def get_month_activities(year: int,
         logger.info(f"{current_user['username']}が{year_month}の活動実績を取得")
         return {"total_monthly_income": total_monthly_income,
                 "salary": fetch_salary.salary,
-                "pay_adjustment": fetch_salary.bonus - fetch_salary.penalty,
+                "pay_adjustment": round((fetch_salary.bonus - fetch_salary.penalty), 2),
                 "bonus": fetch_salary.bonus,
                 "penalty": fetch_salary.penalty,
                 "success_days": len(success_days),
@@ -267,16 +276,16 @@ def get_total_activity_result(db: Session = Depends(get_db),
             raise HTTPException(status_code=404,
                                 detail=f"{current_user['username']}の給料は登録されていません")
         total_salary = sum([earning.salary for earning in fetch_salaries])
-        total_bonus = sum([earning.bonus for earning in fetch_salaries])
-        total_penalty = sum([earning.penalty for earning in fetch_salaries])
+        total_bonus = round(sum([earning.bonus for earning in fetch_salaries]), 2)
+        total_penalty = round(sum([earning.penalty for earning in fetch_salaries]), 2)
         total_income = total_salary + total_bonus - total_penalty
         success_days = [act for act in activities if act.is_achieved is True]
         logger.info(f"{current_user['username']}が全期間の活動実績を取得")
         return {"total_income": total_income,
                 "total_salary": total_salary,
-                "pay_adjustment": total_bonus - total_penalty,
-                "total_bonus": total_bonus,
-                "total_penalty": total_penalty,
+                "pay_adjustment": round(total_bonus - total_penalty, 2),
+                "total_bonus": round(total_bonus, 2),
+                "total_penalty": round(total_penalty, 2),
                 "success_days": len(success_days),
                 "fail_days": len(activities) - len(success_days)}
     except HTTPException as http_e:
