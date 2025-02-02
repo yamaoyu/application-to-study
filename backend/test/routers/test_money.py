@@ -99,10 +99,10 @@ def test_get_income(client, get_headers):
         "今月の詳細": {
             "salary": test_salary,
             "year_month": f"{test_year}-{test_month}",
-            "penalty": 0.0,
+            "total_penalty": 0.0,
             "income_id": 1,
             "username": test_username,
-            "bonus": 0.0
+            "total_bonus": 0.0
         },
         "ボーナス換算後の月収": test_salary
     }

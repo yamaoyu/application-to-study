@@ -297,6 +297,8 @@ def test_get_month_acitivities(client, get_headers):
                                                   "target_time": 5.0,
                                                   "actual_time": 5.0,
                                                   "is_achieved": True,
+                                                  "bonus": test_bonus,
+                                                  "penalty": 0,
                                                   "username": test_username}]}
 
 

@@ -11,6 +11,8 @@ class Activity(Base):
     target_time = Column(Float)
     actual_time = Column(Float, default=0)
     is_achieved = Column(Boolean, default=False)
+    bonus = Column(Float, server_default="0")
+    penalty = Column(Float, server_default="0")
     username = Column(VARCHAR(16), ForeignKey("users.username"), nullable=False)
     __table_args__ = (UniqueConstraint(date, username),)
 
@@ -22,8 +24,8 @@ class Income(Base):
     income_id = Column(Integer, primary_key=True, autoincrement=True)
     year_month = Column(CHAR(7), nullable=False)
     salary = Column(Float, nullable=False)
-    bonus = Column(Float, server_default="0")
-    penalty = Column(Float, server_default="0")
+    total_bonus = Column(Float, server_default="0")
+    total_penalty = Column(Float, server_default="0")
     username = Column(VARCHAR(16), ForeignKey("users.username"))
     __table_args__ = (UniqueConstraint(year_month, username),)
 

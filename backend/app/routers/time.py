@@ -26,20 +26,25 @@ def get_day_activities(year: int,
     try:
         CheckDate(year=year, month=month, day=day)
         date = f"{year}-{month}-{day}"
-        activity = db.query(db_model.Activity).filter(
+        fetch_activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date,
             db_model.Activity.username == current_user["username"]).one()
 
-        target_time = activity.target_time
-        actual_time = activity.actual_time
-        is_achieved = activity.is_achieved
+        target_time = fetch_activity.target_time
+        actual_time = fetch_activity.actual_time
+        is_achieved = fetch_activity.is_achieved
 
-        salary = db.query(db_model.Income).filter(
-            db_model.Income.year_month == f"{year}-{month}",
-            db_model.Income.username == current_user["username"]).one().salary
+        if is_achieved:
+            bonus = fetch_activity.bonus
+            penalty = 0
+        else:
+            salary = db.query(db_model.Income).filter(
+                db_model.Income.year_month == f"{year}-{month}",
+                db_model.Income.username == current_user["username"]).one().salary
 
-        bonus = round(((salary / 200) * actual_time), 2)
-        penalty = 0 if is_achieved else round(((salary / 200) * (target_time - actual_time)), 2)
+            bonus = round(((salary / 200) * actual_time), 2)
+            penalty = 0 if is_achieved else round(((salary / 200) * (target_time - actual_time)), 2)
+
         logger.info(f"{current_user['username']}が{date}の活動実績を取得")
         return {"date": date,
                 "target_time": target_time,
@@ -66,7 +71,7 @@ def register_target_time(target: TargetTimeIn,
                          day: int,
                          db: Session = Depends(get_db),
                          current_user: dict = Depends(get_current_user)):
-    """ 目標活動時間を登録、登録済みなら更新する """
+    """ 目標活動時間を登録する """
     try:
         username = current_user["username"]
         target_time = target.target_time
@@ -111,15 +116,17 @@ def update_actual_time(actual: ActualTimeIn,
         CheckDate(year=year, month=month, day=day)
         date = f"{year}-{month}-{day}"
 
-        activity = db.query(db_model.Activity).filter(
+        fetch_activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date,
-            db_model.Activity.username == current_user["username"]).one()
-        if activity.is_achieved is not True:
-            activity.actual_time = actual_time
+            db_model.Activity.username == current_user["username"]).one_or_none()
+        if not fetch_activity:
+            raise HTTPException(status_code=404, detail=f"先に{date}の目標を入力して下さい")
+        if fetch_activity.bonus == 0 and fetch_activity.penalty == 0:
+            fetch_activity.actual_time = actual_time
             db.commit()
             logger.info(f"{current_user['username']}が{date}の活動時間を登録")
             return {"date": date,
-                    "target_time": activity.target_time,
+                    "target_time": fetch_activity.target_time,
                     "actual_time": actual_time,
                     "is_achieved": False,
                     "message": f"活動時間を{actual_time}時間に設定しました"}
@@ -128,8 +135,6 @@ def update_actual_time(actual: ActualTimeIn,
                                 detail=f"{date}の活動実績は既に確定済みです。変更できません")
     except HTTPException as http_e:
         raise http_e
-    except NoResultFound:
-        raise HTTPException(status_code=404, detail=f"先に{date}の目標を入力して下さい")
     except ValidationError as validate_e:
         raise HTTPException(status_code=422, detail=str(validate_e.errors()[0]["ctx"]["error"]))
     except Exception:
@@ -152,41 +157,37 @@ def finish_activity(year: int,
         CheckDate(year=year, month=month, day=day)
         date = f"{year}-{month}-{day}"
 
-        activity = db.query(db_model.Activity).filter(
+        fetch_activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date,
-            db_model.Activity.username == current_user["username"]).one()
-    except HTTPException as http_e:
-        raise http_e
-    except NoResultFound:
-        raise HTTPException(status_code=404, detail=f"{date}の情報は登録されていません")
-    except ValidationError as validate_e:
-        raise HTTPException(status_code=422, detail=str(validate_e.errors()[0]["ctx"]["error"]))
-    except Exception:
-        logger.error(f"活動終了処理に失敗しました\n{traceback.format_exc()}")
-        raise HTTPException(
-            status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
+            db_model.Activity.username == current_user["username"]).one_or_none()
+        if not fetch_activity:
+            raise HTTPException(status_code=404, detail=f"{date}の活動実績は登録されていません")
 
-    try:
-        target_time = activity.target_time
-        actual_time = activity.actual_time
+        target_time = fetch_activity.target_time
+        actual_time = fetch_activity.actual_time
         year_month = f"{year}-{month}"
 
-        if activity.is_achieved:
+        if fetch_activity.is_achieved or (fetch_activity.bonus != 0 or fetch_activity.penalty != 0):
             raise HTTPException(status_code=400, detail=f"{date}の実績は登録済みです")
-        # 達成している場合はincomesテーブルのボーナスを、達成していない場合はpenaltyを加算する。
         fetch_salary = db.query(db_model.Income).filter(
             db_model.Income.year_month == year_month,
-            db_model.Income.username == current_user["username"]).one()
+            db_model.Income.username == current_user["username"]).one_or_none()
+        if not fetch_salary:
+            raise HTTPException(status_code=404, detail=f"{year_month}の月収が未登録です")
+
+        # 達成している場合はincomesテーブルのボーナスを、達成していない場合はpenaltyを加算する。
         if actual_time >= target_time:
-            activity.is_achieved = True
+            fetch_activity.is_achieved = True
             bonus = round(((fetch_salary.salary / 200) * actual_time), 2)
-            fetch_salary.bonus += bonus
+            fetch_activity.bonus = bonus
+            fetch_salary.total_bonus += bonus
             message = f"目標達成！{bonus}万円({int(bonus * 10000)}円)ボーナス追加！"
         else:
-            activity.is_achieved = False
+            fetch_activity.is_achieved = False
             diff = round((target_time - actual_time), 1)
             penalty = round(((fetch_salary.salary / 200) * diff), 2)
-            fetch_salary.penalty += penalty
+            fetch_activity.penalty = penalty
+            fetch_salary.total_penalty += penalty
             message = f"{diff}時間足りませんでした。{penalty}万円({int(penalty * 10000)}円)ペナルティ追加"
         db.commit()
         logger.info(f"{current_user['username']}が{date}の活動を終了")
@@ -194,13 +195,12 @@ def finish_activity(year: int,
             "date": date,
             "target_time": target_time,
             "actual_time": actual_time,
-            "is_achieved": activity.is_achieved,
+            "is_achieved": fetch_activity.is_achieved,
             "message": message}
     except HTTPException as http_e:
         raise http_e
-    except NoResultFound:
-        raise HTTPException(status_code=404,
-                            detail=f"{year_month}の月収が未登録です")
+    except ValidationError as validate_e:
+        raise HTTPException(status_code=422, detail=str(validate_e.errors()[0]["ctx"]["error"]))
     except Exception:
         logger.error(f"活動終了処理に失敗しました\n{traceback.format_exc()}")
         db.rollback()
@@ -231,17 +231,17 @@ def get_month_activities(year: int,
         if not activities:
             raise HTTPException(status_code=404,
                                 detail=f"{year_month}内の活動は登録されていません")
-        fetch_salary = db.query(db_model.Income).filter(
+        fetch_income = db.query(db_model.Income).filter(
             db_model.Income.year_month == year_month,
             db_model.Income.username == current_user["username"]).one()
-        total_monthly_income = fetch_salary.salary + fetch_salary.bonus
+        total_monthly_income = fetch_income.salary + fetch_income.total_bonus
         success_days = [act for act in activities if act.is_achieved is True]
         logger.info(f"{current_user['username']}が{year_month}の活動実績を取得")
         return {"total_monthly_income": total_monthly_income,
-                "salary": fetch_salary.salary,
-                "pay_adjustment": round((fetch_salary.bonus - fetch_salary.penalty), 2),
-                "bonus": fetch_salary.bonus,
-                "penalty": fetch_salary.penalty,
+                "salary": fetch_income.salary,
+                "pay_adjustment": round((fetch_income.total_bonus - fetch_income.total_penalty), 2),
+                "bonus": fetch_income.total_bonus,
+                "penalty": fetch_income.total_penalty,
                 "success_days": len(success_days),
                 "fail_days": len(activities) - len(success_days),
                 "activity_list": activities}
@@ -270,14 +270,14 @@ def get_total_activity_result(db: Session = Depends(get_db),
         if not activities:
             raise HTTPException(status_code=404,
                                 detail=f"{current_user['username']}の活動は登録されていません")
-        fetch_salaries = db.query(db_model.Income).filter(
+        fetch_incomes = db.query(db_model.Income).filter(
             db_model.Income.username == current_user["username"]).all()
-        if not fetch_salaries:
+        if not fetch_incomes:
             raise HTTPException(status_code=404,
                                 detail=f"{current_user['username']}の給料は登録されていません")
-        total_salary = sum([earning.salary for earning in fetch_salaries])
-        total_bonus = round(sum([earning.bonus for earning in fetch_salaries]), 2)
-        total_penalty = round(sum([earning.penalty for earning in fetch_salaries]), 2)
+        total_salary = sum([income.salary for income in fetch_incomes])
+        total_bonus = round(sum([income.total_bonus for income in fetch_incomes]), 2)
+        total_penalty = round(sum([income.total_penalty for income in fetch_incomes]), 2)
         total_income = total_salary + total_bonus - total_penalty
         success_days = [act for act in activities if act.is_achieved is True]
         logger.info(f"{current_user['username']}が全期間の活動実績を取得")
