@@ -1,5 +1,5 @@
 import { generateYearOptions, generateMonthOptions, changeDate, changeMonth, changeYear } from "./dateUtils";
-import { generateTimeOptions, changeTime } from "./timeUtils";
+import { generateTimeOptions, changeTime, useActivityFinish } from "./timeUtils";
 
 export {
     generateYearOptions, 
@@ -8,5 +8,6 @@ export {
     changeDate,
     changeMonth,
     changeYear,
-    changeTime
+    changeTime,
+    useActivityFinish
 }

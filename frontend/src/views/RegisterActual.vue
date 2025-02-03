@@ -25,6 +25,12 @@
   <div>
     <p v-if="message" class="message">{{ message }}</p>
   </div>
+  <form v-if="isRegistered" @submit.prevent="finishActivity">
+    <div>
+      <label for="finishActivity">このまま{{ date }}の活動を終了しますか？</label>
+      <input type="button" value="はい" @click="finishActivity">
+    </div>
+  </form>
   <div>
     <router-link to="/home">ホームへ戻る</router-link>
   </div>
@@ -34,14 +40,12 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { generateTimeOptions, changeDate, changeTime } from "./lib/index";
+import { generateTimeOptions, changeDate, changeTime, useActivityFinish } from "./lib/index";
 import { useAuthStore } from '@/store/authenticate';
 
 export default {
   setup() {
-    const year = ref("")
-    const month = ref("")
-    const day = ref("")
+    const isRegistered = ref(false);
     const date = ref("")
     const message = ref("")
     const timeOptions = generateTimeOptions(0.0, 12, 0.5);
@@ -50,23 +54,23 @@ export default {
     const authStore = useAuthStore()
     const { insertToday, decreaseOneDay, increaseOneDay } = changeDate(date, message);
     const { decreaseHalfHour, increaseHalfHour, increaseTwoHour, decreaseTwoHour } = changeTime(ActualTime, timeOptions, message);
+    const { finishActivity } = useActivityFinish(date, message, router, authStore);
 
     const registerActual = async() =>{
         try {
           // 日付から年月日を取得
           const dateParts = date.value.split('-');
-          year.value = dateParts[0];
-          month.value = dateParts[1];
-          day.value = dateParts[2];
+          const year = dateParts[0];
           // 月と日が一桁の場合、表記を変更 例)09→9
-          month.value = parseInt(month.value, 10);
-          day.value = parseInt(day.value, 10);
-          const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year.value + '/' + month.value + '/' + day.value +  '/actual';
+          const month = parseInt(dateParts[1], 10);
+          const day = parseInt(dateParts[2], 10);
+          const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month + '/' + day +  '/actual';
           const response = await axios.put(url, 
                                           {actual_time: Number(ActualTime.value)},
                                           {headers: {Authorization: authStore.getAuthHeader}})
           if (response.status===200){
             message.value = response.data.message
+            isRegistered.value = true;
           }
         } catch (error) {
           if (error.response){
@@ -94,14 +98,13 @@ export default {
       }
 
     return {
-      year,
-      month,
-      day,
+      isRegistered,
       date,
       message,
       timeOptions,
       ActualTime,
       registerActual,
+      finishActivity,
       insertToday,
       decreaseOneDay,
       increaseOneDay,
