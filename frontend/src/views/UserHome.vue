@@ -232,7 +232,7 @@ export default {
             ].join('');
             if (activity.is_achieved){
               activity_msg.value += `\nボーナス:${activity.bonus}万円(${parseInt(activity.bonus * 10000)}円)`
-            } else if (activity.is_achieved === false && activity.target_time <= activity.actual_time) {
+            } else if (activity.target_time <= activity.actual_time) {
               activity_msg.value += `\n目標達成!活動を終了してください\n確定後のボーナス:${activity.bonus}万円(${parseInt(activity.bonus * 10000)}円)`
             } else {
               activity_msg.value += `\nこのままだと、${activity.penalty}万円(${parseInt(activity.penalty * 10000)}円)のペナルティが発生`

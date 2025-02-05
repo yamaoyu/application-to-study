@@ -28,7 +28,9 @@ def get_day_activities(year: int,
         date = f"{year}-{month}-{day}"
         fetch_activity = db.query(db_model.Activity).filter(
             db_model.Activity.date == date,
-            db_model.Activity.username == current_user["username"]).one()
+            db_model.Activity.username == current_user["username"]).one_or_none()
+        if fetch_activity is None:
+            raise HTTPException(status_code=404, detail=f"{date}の情報は未登録です")
 
         target_time = fetch_activity.target_time
         actual_time = fetch_activity.actual_time
@@ -38,12 +40,14 @@ def get_day_activities(year: int,
             bonus = fetch_activity.bonus
             penalty = 0
         else:
-            salary = db.query(db_model.Income).filter(
+            fetch_income = db.query(db_model.Income).filter(
                 db_model.Income.year_month == f"{year}-{month}",
-                db_model.Income.username == current_user["username"]).one().salary
+                db_model.Income.username == current_user["username"]).one_or_none()
+            if fetch_income is None:
+                raise HTTPException(status_code=404, detail=f"{year}-{month}の月収が未登録です")
 
-            bonus = round(((salary / 200) * actual_time), 2)
-            penalty = 0 if is_achieved else round(((salary / 200) * (target_time - actual_time)), 2)
+            bonus = round(((fetch_income.salary / 200) * actual_time), 2)
+            penalty = round(((fetch_income.salary / 200) * max((target_time - actual_time), 0)), 2)
 
         logger.info(f"{current_user['username']}が{date}の活動実績を取得")
         return {"date": date,
@@ -52,8 +56,8 @@ def get_day_activities(year: int,
                 "is_achieved": is_achieved,
                 "bonus": bonus,
                 "penalty": penalty}
-    except NoResultFound:
-        raise HTTPException(status_code=404, detail=f"{date}の情報は未登録です")
+    except HTTPException as http_e:
+        raise http_e
     except ValidationError as validate_e:
         raise HTTPException(status_code=422, detail=str(validate_e.errors()[0]["ctx"]["error"]))
     except Exception:
@@ -169,25 +173,25 @@ def finish_activity(year: int,
 
         if fetch_activity.is_achieved or (fetch_activity.bonus != 0 or fetch_activity.penalty != 0):
             raise HTTPException(status_code=400, detail=f"{date}の実績は登録済みです")
-        fetch_salary = db.query(db_model.Income).filter(
+        fetch_income = db.query(db_model.Income).filter(
             db_model.Income.year_month == year_month,
             db_model.Income.username == current_user["username"]).one_or_none()
-        if not fetch_salary:
+        if not fetch_income:
             raise HTTPException(status_code=404, detail=f"{year_month}の月収が未登録です")
 
         # 達成している場合はincomesテーブルのボーナスを、達成していない場合はpenaltyを加算する。
         if actual_time >= target_time:
             fetch_activity.is_achieved = True
-            bonus = round(((fetch_salary.salary / 200) * actual_time), 2)
+            bonus = round(((fetch_income.salary / 200) * actual_time), 2)
             fetch_activity.bonus = bonus
-            fetch_salary.total_bonus += bonus
+            fetch_income.total_bonus += bonus
             message = f"目標達成！{bonus}万円({int(bonus * 10000)}円)ボーナス追加！"
         else:
             fetch_activity.is_achieved = False
             diff = round((target_time - actual_time), 1)
-            penalty = round(((fetch_salary.salary / 200) * diff), 2)
+            penalty = round(((fetch_income.salary / 200) * diff), 2)
             fetch_activity.penalty = penalty
-            fetch_salary.total_penalty += penalty
+            fetch_income.total_penalty += penalty
             message = f"{diff}時間足りませんでした。{penalty}万円({int(penalty * 10000)}円)ペナルティ追加"
         db.commit()
         logger.info(f"{current_user['username']}が{date}の活動を終了")
