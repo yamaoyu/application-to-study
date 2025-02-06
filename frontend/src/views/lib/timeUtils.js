@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BACKEDN_URL = process.env.VUE_APP_BACKEND_URL;
+const BACKEND_URL = process.env.VUE_APP_BACKEND_URL;
 
 export function generateTimeOptions(min, max, step) {
     const timeOptions = [];
@@ -68,7 +68,7 @@ export function useActivityFinish(date, message, router, authStore) {
         // 月と日が一桁の場合、表記を変更 例)09→9
         const month = parseInt(dateParts[1], 10);
         const day = parseInt(dateParts[2], 10);
-        const url = BACKEDN_URL + 'activities/' + year + '/' + month + '/' + day + '/finish';
+        const url = BACKEND_URL + 'activities/' + year + '/' + month + '/' + day + '/finish';
         // axiosのputの第二引数はリクエストボディとなるため{}を用意する。(リクエストボディで渡すデータはないため空)
         const response = await axios.put(url,
                                         {},

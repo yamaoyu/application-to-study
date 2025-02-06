@@ -145,7 +145,7 @@ def test_register_actual_before_register_target(client, get_headers):
                           json=data,
                           headers=get_headers)
     assert response.status_code == 404
-    assert response.json() == {"detail": "先に2024-5-10の目標を入力して下さい"}
+    assert response.json() == {"detail": "2024-5-10の目標時間を先に登録してください"}
 
 
 def test_register_actual_with_invalid_hour(client, get_headers):
@@ -197,7 +197,7 @@ def test_finish_activity_without_register_income(client, get_headers):
                           headers=get_headers)
     assert response.status_code == 404
     assert response.json() == {"detail":
-                               f"{test_year}-{test_month}の月収が未登録です"}
+                               f"{test_year}-{test_month}の月収は未登録です"}
 
 
 def test_get_day_activities_registered_target(client, get_headers):
@@ -257,7 +257,7 @@ def test_get_day_activities_before_register_activity(client, get_headers):
     response = client.get("/activities/2024/5/10",
                           headers=get_headers)
     assert response.status_code == 404
-    assert response.json() == {"detail": f"{date}の情報は未登録です"}
+    assert response.json() == {"detail": f"{date}の活動記録は未登録です"}
 
 
 def test_get_day_activities_with_expired_token(client, get_headers):

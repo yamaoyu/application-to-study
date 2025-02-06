@@ -10,10 +10,28 @@ from db.database import get_db
 from lib.security import get_current_user
 from lib.log_conf import logger
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import NoResultFound, IntegrityError
+from sqlalchemy.exc import IntegrityError
 from pydantic import ValidationError
 
 router = APIRouter()
+
+
+def get_one_activity(date: str, username: str, db: Session, error_msg: str = "活動記録は未登録です"):
+    fetch_activity = db.query(db_model.Activity).filter(
+        db_model.Activity.date == date,
+        db_model.Activity.username == username).one_or_none()
+    if not fetch_activity:
+        raise HTTPException(status_code=404, detail=f"{date}の{error_msg}")
+    return fetch_activity
+
+
+def get_one_income(year_month: str, username: str, db: Session):
+    fetch_income = db.query(db_model.Income).filter(
+        db_model.Income.year_month == year_month,
+        db_model.Income.username == username).one_or_none()
+    if not fetch_income:
+        raise HTTPException(status_code=404, detail=f"{year_month}の月収は未登録です")
+    return fetch_income
 
 
 @router.get("/activities/{year}/{month}/{day}", status_code=200)
@@ -26,26 +44,16 @@ def get_day_activities(year: int,
     try:
         CheckDate(year=year, month=month, day=day)
         date = f"{year}-{month}-{day}"
-        fetch_activity = db.query(db_model.Activity).filter(
-            db_model.Activity.date == date,
-            db_model.Activity.username == current_user["username"]).one_or_none()
-        if fetch_activity is None:
-            raise HTTPException(status_code=404, detail=f"{date}の情報は未登録です")
-
+        username = current_user["username"]
+        fetch_activity = get_one_activity(date, username, db)
         target_time = fetch_activity.target_time
         actual_time = fetch_activity.actual_time
         is_achieved = fetch_activity.is_achieved
-
         if is_achieved:
             bonus = fetch_activity.bonus
             penalty = 0
         else:
-            fetch_income = db.query(db_model.Income).filter(
-                db_model.Income.year_month == f"{year}-{month}",
-                db_model.Income.username == current_user["username"]).one_or_none()
-            if fetch_income is None:
-                raise HTTPException(status_code=404, detail=f"{year}-{month}の月収が未登録です")
-
+            fetch_income = get_one_income(f"{year}-{month}", username, db)
             bonus = round(((fetch_income.salary / 200) * actual_time), 2)
             penalty = round(((fetch_income.salary / 200) * max((target_time - actual_time), 0)), 2)
 
@@ -120,11 +128,8 @@ def update_actual_time(actual: ActualTimeIn,
         CheckDate(year=year, month=month, day=day)
         date = f"{year}-{month}-{day}"
 
-        fetch_activity = db.query(db_model.Activity).filter(
-            db_model.Activity.date == date,
-            db_model.Activity.username == current_user["username"]).one_or_none()
-        if not fetch_activity:
-            raise HTTPException(status_code=404, detail=f"先に{date}の目標を入力して下さい")
+        fetch_activity = get_one_activity(
+            date, current_user["username"], db, error_msg="目標時間を先に登録してください")
         if fetch_activity.bonus == 0 and fetch_activity.penalty == 0:
             fetch_activity.actual_time = actual_time
             db.commit()
@@ -160,25 +165,16 @@ def finish_activity(year: int,
     try:
         CheckDate(year=year, month=month, day=day)
         date = f"{year}-{month}-{day}"
-
-        fetch_activity = db.query(db_model.Activity).filter(
-            db_model.Activity.date == date,
-            db_model.Activity.username == current_user["username"]).one_or_none()
-        if not fetch_activity:
-            raise HTTPException(status_code=404, detail=f"{date}の活動実績は登録されていません")
-
+        username = current_user["username"]
+        fetch_activity = get_one_activity(date, username, db)
         target_time = fetch_activity.target_time
         actual_time = fetch_activity.actual_time
         year_month = f"{year}-{month}"
 
         if fetch_activity.is_achieved or (fetch_activity.bonus != 0 or fetch_activity.penalty != 0):
             raise HTTPException(status_code=400, detail=f"{date}の実績は登録済みです")
-        fetch_income = db.query(db_model.Income).filter(
-            db_model.Income.year_month == year_month,
-            db_model.Income.username == current_user["username"]).one_or_none()
-        if not fetch_income:
-            raise HTTPException(status_code=404, detail=f"{year_month}の月収が未登録です")
 
+        fetch_income = get_one_income(year_month, username, db)
         # 達成している場合はincomesテーブルのボーナスを、達成していない場合はpenaltyを加算する。
         if actual_time >= target_time:
             fetch_activity.is_achieved = True
@@ -221,6 +217,7 @@ def get_month_activities(year: int,
     try:
         CheckDate(year=year, month=month)
         year_month = f"{year}-{month}"
+        username = current_user["username"]
         # 検索範囲の指定
         start_date = datetime(year, month, 1).date()
         if month == 12:
@@ -230,14 +227,12 @@ def get_month_activities(year: int,
 
         activities = db.query(db_model.Activity).filter(
             db_model.Activity.date.between(start_date, end_date),
-            db_model.Activity.username == current_user["username"]).order_by(
+            db_model.Activity.username == username).order_by(
                 db_model.Activity.date).all()
         if not activities:
             raise HTTPException(status_code=404,
                                 detail=f"{year_month}内の活動は登録されていません")
-        fetch_income = db.query(db_model.Income).filter(
-            db_model.Income.year_month == year_month,
-            db_model.Income.username == current_user["username"]).one()
+        fetch_income = get_one_income(year_month, username, db)
         total_monthly_income = fetch_income.salary + fetch_income.total_bonus
         success_days = [act for act in activities if act.is_achieved is True]
         logger.info(f"{current_user['username']}が{year_month}の活動実績を取得")
@@ -251,9 +246,6 @@ def get_month_activities(year: int,
                 "activity_list": activities}
     except HTTPException as http_e:
         raise http_e
-    except NoResultFound:
-        raise HTTPException(status_code=404,
-                            detail=f"{year_month}の給料は登録されていません")
     except ValidationError as validate_e:
         raise HTTPException(status_code=422, detail=str(validate_e.errors()[0]["ctx"]["error"]))
     except Exception:
@@ -268,10 +260,10 @@ def get_total_activity_result(db: Session = Depends(get_db),
     """ 全期間のデータを取得 """
     try:
         # 検索範囲の指定
-        activities = db.query(db_model.Activity).filter(
+        fetch_activities = db.query(db_model.Activity).filter(
             db_model.Activity.username == current_user["username"]).order_by(
                 db_model.Activity.date).all()
-        if not activities:
+        if not fetch_activities:
             raise HTTPException(status_code=404,
                                 detail=f"{current_user['username']}の活動は登録されていません")
         fetch_incomes = db.query(db_model.Income).filter(
@@ -283,7 +275,7 @@ def get_total_activity_result(db: Session = Depends(get_db),
         total_bonus = round(sum([income.total_bonus for income in fetch_incomes]), 2)
         total_penalty = round(sum([income.total_penalty for income in fetch_incomes]), 2)
         total_income = total_salary + total_bonus - total_penalty
-        success_days = [act for act in activities if act.is_achieved is True]
+        success_days = [act for act in fetch_activities if act.is_achieved is True]
         logger.info(f"{current_user['username']}が全期間の活動実績を取得")
         return {"total_income": total_income,
                 "total_salary": total_salary,
@@ -291,7 +283,7 @@ def get_total_activity_result(db: Session = Depends(get_db),
                 "total_bonus": round(total_bonus, 2),
                 "total_penalty": round(total_penalty, 2),
                 "success_days": len(success_days),
-                "fail_days": len(activities) - len(success_days)}
+                "fail_days": len(fetch_activities) - len(success_days)}
     except HTTPException as http_e:
         raise http_e
     except Exception:
