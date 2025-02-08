@@ -231,15 +231,17 @@ export default {
                                   `\n活動時間:${activity.actual_time}時間`,
                                   `\nステータス:${STATUS_DICT[activity.status]}`
             ].join('');
+            const bonusInYen = parseInt(activity.bonus * 10000, 10)
+            const penaltyInYen = parseInt(activity.penalty * 10000, 10)
             if (activity.status === "success"){
-              activity_msg.value += `\nボーナス:${activity.bonus}万円(${parseInt(activity.bonus * 10000)}円)`
+              activity_msg.value += `\nボーナス:${activity.bonus}万円(${bonusInYen}円)`
             } else if(activity.status === "failure"){
-              activity_msg.value += `\nペナルティ:${activity.penalty}万円(${parseInt(activity.penalty * 10000)}円)`
+              activity_msg.value += `\nペナルティ:${activity.penalty}万円(${penaltyInYen}円)`
             } else {
               if (activity.target_time <= activity.actual_time) {
-              activity_msg.value += `\n目標達成!活動を終了してください\n確定後のボーナス:${activity.bonus}万円(${parseInt(activity.bonus * 10000)}円)`
+              activity_msg.value += `\n目標達成!活動を終了してください\n確定後のボーナス:${activity.bonus}万円(${bonusInYen}円)`
               } else {
-              activity_msg.value += `\nこのままだと、${activity.penalty}万円(${parseInt(activity.penalty * 10000)}円)のペナルティが発生`}
+              activity_msg.value += `\nこのままだと、${activity.penalty}万円(${penaltyInYen}円)のペナルティが発生`}
             }
           }
         } catch (act_err) {
