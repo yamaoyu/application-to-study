@@ -46,7 +46,10 @@ setup() {
             message.value = [`合計:${response.data.total_income}万円\n`,
                             `内訳\n`,
                             `月収:${response.data.total_salary}万円\n`,
-                            `ボーナス合計:${response.data.total_bonus}万円\n`,
+                            `ボーナス合計:${response.data.pay_adjustment}万円\n`,
+                            `ボーナス内訳\n`,
+                            `ボーナス:${response.data.total_bonus}万円\n`,
+                            `ペナルティ:${response.data.total_penalty}万円\n`,
                             `目標達成日数:${response.data.success_days}日\n`,
                             `目標未達成日数:${response.data.fail_days}日`].join('');
         }

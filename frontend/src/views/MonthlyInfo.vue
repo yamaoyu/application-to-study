@@ -8,7 +8,7 @@
     <ul>
       <li v-for="(activity, index) in activities" :key="index" class="activity">
         <p>{{ activity.date }}</p>
-        <p>目標:{{ activity.target_time }}時間 実績:{{ activity.actual_time }}時間 ステータス:{{ activity.is_achieved }}</p>
+        <p>目標:{{ activity.target_time }}時間 実績:{{ activity.actual_time }}時間 ステータス:{{ activity.status }}</p>
       </li>
     </ul>
   </div>
@@ -61,7 +61,7 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { generateYearOptions, generateMonthOptions, changeMonth, changeYear } from './lib/index';
+import { generateYearOptions, generateMonthOptions, changeMonth, changeYear, STATUS_DICT } from './lib/index';
 import { useAuthStore } from '@/store/authenticate';
 import "../assets/styles/common.css"
 
@@ -91,16 +91,15 @@ export default {
             message.value = [`合計:${response.data.total_monthly_income}万円\n`,
                             `内訳\n`,
                             `月収:${response.data.salary}万円\n`,
-                            `ボーナス合計:${response.data.total_bonus}万円\n`,
+                            `ボーナス合計:${response.data.pay_adjustment}万円\n`,
+                            `ボーナス内訳\n`,
+                            `ボーナス:${response.data.bonus}万円\n`,
+                            `ペナルティ:${response.data.penalty}万円\n`,
                             `目標達成日数:${response.data.success_days}日\n`,
                             `目標未達成日数:${response.data.fail_days}日`].join('');
             //  is_achievedを真偽値からテキストに変換
             for (const activity of response.data.activity_list){
-              if (activity.is_achieved){
-                activity.is_achieved = "達成"
-              } else {
-                activity.is_achieved = "未達成"
-              }
+              activity.status = STATUS_DICT[activity.status];
             }
 
             activities.value = response.data.activity_list;

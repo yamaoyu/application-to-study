@@ -11,6 +11,7 @@
       <input type="button" value="今年" @click="insertThisYear">
       <input type="button" value="-1" @click="decreaseOneYear">
       <input type="button" value="+1" @click="increaseOneYear">
+      <div v-if="year_msg" class="year_msg">{{ year_msg }}</div>
     </div>
     <div>
       <label for="month">月:</label>
@@ -22,15 +23,17 @@
       <input type="button" value="今月" @click="insertThisMonth">
       <input type="button" value="-1" @click="decreaseOneMonth">
       <input type="button" value="+1" @click="increaseOneMonth">
+      <div v-if="month_msg" class="month_msg">{{ month_msg }}</div>
     </div>
     <div>
       <label for="monthlyIncome">月収(万):</label>
-      <input type="number" id="monthlyIncome" v-model="monthlyIncome" required min="0" max="999">
+      <input type="number" id="monthlyIncome" v-model="monthlyIncome" required min="5" max="999">
       <input type="button" value="先月の給料" @click="insertPreviousSalary">
       <input type="button" value="-1" @click="updateSalary(-1)">
       <input type="button" value="+1" @click="updateSalary(1)">
       <input type="button" value="-5" @click="updateSalary(-5)">
       <input type="button" value="+5" @click="updateSalary(5)">
+      <div v-if="salary_msg" class="salary_msg">{{ salary_msg }}</div>
     </div>
     <button type="submit">登録</button>
   </form>
@@ -56,12 +59,15 @@ export default {
   setup() {
     const year = ref('')
     const month = ref('')
-    const monthlyIncome = ref(0)
+    const monthlyIncome = ref(5)
+    const year_msg = ref('')
+    const month_msg = ref('')
+    const salary_msg = ref('')
     const message = ref('')
     const router = useRouter()
     const authStore = useAuthStore()
-    const { insertThisYear, decreaseOneYear, increaseOneYear } = changeYear(year, message);
-    const { insertThisMonth, decreaseOneMonth, increaseOneMonth } = changeMonth(month, year, message);
+    const { insertThisYear, decreaseOneYear, increaseOneYear } = changeYear(year, year_msg);
+    const { insertThisMonth, decreaseOneMonth, increaseOneMonth } = changeMonth(month, year, month_msg);
     
     const insertPreviousSalary = async() =>{
       // 先月の年収を取得
@@ -79,24 +85,36 @@ export default {
         if (response.status===200){
           monthlyIncome.value = response.data["今月の詳細"].salary
         } else {
-          message.value = "先月の月収を取得できませんでした"
+          salary_msg.value = "先月の月収を取得できませんでした"
         }
       } catch (error) {
         switch (error.response.status){
           case 404:
-            message.value = "先月の月収は登録されていません"
+            salary_msg.value = "先月の月収は登録されていません"
             break;
           default:
-            message.value = "先月の月収を取得できませんでした";
+            salary_msg.value = "先月の月収を取得できませんでした";
         }
       }
     }
 
     const updateSalary = async(step) =>{
-      if (step > 0 && monthlyIncome.value + step < 999){
-        monthlyIncome.value += step
-      } else if (step < 0 && monthlyIncome.value + step >= 0) {
-        monthlyIncome.value += step
+      if (step > 0){
+        if   (monthlyIncome.value + step <= 999){
+          monthlyIncome.value += step
+          salary_msg.value = ""
+        } else {
+          monthlyIncome.value = 999
+          salary_msg.value = "月収は999万円までとなります"
+        }
+      } else if (step < 0) {
+        if  (monthlyIncome.value + step >= 5){
+          monthlyIncome.value += step
+          salary_msg.value = 0
+        } else {
+          monthlyIncome.value = 5
+          salary_msg.value = "月収は5万円以上となります"
+        }
       }
     }
 
@@ -138,6 +156,9 @@ export default {
       year,
       month,
       monthlyIncome,
+      year_msg,
+      month_msg,
+      salary_msg,
       message,
       insertThisYear,
       insertThisMonth,

@@ -59,6 +59,7 @@ import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
 import { useTodoStore } from '@/store/todo';
+import { STATUS_DICT } from './lib';
 
 export default {
   setup() {
@@ -224,12 +225,24 @@ export default {
           const activity_res = await axios.get(act_url,
                                               {headers: {Authorization: authStore.getAuthHeader}})
           if (activity_res.status===200){
-            activity_msg.value = [activity_res.data.date,
-                                  `\n目標時間:${activity_res.data.target_time}時間`,
-                                  `\n活動時間:${activity_res.data.actual_time}時間`,
-                                  `\nステータス:${activity_res.data.is_achieved}`,
-                                  `\nボーナス:${(activity_res.data.bonus * 10)}千円`
+            const activity = activity_res.data
+            activity_msg.value = [activity.date,
+                                  `\n目標時間:${activity.target_time}時間`,
+                                  `\n活動時間:${activity.actual_time}時間`,
+                                  `\nステータス:${STATUS_DICT[activity.status]}`
             ].join('');
+            const bonusInYen = parseInt(activity.bonus * 10000, 10)
+            const penaltyInYen = parseInt(activity.penalty * 10000, 10)
+            if (activity.status === "success"){
+              activity_msg.value += `\nボーナス:${activity.bonus}万円(${bonusInYen}円)`
+            } else if(activity.status === "failure"){
+              activity_msg.value += `\nペナルティ:${activity.penalty}万円(${penaltyInYen}円)`
+            } else {
+              if (activity.target_time <= activity.actual_time) {
+              activity_msg.value += `\n目標達成!活動を終了してください\n確定後のボーナス:${activity.bonus}万円(${bonusInYen}円)`
+              } else {
+              activity_msg.value += `\nこのままだと、${activity.penalty}万円(${penaltyInYen}円)のペナルティが発生`}
+            }
           }
         } catch (act_err) {
           if (act_err.response){
@@ -260,8 +273,9 @@ export default {
                                           {headers: {Authorization: authStore.getAuthHeader}}
           )
           if (earn_res.status===200){
-            income_msg.value = [`今月の月収:${earn_res.data["今月の詳細"].salary}万円`,
-                                `\n合計ボーナス:${(earn_res.data["今月の詳細"].bonus * 10000)}円`,
+            income_msg.value = [`月収:${earn_res.data["今月の詳細"].salary}万円`,
+                                `\nボーナス:${(earn_res.data["今月の詳細"].total_bonus)}万円`,
+                                `\nペナルティ:${(earn_res.data["今月の詳細"].total_penalty)}万円`,
                                 `\nボーナス換算後の月収:${earn_res.data["ボーナス換算後の月収"]}万円`
           ].join('');
           }

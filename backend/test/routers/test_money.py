@@ -86,7 +86,7 @@ def test_register_income_with_minus_digit(client, get_headers):
             "month": test_month}
     response = client.post(f"/incomes/{test_year}/{test_month}", json=data, headers=get_headers)
     assert response.status_code == 422
-    assert response.json() == {"detail": "給料は正の数を入力して下さい"}
+    assert response.json() == {"detail": "給料は5以上を入力して下さい"}
 
 
 def test_get_income(client, get_headers):
@@ -99,9 +99,10 @@ def test_get_income(client, get_headers):
         "今月の詳細": {
             "salary": test_salary,
             "year_month": f"{test_year}-{test_month}",
+            "total_penalty": 0.0,
             "income_id": 1,
             "username": test_username,
-            "bonus": 0.0
+            "total_bonus": 0.0
         },
         "ボーナス換算後の月収": test_salary
     }

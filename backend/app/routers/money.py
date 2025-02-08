@@ -28,7 +28,6 @@ def register_salary(year: int,
         username = current_user['username']
         data = db_model.Income(year_month=year_month,
                                salary=salary,
-                               bonus=0,
                                username=username)
         db.add(data)
         db.commit()
@@ -62,7 +61,7 @@ def get_monthly_income(year: int,
         result = db.query(db_model.Income).filter(
             db_model.Income.year_month == year_month,
             db_model.Income.username == username).one()
-        total_income = result.salary + result.bonus
+        total_income = round((result.salary + result.total_bonus - result.total_penalty), 2)
         logger.info(f"{username}:{year_month}の月収を取得")
         return {"今月の詳細": result, "ボーナス換算後の月収": total_income}
     except NoResultFound:

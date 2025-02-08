@@ -1,12 +1,19 @@
 import re
+from enum import Enum
 from pydantic import BaseModel, Field, field_validator
+
+
+class Status(str, Enum):
+    pending = "pending"
+    success = "success"
+    failure = "failure"
 
 
 class RegisterActivities(BaseModel):
     date: str
     target_time: float
     actual_time: float
-    is_achieved: bool
+    status: Status
     message: str
 
 

@@ -1,15 +1,14 @@
 """給料テーブルの名称の変更
 
 Revision ID: 89511bb8c5d8
-Revises: 
+Revises:
 Create Date: 2024-11-06 23:25:52.395801+09:00
 
 """
 from typing import Sequence, Union
 
 from alembic import op
-import sqlalchemy as sa
-from sqlalchemy import Float, Integer
+from sqlalchemy import Float
 
 
 # revision identifiers, used by Alembic.
