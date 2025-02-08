@@ -59,6 +59,7 @@ import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
 import { useTodoStore } from '@/store/todo';
+import { STATUS_DICT } from './lib';
 
 export default {
   setup() {
@@ -228,14 +229,17 @@ export default {
             activity_msg.value = [activity.date,
                                   `\n目標時間:${activity.target_time}時間`,
                                   `\n活動時間:${activity.actual_time}時間`,
-                                  `\nステータス:${activity.is_achieved}`
+                                  `\nステータス:${STATUS_DICT[activity.status]}`
             ].join('');
-            if (activity.is_achieved){
+            if (activity.status === "success"){
               activity_msg.value += `\nボーナス:${activity.bonus}万円(${parseInt(activity.bonus * 10000)}円)`
-            } else if (activity.target_time <= activity.actual_time) {
-              activity_msg.value += `\n目標達成!活動を終了してください\n確定後のボーナス:${activity.bonus}万円(${parseInt(activity.bonus * 10000)}円)`
+            } else if(activity.status === "failure"){
+              activity_msg.value += `\nペナルティ:${activity.penalty}万円(${parseInt(activity.penalty * 10000)}円)`
             } else {
-              activity_msg.value += `\nこのままだと、${activity.penalty}万円(${parseInt(activity.penalty * 10000)}円)のペナルティが発生`
+              if (activity.target_time <= activity.actual_time) {
+              activity_msg.value += `\n目標達成!活動を終了してください\n確定後のボーナス:${activity.bonus}万円(${parseInt(activity.bonus * 10000)}円)`
+              } else {
+              activity_msg.value += `\nこのままだと、${activity.penalty}万円(${parseInt(activity.penalty * 10000)}円)のペナルティが発生`}
             }
           }
         } catch (act_err) {

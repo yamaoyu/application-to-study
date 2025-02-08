@@ -10,7 +10,7 @@ class Activity(Base):
     date = Column(Date)
     target_time = Column(Float)
     actual_time = Column(Float, default=0)
-    is_achieved = Column(Boolean, default=False)
+    status = Column(Enum("pending", "success", "failure"), server_default="pending")
     bonus = Column(Float, server_default="0")
     penalty = Column(Float, server_default="0")
     username = Column(VARCHAR(16), ForeignKey("users.username"), nullable=False)

@@ -49,7 +49,7 @@ def test_register_target(client, get_headers):
     assert response.json() == {"date": test_date,
                                "target_time": 5.0,
                                "actual_time": 0,
-                               "is_achieved": False,
+                               "status": "pending",
                                "message": f"{test_date}の目標時間を5.0時間に設定しました"}
 
 
@@ -133,7 +133,7 @@ def test_register_actual(client, get_headers):
         "date": test_date,
         "target_time": 5.0,
         "actual_time": data["actual_time"],
-        "is_achieved": False,
+        "status": "pending",
         "message": f"活動時間を{data['actual_time']}時間に設定しました"
     }
 
@@ -185,7 +185,7 @@ def test_finish_activity(client, get_headers):
         "date": test_date,
         "target_time": 5.0,
         "actual_time": 5.0,
-        "is_achieved": True,
+        "status": "success",
         "message": f"目標達成！{f"{test_bonus}万円({int(test_bonus * 10000)}円)"}ボーナス追加！"}
 
 
@@ -211,7 +211,7 @@ def test_get_day_activities_registered_target(client, get_headers):
     assert response.json() == {"date": date,
                                "target_time": 5.0,
                                "actual_time": 0,
-                               "is_achieved": False,
+                               "status": "pending",
                                "bonus": 0,
                                "penalty": test_penalty}
 
@@ -228,7 +228,7 @@ def test_get_day_activities_registered_actual(client, get_headers):
     assert response.json() == {"date": date,
                                "target_time": 5.0,
                                "actual_time": 5.0,
-                               "is_achieved": False,
+                               "status": "pending",
                                "bonus": test_bonus,
                                "penalty": 0}
 
@@ -246,7 +246,7 @@ def test_get_day_activities(client, get_headers):
     assert response.json() == {"date": date,
                                "target_time": 5.0,
                                "actual_time": 5.0,
-                               "is_achieved": True,
+                               "status": "success",
                                "bonus": test_bonus,
                                "penalty": 0}
 
@@ -296,7 +296,7 @@ def test_get_month_acitivities(client, get_headers):
                                                   "date": "2024-05-05",
                                                   "target_time": 5.0,
                                                   "actual_time": 5.0,
-                                                  "is_achieved": True,
+                                                  "status": "success",
                                                   "bonus": test_bonus,
                                                   "penalty": 0,
                                                   "username": test_username}]}
