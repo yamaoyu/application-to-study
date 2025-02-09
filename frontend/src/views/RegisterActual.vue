@@ -31,9 +31,6 @@
       <input type="button" value="はい" @click="finishActivity">
     </div>
   </form>
-  <div>
-    <router-link to="/home">ホームへ戻る</router-link>
-  </div>
 </template>
 
 <script>

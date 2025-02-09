@@ -22,34 +22,6 @@
     <p v-else>{{ todo_msg }}</p>
   </div>
   <br>
-  <div>
-    <router-link to="/register/salary">月収登録</router-link>
-  </div>
-  <div>
-    <router-link to="/register/target">目標時間登録</router-link>
-  </div>
-  <div>
-    <router-link to="/register/actual">活動時間登録</router-link>
-  </div>
-  <div>
-    <router-link to="/finish/activity">活動を終了</router-link>
-  </div>
-  <div>
-    <router-link to="/view/month-activities">月ごとの活動記録</router-link>
-  </div>
-  <div>
-    <router-link to="/view/all-activities">全期間の活動記録</router-link>
-  </div>
-  <div>
-    <router-link to="/register/todo">Todoを登録</router-link>
-  </div>
-  <div>
-    <router-link to="/register/inquiry">問い合わせ</router-link>
-  </div>
-  <div>
-    <input type="button" value="ログアウト" @click="logout()">
-    <p v-if="logout_msg" class="logout_msg">{{ logout_msg }}</p>
-  </div>
 </template>
 
 
@@ -74,7 +46,6 @@ export default {
     const router = useRouter()
     const authStore = useAuthStore()
     const todoStore = useTodoStore()
-    const logout_msg = ref("")
 
     const updateTodos = async() =>{
       // todo更新後、データを更新する
@@ -174,49 +145,6 @@ export default {
       )
     }
 
-    const logout = async() =>{
-      try{
-        // デバイス情報を取得 HTTPSにするまでの一時的な対応としてplatform(非推奨)を使用
-        const device = navigator.platform || "unknown";
-        const logout_url = process.env.VUE_APP_BACKEND_URL + 'logout'
-        const logout_res = await axios.post(logout_url, 
-              {
-                device: device
-              },
-              {
-                headers: {Authorization: authStore.getAuthHeader},
-                withCredentials: true
-              }
-        )
-        if (logout_res.status===200){
-          authStore.clearAuthData()
-          router.push(
-                  {"path":"/login",
-                    "query":{message:"ログアウトしました"}
-                  })
-        }
-      } catch(logout_err){
-        if (logout_err.response){
-            switch (logout_err.response.status){
-              case 401:
-                router.push(
-                  {"path":"/login",
-                    "query":{message:"再度ログインしてください"}
-                  })
-                break;
-              case 404:
-              case 500:
-                logout_msg.value = logout_err.response.data.detail;
-                break;
-              default:
-                logout_msg.value = "ログアウトに失敗しました";}
-          } else if (logout_err.request){
-            logout_msg.value =  "リクエストがサーバーに到達できませんでした"
-          } else {
-            logout_msg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
-          }
-      }
-    }
 
     onMounted( async() =>{
         // その日の活動実績を取得
@@ -338,15 +266,13 @@ export default {
       income_msg,
       todos,
       todo_msg,
-      logout_msg,
       year,
       month,
       date,
       updateTodos,
       deleteTodo,
       finishTodo,
-      editTodo,
-      logout
+      editTodo
     }
   }
 }
