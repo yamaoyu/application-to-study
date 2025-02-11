@@ -21,7 +21,6 @@
     </template>
     <p v-else>{{ todo_msg }}</p>
   </div>
-  <br>
 </template>
 
 

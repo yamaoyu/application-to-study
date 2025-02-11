@@ -1,15 +1,19 @@
 <template>
+  <head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  </head>
   <nav class="navbar navbar-expand-lg bd-navbar fixed-top bg-dark navbar-dark">
     <div class="container-fluid">
-      <a class="navbar-brand">MENU</a>
+      <ul class="navbar-nav me-2" style="color: white;">
+        <li class="nav-item" v-if="$router.currentRoute.value.name != 'Home'">
+          <router-link class="nav-link bi-house" to="/home">HOME</router-link>
+        </li>
+      </ul>
       <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item" v-if="$router.currentRoute.value.name != 'Home'">
-            <router-link class="nav-link" to="/home">ホーム</router-link>
-          </li>
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               活動登録
@@ -54,7 +58,6 @@
     <div class="offcanvas offcanvas-start bg-dark" id="offcanvasNavbar">
       <div class="offcanvas-header" style="color: white;">
           <h5 class="offcanvas-title">MENU</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
       </div>
       <ul class="offcanvas-body" style="color: white;">
         <li class="nav-item" v-if="$router.currentRoute.value.name != 'Home'" data-bs-dismiss="offcanvas">
@@ -101,7 +104,9 @@
     </div>
   </nav>
   <p v-if="logout_msg" class="logout_msg">{{ logout_msg }}</p>
-  <router-view></router-view>
+  <BContainer>
+    <router-view></router-view>
+  </BContainer>
 </template>
 
 <script>
@@ -109,8 +114,13 @@ import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
+import { BContainer } from 'bootstrap-vue-next';
 
 export default {
+  components: {
+    BContainer,
+  },
+
   setup() {
     const router = useRouter()
     const authStore = useAuthStore()

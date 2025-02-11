@@ -1,3 +1,7 @@
 * {
     white-space: pre-wrap;
 }
+
+body {
+    background-color: var(--bs-secondary-bg) !important;
+}

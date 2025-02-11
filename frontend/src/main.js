@@ -5,14 +5,14 @@ import { createPinia } from 'pinia';
 import { useAuthStore } from '@/store/authenticate';
 import axios from 'axios'
 import { jwtDecode } from 'jwt-decode';
-import { createBootstrap } from 'bootstrap-vue-next';
+import { BootstrapVueNext } from 'bootstrap-vue-next'
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue-next/dist/bootstrap-vue-next.css";
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 
 const pinia = createPinia();
 
-createApp(App).use(router).use(pinia).use(createBootstrap()).mount('#app')
+createApp(App).use(router).use(pinia).use(BootstrapVueNext).mount('#app')
 
 // トークンが無効、もしくはない場合はログインページとユーザー登録ページ以外は開けないようにする
 const authStore = useAuthStore()
