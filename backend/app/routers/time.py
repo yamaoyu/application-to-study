@@ -243,17 +243,22 @@ def get_month_activities(year: int,
             raise HTTPException(status_code=404,
                                 detail=f"{year_month}内の活動は登録されていません")
         income = fetch_one_income(year_month, username, db)
-        total_monthly_income = income.salary + income.total_bonus
         success_days = [act for act in activities if act.status == "success"]
+        total_bonus = round(income.total_bonus, 2)
+        total_penalty = round(income.total_penalty, 2)
+        total_monthly_income = round((income.salary + total_bonus), 2)
+        pay_adjustment = round((total_bonus - total_penalty), 2)
         logger.info(f"{current_user['username']}が{year_month}の活動実績を取得")
-        return {"total_monthly_income": total_monthly_income,
-                "salary": income.salary,
-                "pay_adjustment": round((income.total_bonus - income.total_penalty), 2),
-                "bonus": income.total_bonus,
-                "penalty": income.total_penalty,
-                "success_days": len(success_days),
-                "fail_days": len(activities) - len(success_days),
-                "activity_list": activities}
+        return {
+            "total_monthly_income": total_monthly_income,
+            "salary": income.salary,
+            "pay_adjustment": pay_adjustment,
+            "bonus": total_bonus,
+            "penalty": total_penalty,
+            "success_days": len(success_days),
+            "fail_days": len(activities) - len(success_days),
+            "activity_list": activities
+        }
     except HTTPException as http_e:
         raise http_e
     except ValidationError as validate_e:
@@ -265,8 +270,8 @@ def get_month_activities(year: int,
 
 
 @router.get("/activities/total/", status_code=200)
-def get_total_activity_result(db: Session = Depends(get_db),
-                              current_user: dict = Depends(get_current_user)):
+def get_all_activities(db: Session = Depends(get_db),
+                       current_user: dict = Depends(get_current_user)):
     """ 全期間のデータを取得 """
     try:
         # 検索範囲の指定
@@ -281,17 +286,18 @@ def get_total_activity_result(db: Session = Depends(get_db),
         if not incomes:
             raise HTTPException(status_code=404,
                                 detail=f"{current_user['username']}の給料は登録されていません")
-        total_salary = sum([income.salary for income in incomes])
+        total_salary = round(sum([income.salary for income in incomes]), 2)
         total_bonus = round(sum([income.total_bonus for income in incomes]), 2)
         total_penalty = round(sum([income.total_penalty for income in incomes]), 2)
-        total_income = total_salary + total_bonus - total_penalty
+        pay_adjustment = round(total_bonus - total_penalty, 2)
+        total_income = round((total_salary + total_bonus - total_penalty), 2)
         success_days = [act for act in activities if act.status == "success"]
         logger.info(f"{current_user['username']}が全期間の活動実績を取得")
-        return {"total_income": total_income,
-                "total_salary": total_salary,
-                "pay_adjustment": round(total_bonus - total_penalty, 2),
-                "total_bonus": round(total_bonus, 2),
-                "total_penalty": round(total_penalty, 2),
+        return {"total_income": total_income,  # 総収入(総給与 + ボーナス - ペナルティ)
+                "total_salary": total_salary,  # 総給与(月収の合計)
+                "pay_adjustment": pay_adjustment,
+                "total_bonus": total_bonus,
+                "total_penalty": total_penalty,
                 "success_days": len(success_days),
                 "fail_days": len(activities) - len(success_days)}
     except HTTPException as http_e:
