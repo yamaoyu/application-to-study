@@ -246,7 +246,7 @@ def get_month_activities(year: int,
         success_days = [act for act in activities if act.status == "success"]
         total_bonus = round(income.total_bonus, 2)
         total_penalty = round(income.total_penalty, 2)
-        total_monthly_income = round((income.salary + total_bonus), 2)
+        total_monthly_income = round((income.salary + total_bonus - total_penalty), 2)
         pay_adjustment = round((total_bonus - total_penalty), 2)
         logger.info(f"{current_user['username']}が{year_month}の活動実績を取得")
         return {
