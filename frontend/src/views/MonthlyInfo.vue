@@ -61,7 +61,7 @@
       </div>
       <div class="col-6">
         <div class="bg-white p-4 rounded shadow">
-          <h3 class="small">失敗日数</h3>
+          <h3 class="small">未達成日数</h3>
           <div class="d-flex align-items-baseline justify-content-center">
             <span class="h3 fw-bold text-danger">{{ response.data.fail_days }}</span>
             <span class="small">日</span>
@@ -157,28 +157,27 @@ export default {
             activities.value = response.value.data.activity_list;
           }
       } catch (error){
-        if (error.response.value){
-          activities.value = []
-          switch (error.response.value.status){
-              case 401:
-              router.push(
-                {"path":"/login",
-                  "query":{message:"再度ログインしてください"}
-                })
-                break;
-              case 422:
-                message.value = error.response.value.data.detail;
-                break;
-              case 500:
-                message.value =  "情報の取得に失敗しました"
-                break;
-              default:
-                message.value = error.response.value.data.detail;}
-          } else if (error.request){
-            message.value =  "リクエストがサーバーに到達できませんでした"
-          } else {
-            message.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
-          }
+        console.log(error.response)
+        response.value = ""
+        activities.value = []
+        if (error.response){
+          switch (error.response.status){
+            case 401:
+            router.push(
+              {"path":"/login",
+                "query":{message:"再度ログインしてください"}
+              })
+              break;
+            case 500:
+              message.value =  "情報の取得に失敗しました"
+              break;
+            default:
+              message.value = error.response.data.detail;}
+        } else if (error.request){
+          message.value =  "リクエストがサーバーに到達できませんでした"
+        } else {
+          message.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
+        }
       }
     }
 

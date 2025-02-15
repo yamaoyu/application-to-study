@@ -241,7 +241,7 @@ def get_month_activities(year: int,
         activities = fetch_monthly_activities(year, month, username, db)
         if not activities:
             raise HTTPException(status_code=404,
-                                detail=f"{year_month}内の活動は登録されていません")
+                                detail=f"{year}年{month}月の活動は登録されていません")
         income = fetch_one_income(year_month, username, db)
         success_days = [act for act in activities if act.status == "success"]
         total_bonus = round(income.total_bonus, 2)
