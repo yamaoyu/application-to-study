@@ -62,8 +62,9 @@ def get_monthly_income(year: int,
             db_model.Income.year_month == year_month,
             db_model.Income.username == username).one()
         total_income = round((result.salary + result.total_bonus - result.total_penalty), 2)
+        pay_adjustment = round((result.total_bonus - result.total_penalty), 2)
         logger.info(f"{username}:{year_month}の月収を取得")
-        return {"今月の詳細": result, "ボーナス換算後の月収": total_income}
+        return {"month_info": result, "total_income": total_income, "pay_adjustment": pay_adjustment}
     except NoResultFound:
         raise HTTPException(status_code=404, detail=f"{year_month}の月収は未登録です")
     except ValidationError as validate_e:

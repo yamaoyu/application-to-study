@@ -3,5 +3,5 @@
 }
 
 body {
-    background-color: var(--bs-secondary-bg) !important;
+    background-color: var(--bs-light) !important;
 }
