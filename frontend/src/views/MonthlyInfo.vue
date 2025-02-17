@@ -1,9 +1,9 @@
 <template>
   <h2 v-if="!response">月ごとの活動実績</h2>
-  <h2 v-if="response">{{ year }}年{{ month }}月の活動実績</h2>
-  <div class="container p-4" v-if="response">
+  <h2 v-else>{{ selectedMonth.split("-")[0] }}年{{ selectedMonth.split("-")[1] }}月の活動実績</h2>
+  <div class="container" v-if="response">
     <div class="row justify-content-center mb-4">
-      <div class="col-8 ">
+      <div class="col-8">
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">合計</h3>
           <div class="d-flex align-items-baseline justify-content-center">
@@ -71,8 +71,8 @@
     </div>
   </div>
   <br>
-  <div v-if="message" class="message">
-    <p v-if="message" class="message">{{ message }}</p>
+  <div v-if="message" class="alert alert-warning">
+    {{ message }}
   </div>
   <div v-if="activities.length > 0" class="activities">
     <h2>活動状況(日別)</h2>
@@ -95,69 +95,90 @@
       </tbody>
     </table>
   </div>
-  <form @submit.prevent="GetMonthlyInfo">
-    <div>
-      <label for="year">年:</label>
-      <select id="year" v-model="year" required>
-        <option v-for="year in yearOptions" :key="year">
-          {{ year }}
-        </option>
-      </select>
-      <input type="button" value="今年" @click="insertThisYear">
-      <input type="button" value="-1" @click="decreaseOneYear">
-      <input type="button" value="+1" @click="increaseOneYear">
+  <form @submit.prevent="GetMonthlyInfo" class="form-inline">
+    <div class="container col-8 d-flex justify-content-center">
+      <div class="input-group">
+        <input
+          type="month"
+          v-model="selectedMonth"
+          :min="minMonth"
+          :max="maxMonth"
+          class="form-control col-2"
+        />
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary" 
+          @click="increaseMonth(-1)"
+          :disabled="isAtMinMonth"
+        >
+          前月
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary" 
+          @click="increaseMonth(1)"
+          :disabled="isAtMaxMonth"
+        >
+          翌月
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary" 
+          @click="increaseYear(-1)"
+          :disabled="isAtMinYear"
+        >
+          前年
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary" 
+          @click="increaseYear(1)"
+          :disabled="isAtMaxYear"
+        >
+          翌年
+        </button>
+      </div>
     </div>
-    <div>
-      <label for="month">月:</label>
-      <select id="month" v-model="month" required>
-        <option v-for="month in monthOptions" :key="month">
-          {{ month }}
-        </option>
-      </select>
-      <input type="button" value="今月" @click="insertThisMonth">
-      <input type="button" value="-1" @click="decreaseOneMonth">
-      <input type="button" value="+1" @click="increaseOneMonth">
-    </div>
-    <button type="submit" class="btn btn-outline-secondary">検索</button>
+    <button type="submit" class="btn btn-outline-secondary mt-2">検索</button>
   </form>
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { generateYearOptions, generateMonthOptions, changeMonth, changeYear, STATUS_DICT, statusClass, resultClass } from './lib/index';
+import { getMaxMonth, changeMonth, changeYear, STATUS_DICT, statusClass, resultClass } from './lib/index';
 import { useAuthStore } from '@/store/authenticate';
-import "../assets/styles/common.css"
+import "../assets/styles/common.css";
 
 
 export default {
-  created() {
-      this.yearOptions = generateYearOptions();
-      this.monthOptions = generateMonthOptions();
-    },
-
   setup() {
-    const year = ref("")
-    const month = ref("")
     const message = ref("")
     const router = useRouter()
     const activities = ref([])
     const response = ref()
     const authStore = useAuthStore()
-    const { insertThisYear, decreaseOneYear, increaseOneYear } = changeYear(year, message);
-    const { insertThisMonth, decreaseOneMonth, increaseOneMonth } = changeMonth(month, year, message);
+    const selectedMonth = ref(new Date().toISOString().slice(0, 7));
+    const minMonth = "2024-01";
+    const maxMonth = getMaxMonth();
+    const isAtMinMonth = computed(() => selectedMonth.value <= minMonth)
+    const isAtMaxMonth = computed(() => selectedMonth.value >= maxMonth)
+    const isAtMinYear = computed(() => selectedMonth.value <= "2024-12")
+    const isAtMaxYear = computed(() => selectedMonth.value >= maxMonth.split("-")[0])
+    const { increaseYear } = changeYear(selectedMonth);
+    const { increaseMonth } = changeMonth(selectedMonth);
 
     const GetMonthlyInfo = async() =>{
       try{
-          const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year.value + '/' + month.value;
+          const [year, month] = selectedMonth.value.split('-').map(Number)
+          const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month;
           response.value = await axios.get(url,
                                           {headers: {Authorization: authStore.getAuthHeader}})
           if (response.value.status===200){
             activities.value = response.value.data.activity_list;
           }
       } catch (error){
-        console.log(error.response)
         response.value = ""
         activities.value = []
         if (error.response){
@@ -183,20 +204,21 @@ export default {
 
     return {
       message,
-      year,
-      month,
       response,
       statusClass,
       resultClass,
       activities,
-      insertThisYear,
-      insertThisMonth,
       GetMonthlyInfo,
-      decreaseOneYear,
-      increaseOneYear,
-      decreaseOneMonth,
-      increaseOneMonth,
-      STATUS_DICT
+      STATUS_DICT,
+      selectedMonth,
+      minMonth,
+      maxMonth,
+      isAtMinMonth,
+      isAtMaxMonth,
+      isAtMinYear,
+      isAtMaxYear,
+      increaseYear,
+      increaseMonth
     }
   }
 }
