@@ -1,123 +1,136 @@
 <template>
   <h3>月収の登録</h3>
-  <form @submit.prevent="registerSalary">
-    <div>
-      <label for="year">年:</label>
-      <select v-model="year" required>
-        <option v-for="year in yearOptions" :key="year">
-          {{ year }}
-        </option>
-      </select>
-      <input type="button" value="今年" @click="insertThisYear">
-      <input type="button" value="-1" @click="decreaseOneYear">
-      <input type="button" value="+1" @click="increaseOneYear">
-      <div v-if="year_msg" class="year_msg">{{ year_msg }}</div>
+  <form @submit.prevent="registerSalary" class="form-inline">
+    <div class="container col-8 d-flex justify-content-center">
+      <div class="input-group">
+        <input
+          type="month"
+          v-model="selectedMonth"
+          :min="minMonth"
+          :max="maxMonth"
+          class="form-control col-2"
+        />
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary" 
+          @click="increaseYear(-1)"
+          :disabled="isAtMinYear"
+        >
+          前年
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary" 
+          @click="increaseMonth(-1)"
+          :disabled="isAtMinMonth"
+        >
+          前月
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary" 
+          @click="increaseMonth(1)"
+          :disabled="isAtMaxMonth"
+        >
+          翌月
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary" 
+          @click="increaseYear(1)"
+          :disabled="isAtMaxYear"
+        >
+          翌年
+        </button>
+      </div>
     </div>
-    <div>
-      <label for="month">月:</label>
-      <select id="month" v-model="month" required>
-        <option v-for="month in monthOptions" :key="month">
-          {{ month }}
-        </option>
-      </select>
-      <input type="button" value="今月" @click="insertThisMonth">
-      <input type="button" value="-1" @click="decreaseOneMonth">
-      <input type="button" value="+1" @click="increaseOneMonth">
-      <div v-if="month_msg" class="month_msg">{{ month_msg }}</div>
+    <div class="container col-8 d-flex justify-content-center mt-3">
+      <div class="input-group">
+        <input
+          type="number"
+          v-model="monthlyIncome"
+          class="form-control"
+          placeholder="月収(万円)"
+        />
+        <span class="input-group-text">万円</span>
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary" 
+          @click="updateSalary(-10)"
+          :disabled="isMinInome"
+        >
+          -10万
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary" 
+          @click="updateSalary(-5)"
+          :disabled="isMinInome"
+        >
+          -5万
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary" 
+          @click="updateSalary(5)"
+          :disabled="isMaxIncome"
+        >
+          +5万
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary" 
+          @click="updateSalary(10)"
+          :disabled="isMaxIncome"
+        >
+          +10万
+        </button>
+      </div>
     </div>
-    <div>
-      <label for="monthlyIncome">月収(万):</label>
-      <input type="number" id="monthlyIncome" v-model="monthlyIncome" required min="5" max="999">
-      <input type="button" value="先月の給料" @click="insertPreviousSalary">
-      <input type="button" value="-1" @click="updateSalary(-1)">
-      <input type="button" value="+1" @click="updateSalary(1)">
-      <input type="button" value="-5" @click="updateSalary(-5)">
-      <input type="button" value="+5" @click="updateSalary(5)">
-      <div v-if="salary_msg" class="salary_msg">{{ salary_msg }}</div>
-    </div>
-    <button type="submit">登録</button>
+
+    <button type="submit" class="btn btn-outline-secondary mt-3">登録</button>
   </form>
-  <div v-if="message" class="message">{{ message }}</div>
+  <div v-if="message" class="alert alert-info d-flex justify-content-center rounded shadow mt-3 p-3">{{ message }}</div>
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { generateYearOptions, generateMonthOptions, changeMonth, changeYear } from './lib/index';
+import { getMaxMonth, changeMonth, changeYear } from './lib/index';
 import { useAuthStore } from '@/store/authenticate';
 
 export default {
-  created() {
-      this.yearOptions = generateYearOptions();
-      this.monthOptions = generateMonthOptions();
-    },
-
   setup() {
-    const year = ref('')
-    const month = ref('')
-    const monthlyIncome = ref(5)
+    const monthlyIncome = ref()
     const year_msg = ref('')
-    const month_msg = ref('')
     const salary_msg = ref('')
     const message = ref('')
     const router = useRouter()
     const authStore = useAuthStore()
-    const { insertThisYear, decreaseOneYear, increaseOneYear } = changeYear(year, year_msg);
-    const { insertThisMonth, decreaseOneMonth, increaseOneMonth } = changeMonth(month, year, month_msg);
-    
-    const insertPreviousSalary = async() =>{
-      // 先月の年収を取得
-      const date = new Date()
-      let prevYear = date.getFullYear()
-      // 先月のデータを取得するため+1しない
-      let prevMonth = date.getMonth()
-      if (date.getMonth() == 0){
-        prevYear = date.getFullYear() - 1
-        prevMonth = 12
-      } 
-      try {
-        const url = process.env.VUE_APP_BACKEND_URL + 'incomes/' + prevYear + '/' + prevMonth;
-        const response = await axios.get(url, {headers: {Authorization: authStore.getAuthHeader}})
-        if (response.status===200){
-          monthlyIncome.value = response.data["今月の詳細"].salary
-        } else {
-          salary_msg.value = "先月の月収を取得できませんでした"
-        }
-      } catch (error) {
-        switch (error.response.status){
-          case 404:
-            salary_msg.value = "先月の月収は登録されていません"
-            break;
-          default:
-            salary_msg.value = "先月の月収を取得できませんでした";
-        }
-      }
-    }
+    const minMonth = "2024-01";
+    const maxMonth = getMaxMonth();
+    const selectedMonth = ref(new Date().toISOString().slice(0, 7));
+    const isAtMinMonth = computed(() => selectedMonth.value <= minMonth)
+    const isAtMaxMonth = computed(() => selectedMonth.value >= maxMonth)
+    const isAtMinYear = computed(() => selectedMonth.value <= "2024-12")
+    const isAtMaxYear = computed(() => selectedMonth.value >= maxMonth.split("-")[0])
+    const isMinInome = computed(() => monthlyIncome.value <= 5)
+    const isMaxIncome = computed(() => monthlyIncome.value >= 999)
+    const { increaseYear } = changeYear(selectedMonth);
+    const { increaseMonth } = changeMonth(selectedMonth);
 
     const updateSalary = async(step) =>{
       if (step > 0){
-        if   (monthlyIncome.value + step <= 999){
-          monthlyIncome.value += step
-          salary_msg.value = ""
-        } else {
-          monthlyIncome.value = 999
-          salary_msg.value = "月収は999万円までとなります"
-        }
+        monthlyIncome.value = Math.min(monthlyIncome.value + step, 999)
       } else if (step < 0) {
-        if  (monthlyIncome.value + step >= 5){
-          monthlyIncome.value += step
-          salary_msg.value = 0
-        } else {
-          monthlyIncome.value = 5
-          salary_msg.value = "月収は5万円以上となります"
-        }
+        monthlyIncome.value = Math.max(monthlyIncome.value + step, 5)
       }
     }
 
     const registerSalary = async() =>{
         try {
-          const url = process.env.VUE_APP_BACKEND_URL + 'incomes/'+ year.value + '/' + month.value;
+          const url = process.env.VUE_APP_BACKEND_URL + 'incomes/'+ selectedMonth.value.split("-")[0] + '/' + selectedMonth.value.split("-")[1];
           const response = await axios.post(url, 
                                             {salary: Number(monthlyIncome.value)},
                                             {headers: {Authorization: authStore.getAuthHeader}})
@@ -149,23 +162,48 @@ export default {
         }
       }
 
+    onMounted( async() =>{
+      // 先月の年収を取得
+      const date = new Date()
+      let year = date.getFullYear()
+      // 先月のデータを取得するため+1しない
+      let month = date.getMonth()
+      if (date.getMonth() == 0){
+        year = date.getFullYear() - 1
+        month = 12
+      } 
+      try {
+        const url = process.env.VUE_APP_BACKEND_URL + 'incomes/' + year + '/' + month;
+        const response = await axios.get(url, {headers: {Authorization: authStore.getAuthHeader}})
+        if (response.status===200){
+          monthlyIncome.value = response.data["month_info"].salary
+        } else {
+          monthlyIncome.value = 5
+        }
+      } catch (error) {
+        monthlyIncome.value = 5
+      }
+    }
+  )
+
     return {
-      year,
-      month,
       monthlyIncome,
       year_msg,
-      month_msg,
       salary_msg,
       message,
-      insertThisYear,
-      insertThisMonth,
-      insertPreviousSalary,
       updateSalary,
       registerSalary,
-      decreaseOneYear,
-      increaseOneYear,
-      decreaseOneMonth,
-      increaseOneMonth
+      minMonth,
+      maxMonth,
+      selectedMonth,
+      isAtMinMonth,
+      isAtMaxMonth,
+      isAtMinYear,
+      isAtMaxYear,
+      isMinInome,
+      isMaxIncome,
+      increaseYear,
+      increaseMonth
     }
   }
 }
