@@ -16,13 +16,21 @@ export const resultClass = (response) => {
 export const activityAlertClass = (response) => {
     if (!response) {
         // 未登録の場合
-        return 'alert-warning';
+        return 'alert alert-warning';
     } else if (response.data.status === 'success') {
-        return 'alert-success';
+        return 'alert alert-success';
     } else if (response.data.status === 'failure') {
-        return 'alert-danger';
+        return 'alert alert-danger';
     } else {
         // 登録はあるがステータスが未確定の場合
-        return 'alert-warning';
+        return 'alert alert-warning';
+    }
+}
+
+export const responseAlertClass = (status) => {
+    if (status >= 200 && status < 300) {
+        return 'alert alert-success';
+    } else {
+        return 'alert alert-warning';
     }
 }

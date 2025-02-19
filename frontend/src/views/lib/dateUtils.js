@@ -6,37 +6,12 @@ export function getMaxMonth(){
 }
 
 export function changeDate(date, message){
-    const insertToday = async() => {
-        message.value = ""
-        // YYYY-MM-DDの形にする
-        const today = new Date()
-        const year = today.getFullYear()
-        const month = `${today.getMonth()+1}`.padStart(2, '0')
-        const day = `${today.getDate()}`.padStart(2, '0')
-        date.value = `${year}-${month}-${day}`
-    }
-
-    const decreaseOneDay = async() => {
-        if (date.value) {
-            message.value = ""
-            // YYYY-MM-DDの形にする
-            const newDate = new Date(date.value)
-            newDate.setDate(newDate.getDate() - 1)
-            const year = newDate.getFullYear()
-            const month = `${newDate.getMonth()+1}`.padStart(2, '0')
-            const day = `${newDate.getDate()}`.padStart(2, '0')
-            date.value = `${year}-${month}-${day}`
-        } else {
-            message.value = "日付が指定されていません"
-        }
-    }
-
-    const increaseOneDay = async() => {
+    const increaseDay = async(step) => {
         if (date.value !== '') {
             message.value = ""
             // YYYY-MM-DDの形にする
             const newDate = new Date(date.value)
-            newDate.setDate(newDate.getDate() + 1)
+            newDate.setDate(newDate.getDate() + step)
             const year = newDate.getFullYear()
             const month = `${newDate.getMonth()+1}`.padStart(2, '0')
             const day = `${newDate.getDate()}`.padStart(2, '0')
@@ -47,9 +22,7 @@ export function changeDate(date, message){
     }
 
     return {
-        insertToday,
-        decreaseOneDay,
-        increaseOneDay
+        increaseDay
     }
 }
 

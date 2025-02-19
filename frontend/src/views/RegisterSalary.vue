@@ -90,21 +90,22 @@
 
     <button type="submit" class="btn btn-outline-secondary mt-3">登録</button>
   </form>
-  <div v-if="message" class="alert alert-info d-flex justify-content-center rounded shadow mt-3 p-3">{{ message }}</div>
+  <div class="container d-flex justify-content-center">
+    <p v-if="message" class="mt-3 p-3 col-8" :class="responseAlertClass(statusCode)">{{ message }}</p>
+  </div>
 </template>
 
 <script>
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { getMaxMonth, changeMonth, changeYear } from './lib/index';
+import { getMaxMonth, changeMonth, changeYear, responseAlertClass } from './lib/index';
 import { useAuthStore } from '@/store/authenticate';
 
 export default {
   setup() {
     const monthlyIncome = ref()
-    const year_msg = ref('')
-    const salary_msg = ref('')
+    const statusCode = ref()
     const message = ref('')
     const router = useRouter()
     const authStore = useAuthStore()
@@ -134,6 +135,7 @@ export default {
           const response = await axios.post(url, 
                                             {salary: Number(monthlyIncome.value)},
                                             {headers: {Authorization: authStore.getAuthHeader}})
+          statusCode.value = response.status
           if (response.status===201){
             message.value = response.data.message
           }
@@ -188,8 +190,8 @@ export default {
 
     return {
       monthlyIncome,
-      year_msg,
-      salary_msg,
+      statusCode,
+      responseAlertClass,
       message,
       updateSalary,
       registerSalary,

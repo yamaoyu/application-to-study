@@ -30,7 +30,7 @@
       </div>
     </div>
     <div class="row d-flex align-items-center justify-content-center my-3">
-      <p v-if="activity_msg" class="col-8 alert" :class="activityAlertClass(activity_res)">
+      <p v-if="activity_msg" class="col-8" :class="activityAlertClass(activity_res)">
           {{ activity_msg }}
       </p>
     </div>
