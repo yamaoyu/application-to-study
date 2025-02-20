@@ -1,29 +1,82 @@
 <template>
   <h3>活動時間の登録</h3>
   <form @submit.prevent="registerActual">
-    <div>
-      <label for="date">日付:</label>
-      <input type="date" id="date" v-model="date" required>
-      <input type="button" value="今日" @click="insertToday">
-      <input type="button" value="-1" @click="decreaseOneDay">
-      <input type="button" value="+1" @click="increaseOneDay">
+    <div class="container col-8 d-flex justify-content-center mt-3">
+      <div class="input-group">
+        <span class="input-group-text">日付</span>
+        <input
+          type="date"
+          v-model="date"
+          class="form-control col-2"
+          min="2024-01-01"
+        />
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          @click="increaseDay(-1)"
+          >
+          前日
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          @click="increaseDay(1)"
+          >
+          翌日
+        </button>
+      </div>
     </div>
-    <div>
-      <label for="ActualTime">活動時間:</label>
-      <select v-model="ActualTime">
-        <option v-for="option in timeOptions" :key="option" :value="option">
-        {{ option }}
-        </option>
-      </select>
-      <input type="button" value="-0.5" @click="decreaseHalfHour">
-      <input type="button" value="+0.5" @click="increaseHalfHour">
-      <input type="button" value="-2" @click="decreaseTwoHour">
-      <input type="button" value="+2" @click="increaseTwoHour">
+    <div class="container col-8 d-flex justify-content-center mt-3">
+      <div class="input-group">
+        <span class="input-group-text">目標</span>
+        <input
+          type="number"
+          v-model="actualTime"
+          class="form-control col-2 text-center"
+          min="0.0"
+          max="12"
+          step="0.5"
+          placeholder="活動時間(Hour)"
+        />
+        <span class="input-group-text small">時間</span>
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          @click="decreaseHour(1)"
+          :disabled="isMinHour"
+          >
+          -1
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          @click="increaseHour(1)"
+          :disabled="isMaxHour"
+          >
+          +1
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          @click="decreaseHour(3)"
+          :disabled="isMinHour"
+          >
+          -3
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          @click="increaseHour(3)"
+          :disabled="isMaxHour"
+          >
+          +3
+        </button>
+      </div>
     </div>
-    <button type="submit">登録</button>
+    <button type="submit" class="btn btn-outline-secondary mt-3">登録</button>
   </form>
-  <div>
-    <p v-if="message" class="message">{{ message }}</p>
+  <div class="container d-flex justify-content-center">
+    <p v-if="message" class="mt-3 col-10" :class="responseAlertClass(statusCode)">{{ message }}</p>
   </div>
   <form v-if="isRegistered" @submit.prevent="finishActivity">
     <div>
@@ -34,24 +87,26 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { generateTimeOptions, changeDate, changeTime, useActivityFinish } from "./lib/index";
+import { changeDate, changeTime, useActivityFinish, responseAlertClass } from "./lib/index";
 import { useAuthStore } from '@/store/authenticate';
 
 export default {
   setup() {
     const isRegistered = ref(false);
-    const date = ref("")
+    const date = ref(new Date().toISOString().slice(0, 10)); // 今日の日付を取得
     const message = ref("")
-    const timeOptions = generateTimeOptions(0.0, 12, 0.5);
-    const ActualTime = ref(timeOptions[0])
+    const actualTime = ref(0)
     const router = useRouter()
     const authStore = useAuthStore()
-    const { insertToday, decreaseOneDay, increaseOneDay } = changeDate(date, message);
-    const { decreaseHalfHour, increaseHalfHour, increaseTwoHour, decreaseTwoHour } = changeTime(ActualTime, timeOptions, message);
+    const statusCode = ref()
+    const { increaseDay } = changeDate(date, message);
+    const { decreaseHour, increaseHour,  } = changeTime(actualTime, message);
     const { finishActivity } = useActivityFinish(date, message, router, authStore);
+    const isMinHour = computed(() => actualTime.value <= 0.0);
+    const isMaxHour = computed(() => actualTime.value >= 12.0);
 
     const registerActual = async() =>{
         try {
@@ -63,13 +118,15 @@ export default {
           const day = parseInt(dateParts[2], 10);
           const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month + '/' + day +  '/actual';
           const response = await axios.put(url, 
-                                          {actual_time: Number(ActualTime.value)},
+                                          {actual_time: Number(actualTime.value)},
                                           {headers: {Authorization: authStore.getAuthHeader}})
+          statusCode.value = response.status
           if (response.status===200){
             message.value = response.data.message
             isRegistered.value = true;
           }
         } catch (error) {
+          statusCode.value = error.response.status
           if (error.response){
           switch (error.response.status){
             case 401:
@@ -98,17 +155,16 @@ export default {
       isRegistered,
       date,
       message,
-      timeOptions,
-      ActualTime,
+      actualTime,
       registerActual,
+      responseAlertClass,
+      statusCode,
       finishActivity,
-      insertToday,
-      decreaseOneDay,
-      increaseOneDay,
-      increaseHalfHour,
-      decreaseHalfHour,
-      increaseTwoHour,
-      decreaseTwoHour
+      increaseDay,
+      increaseHour,
+      decreaseHour,
+      isMinHour,
+      isMaxHour
     }
   }
 }

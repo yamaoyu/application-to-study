@@ -140,6 +140,7 @@ export default {
             message.value = response.data.message
           }
         } catch (error) {
+          statusCode.value = error.response.status
           if (error.response){
             switch (error.response.status){
               case 401:

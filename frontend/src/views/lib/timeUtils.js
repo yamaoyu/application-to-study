@@ -10,52 +10,26 @@ export function generateTimeOptions(min, max, step) {
     return timeOptions;
 }
 
-export function changeTime(time, timeOptions, message) {
-  const increaseHalfHour = async() => {
-    const currentIndex = timeOptions.indexOf(time.value)
-    if (currentIndex < timeOptions.length - 1) {
-      time.value = timeOptions[currentIndex + 1]
-      message.value = ""
+export function changeTime(time) {
+  const increaseHour = async(step) => {
+    if ((time.value + step) <= 12) {
+      time.value += step
     } else {
-      message.value = "12時間を超える時間は設定できません";
+      time.value = 12
     }
   }
 
-  const decreaseHalfHour = async() => {
-    const currentIndex = timeOptions.indexOf(time.value)
-    if (currentIndex > 0) {
-      time.value = timeOptions[currentIndex - 1]
-      message.value = "";
+  const decreaseHour = async(step) => {
+    if ((time.value - step) >= 0) {
+      time.value -= step
     } else {
-      message.value = timeOptions[0] + "時間以下は設定できません";
-    }
-  }
-
-  const increaseTwoHour = async() => {
-    const currentIndex = timeOptions.indexOf(time.value)
-    if (currentIndex < timeOptions.length - 4) {
-      time.value = timeOptions[currentIndex + 4]
-      message.value = "";
-    } else {
-      message.value = "12時間を超える時間は設定できません";
-    }
-  }
-
-  const decreaseTwoHour = async() => {
-    const currentIndex = timeOptions.indexOf(time.value)
-    if (currentIndex > 2) {
-      time.value = timeOptions[currentIndex - 4];
-      message.value = "";
-    } else {
-      message.value = timeOptions[0] + "時間以下は設定できません";
+      time.value = 0
     }
   }
 
   return {
-    increaseHalfHour,
-    decreaseHalfHour,
-    increaseTwoHour,
-    decreaseTwoHour
+    increaseHour,
+    decreaseHour
   }
 }
 
