@@ -106,9 +106,9 @@
         </thead>
         <tbody v-for="(todo, index) in todos" :key="index">
           <tr>
-            <td>{{ index + 1 }}</td>
-            <td>{{ todo.action }}</td>
-            <td>{{ todo.due }}</td>
+            <td class="text-center align-middle">{{ index + 1 }}</td>
+            <td class="text-center align-middle">{{ todo.action }}</td>
+            <td class="text-center align-middle">{{ todo.due }}</td>
             <td><input class="btn btn-outline-primary btn-sm" type="button" value="編集" @click="editTodo(todo)"></td>
             <td><input class="btn btn-outline-success btn-sm" type="button" value="終了" @click="finishTodo(todo.todo_id)"></td>
             <td><input class="btn btn-outline-danger btn-sm" type="button" value="削除" @click="deleteTodo(todo.todo_id)"></td>
@@ -258,9 +258,9 @@ export default {
             const bonusInYen = parseInt(activity_res.value.data.bonus * 10000, 10)
             const penaltyInYen = parseInt(activity_res.value.data.penalty * 10000, 10)
             if (activity_res.value.data.status === "success"){
-              activity_msg.value += `ボーナス:${activity_res.value.data.bonus}万円(${bonusInYen}円)`
+              activity_msg.value += `目標達成!|\nボーナス:${activity_res.value.data.bonus}万円(${bonusInYen}円)`
             } else if(activity_res.value.data.status === "failure"){
-              activity_msg.value += `ペナルティ:${activity_res.value.data.penalty}万円(${penaltyInYen}円)`
+              activity_msg.value += `目標失敗...\nペナルティ:${activity_res.value.data.penalty}万円(${penaltyInYen}円)`
             } else {
               if (activity_res.value.data.target_time <= activity_res.value.data.actual_time) {
               activity_msg.value += `目標達成!活動を終了してください\n確定後のボーナス:${activity_res.value.data.bonus}万円(${bonusInYen}円)`
