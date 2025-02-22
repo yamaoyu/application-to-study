@@ -41,7 +41,7 @@
     <button type="submit" class="btn btn-outline-secondary mt-3">更新</button>
   </form>
   <div class="container d-flex justify-content-center">
-    <p v-if="message" class="mt-3 col-8" :class="responseAlertClass(statusCode)">{{ message }}</p>
+    <p v-if="message" class="mt-3 col-8" :class="getResponseAlert(statusCode)">{{ message }}</p>
   </div>
 </template>
 
@@ -51,7 +51,7 @@ import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
 import { useTodoStore } from '@/store/todo';
-import { changeDate, responseAlertClass } from './lib/index';
+import { changeDate, getResponseAlert } from './lib/index';
 
 export default {
   setup() {
@@ -116,7 +116,7 @@ export default {
       statusCode,
       todoStore,
       increaseDay,
-      responseAlertClass,
+      getResponseAlert,
       editTodo
     }
   }

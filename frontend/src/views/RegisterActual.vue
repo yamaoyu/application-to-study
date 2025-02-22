@@ -76,12 +76,14 @@
     <button type="submit" class="btn btn-outline-secondary mt-3">登録</button>
   </form>
   <div class="container d-flex justify-content-center">
-    <p v-if="message" class="mt-3 col-10" :class="responseAlertClass(statusCode)">{{ message }}</p>
+    <p v-if="message" class="mt-3 col-8" :class="getResponseAlert(statusCode)">{{ message }}</p>
   </div>
   <form v-if="isRegistered" @submit.prevent="finishActivity">
     <div>
-      <label for="finishActivity">このまま{{ date }}の活動を終了しますか？</label>
-      <input type="button" value="はい" @click="finishActivity">
+      <label for="finishActivity" class="p-2">このまま{{ date }}の活動を終了しますか？</label>
+      <button type="submit" class="btn btn-outline-secondary mt-3">
+        はい
+      </button>
     </div>
   </form>
 </template>
@@ -90,7 +92,7 @@
 import { ref, computed } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { changeDate, changeTime, useActivityFinish, responseAlertClass } from "./lib/index";
+import { changeDate, changeTime, useActivityFinish, getResponseAlert } from "./lib/index";
 import { useAuthStore } from '@/store/authenticate';
 
 export default {
@@ -157,7 +159,7 @@ export default {
       message,
       actualTime,
       registerActual,
-      responseAlertClass,
+      getResponseAlert,
       statusCode,
       finishActivity,
       increaseDay,

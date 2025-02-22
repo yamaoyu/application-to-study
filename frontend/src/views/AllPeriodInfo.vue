@@ -9,7 +9,7 @@
         <div class="bg-white p-4 rounded shadow">
             <h3 class="small">合計</h3>
             <div class="d-flex align-items-baseline justify-content-center">
-            <span :class="resultClass(response)" class="h3 fw-bold text-center">{{ response.data.total_income }}</span>
+            <span :class="getAdjustmentColors(response)" class="h3 fw-bold text-center">{{ response.data.total_income }}</span>
             万円
             </div>
         </div>
@@ -29,7 +29,7 @@
         <div class="bg-white p-4 rounded shadow">
             <h3 class="small">ボーナス+ペナルティ</h3>
             <div class="d-flex align-items-baseline justify-content-center">
-            <span :class="resultClass(response)" class="h3 fw-bold">{{ response.data.pay_adjustment }}</span>
+            <span :class="getAdjustmentColors(response)" class="h3 fw-bold">{{ response.data.pay_adjustment }}</span>
             <span class="small">万円</span>
             </div>
         </div>
@@ -63,7 +63,7 @@
         </div>
         <div class="col-6">
         <div class="bg-white p-4 rounded shadow">
-            <h3 class="small">失敗日数</h3>
+            <h3 class="small">未達成日数</h3>
             <div class="d-flex align-items-baseline justify-content-center">
             <span class="h3 fw-bold text-danger">{{ response.data.fail_days }}</span>
             <span class="small">日</span>
@@ -79,7 +79,7 @@ import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
-import { statusClass, resultClass } from './lib/index';
+import { getStatusColors, getAdjustmentColors } from './lib/index';
 
 export default {
 setup() {
@@ -122,8 +122,8 @@ setup() {
     return {
         message,
         response,
-        statusClass,
-        resultClass
+        getStatusColors,
+        getAdjustmentColors
         }
      } 
     }

@@ -1,9 +1,9 @@
 <template>
-  <div class="container">
+  <div class="container col-8">
     <h2>活動を終了</h2>
     <div class="row">
       <form @submit.prevent="finishActivity">
-        <div class="input-group col-10">
+        <div class="input-group">
           <span class="col-2 p-2 input-group-text">日付</span>
           <input
             type="date"
@@ -30,7 +30,7 @@
       </form>
     </div>
     <div class="row d-flex justify-content-center">
-      <p v-if="fin_msg" class="mt-3 col-10" :class="responseAlertClass(statusCode)">{{ fin_msg }}</p>
+      <p v-if="fin_msg" class="mt-3 col-10" :class="getResponseAlert(statusCode)">{{ fin_msg }}</p>
     </div>
   </div>
   <div class="container">
@@ -58,7 +58,7 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">ステータス</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center" :class="statusClass[activity_res.data.status]">{{ STATUS_DICT[activity_res.data.status] }}</span>
+            <span class="h3 fw-bold text-center" :class="getStatusColors[activity_res.data.status]">{{ STATUS_DICT[activity_res.data.status] }}</span>
           </div>
         </div>
       </div>
@@ -74,7 +74,7 @@ import { ref, watch, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
-import { changeDate, STATUS_DICT, statusClass, responseAlertClass } from './lib/index';
+import { changeDate, STATUS_DICT, getStatusColors, getResponseAlert } from './lib/index';
 
 export default {
   setup() {
@@ -183,8 +183,8 @@ export default {
       finishActivity,
       increaseDay,
       STATUS_DICT,
-      statusClass,
-      responseAlertClass
+      getStatusColors,
+      getResponseAlert
     }
   }
 }

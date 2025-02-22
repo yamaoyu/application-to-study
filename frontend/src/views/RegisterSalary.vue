@@ -91,7 +91,7 @@
     <button type="submit" class="btn btn-outline-secondary mt-3">登録</button>
   </form>
   <div class="container d-flex justify-content-center">
-    <p v-if="message" class="mt-3 p-3 col-8" :class="responseAlertClass(statusCode)">{{ message }}</p>
+    <p v-if="message" class="mt-3 p-3 col-8" :class="getResponseAlert(statusCode)">{{ message }}</p>
   </div>
 </template>
 
@@ -99,7 +99,7 @@
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { getMaxMonth, changeMonth, changeYear, responseAlertClass } from './lib/index';
+import { getMaxMonth, changeMonth, changeYear, getResponseAlert } from './lib/index';
 import { useAuthStore } from '@/store/authenticate';
 
 export default {
@@ -192,7 +192,7 @@ export default {
     return {
       monthlyIncome,
       statusCode,
-      responseAlertClass,
+      getResponseAlert,
       message,
       updateSalary,
       registerSalary,

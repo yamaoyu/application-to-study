@@ -7,7 +7,7 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">合計</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span :class="resultClass(response)" class="h3 fw-bold text-center">{{ response.data.total_monthly_income }}</span>
+            <span :class="getAdjustmentColors(response)" class="h3 fw-bold text-center">{{ response.data.total_monthly_income }}</span>
             万円
           </div>
         </div>
@@ -27,7 +27,7 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">ボーナス+ペナルティ</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span :class="resultClass(response)" class="h3 fw-bold">{{ response.data.pay_adjustment }}</span>
+            <span :class="getAdjustmentColors(response)" class="h3 fw-bold">{{ response.data.pay_adjustment }}</span>
             <span class="small">万円</span>
           </div>
         </div>
@@ -90,7 +90,7 @@
           <td>{{ activity.date }}</td>
           <td>{{ activity.target_time }}時間</td>
           <td>{{ activity.actual_time }}時間</td>
-          <td :class="statusClass[activity.status]">{{ STATUS_DICT[activity.status] }}</td>
+          <td :class="getStatusColors[activity.status]">{{ STATUS_DICT[activity.status] }}</td>
         </tr>
       </tbody>
     </table>
@@ -147,7 +147,7 @@
 import { ref, computed } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { getMaxMonth, changeMonth, changeYear, STATUS_DICT, statusClass, resultClass } from './lib/index';
+import { getMaxMonth, changeMonth, changeYear, STATUS_DICT, getStatusColors, getAdjustmentColors } from './lib/index';
 import { useAuthStore } from '@/store/authenticate';
 import "../assets/styles/common.css";
 
@@ -205,8 +205,8 @@ export default {
     return {
       message,
       response,
-      statusClass,
-      resultClass,
+      getStatusColors,
+      getAdjustmentColors,
       activities,
       GetMonthlyInfo,
       STATUS_DICT,

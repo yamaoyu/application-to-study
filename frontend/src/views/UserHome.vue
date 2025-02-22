@@ -24,13 +24,13 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">ステータス</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span :class="statusClass[activity_res.data.status]" class="h3 fw-bold text-center">{{ STATUS_DICT[activity_res.data.status] }}</span>
+            <span :class="getStatusColors[activity_res.data.status]" class="h3 fw-bold text-center">{{ STATUS_DICT[activity_res.data.status] }}</span>
           </div>
         </div>
       </div>
     </div>
     <div class="row d-flex align-items-center justify-content-center my-3">
-      <p v-if="activity_msg" class="col-8" :class="activityAlertClass(activity_res)">
+      <p v-if="activity_msg" class="col-8" :class="getActivityAlert(activity_res)">
           {{ activity_msg }}
       </p>
     </div>
@@ -42,7 +42,7 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">合計</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span :class="resultClass(income_res)" class="h3 fw-bold text-center">{{ income_res.data.total_income }}</span>
+            <span :class="getAdjustmentColors(income_res)" class="h3 fw-bold text-center">{{ income_res.data.total_income }}</span>
             万円
           </div>
         </div>
@@ -60,7 +60,7 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">ボーナス-ペナルティ</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span :class="resultClass(income_res)" class="h3 fw-bold text-center">{{ income_res.data.pay_adjustment }}</span>
+            <span :class="getAdjustmentColors(income_res)" class="h3 fw-bold text-center">{{ income_res.data.pay_adjustment }}</span>
             万円
           </div>
         </div>
@@ -131,7 +131,7 @@ import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
 import { useTodoStore } from '@/store/todo';
-import { STATUS_DICT, resultClass, statusClass, activityAlertClass } from './lib';
+import { STATUS_DICT, getAdjustmentColors, getStatusColors, getActivityAlert } from './lib';
 
 export default {
   setup() {
@@ -365,9 +365,9 @@ export default {
       finishTodo,
       editTodo,
       STATUS_DICT,
-      resultClass,
-      statusClass,
-      activityAlertClass
+      getAdjustmentColors,
+      getStatusColors,
+      getActivityAlert
     }
   }
 }

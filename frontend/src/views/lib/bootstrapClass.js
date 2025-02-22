@@ -1,9 +1,11 @@
-export const statusClass = {
+export const getStatusColors = {
+    // アクティビティのステータスに応じた文字の色のクラスを返す
     pending: 'text-dark',
     success: 'text-success fw-bold',
     failure: 'text-danger fw-bold'};
 
-export const resultClass = (response) => {
+export const getAdjustmentColors = (response) => {
+    // ボーナス-ペナルティの結果に応じた文字の色のクラスを返す
     if (response.data.pay_adjustment > 0) {
         return 'text-success';
     } else if (response.data.pay_adjustment < 0) {
@@ -13,7 +15,8 @@ export const resultClass = (response) => {
     }
 }
 
-export const activityAlertClass = (response) => {
+export const getActivityAlert = (response) => {
+    // アクティビティのステータスに応じたアラートクラスを返す
     if (!response) {
         // 未登録の場合
         return 'alert alert-warning';
@@ -27,7 +30,8 @@ export const activityAlertClass = (response) => {
     }
 }
 
-export const responseAlertClass = (status) => {
+export const getResponseAlert = (status) => {
+    // レスポンスのステータスコードに応じたアラートクラスを返す
     if (status >= 200 && status < 300) {
         return 'alert alert-success';
     } else {
