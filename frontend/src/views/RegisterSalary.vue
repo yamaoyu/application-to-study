@@ -99,7 +99,7 @@
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { getMaxMonth, changeMonth, changeYear, getResponseAlert } from './lib/index';
+import { getMaxMonth, changeMonth, changeYear, getResponseAlert, getThisMonth } from './lib/index';
 import { useAuthStore } from '@/store/authenticate';
 
 export default {
@@ -111,7 +111,7 @@ export default {
     const authStore = useAuthStore()
     const minMonth = "2024-01";
     const maxMonth = getMaxMonth();
-    const selectedMonth = ref(new Date().toISOString().slice(0, 7));
+    const selectedMonth = ref(getThisMonth());
     const isAtMinMonth = computed(() => selectedMonth.value <= minMonth)
     const isAtMaxMonth = computed(() => selectedMonth.value >= maxMonth)
     const isAtMinYear = computed(() => selectedMonth.value <= "2024-12")

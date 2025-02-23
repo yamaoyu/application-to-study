@@ -30,7 +30,7 @@
       </form>
     </div>
     <div class="row d-flex justify-content-center">
-      <p v-if="fin_msg" class="mt-3 col-10" :class="getResponseAlert(statusCode)">{{ fin_msg }}</p>
+      <p v-if="fin_msg" class="mt-3" :class="getResponseAlert(statusCode)">{{ fin_msg }}</p>
     </div>
   </div>
   <div class="container">
@@ -64,7 +64,7 @@
       </div>
     </div>
     <div v-if="check_msg" class="row d-flex justify-content-center mt-3">
-      <p class="alert alert-warning">{{ check_msg }}</p>
+      <p class="alert alert-warning col-8">{{ check_msg }}</p>
     </div>
   </div>
 </template>
@@ -74,11 +74,11 @@ import { ref, watch, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
-import { changeDate, STATUS_DICT, getStatusColors, getResponseAlert } from './lib/index';
+import { changeDate, STATUS_DICT, getStatusColors, getResponseAlert, getToday } from './lib/index';
 
 export default {
   setup() {
-    const date = ref(new Date().toISOString().slice(0, 10)); // 今日の日付を取得
+    const date = ref(getToday()); // 今日の日付を取得
     const fin_msg = ref("")
     const check_msg = ref("")
     const router = useRouter()
@@ -104,7 +104,7 @@ export default {
                                           {headers: {Authorization: authStore.getAuthHeader}})
           statusCode.value = response.status
           if (response.status===200){
-            fin_msg.value = response.data.fin_msg
+            fin_msg.value = response.data.message;
           }
         } catch (error) {
           statusCode.value = error.response.status

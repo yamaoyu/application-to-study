@@ -92,13 +92,13 @@
 import { ref, computed } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { changeDate, changeTime, useActivityFinish, getResponseAlert } from "./lib/index";
+import { changeDate, changeTime, useActivityFinish, getResponseAlert, getToday } from "./lib/index";
 import { useAuthStore } from '@/store/authenticate';
 
 export default {
   setup() {
     const isRegistered = ref(false);
-    const date = ref(new Date().toISOString().slice(0, 10)); // 今日の日付を取得
+    const date = ref(getToday()); // 今日の日付を取得
     const message = ref("")
     const actualTime = ref(0)
     const router = useRouter()

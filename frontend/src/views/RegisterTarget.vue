@@ -85,14 +85,14 @@ import { ref, computed } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
-import { changeDate, changeTime, getResponseAlert } from "./lib/index";
+import { changeDate, changeTime, getResponseAlert, getToday } from "./lib/index";
 
 export default {
   setup() {
     const year = ref("")
     const month = ref("")
     const day = ref("")
-    const date = ref(new Date().toISOString().slice(0, 10)); // 今日の日付を取得
+    const date = ref(getToday()); // 今日の日付を取得
     const message = ref("")
     const targetTime = ref(0.5);
     const statusCode = ref()

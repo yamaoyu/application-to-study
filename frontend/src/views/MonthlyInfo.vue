@@ -147,7 +147,7 @@
 import { ref, computed } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { getMaxMonth, changeMonth, changeYear, STATUS_DICT, getStatusColors, getAdjustmentColors } from './lib/index';
+import { getMaxMonth, changeMonth, changeYear, STATUS_DICT, getStatusColors, getAdjustmentColors, getThisMonth } from './lib/index';
 import { useAuthStore } from '@/store/authenticate';
 import "../assets/styles/common.css";
 
@@ -159,7 +159,7 @@ export default {
     const activities = ref([])
     const response = ref()
     const authStore = useAuthStore()
-    const selectedMonth = ref(new Date().toISOString().slice(0, 7));
+    const selectedMonth = ref(getThisMonth());
     const minMonth = "2024-01";
     const maxMonth = getMaxMonth();
     const isAtMinMonth = computed(() => selectedMonth.value <= minMonth)
@@ -177,6 +177,7 @@ export default {
                                           {headers: {Authorization: authStore.getAuthHeader}})
           if (response.value.status===200){
             activities.value = response.value.data.activity_list;
+            message.value = ""
           }
       } catch (error){
         response.value = ""

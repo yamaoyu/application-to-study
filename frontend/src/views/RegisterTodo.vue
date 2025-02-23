@@ -13,7 +13,7 @@
         </textarea>
       </div>
     </div>
-    <div class="container col-10 d-flex justify-content-center mt-3">
+    <div class="container col-8 d-flex justify-content-center mt-3">
       <div class="input-group">
         <span class="input-group-text">期限</span>
         <input
@@ -50,13 +50,13 @@ import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
-import { changeDate, getResponseAlert } from './lib/index';
+import { changeDate, getResponseAlert, getToday } from './lib/index';
 
 export default {
   setup() {
     const message = ref("")
     const action = ref("")
-    const due = ref(new Date().toISOString().slice(0, 10)); // 今日の日付を取得
+    const due = ref(getToday()); // 今日の日付を取得
     const statusCode = ref()
     const router = useRouter()
     const authStore = useAuthStore()
