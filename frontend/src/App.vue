@@ -2,7 +2,7 @@
   <head>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   </head>
-  <nav class="navbar navbar-expand-lg bd-navbar fixed-top bg-dark navbar-dark">
+  <nav class="navbar navbar-expand-lg bd-navbar fixed-top bg-dark navbar-dark" v-if="this.$route.name != 'Login' && this.$route.name != 'RegisterUser'">
     <div class="container-fluid">
       <ul class="navbar-nav me-2" style="color: white;">
         <li class="nav-item" v-if="$router.currentRoute.value.name != 'Home'">
