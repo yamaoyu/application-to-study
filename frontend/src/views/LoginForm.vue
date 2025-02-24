@@ -30,6 +30,7 @@
       const username = ref('')
       const password = ref('')
       const message = ref('')
+      const statusCode = ref()
       const router =  useRouter()
       const route = useRoute()
       const authStore = useAuthStore()
@@ -67,6 +68,7 @@
           }
         } catch (error) {
         if (error.response){
+          statusCode.value = error.response.status;
           switch (error.response.status){
             case 422:
               message.value = error.response.data.detail;
@@ -88,6 +90,7 @@
         username,
         password,
         message,
+        statusCode,
         getResponseAlert,
         userLogin
       }

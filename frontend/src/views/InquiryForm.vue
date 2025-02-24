@@ -1,23 +1,34 @@
 <template>
-  <form @submit.prevent="sendInquiry">
-    <div>
-      <label for="category">カテゴリ:</label><br>
-      <input type="radio" id="category-request" value="要望" v-model="category" required>要望
-      <input type="radio" id="category-error" value="エラー報告" v-model="category" required>エラー報告
-      <input type="radio" id="category-other" value="その他" v-model="category" required>その他
+  <form @submit.prevent="sendInquiry" class="container d-flex flex-column align-items-center">
+    <div class="mt-3 col-8">
+      <p class="fw-bold">カテゴリ</p>
+      <div class="mt-2">
+        <label class="me-2">
+          <input type="radio" value="要望" v-model="category" required>要望
+        </label>
+        <label class="me-2">
+          <input type="radio" value="エラー報告" v-model="category" required>エラー報告
+        </label>
+        <label class="me-2">
+          <input type="radio" value="その他" v-model="category" required>その他
+        </label>
+      </div>
     </div>
-    <div>
-      <label for="detail">詳細(最大256文字):</label><br>
-      <textarea id="detail" maxlength="256" v-model="detail" required></textarea>
+    <div class="mt-3 col-8">
+      <label class="fw-bold">詳細(最大256文字):</label>
+      <textarea id="detail" maxlength="256" v-model="detail" class="form-control mt-2" required></textarea>
     </div>
-    <button type="submit">送信</button>
+    <button type="submit" class="btn btn-outline-secondary mt-3">送信</button>
   </form>
-  <p v-if="message" class="message">{{ message }}</p>
+  <div class="container d-flex flex-column align-items-center">
+    <p v-if="message" class="col-8 mt-3" :class="getResponseAlert(statusCode)">{{ message }}</p>
+  </div>
 </template>
   
   <script>
   import { ref } from 'vue'
   import axios from 'axios'
+  import { getResponseAlert } from './lib';
   import { useRouter } from 'vue-router';
   import { useAuthStore } from '@/store/authenticate';
   
@@ -26,6 +37,7 @@
       const category = ref('')
       const detail = ref('')
       const message = ref('')
+      const statusCode = ref()
       const router = useRouter()
       const authStore = useAuthStore()
   
@@ -44,11 +56,13 @@
             }
           )
           if (response.status===201){
+            statusCode.value = response.status
             message.value = ["以下の内容で受け付けました\n",
                             `カテゴリ:${response.data.category}\n`,
                             `内容:${response.data.detail}`].join('');
           }
         } catch (error) {
+          statusCode.value = error.response.status
           if (error.response){
             switch (error.response.status){
               case 401:
@@ -77,6 +91,8 @@
         category,
         detail,
         message,
+        statusCode,
+        getResponseAlert,
         sendInquiry
       }
     }
