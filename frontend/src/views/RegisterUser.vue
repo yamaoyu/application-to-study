@@ -16,7 +16,7 @@
       <BFormValidFeedback :state="validatePassword"> OK </BFormValidFeedback>
     </div>
     <div class="form-group mt-3 col-8">
-      <BFormInput placeholder="email(任意)" v-model="email" :state="validateEmail" />
+      <BFormInput placeholder="email(任意)" type="email" v-model="email" :state="validateEmail" />
       <BFormInvalidFeedback :state="validateEmail">
         メールアドレスの形式で入力して下さい
       </BFormInvalidFeedback>
@@ -69,7 +69,7 @@
         if (email.value.length === 0) {
           return null
         }
-        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const emailPattern = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
         return emailPattern.test(email.value);
       })
   
