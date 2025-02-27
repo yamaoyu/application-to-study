@@ -1,12 +1,12 @@
 <template>
   <div class="container">
     <h2 class="mt-2 mb-4">{{ year }}年{{ month }}月{{ date }}日の活動実績</h2>
-    <div class="row" v-if="activity_res">
+    <div class="row" v-if="activityRes">
       <div class="col-4">
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">目標時間</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center">{{ activity_res.data.target_time }}</span>
+            <span class="h3 fw-bold text-center">{{ activityRes.data.target_time }}</span>
             時間
           </div>
         </div>
@@ -15,7 +15,7 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">活動時間</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center">{{ activity_res.data.actual_time }}</span>
+            <span class="h3 fw-bold text-center">{{ activityRes.data.actual_time }}</span>
             時間
           </div>
         </div>
@@ -24,25 +24,25 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">ステータス</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span :class="getStatusColors[activity_res.data.status]" class="h3 fw-bold text-center">{{ STATUS_DICT[activity_res.data.status] }}</span>
+            <span :class="getStatusColors[activityRes.data.status]" class="h3 fw-bold text-center">{{ STATUS_DICT[activityRes.data.status] }}</span>
           </div>
         </div>
       </div>
     </div>
     <div class="row d-flex align-items-center justify-content-center my-3">
-      <p v-if="activity_msg" class="col-8" :class="getActivityAlert(activity_res)">
-          {{ activity_msg }}
+      <p v-if="activityMsg" class="col-8" :class="getActivityAlert(activityStatus)">
+          {{ activityMsg }}
       </p>
     </div>
   </div>
   <div class="container">
     <h2>今月の給料</h2>
-    <div class="row justify-content-center mb-4" v-if="income_res">
+    <div class="row justify-content-center mb-4" v-if="incomeRes">
       <div class="col-8 mb-4">
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">合計</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span :class="getAdjustmentColors(income_res)" class="h3 fw-bold text-center">{{ income_res.data.total_income }}</span>
+            <span :class="getAdjustmentColors(incomeRes)" class="h3 fw-bold text-center">{{ incomeRes.data.total_income }}</span>
             万円
           </div>
         </div>
@@ -51,7 +51,7 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">月収</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center">{{ income_res.data.month_info.salary }}</span>
+            <span class="h3 fw-bold text-center">{{ incomeRes.data.month_info.salary }}</span>
             万円
           </div>
         </div>
@@ -60,7 +60,7 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">ボーナス-ペナルティ</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span :class="getAdjustmentColors(income_res)" class="h3 fw-bold text-center">{{ income_res.data.pay_adjustment }}</span>
+            <span :class="getAdjustmentColors(incomeRes)" class="h3 fw-bold text-center">{{ incomeRes.data.pay_adjustment }}</span>
             万円
           </div>
         </div>
@@ -69,7 +69,7 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">ボーナス</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center text-success">{{ income_res.data.month_info.total_bonus }}</span>
+            <span class="h3 fw-bold text-center text-success">{{ incomeRes.data.month_info.total_bonus }}</span>
             万円
           </div>
         </div>
@@ -78,15 +78,15 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">合計</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center text-danger">{{ income_res.data.month_info.total_penalty }}</span>
+            <span class="h3 fw-bold text-center text-danger">{{ incomeRes.data.month_info.total_penalty }}</span>
             万円
           </div>
         </div>
       </div>
     </div>
     <div class="row d-flex align-items-center justify-content-center my-3">
-      <p v-if="income_msg" class="col-8 alert alert-warning p-3">
-          {{ income_msg }}
+      <p v-if="incomeMsg" class="col-8 alert alert-warning p-3">
+          {{ incomeMsg }}
       </p>
     </div>
   </div>
@@ -117,8 +117,8 @@
       </table>
     </template>
     <div class="row d-flex align-items-center justify-content-center my-3">
-      <p v-if="todo_msg" class="col-8 bg-white rounded shadow p-3">
-          {{ todo_msg }}
+      <p v-if="todoMsg" class="col-8 bg-white rounded shadow p-3">
+          {{ todoMsg }}
       </p>
     </div>
   </div>
@@ -139,12 +139,13 @@ export default {
     const year = today.getFullYear()
     const month = today.getMonth() + 1;
     const date = today.getDate();
-    const activity_msg = ref("")
-    const activity_res = ref()
-    const income_msg = ref("")
-    const income_res = ref()
+    const activityMsg = ref("")
+    const activityRes = ref()
+    const activityStatus = ref("")
+    const incomeMsg = ref("")
+    const incomeRes = ref()
     const todos = ref([])
-    const todo_msg = ref("")
+    const todoMsg = ref("")
     const router = useRouter()
     const authStore = useAuthStore()
     const todoStore = useTodoStore()
@@ -161,10 +162,10 @@ export default {
           case 404:
           case 500:
             todos.value = []
-            todo_msg.value = todo_err.response.data.detail;
+            todoMsg.value = todo_err.response.data.detail;
             break
           default:
-            todo_msg.value = "todoの取得に失敗しました"
+            todoMsg.value = "todoの取得に失敗しました"
         }
       }
     }
@@ -193,14 +194,14 @@ export default {
                 })
                 break;
               case 500:
-                todo_msg.value =  "todoの削除に失敗しました"
+                todoMsg.value =  "todoの削除に失敗しました"
                 break;
               default:
-                todo_msg.value = error.response.data.detail;}
+                todoMsg.value = error.response.data.detail;}
           } else if (error.request){
-            todo_msg.value =  "リクエストがサーバーに到達できませんでした"
+            todoMsg.value =  "リクエストがサーバーに到達できませんでした"
           } else {
-            todo_msg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
+            todoMsg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
           }
         }
     }
@@ -229,14 +230,14 @@ export default {
                 })
                 break;
               case 500:
-                todo_msg.value =  "todoの削除に失敗しました"
+                todoMsg.value =  "todoの削除に失敗しました"
                 break;
               default:
-                todo_msg.value = error.response.data.detail;}
+                todoMsg.value = error.response.data.detail;}
           } else if (error.request){
-            todo_msg.value =  "リクエストがサーバーに到達できませんでした"
+            todoMsg.value =  "リクエストがサーバーに到達できませんでした"
           } else {
-            todo_msg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
+            todoMsg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
           }
         }
     }
@@ -252,23 +253,25 @@ export default {
         // その日の活動実績を取得
         try {
           const act_url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month + '/' + date;
-          activity_res.value = await axios.get(act_url,
+          activityRes.value = await axios.get(act_url,
                                               {headers: {Authorization: authStore.getAuthHeader}})
-          if (activity_res.value.status===200){
-            const bonusInYen = parseInt(activity_res.value.data.bonus * 10000, 10)
-            const penaltyInYen = parseInt(activity_res.value.data.penalty * 10000, 10)
-            if (activity_res.value.data.status === "success"){
-              activity_msg.value += `目標達成!|\nボーナス:${activity_res.value.data.bonus}万円(${bonusInYen}円)`
-            } else if(activity_res.value.data.status === "failure"){
-              activity_msg.value += `目標失敗...\nペナルティ:${activity_res.value.data.penalty}万円(${penaltyInYen}円)`
+          if (activityRes.value.status===200){
+            activityStatus.value = activityRes.value.data.status
+            const bonusInYen = parseInt(activityRes.value.data.bonus * 10000, 10)
+            const penaltyInYen = parseInt(activityRes.value.data.penalty * 10000, 10)
+            if (activityRes.value.data.status === "success"){
+              activityMsg.value += `目標達成!|\nボーナス:${activityRes.value.data.bonus}万円(${bonusInYen}円)`
+            } else if(activityRes.value.data.status === "failure"){
+              activityMsg.value += `目標失敗...\nペナルティ:${activityRes.value.data.penalty}万円(${penaltyInYen}円)`
             } else {
-              if (activity_res.value.data.target_time <= activity_res.value.data.actual_time) {
-              activity_msg.value += `目標達成!活動を終了してください\n確定後のボーナス:${activity_res.value.data.bonus}万円(${bonusInYen}円)`
+              if (activityRes.value.data.target_time <= activityRes.value.data.actual_time) {
+              activityMsg.value += `目標達成!活動を終了してください\n確定後のボーナス:${activityRes.value.data.bonus}万円(${bonusInYen}円)`
               } else {
-              activity_msg.value += `このままだと、${activity_res.value.data.penalty}万円(${penaltyInYen}円)のペナルティが発生`}
+              activityMsg.value += `このままだと、${activityRes.value.data.penalty}万円(${penaltyInYen}円)のペナルティが発生`}
             }
           }
         } catch (act_err) {
+          activityStatus.value = ""
           if (act_err.response){
             switch (act_err.response.status){
               case 401:
@@ -279,21 +282,21 @@ export default {
                 break;
               case 404:
               case 500:
-                activity_msg.value = act_err.response.data.detail;
+                activityMsg.value = act_err.response.data.detail;
                 break;
               default:
-                activity_msg.value = "情報の取得に失敗しました";}
+                activityMsg.value = "情報の取得に失敗しました";}
           } else if (act_err.request){
-            activity_msg.value =  "リクエストがサーバーに到達できませんでした"
+            activityMsg.value =  "リクエストがサーバーに到達できませんでした"
           } else {
-            activity_msg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
+            activityMsg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
           }
         }
 
         // その月の月収を取得
         try{
           const income_url = process.env.VUE_APP_BACKEND_URL + 'incomes/' + year + '/' + month;
-          income_res.value = await axios.get(income_url,
+          incomeRes.value = await axios.get(income_url,
                                           {headers: {Authorization: authStore.getAuthHeader}}
           )
         } catch (income_err) {
@@ -307,14 +310,14 @@ export default {
                 break;
               case 404:
               case 500:
-                income_msg.value = income_err.response.data.detail;
+                incomeMsg.value = income_err.response.data.detail;
                 break;
               default:
-                income_msg.value = "情報の取得に失敗しました";}
+                incomeMsg.value = "情報の取得に失敗しました";}
           } else if (income_err.request){
-            income_msg.value =  "リクエストがサーバーに到達できませんでした"
+            incomeMsg.value =  "リクエストがサーバーに到達できませんでした"
           } else {
-            income_msg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
+            incomeMsg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
           }
         }
 
@@ -337,26 +340,27 @@ export default {
                 break;
               case 404:
               case 500:
-                todo_msg.value = todo_err.response.data.detail;
+                todoMsg.value = todo_err.response.data.detail;
                 break;
               default:
-                todo_msg.value = "情報の取得に失敗しました";}
+                todoMsg.value = "情報の取得に失敗しました";}
           } else if (todo_err.request){
-            todo_msg.value =  "リクエストがサーバーに到達できませんでした"
+            todoMsg.value =  "リクエストがサーバーに到達できませんでした"
           } else {
-            todo_msg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
+            todoMsg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
           }
         }
       }
     )
 
     return {
-      activity_msg,
-      activity_res,
-      income_msg,
-      income_res,
+      activityMsg,
+      activityRes,
+      activityStatus,
+      incomeMsg,
+      incomeRes,
       todos,
-      todo_msg,
+      todoMsg,
       year,
       month,
       date,

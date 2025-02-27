@@ -15,14 +15,14 @@ export const getAdjustmentColors = (response) => {
     }
 }
 
-export const getActivityAlert = (response) => {
+export const getActivityAlert = (status) => {
     // アクティビティのステータスに応じたアラートクラスを返す
-    if (!response) {
+    if (!status) {
         // 未登録の場合
         return 'alert alert-warning';
-    } else if (response.data.status === 'success') {
+    } else if (status === 'success') {
         return 'alert alert-success';
-    } else if (response.data.status === 'failure') {
+    } else if (status === 'failure') {
         return 'alert alert-danger';
     } else {
         // 登録はあるがステータスが未確定の場合

@@ -30,17 +30,17 @@
       </form>
     </div>
     <div class="row d-flex justify-content-center">
-      <p v-if="fin_msg" class="mt-3" :class="getResponseAlert(statusCode)">{{ fin_msg }}</p>
+      <p v-if="finMsg" class="mt-3" :class="getActivityAlert(activityStatus)">{{ finMsg }}</p>
     </div>
   </div>
   <div class="container">
     <h3 class="mt-4">{{ date }}の実績</h3>
-    <div class="row mt-3" v-if="activity_res">
+    <div class="row mt-3" v-if="activityRes">
       <div class="col-4">
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">目標時間</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center">{{ activity_res.data.target_time }}</span>
+            <span class="h3 fw-bold text-center">{{ activityRes.data.target_time }}</span>
             時間
           </div>
         </div>
@@ -49,7 +49,7 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">活動時間</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center">{{ activity_res.data.actual_time }}</span>
+            <span class="h3 fw-bold text-center">{{ activityRes.data.actual_time }}</span>
             時間
           </div>
         </div>
@@ -58,13 +58,13 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">ステータス</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center" :class="getStatusColors[activity_res.data.status]">{{ STATUS_DICT[activity_res.data.status] }}</span>
+            <span class="h3 fw-bold text-center" :class="getStatusColors[activityRes.data.status]">{{ STATUS_DICT[activityRes.data.status] }}</span>
           </div>
         </div>
       </div>
     </div>
-    <div v-if="check_msg" class="row d-flex justify-content-center mt-3">
-      <p class="alert alert-warning col-8">{{ check_msg }}</p>
+    <div v-if="checkMsg" class="row d-flex justify-content-center mt-3">
+      <p class="alert alert-warning col-8">{{ checkMsg }}</p>
     </div>
   </div>
 </template>
@@ -74,18 +74,18 @@ import { ref, watch, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
-import { changeDate, STATUS_DICT, getStatusColors, getResponseAlert, getToday } from './lib/index';
+import { changeDate, STATUS_DICT, getStatusColors, getResponseAlert, getActivityAlert, getToday } from './lib/index';
 
 export default {
   setup() {
     const date = ref(getToday()); // 今日の日付を取得
-    const fin_msg = ref("")
-    const check_msg = ref("")
+    const finMsg = ref("")
+    const checkMsg = ref("")
     const router = useRouter()
-    const statusCode = ref()
-    const activity_res = ref()
+    const activityRes = ref()
+    const activityStatus = ref("")
     const authStore = useAuthStore()
-    const { increaseDay } = changeDate(date, fin_msg);
+    const { increaseDay } = changeDate(date, finMsg);
 
     const finishActivity = async() =>{
         try {
@@ -102,33 +102,33 @@ export default {
           const response = await axios.put(url,
                                           {},
                                           {headers: {Authorization: authStore.getAuthHeader}})
-          statusCode.value = response.status
           if (response.status===200){
-            fin_msg.value = response.data.message;
+            activityStatus.value = response.data.status;
+            finMsg.value = response.data.message;
           }
         } catch (error) {
-          statusCode.value = error.response.status
+          activityStatus.value = ""
           if (error.response){
             switch (error.response.status){
             case 401:
             router.push(
               {"path":"/login",
-                "query":{fin_msg:"再度ログインしてください"}
+                "query":{finMsg:"再度ログインしてください"}
               })
               break;
             case 422:
-              fin_msg.value = error.response.data.detail;
+              finMsg.value = error.response.data.detail;
               break;
             case 500:
-              fin_msg.value =  "活動の確定に失敗しました"
+              finMsg.value =  "活動の確定に失敗しました"
               break;
             default:
-              fin_msg.value = error.response.data.detail;
+              finMsg.value = error.response.data.detail;
             }
           } else if (error.request){
-            fin_msg.value =  "リクエストがサーバーに到達できませんでした"
+            finMsg.value =  "リクエストがサーバーに到達できませんでした"
           } else {
-            fin_msg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
+            finMsg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
           }
         }
       }
@@ -140,27 +140,27 @@ export default {
         let month = dateParts[1];
         let day = dateParts[2];
         const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month + '/' + day;
-        activity_res.value = await axios.get(url,
+        activityRes.value = await axios.get(url,
                                         {headers: {Authorization: authStore.getAuthHeader}})
-        check_msg.value = ""
+        checkMsg.value = ""
       } catch (error) {
-        activity_res.value = ""
+        activityRes.value = ""
         if (error.response){
           switch (error.response.status){
           case 401:
           router.push(
             {"path":"/login",
-              "query":{check_msg:"再度ログインしてください"}
+              "query":{checkMsg:"再度ログインしてください"}
             })
             break;
           case 422:
-            check_msg.value = error.response.data.detail;
+            checkMsg.value = error.response.data.detail;
             break;
           case 500:
-            check_msg.value =  "活動の取得に失敗しました"
+            checkMsg.value =  "活動の取得に失敗しました"
             break;
           default:
-            check_msg.value = error.response.data.detail;
+            checkMsg.value = error.response.data.detail;
           }
         }
       }
@@ -176,15 +176,16 @@ export default {
 
     return {
       date,
-      fin_msg,
-      check_msg,
-      statusCode,
-      activity_res,
+      finMsg,
+      checkMsg,
+      activityRes,
+      activityStatus,
       finishActivity,
       increaseDay,
       STATUS_DICT,
       getStatusColors,
-      getResponseAlert
+      getResponseAlert,
+      getActivityAlert
     }
   }
 }
