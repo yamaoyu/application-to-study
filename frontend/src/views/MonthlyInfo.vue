@@ -108,6 +108,14 @@
         <button 
           type="button" 
           class="btn btn-outline-secondary" 
+          @click="increaseYear(-1)"
+          :disabled="isAtMinYear"
+        >
+          前年
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary" 
           @click="increaseMonth(-1)"
           :disabled="isAtMinMonth"
         >
@@ -120,14 +128,6 @@
           :disabled="isAtMaxMonth"
         >
           翌月
-        </button>
-        <button 
-          type="button" 
-          class="btn btn-outline-secondary" 
-          @click="increaseYear(-1)"
-          :disabled="isAtMinYear"
-        >
-          前年
         </button>
         <button 
           type="button" 

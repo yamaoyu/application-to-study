@@ -117,7 +117,7 @@
       </table>
     </template>
     <div class="row d-flex align-items-center justify-content-center my-3">
-      <p v-if="todoMsg" class="col-8 bg-white rounded shadow p-3">
+      <p v-if="todoMsg" class="col-8 alert alert-warning p-3">
           {{ todoMsg }}
       </p>
     </div>
