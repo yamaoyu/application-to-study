@@ -28,7 +28,7 @@
     </div>
     <div class="container col-8 d-flex justify-content-center mt-3">
       <div class="input-group">
-        <span class="input-group-text">目標</span>
+        <span class="input-group-text">実績</span>
         <input
           type="number"
           v-model="actualTime"
@@ -78,26 +78,27 @@
   <div class="container d-flex justify-content-center">
     <p v-if="message" class="mt-3 col-8" :class="getResponseAlert(statusCode)">{{ message }}</p>
   </div>
-  <form v-if="isRegistered" @submit.prevent="finishActivity">
-    <div>
-      <label for="finishActivity" class="p-2">このまま{{ date }}の活動を終了しますか？</label>
-      <button type="submit" class="btn btn-outline-secondary mt-3">
-        はい
-      </button>
-    </div>
-  </form>
+  <div>
+    <b-modal v-model="isModalShow" title="活動時間登録成功" ok-title="はい" cancel-title="いいえ" @ok="finishActivity()">
+      <p class="my-4">{{ date }}の活動を終了しますか？</p>
+    </b-modal>
+  </div>
 </template>
 
 <script>
 import { ref, computed } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { changeDate, changeTime, useActivityFinish, getResponseAlert, getToday } from "./lib/index";
+import { changeDate, changeTime, getResponseAlert, useActivityFinish, getToday } from "./lib/index";
 import { useAuthStore } from '@/store/authenticate';
+import { BModal } from 'bootstrap-vue-next';
 
 export default {
+  components: {
+    BModal,
+  },
+
   setup() {
-    const isRegistered = ref(false);
     const date = ref(getToday()); // 今日の日付を取得
     const message = ref("")
     const actualTime = ref(0)
@@ -105,10 +106,11 @@ export default {
     const authStore = useAuthStore()
     const statusCode = ref()
     const { increaseDay } = changeDate(date, message);
-    const { decreaseHour, increaseHour,  } = changeTime(actualTime, message);
+    const { decreaseHour, increaseHour } = changeTime(actualTime, message);
     const { finishActivity } = useActivityFinish(date, message, router, authStore);
     const isMinHour = computed(() => actualTime.value <= 0.0);
     const isMaxHour = computed(() => actualTime.value >= 12.0);
+    const isModalShow = ref(false);
 
     const registerActual = async() =>{
         try {
@@ -125,7 +127,7 @@ export default {
           statusCode.value = response.status
           if (response.status===200){
             message.value = response.data.message
-            isRegistered.value = true;
+            isModalShow.value = true;
           }
         } catch (error) {
           statusCode.value = error.response.status
@@ -154,7 +156,6 @@ export default {
       }
 
     return {
-      isRegistered,
       date,
       message,
       actualTime,
@@ -166,7 +167,8 @@ export default {
       increaseHour,
       decreaseHour,
       isMinHour,
-      isMaxHour
+      isMaxHour,
+      isModalShow
     }
   }
 }

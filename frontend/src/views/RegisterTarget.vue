@@ -78,6 +78,11 @@
   <div class="container d-flex justify-content-center">
     <p v-if="message" class="mt-3 col-8" :class="getResponseAlert(statusCode)">{{ message }}</p>
   </div>
+  <div>
+    <b-modal v-model="isModalShow" title="目標時間登録成功" ok-title="はい" cancel-title="いいえ" @ok="router.push('/register/actual')">
+      <p class="my-4">活動時間登録ページに移動しますか?</p>
+    </b-modal>
+  </div>
 </template>
 
 <script>
@@ -86,8 +91,13 @@ import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
 import { changeDate, changeTime, getResponseAlert, getToday } from "./lib/index";
+import { BModal } from 'bootstrap-vue-next';
 
 export default {
+  components: {
+    BModal
+  },
+
   setup() {
     const year = ref("")
     const month = ref("")
@@ -96,6 +106,7 @@ export default {
     const message = ref("")
     const targetTime = ref(0.5);
     const statusCode = ref()
+    const isModalShow = ref(false);
     const router = useRouter()
     const authStore = useAuthStore()
     const { increaseDay } = changeDate(date, message);
@@ -119,6 +130,7 @@ export default {
                                           {headers: {Authorization: authStore.getAuthHeader}})
           statusCode.value = response.status
           if (response.status===201){
+            isModalShow.value = true;
             message.value = response.data.message
           }
         } catch (error) {
@@ -148,6 +160,7 @@ export default {
       }
 
     return {
+      router,
       year,
       month,
       day,
@@ -155,6 +168,7 @@ export default {
       message,
       targetTime,
       statusCode,
+      isModalShow,
       registerTarget,
       getResponseAlert,
       increaseDay,
