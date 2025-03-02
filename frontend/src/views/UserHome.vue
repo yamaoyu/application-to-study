@@ -260,14 +260,14 @@ export default {
             const bonusInYen = parseInt(activityRes.value.data.bonus * 10000, 10)
             const penaltyInYen = parseInt(activityRes.value.data.penalty * 10000, 10)
             if (activityRes.value.data.status === "success"){
-              activityMsg.value += `目標達成!|\nボーナス:${activityRes.value.data.bonus}万円(${bonusInYen}円)`
+              activityMsg.value = `目標達成!|\nボーナス:${activityRes.value.data.bonus}万円(${bonusInYen}円)`
             } else if(activityRes.value.data.status === "failure"){
-              activityMsg.value += `目標失敗...\nペナルティ:${activityRes.value.data.penalty}万円(${penaltyInYen}円)`
+              activityMsg.value = `目標失敗...\nペナルティ:${activityRes.value.data.penalty}万円(${penaltyInYen}円)`
             } else {
               if (activityRes.value.data.target_time <= activityRes.value.data.actual_time) {
-              activityMsg.value += `目標達成!活動を終了してください\n確定後のボーナス:${activityRes.value.data.bonus}万円(${bonusInYen}円)`
+              activityMsg.value = `目標達成!活動を終了してください\n確定後のボーナス:${activityRes.value.data.bonus}万円(${bonusInYen}円)`
               } else {
-              activityMsg.value += `このままだと、${activityRes.value.data.penalty}万円(${penaltyInYen}円)のペナルティが発生`}
+              activityMsg.value = `このままだと、${activityRes.value.data.penalty}万円(${penaltyInYen}円)のペナルティが発生`}
             }
           }
         } catch (act_err) {

@@ -180,7 +180,7 @@ export default {
             message.value = ""
           }
       } catch (error){
-        response.value = ""
+        response.value = null
         activities.value = []
         if (error.response){
           switch (error.response.status){

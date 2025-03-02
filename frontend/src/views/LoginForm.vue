@@ -67,8 +67,8 @@
               "path":"/home"})
           }
         } catch (error) {
+          statusCode.value = null;
         if (error.response){
-          statusCode.value = error.response.status;
           switch (error.response.status){
             case 422:
               message.value = error.response.data.detail;
@@ -79,7 +79,6 @@
             default:
               message.value = error.response.data.detail;}
           } else if (error.request){
-            console.log(error.request)
             message.value =  "リクエストがサーバーに到達できませんでした"
           } else {
             message.value =  "不明なエラーが発生しました。管理者にお問い合わせください"

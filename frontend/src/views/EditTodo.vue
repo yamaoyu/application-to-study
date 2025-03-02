@@ -80,6 +80,7 @@ export default {
             ].join('');
           }
         } catch (error) {
+          statusCode.value = null;
           if (error.response){
             switch (error.response.status){
               case 401:

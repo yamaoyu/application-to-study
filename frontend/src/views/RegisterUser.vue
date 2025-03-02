@@ -89,7 +89,7 @@
             message.value = response.data.message;
           }
         } catch (error) {
-          statusCode.value = error.response.status;
+          statusCode.value = null;
           if (error.response){
             switch (error.response.status){
               case 422:
