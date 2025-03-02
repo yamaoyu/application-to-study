@@ -1,19 +1,18 @@
 <template>
-  <form @submit.prevent="userLogin">
-    <div>
-      <label for="username">ユーザー名:</label>
-      <input type="text" id="username" v-model="username" required>
+  <h3>ログイン</h3>
+  <form @submit.prevent="userLogin" class="container d-flex flex-column align-items-center">
+    <div class="mt-3 col-6">
+      <input type="text" placeholder="username" class="form-control" v-model="username" required>
     </div>
-    <div>
-      <label for="password">パスワード:</label>
-      <input type="password" id="password" v-model="password" required>
+    <div class="mt-3 col-6">
+      <input type="password" placeholder="password" class="form-control" v-model="password" required>
     </div>
-    <button type="submit">ログイン</button>
+    <button type="submit" class="btn btn-outline-secondary mt-3">ログイン</button>
   </form>
-  <div>
-    <p v-if="message" class="message">{{ message }}</p>
+  <div class="container d-flex flex-column align-items-center">
+    <p v-if="message" :class="getResponseAlert(statusCode)" class="mt-3 col-8">{{ message }}</p>
   </div>
-  <div>
+  <div class="mt-3">
     <router-link to="/register/user">登録はこちら</router-link>
   </div>
 </template>
@@ -24,12 +23,14 @@
   import { useRoute, useRouter } from 'vue-router';
   import { useAuthStore } from '@/store/authenticate';
   import { jwtDecode } from 'jwt-decode';
-  
+  import { getResponseAlert } from './lib';
+
   export default {
     setup() {
       const username = ref('')
       const password = ref('')
       const message = ref('')
+      const statusCode = ref()
       const router =  useRouter()
       const route = useRoute()
       const authStore = useAuthStore()
@@ -66,6 +67,7 @@
               "path":"/home"})
           }
         } catch (error) {
+          statusCode.value = null;
         if (error.response){
           switch (error.response.status){
             case 422:
@@ -77,7 +79,6 @@
             default:
               message.value = error.response.data.detail;}
           } else if (error.request){
-            console.log(error.request)
             message.value =  "リクエストがサーバーに到達できませんでした"
           } else {
             message.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
@@ -88,6 +89,8 @@
         username,
         password,
         message,
+        statusCode,
+        getResponseAlert,
         userLogin
       }
     }

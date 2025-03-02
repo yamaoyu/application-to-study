@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict, field_validator
 from typing import Optional
+from email_validator import validate_email
 
 
 class RegisterUserInfo(BaseModel):
@@ -22,9 +23,11 @@ class RegisterUserInfo(BaseModel):
 
     @field_validator("email")
     def validate_email(cls, email):
-        if email and "@" not in email:
-            raise ValueError("正しいメールアドレスを入力してください")
-        return email
+        try:
+            validate_email(email)
+            return email
+        except Exception:
+            raise ValueError("正しい形式のメールアドレスを入力してください")
 
 
 class LoginUserInfo(BaseModel):

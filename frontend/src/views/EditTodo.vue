@@ -1,24 +1,47 @@
 <template>
   <h3>Todoの編集</h3>
   <form @submit.prevent="editTodo">
-      <div>
-        <label for="action">Todo:</label>
-        <textarea name="action" id="action" for="action" v-model="action" required></textarea>
+    <div class="container col-10 d-flex justify-content-center">
+      <span class="input-group-text">内容</span>
+      <div class="input-group">
+        <textarea
+          v-model="action"
+          class="form-control"
+          placeholder="Todoの内容"
+          maxlength="256"
+          >
+        </textarea>
       </div>
-      <div>
-        <label for="due">期限:</label>
-        <input type="date" id="date" v-model="due" required>
-        <input type="button" value="今日" @click="insertToday">
-        <input type="button" value="-1" @click="decreaseOneDay">
-        <input type="button" value="+1" @click="increaseOneDay">
+    </div>
+    <div class="container col-10 d-flex justify-content-center mt-3">
+      <div class="input-group">
+        <span class="input-group-text">期限</span>
+        <input
+          type="date"
+          v-model="due"
+          class="form-control col-2"
+          min="2024-01-01"
+        />
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          @click="increaseDay(-1)"
+          >
+          前日
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          @click="increaseDay(1)"
+          >
+          翌日
+        </button>
       </div>
-      <button type="submit">更新</button>
+    </div>
+    <button type="submit" class="btn btn-outline-secondary mt-3">更新</button>
   </form>
-  <div>
-    <p v-if="message" class="message">{{ message }}</p>
-  </div>
-  <div>
-    <router-link to="/home">ホームへ戻る</router-link>
+  <div class="container d-flex justify-content-center">
+    <p v-if="message" class="mt-3 col-8" :class="getResponseAlert(statusCode)">{{ message }}</p>
   </div>
 </template>
 
@@ -28,7 +51,7 @@ import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
 import { useTodoStore } from '@/store/todo';
-import { changeDate } from './lib/index';
+import { changeDate, getResponseAlert } from './lib/index';
 
 export default {
   setup() {
@@ -36,9 +59,11 @@ export default {
     const action = ref("")
     const due = ref()
     const router = useRouter()
+    const statusCode = ref()
     const authStore = useAuthStore()
     const todoStore = useTodoStore()
-    const { insertToday, decreaseOneDay, increaseOneDay } = changeDate(due, message);
+
+    const { increaseDay } = changeDate(due, message);
 
     const editTodo = async() =>{
       try{
@@ -46,6 +71,7 @@ export default {
           const response = await axios.put(url,
                                           {action: action.value, due:due.value},
                                           {headers: {Authorization: authStore.getAuthHeader}})
+          statusCode.value = response.status
           if (response.status===200){
             message.value = [
               response.data.message,
@@ -54,6 +80,7 @@ export default {
             ].join('');
           }
         } catch (error) {
+          statusCode.value = null;
           if (error.response){
             switch (error.response.status){
               case 401:
@@ -87,10 +114,10 @@ export default {
       message,
       action,
       due,
+      statusCode,
       todoStore,
-      insertToday,
-      increaseOneDay,
-      decreaseOneDay,
+      increaseDay,
+      getResponseAlert,
       editTodo
     }
   }

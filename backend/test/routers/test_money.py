@@ -96,7 +96,7 @@ def test_get_income(client, get_headers):
     response = client.get(f"/incomes/{year}/{month}", headers=get_headers)
     assert response.status_code == 200
     assert response.json() == {
-        "今月の詳細": {
+        "month_info": {
             "salary": test_salary,
             "year_month": f"{test_year}-{test_month}",
             "total_penalty": 0.0,
@@ -104,7 +104,8 @@ def test_get_income(client, get_headers):
             "username": test_username,
             "total_bonus": 0.0
         },
-        "ボーナス換算後の月収": test_salary
+        "total_income": test_salary,
+        "pay_adjustment": 0.0,
     }
 
 

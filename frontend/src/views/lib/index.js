@@ -1,15 +1,21 @@
-import { generateYearOptions, generateMonthOptions, changeDate, changeMonth, changeYear } from "./dateUtils";
+import { getMaxMonth, changeDate, changeMonth, changeYear, getToday, getThisMonth } from "./dateUtils";
 import { generateTimeOptions, changeTime, useActivityFinish } from "./timeUtils";
 import { STATUS_DICT } from "./status";
+import { getStatusColors, getAdjustmentColors, getActivityAlert, getResponseAlert } from "./bootstrapClass";
 
 export {
-    generateYearOptions, 
-    generateMonthOptions, 
+    getMaxMonth, 
     generateTimeOptions,
     changeDate,
     changeMonth,
+    getToday,
+    getThisMonth,
     changeYear,
     changeTime,
     useActivityFinish,
-    STATUS_DICT
+    STATUS_DICT,
+    getStatusColors,
+    getAdjustmentColors,
+    getActivityAlert,
+    getResponseAlert
 }
