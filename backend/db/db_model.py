@@ -60,11 +60,11 @@ class User(Base):
 class Token(Base):
     __tablename__ = "tokens"
     username = Column(VARCHAR(16), ForeignKey("users.username"), nullable=False)
-    device = Column(VARCHAR(16), nullable=False)
+    device_id = Column(VARCHAR(36), nullable=False)
     token = Column(VARCHAR(256))
     expires_at = Column(Date, nullable=False)
 
-    __table_args__ = (PrimaryKeyConstraint(username, device),)
+    __table_args__ = (PrimaryKeyConstraint(username, device_id),)
 
     user = relationship('User', back_populates='tokens')
 

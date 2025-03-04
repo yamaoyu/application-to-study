@@ -21,10 +21,8 @@ const BACKEND_URL = process.env.VUE_APP_BACKEND_URL
 
 
 const verfiyRefreshToken = async () => {
-    // デバイス情報を取得 HTTPSにするまでの一時的な対応としてplatform(非推奨)を使用
-  const device = navigator.platform || "unknown";
   const response = await axios.post(BACKEND_URL + "token",
-    { device: device },
+    {},
     { withCredentials: true })
   return response
 }
