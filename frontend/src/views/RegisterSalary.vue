@@ -99,8 +99,9 @@
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { getMaxMonth, changeMonth, changeYear, getResponseAlert, getThisMonth } from './lib/index';
+import { getMaxMonth, changeMonth, changeYear, getResponseAlert, getThisMonth, verfiyRefreshToken, commonError } from './lib/index';
 import { useAuthStore } from '@/store/authenticate';
+import { jwtDecode } from 'jwt-decode';
 
 export default {
   setup() {
@@ -120,6 +121,7 @@ export default {
     const isMaxIncome = computed(() => monthlyIncome.value >= 999)
     const { increaseYear } = changeYear(selectedMonth);
     const { increaseMonth } = changeMonth(selectedMonth);
+    const { handleError } = commonError(statusCode, message, router);
 
     const updateSalary = async(step) =>{
       if (step > 0){
@@ -129,41 +131,43 @@ export default {
       }
     }
 
-    const registerSalary = async() =>{
-        try {
-          const url = process.env.VUE_APP_BACKEND_URL + 'incomes/'+ selectedMonth.value.split("-")[0] + '/' + selectedMonth.value.split("-")[1];
-          const response = await axios.post(url, 
-                                            {salary: Number(monthlyIncome.value)},
-                                            {headers: {Authorization: authStore.getAuthHeader}})
-          statusCode.value = response.status
-          if (response.status===201){
-            message.value = response.data.message
-          }
-        } catch (error) {
-          statusCode.value = null;
-          if (error.response){
-            switch (error.response.status){
-              case 401:
-              router.push(
-                {"path":"/login",
-                  "query":{message:"再度ログインしてください"}
-                })
-                break;
-              case 422:
-                message.value = error.response.data.detail;
-                break;
-              case 500:
-                message.value =  "月収の登録に失敗しました"
-                break;
-              default:
-                message.value = error.response.data.detail;}
-          } else if (error.request){
-            message.value =  "リクエストがサーバーに到達できませんでした"
-          } else {
-            message.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
-          }
-        }
+    const submitSalary = async() =>{
+      const url = process.env.VUE_APP_BACKEND_URL + 'incomes/'+ selectedMonth.value.split("-")[0] + '/' + selectedMonth.value.split("-")[1];
+      const response = await axios.post(url, 
+                                        {salary: Number(monthlyIncome.value)},
+                                        {headers: {Authorization: authStore.getAuthHeader}})
+      statusCode.value = response.status
+      if (response.status===201){
+        message.value = response.data.message
       }
+    }
+
+    const registerSalary = async() =>{
+      try {
+        await submitSalary();
+      } catch (error) {
+        if (error.response?.status === 401) {
+        try {
+          // リフレッシュトークンを検証して新しいアクセストークンを取得
+          const tokenResponse = await verfiyRefreshToken();
+          // 新しいアクセストークンをストアに保存
+          await authStore.setAuthData(
+          tokenResponse.data.access_token,
+          tokenResponse.data.token_type,
+          jwtDecode(tokenResponse.data.access_token).exp)
+          // 再度リクエストを送信
+          await submitSalary();
+        } catch (refreshError) {
+          router.push({
+            path: "/login",
+            query: { message: "再度ログインしてください" }
+          });
+        }            
+      } else {
+        handleError(error)
+      }
+      }
+    }
 
     onMounted( async() =>{
       // 先月の年収を取得

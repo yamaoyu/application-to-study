@@ -93,7 +93,6 @@ def create_refresh_token(data: dict,
         to_encode.update({"exp": expire})
         refresh_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         if device_id:
-            print(f"device_id: {device_id}")
             # トークンが既に存在するか確認(リフレッシュトークンはユーザーとデバイスで一意)
             existing_token = db.query(db_model.Token).filter(
                 db_model.Token.username == data["sub"],
@@ -103,6 +102,12 @@ def create_refresh_token(data: dict,
                 existing_token.token = refresh_token
                 existing_token.expires_at = expire
                 existing_token.device_id = device_id
+            else:
+                new_token = db_model.Token(token=refresh_token,
+                                           username=data["sub"],
+                                           device_id=device_id,
+                                           expires_at=expire)
+                db.add(new_token)
         # デバイスIDが存在しない場合は、新規作成
         else:
             device_id = str(uuid.uuid4())
