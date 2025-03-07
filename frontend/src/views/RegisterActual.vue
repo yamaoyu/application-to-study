@@ -79,8 +79,8 @@
     <p v-if="message" class="mt-3 col-8" :class="getResponseAlert(statusCode)">{{ message }}</p>
   </div>
   <div>
-    <b-modal v-model="isModalShow" title="活動時間登録成功" ok-title="はい" cancel-title="いいえ" @ok="finishActivity()">
-      <p class="my-4">{{ date }}の活動を終了しますか？</p>
+    <b-modal v-model="isModalShow" title="活動時間登録成功" ok-title="はい" cancel-title="いいえ" @ok="router.push('/finish/activity')">
+      <p class="my-4">活動終了ページへ移動しますか？</p>
     </b-modal>
   </div>
 </template>
@@ -89,7 +89,7 @@
 import { ref, computed } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { changeDate, changeTime, getResponseAlert, useActivityFinish, getToday, verfiyRefreshToken, commonError } from "./lib/index";
+import { changeDate, changeTime, getResponseAlert, getToday, verfiyRefreshToken, commonError } from "./lib/index";
 import { useAuthStore } from '@/store/authenticate';
 import { BModal } from 'bootstrap-vue-next';
 import { jwtDecode } from 'jwt-decode';
@@ -108,7 +108,6 @@ export default {
     const statusCode = ref()
     const { increaseDay } = changeDate(date, message);
     const { decreaseHour, increaseHour } = changeTime(actualTime, message);
-    const { finishActivity } = useActivityFinish(date, message, router, authStore);
     const isMinHour = computed(() => actualTime.value <= 0.0);
     const isMaxHour = computed(() => actualTime.value >= 12.0);
     const isModalShow = ref(false);
@@ -160,13 +159,13 @@ export default {
     }
 
     return {
+      router,
       date,
       message,
       actualTime,
       registerActual,
       getResponseAlert,
       statusCode,
-      finishActivity,
       increaseDay,
       increaseHour,
       decreaseHour,
