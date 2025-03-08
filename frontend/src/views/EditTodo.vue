@@ -66,7 +66,7 @@ export default {
     const { increaseDay } = changeDate(due, message);
     const { handleError } = commonError(statusCode, message, router)
 
-    const submitNewTodo = async() =>{
+    const updateTodo = async() =>{
       const url = process.env.VUE_APP_BACKEND_URL + 'todos/' + todoStore.todoId
       const response = await axios.put(url,
                                       {action: action.value, due:due.value},
@@ -83,7 +83,7 @@ export default {
 
     const editTodo = async() =>{
       try{
-        await submitNewTodo()
+        await updateTodo()
       } catch (error) {
         if (error.response?.status === 401) {
           try {
@@ -95,7 +95,7 @@ export default {
             tokenResponse.data.token_type,
             jwtDecode(tokenResponse.data.access_token).exp)
             // 再度リクエストを送信
-            await submitNewTodo();
+            await updateTodo();
           } catch (refreshError) {
             router.push({
               path: "/login",

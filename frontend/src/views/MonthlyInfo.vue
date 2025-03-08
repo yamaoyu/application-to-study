@@ -71,8 +71,8 @@
     </div>
   </div>
   <br>
-  <div v-if="message" class="alert alert-warning">
-    {{ message }}
+  <div class="container d-flex justify-content-center">
+    <p v-if="message" class="col-8 alert alert-warning">{{ message }}</p>
   </div>
   <div v-if="activities.length > 0" class="activities">
     <h2>活動状況(日別)</h2>
@@ -147,9 +147,10 @@
 import { ref, computed } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { getMaxMonth, changeMonth, changeYear, STATUS_DICT, getStatusColors, getAdjustmentColors, getThisMonth } from './lib/index';
+import { getMaxMonth, changeMonth, changeYear, STATUS_DICT, getStatusColors, getAdjustmentColors, getThisMonth, verfiyRefreshToken, getMonthlyinfoError } from './lib/index';
 import { useAuthStore } from '@/store/authenticate';
 import "../assets/styles/common.css";
+import { jwtDecode } from 'jwt-decode';
 
 
 export default {
@@ -168,37 +169,43 @@ export default {
     const isAtMaxYear = computed(() => selectedMonth.value >= maxMonth.split("-")[0])
     const { increaseYear } = changeYear(selectedMonth);
     const { increaseMonth } = changeMonth(selectedMonth);
+    const { handleError } = getMonthlyinfoError(response, activities, message, router);
+
+    const sendRequestForMonthlyInfo = async() =>{
+      const [year, month] = selectedMonth.value.split('-').map(Number)
+      const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month;
+      response.value = await axios.get(url,
+                                      {headers: {Authorization: authStore.getAuthHeader}})
+      if (response.value.status===200){
+        activities.value = response.value.data.activity_list;
+        message.value = ""
+      } 
+    }
 
     const GetMonthlyInfo = async() =>{
+      // 検索ボタンが押された時の処理
       try{
-          const [year, month] = selectedMonth.value.split('-').map(Number)
-          const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month;
-          response.value = await axios.get(url,
-                                          {headers: {Authorization: authStore.getAuthHeader}})
-          if (response.value.status===200){
-            activities.value = response.value.data.activity_list;
-            message.value = ""
-          }
+        await sendRequestForMonthlyInfo();
       } catch (error){
-        response.value = null
-        activities.value = []
-        if (error.response){
-          switch (error.response.status){
-            case 401:
-            router.push(
-              {"path":"/login",
-                "query":{message:"再度ログインしてください"}
-              })
-              break;
-            case 500:
-              message.value =  "情報の取得に失敗しました"
-              break;
-            default:
-              message.value = error.response.data.detail;}
-        } else if (error.request){
-          message.value =  "リクエストがサーバーに到達できませんでした"
+        if (error.response?.status === 401) {
+          try {
+            // リフレッシュトークンを検証して新しいアクセストークンを取得
+            const tokenResponse = await verfiyRefreshToken();
+            // 新しいアクセストークンをストアに保存
+            await authStore.setAuthData(
+            tokenResponse.data.access_token,
+            tokenResponse.data.token_type,
+            jwtDecode(tokenResponse.data.access_token).exp)
+            // 再度リクエストを送信
+            await sendRequestForMonthlyInfo();
+          } catch (refreshError) {
+            router.push({
+              path: "/login",
+              query: { message: "再度ログインしてください" }
+            });
+          }            
         } else {
-          message.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
+          handleError(error)
         }
       }
     }

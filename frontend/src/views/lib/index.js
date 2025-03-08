@@ -3,7 +3,7 @@ import { generateTimeOptions, changeTime } from "./timeUtils";
 import { STATUS_DICT } from "./status";
 import { getStatusColors, getAdjustmentColors, getActivityAlert, getResponseAlert } from "./bootstrapClass";
 import { verfiyRefreshToken } from "./token";
-import { commonError, finishActivityError, getActivityError } from "./error";
+import { commonError, finishActivityError, getActivityError, getMonthlyinfoError } from "./error";
 
 export {
     getMaxMonth, 
@@ -22,5 +22,6 @@ export {
     verfiyRefreshToken,
     commonError,
     finishActivityError,
-    getActivityError
+    getActivityError,
+    getMonthlyinfoError
 }
