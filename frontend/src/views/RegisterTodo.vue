@@ -50,7 +50,7 @@ import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
-import { changeDate, getResponseAlert, getToday, verfiyRefreshToken, commonError } from './lib/index';
+import { changeDate, getResponseAlert, getToday, verifyRefreshToken, commonError } from './lib/index';
 import { jwtDecode } from 'jwt-decode';
 
 export default {
@@ -65,6 +65,7 @@ export default {
     const { handleError } = commonError(message, statusCode, router);
 
     const submitTodo = async() =>{
+      // Todoを登録する処理
       const url = process.env.VUE_APP_BACKEND_URL + 'todos'
       const response = await axios.post(
         url, 
@@ -83,31 +84,32 @@ export default {
     }
 
     const registerTodo = async() =>{
-        try {
-          await submitTodo();
-        } catch (error) {
-            if (error.response?.status === 401) {
-            try {
-              // リフレッシュトークンを検証して新しいアクセストークンを取得
-              const tokenResponse = await verfiyRefreshToken();
-              // 新しいアクセストークンをストアに保存
-              await authStore.setAuthData(
-              tokenResponse.data.access_token,
-              tokenResponse.data.token_type,
-              jwtDecode(tokenResponse.data.access_token).exp)
-              // 再度リクエストを送信
-              await submitTodo();
-            } catch (refreshError) {
-              router.push({
-                path: "/login",
-                query: { message: "再度ログインしてください" }
-              });
-            }            
-          } else {
-            handleError(error)
-          }
+      // 登録ボタンクリック時に実行される関数
+      try {
+        await submitTodo();
+      } catch (error) {
+          if (error.response?.status === 401) {
+          try {
+            // リフレッシュトークンを検証して新しいアクセストークンを取得
+            const tokenResponse = await verifyRefreshToken();
+            // 新しいアクセストークンをストアに保存
+            await authStore.setAuthData(
+            tokenResponse.data.access_token,
+            tokenResponse.data.token_type,
+            jwtDecode(tokenResponse.data.access_token).exp)
+            // 再度リクエストを送信
+            await submitTodo();
+          } catch (refreshError) {
+            router.push({
+              path: "/login",
+              query: { message: "再度ログインしてください" }
+            });
+          }            
+        } else {
+          handleError(error)
         }
       }
+    }
 
     return {
       message,

@@ -99,7 +99,7 @@
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { getMaxMonth, changeMonth, changeYear, getResponseAlert, getThisMonth, verfiyRefreshToken, commonError } from './lib/index';
+import { getMaxMonth, changeMonth, changeYear, getResponseAlert, getThisMonth, verifyRefreshToken, commonError } from './lib/index';
 import { useAuthStore } from '@/store/authenticate';
 import { jwtDecode } from 'jwt-decode';
 
@@ -124,6 +124,7 @@ export default {
     const { handleError } = commonError(statusCode, message, router);
 
     const updateSalary = async(step) =>{
+      // 画面に表示される給料を更新する関数
       if (step > 0){
         monthlyIncome.value = Math.min(monthlyIncome.value + step, 999)
       } else if (step < 0) {
@@ -132,6 +133,7 @@ export default {
     }
 
     const submitSalary = async() =>{
+      // 給料を登録する処理
       const url = process.env.VUE_APP_BACKEND_URL + 'incomes/'+ selectedMonth.value.split("-")[0] + '/' + selectedMonth.value.split("-")[1];
       const response = await axios.post(url, 
                                         {salary: Number(monthlyIncome.value)},
@@ -143,13 +145,14 @@ export default {
     }
 
     const registerSalary = async() =>{
+      // 登録ボタンクリック時実行される関数
       try {
         await submitSalary();
       } catch (error) {
         if (error.response?.status === 401) {
         try {
           // リフレッシュトークンを検証して新しいアクセストークンを取得
-          const tokenResponse = await verfiyRefreshToken();
+          const tokenResponse = await verifyRefreshToken();
           // 新しいアクセストークンをストアに保存
           await authStore.setAuthData(
           tokenResponse.data.access_token,

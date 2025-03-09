@@ -51,7 +51,7 @@ import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
 import { useTodoStore } from '@/store/todo';
-import { changeDate, getResponseAlert, verfiyRefreshToken, commonError } from './lib/index';
+import { changeDate, getResponseAlert, verifyRefreshToken, commonError } from './lib/index';
 import { jwtDecode } from 'jwt-decode';
 
 export default {
@@ -67,6 +67,7 @@ export default {
     const { handleError } = commonError(statusCode, message, router)
 
     const updateTodo = async() =>{
+      // 更新後のTodoを送信する処理
       const url = process.env.VUE_APP_BACKEND_URL + 'todos/' + todoStore.todoId
       const response = await axios.put(url,
                                       {action: action.value, due:due.value},
@@ -82,13 +83,14 @@ export default {
     }
 
     const editTodo = async() =>{
+      // 更新ボタンを押した時に実行される関数
       try{
         await updateTodo()
       } catch (error) {
         if (error.response?.status === 401) {
           try {
             // リフレッシュトークンを検証して新しいアクセストークンを取得
-            const tokenResponse = await verfiyRefreshToken();
+            const tokenResponse = await verifyRefreshToken();
             // 新しいアクセストークンをストアに保存
             await authStore.setAuthData(
             tokenResponse.data.access_token,

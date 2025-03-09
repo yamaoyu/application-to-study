@@ -147,7 +147,7 @@
 import { ref, computed } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { getMaxMonth, changeMonth, changeYear, STATUS_DICT, getStatusColors, getAdjustmentColors, getThisMonth, verfiyRefreshToken, getMonthlyinfoError } from './lib/index';
+import { getMaxMonth, changeMonth, changeYear, STATUS_DICT, getStatusColors, getAdjustmentColors, getThisMonth, verifyRefreshToken, getMonthlyinfoError } from './lib/index';
 import { useAuthStore } from '@/store/authenticate';
 import "../assets/styles/common.css";
 import { jwtDecode } from 'jwt-decode';
@@ -190,7 +190,7 @@ export default {
         if (error.response?.status === 401) {
           try {
             // リフレッシュトークンを検証して新しいアクセストークンを取得
-            const tokenResponse = await verfiyRefreshToken();
+            const tokenResponse = await verifyRefreshToken();
             // 新しいアクセストークンをストアに保存
             await authStore.setAuthData(
             tokenResponse.data.access_token,

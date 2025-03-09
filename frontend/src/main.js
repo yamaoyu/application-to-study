@@ -8,7 +8,7 @@ import { createBootstrap } from 'bootstrap-vue-next';
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue-next/dist/bootstrap-vue-next.css";
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
-import { verfiyRefreshToken } from './views/lib/token';
+import { verifyRefreshToken } from './views/lib/token';
 
 const pinia = createPinia();
 
@@ -28,7 +28,7 @@ router.beforeEach(async (to) => {
   if (!authStore.isToken || authStore.isExpired()) {
     // リフレッシュトークンの検証
     try{
-      const response = await verfiyRefreshToken()
+      const response = await verifyRefreshToken()
       if (response.status === 200) {
         // トークンの更新
         await authStore.setAuthData(

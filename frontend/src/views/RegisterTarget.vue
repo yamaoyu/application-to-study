@@ -90,7 +90,7 @@ import { ref, computed } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
-import { changeDate, changeTime, getResponseAlert, getToday, verfiyRefreshToken, commonError } from "./lib/index";
+import { changeDate, changeTime, getResponseAlert, getToday, verifyRefreshToken, commonError } from "./lib/index";
 import { BModal } from 'bootstrap-vue-next';
 import { jwtDecode } from 'jwt-decode';
 
@@ -117,7 +117,7 @@ export default {
     const { handleError } = commonError(statusCode, message, router);
 
     const submitTarget = async() =>{
-      // 日付から年月日を取得
+      // 目標時間を送信する処理
       const dateParts = date.value.split('-');
       year.value = dateParts[0];
       month.value = dateParts[1];
@@ -134,34 +134,35 @@ export default {
         isModalShow.value = true;
         message.value = response.data.message
       }
-      }
+    }
 
     const registerTarget = async() =>{
-        try {
-          await submitTarget();
-        } catch (error) {
-          if (error.response?.status === 401) {
-            try {
-              // リフレッシュトークンを検証して新しいアクセストークンを取得
-              const tokenResponse = await verfiyRefreshToken();
-              // 新しいアクセストークンをストアに保存
-              await authStore.setAuthData(
-              tokenResponse.data.access_token,
-              tokenResponse.data.token_type,
-              jwtDecode(tokenResponse.data.access_token).exp)
-              // 再度リクエストを送信
-              await submitTarget();
-            } catch (refreshError) {
-              router.push({
-                path: "/login",
-                query: { message: "再度ログインしてください" }
-              });
-            }            
-          } else {
-            handleError(error)
-          }
+      // 登録ボタンクリック時に実行される関数
+      try {
+        await submitTarget();
+      } catch (error) {
+        if (error.response?.status === 401) {
+          try {
+            // リフレッシュトークンを検証して新しいアクセストークンを取得
+            const tokenResponse = await verifyRefreshToken();
+            // 新しいアクセストークンをストアに保存
+            await authStore.setAuthData(
+            tokenResponse.data.access_token,
+            tokenResponse.data.token_type,
+            jwtDecode(tokenResponse.data.access_token).exp)
+            // 再度リクエストを送信
+            await submitTarget();
+          } catch (refreshError) {
+            router.push({
+              path: "/login",
+              query: { message: "再度ログインしてください" }
+            });
+          }            
+        } else {
+          handleError(error)
         }
       }
+    }
 
     return {
       router,

@@ -28,7 +28,7 @@
   <script>
   import { ref } from 'vue'
   import axios from 'axios'
-  import { getResponseAlert, verfiyRefreshToken, commonError } from './lib';
+  import { getResponseAlert, verifyRefreshToken, commonError } from './lib';
   import { useRouter } from 'vue-router';
   import { useAuthStore } from '@/store/authenticate';
   import { jwtDecode } from 'jwt-decode';
@@ -67,7 +67,7 @@
           if (error.response?.status === 401) {
           try {
             // リフレッシュトークンを検証して新しいアクセストークンを取得
-            const tokenResponse = await verfiyRefreshToken();
+            const tokenResponse = await verifyRefreshToken();
             // 新しいアクセストークンをストアに保存
             await authStore.setAuthData(
             tokenResponse.data.access_token,

@@ -2,7 +2,7 @@ import { getMaxMonth, changeDate, changeMonth, changeYear, getToday, getThisMont
 import { generateTimeOptions, changeTime } from "./timeUtils";
 import { STATUS_DICT } from "./status";
 import { getStatusColors, getAdjustmentColors, getActivityAlert, getResponseAlert } from "./bootstrapClass";
-import { verfiyRefreshToken } from "./token";
+import { verifyRefreshToken } from "./token";
 import { commonError, finishActivityError, getActivityError, getMonthlyinfoError } from "./error";
 
 export {
@@ -19,7 +19,7 @@ export {
     getAdjustmentColors,
     getActivityAlert,
     getResponseAlert,
-    verfiyRefreshToken,
+    verifyRefreshToken,
     commonError,
     finishActivityError,
     getActivityError,

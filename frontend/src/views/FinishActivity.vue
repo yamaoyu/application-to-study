@@ -76,7 +76,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
 import { changeDate, STATUS_DICT, getStatusColors,
           getResponseAlert, getActivityAlert, getToday,
-          verfiyRefreshToken, finishActivityError, getActivityError } from './lib/index';
+          verifyRefreshToken, finishActivityError, getActivityError } from './lib/index';
 import { jwtDecode } from 'jwt-decode';
 
 export default {
@@ -124,7 +124,7 @@ export default {
         if (error.response?.status === 401) {
           // リフレッシュトークンを検証して新しいアクセストークンを取得
           try {
-            const tokenResponse = await verfiyRefreshToken();
+            const tokenResponse = await verifyRefreshToken();
             await authStore.setAuthData(
             tokenResponse.data.access_token,
             tokenResponse.data.token_type,
@@ -163,7 +163,7 @@ export default {
         if (error.response?.status === 401) {
           // リフレッシュトークンを検証して新しいアクセストークンを取得
           try {
-            const tokenResponse = await verfiyRefreshToken();
+            const tokenResponse = await verifyRefreshToken();
             await authStore.setAuthData(
             tokenResponse.data.access_token,
             tokenResponse.data.token_type,
