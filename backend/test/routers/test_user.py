@@ -42,7 +42,7 @@ def test_register_user_with_invalid_email(client):
                  "email": "aaaaa"}
     response = client.post("/users", json=user_info)
     assert response.status_code == 422
-    assert response.json() == {"detail": "正しいメールアドレスを入力してください"}
+    assert response.json() == {"detail": "正しい形式のメールアドレスを入力してください"}
 
 
 def test_register_with_duplicate_user_name(client):

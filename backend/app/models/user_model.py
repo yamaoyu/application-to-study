@@ -23,6 +23,8 @@ class RegisterUserInfo(BaseModel):
 
     @field_validator("email")
     def validate_email(cls, email):
+        if email is None:
+            return None
         try:
             validate_email(email)
             return email
