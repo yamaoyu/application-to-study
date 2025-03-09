@@ -76,7 +76,7 @@
       </div>
       <div class="col-6">
         <div class="bg-white p-4 rounded shadow">
-          <h3 class="small">合計</h3>
+          <h3 class="small">ペナルティ</h3>
           <div class="d-flex align-items-baseline justify-content-center">
             <span class="h3 fw-bold text-center text-danger">{{ incomeRes.data.month_info.total_penalty }}</span>
             万円

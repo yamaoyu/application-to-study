@@ -79,8 +79,8 @@
     <p v-if="message" class="mt-3 col-8" :class="getResponseAlert(statusCode)">{{ message }}</p>
   </div>
   <div>
-    <b-modal v-model="isModalShow" title="活動時間登録成功" ok-title="はい" cancel-title="いいえ" @ok="finishActivity()">
-      <p class="my-4">{{ date }}の活動を終了しますか？</p>
+    <b-modal v-model="isModalShow" title="活動時間登録成功" ok-title="はい" cancel-title="いいえ" @ok="router.push('/finish/activity')">
+      <p class="my-4">活動終了ページへ移動しますか？</p>
     </b-modal>
   </div>
 </template>
@@ -89,9 +89,10 @@
 import { ref, computed } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { changeDate, changeTime, getResponseAlert, useActivityFinish, getToday } from "./lib/index";
+import { changeDate, changeTime, getResponseAlert, getToday, verifyRefreshToken, commonError } from "./lib/index";
 import { useAuthStore } from '@/store/authenticate';
 import { BModal } from 'bootstrap-vue-next';
+import { jwtDecode } from 'jwt-decode';
 
 export default {
   components: {
@@ -107,62 +108,65 @@ export default {
     const statusCode = ref()
     const { increaseDay } = changeDate(date, message);
     const { decreaseHour, increaseHour } = changeTime(actualTime, message);
-    const { finishActivity } = useActivityFinish(date, message, router, authStore);
     const isMinHour = computed(() => actualTime.value <= 0.0);
     const isMaxHour = computed(() => actualTime.value >= 12.0);
     const isModalShow = ref(false);
+    const { handleError } = commonError(statusCode, message, router);
+
+    const submitActual = async() =>{
+      // 目標時間を登録する処理
+      const dateParts = date.value.split('-');
+      const year = dateParts[0];
+      // 月と日が一桁の場合、表記を変更 例)09→9
+      const month = parseInt(dateParts[1], 10);
+      const day = parseInt(dateParts[2], 10);
+      const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month + '/' + day +  '/actual';
+      const response = await axios.put(url, 
+                                      {actual_time: Number(actualTime.value)},
+                                      {headers: {Authorization: authStore.getAuthHeader}})
+      statusCode.value = response.status
+      if (response.status===200){
+        message.value = response.data.message
+        isModalShow.value = true;
+      }
+    }
 
     const registerActual = async() =>{
-        try {
-          // 日付から年月日を取得
-          const dateParts = date.value.split('-');
-          const year = dateParts[0];
-          // 月と日が一桁の場合、表記を変更 例)09→9
-          const month = parseInt(dateParts[1], 10);
-          const day = parseInt(dateParts[2], 10);
-          const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month + '/' + day +  '/actual';
-          const response = await axios.put(url, 
-                                          {actual_time: Number(actualTime.value)},
-                                          {headers: {Authorization: authStore.getAuthHeader}})
-          statusCode.value = response.status
-          if (response.status===200){
-            message.value = response.data.message
-            isModalShow.value = true;
-          }
-        } catch (error) {
-          statusCode.value = null;
-          if (error.response){
-          switch (error.response.status){
-            case 401:
-            router.push(
-              {"path":"/login",
-                "query":{message:"再度ログインしてください"}
-              })
-              break;
-            case 422:
-              message.value = error.response.data.detail;
-              break;
-            case 500:
-              message.value =  "活動時間の登録に失敗しました"
-              break;
-            default:
-              message.value = error.response.data.detail;}
-          } else if (error.request){
-            message.value =  "リクエストがサーバーに到達できませんでした"
-          } else {
-            message.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
-          }
+      // 登録ボタンクリック時に実行される関数
+      try {
+        await submitActual();
+      } catch (error) {
+        if (error.response?.status === 401) {
+          try {
+            // リフレッシュトークンを検証して新しいアクセストークンを取得
+            const tokenResponse = await verifyRefreshToken();
+            // 新しいアクセストークンをストアに保存
+            await authStore.setAuthData(
+            tokenResponse.data.access_token,
+            tokenResponse.data.token_type,
+            jwtDecode(tokenResponse.data.access_token).exp)
+            // 再度リクエストを送信
+            await submitActual();
+          } catch (refreshError) {
+            router.push({
+              path: "/login",
+              query: { message: "再度ログインしてください" }
+            });
+          }            
+        } else {
+          handleError(error)
         }
       }
+    }
 
     return {
+      router,
       date,
       message,
       actualTime,
       registerActual,
       getResponseAlert,
       statusCode,
-      finishActivity,
       increaseDay,
       increaseHour,
       decreaseHour,

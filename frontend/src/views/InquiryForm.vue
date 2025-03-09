@@ -28,9 +28,10 @@
   <script>
   import { ref } from 'vue'
   import axios from 'axios'
-  import { getResponseAlert } from './lib';
+  import { getResponseAlert, verifyRefreshToken, commonError } from './lib';
   import { useRouter } from 'vue-router';
   import { useAuthStore } from '@/store/authenticate';
+  import { jwtDecode } from 'jwt-decode';
   
   export default {
     setup() {
@@ -40,50 +41,49 @@
       const statusCode = ref()
       const router = useRouter()
       const authStore = useAuthStore()
-  
+      const { handleError } = commonError(statusCode, message, router)
+
+      const submitInquiry = async() =>{
+        // 問い合わせ送信リクエスト処理、sendInquiry関数で呼び出される
+        const url = process.env.VUE_APP_BACKEND_URL + 'inquiries'
+        const response = await axios.post(
+          url, 
+          {category: category.value, detail: detail.value},
+          {headers: {Authorization: authStore.getAuthHeader}}
+        )
+        if (response.status===201){
+          statusCode.value = response.status
+          message.value = ["以下の内容で受け付けました\n",
+                          `カテゴリ:${response.data.category}\n`,
+                          `内容:${response.data.detail}`].join('');
+        }
+      }
+
       const sendInquiry = async() => {
+        // 送信ボタンクリック時に実行される
         try {
-          const url = process.env.VUE_APP_BACKEND_URL + 'inquiries'
-          const response = await axios.post(
-            url, 
-            {
-              category: category.value,
-              detail: detail.value,
-            },
-            {
-              headers: {
-                Authorization: authStore.getAuthHeader}
-            }
-          )
-          if (response.status===201){
-            statusCode.value = response.status
-            message.value = ["以下の内容で受け付けました\n",
-                            `カテゴリ:${response.data.category}\n`,
-                            `内容:${response.data.detail}`].join('');
-          }
+          await submitInquiry();
         } catch (error) {
-          statusCode.value = null;
-          if (error.response){
-            switch (error.response.status){
-              case 401:
-              router.push(
-                {"path":"/login",
-                  "query":{message:"再度ログインしてください"}
-                })
-                break;
-              case 422:
-                message.value = error.response.data.detail;
-                break;
-              case 500:
-                message.value =  "問い合わせの送信に失敗しました"
-                break;
-              default:
-                message.value = error.response.data.detail;}
-          } else if (error.request){
-            message.value =  "リクエストがサーバーに到達できませんでした"
-          } else {
-            message.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
-          }
+          if (error.response?.status === 401) {
+          try {
+            // リフレッシュトークンを検証して新しいアクセストークンを取得
+            const tokenResponse = await verifyRefreshToken();
+            // 新しいアクセストークンをストアに保存
+            await authStore.setAuthData(
+            tokenResponse.data.access_token,
+            tokenResponse.data.token_type,
+            jwtDecode(tokenResponse.data.access_token).exp)
+            // 再度リクエストを送信
+            await submitInquiry();
+          } catch (refreshError) {
+            router.push({
+              path: "/login",
+              query: { message: "再度ログインしてください" }
+            });
+          }            
+        } else {
+          handleError(error)
+        }
         }
       }
   
