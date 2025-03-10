@@ -50,7 +50,8 @@ import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
-import { changeDate, getResponseAlert, getToday } from './lib/index';
+import { changeDate, getResponseAlert, getToday, verifyRefreshToken, commonError } from './lib/index';
+import { jwtDecode } from 'jwt-decode';
 
 export default {
   setup() {
@@ -61,55 +62,54 @@ export default {
     const router = useRouter()
     const authStore = useAuthStore()
     const { increaseDay } = changeDate(due, message);
+    const { handleError } = commonError(message, statusCode, router);
+
+    const submitTodo = async() =>{
+      // Todoを登録する処理
+      const url = process.env.VUE_APP_BACKEND_URL + 'todos'
+      const response = await axios.post(
+        url, 
+        { action: action.value, due: due.value},
+        { headers: { Authorization: authStore.getAuthHeader}}
+      )
+      statusCode.value = response.status
+      if (response.status===201){
+        message.value = [response.data.message + "\n",
+                        "内容:" + response.data.action + "\n",
+                        "期限:" + response.data.due].join("")
+        // フィールドをクリア
+        action.value = ""
+        due.value = ""
+      }
+    }
 
     const registerTodo = async() =>{
-        try {
-          const url = process.env.VUE_APP_BACKEND_URL + 'todos'
-          const response = await axios.post(
-            url, 
-            {
-              action: action.value,
-              due: due.value
-            },
-            { 
-              headers: {
-              Authorization:  authStore.getAuthHeader}
-            }
-          )
-          statusCode.value = response.status
-          if (response.status===201){
-            message.value = [response.data.message + "\n",
-                            "内容:" + response.data.action + "\n",
-                            "期限:" + response.data.due].join("")
-            // フィールドをクリア
-            action.value = ""
-            due.value = ""
-          }
-        } catch (error) {
-          statusCode.value = null;
-          if (error.response){
-            switch (error.response.status){
-              case 401:
-              router.push(
-                {"path":"/login",
-                  "query":{message:"再度ログインしてください"}
-                })
-                break;
-              case 422:
-                message.value = error.response.data.detail;
-                break;
-              case 500:
-                message.value =  "todoの登録に失敗しました"
-                break;
-              default:
-                message.value = error.response.data.detail;}
-          } else if (error.request){
-            message.value =  "リクエストがサーバーに到達できませんでした"
-          } else {
-            message.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
-          }
+      // 登録ボタンクリック時に実行される関数
+      try {
+        await submitTodo();
+      } catch (error) {
+          if (error.response?.status === 401) {
+          try {
+            // リフレッシュトークンを検証して新しいアクセストークンを取得
+            const tokenResponse = await verifyRefreshToken();
+            // 新しいアクセストークンをストアに保存
+            await authStore.setAuthData(
+            tokenResponse.data.access_token,
+            tokenResponse.data.token_type,
+            jwtDecode(tokenResponse.data.access_token).exp)
+            // 再度リクエストを送信
+            await submitTodo();
+          } catch (refreshError) {
+            router.push({
+              path: "/login",
+              query: { message: "再度ログインしてください" }
+            });
+          }            
+        } else {
+          handleError(error)
         }
       }
+    }
 
     return {
       message,

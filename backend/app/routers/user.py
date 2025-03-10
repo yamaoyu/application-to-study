@@ -5,7 +5,7 @@ from lib.security import (get_password_hash, get_token, get_current_user,
 from db.database import get_db
 from lib.log_conf import logger
 from sqlalchemy.orm import Session
-from app.models.user_model import RegisterUserInfo, ResponseCreatedUser, LoginUserInfo, DeviceInfo
+from app.models.user_model import RegisterUserInfo, ResponseCreatedUser, LoginUserInfo
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from fastapi import APIRouter, HTTPException, Depends, Response, Cookie
 
@@ -74,8 +74,7 @@ def create_user(user: RegisterUserInfo, db: Session = Depends(get_db)):
 @router.post("/admins", response_model=ResponseCreatedUser, status_code=201)
 @admin_only()
 def create_admin_user(user: RegisterUserInfo,
-                      db: Session = Depends(get_db),
-                      current_user: dict = Depends(get_current_user)):
+                      db: Session = Depends(get_db)):
     try:
         username = user.username
         plain_password = user.password
@@ -115,10 +114,10 @@ def create_admin_user(user: RegisterUserInfo,
 @router.post("/login", status_code=200)
 def login(user_info: LoginUserInfo,
           db: Session = Depends(get_db),
+          device_id: str = Cookie(default=None),
           response: Response = response):
     username = user_info.username
     plain_password = user_info.password
-    device = user_info.device
     try:
         user = db.query(db_model.User).filter(
             db_model.User.username == username).one()
@@ -127,7 +126,7 @@ def login(user_info: LoginUserInfo,
             raise HTTPException(status_code=401, detail="パスワードが正しくありません")
         access_token = get_token(user, token_type="access")
         refresh_token = get_token(user, token_type="refresh",
-                                  response=response, db=db, device=device)
+                                  response=response, db=db, device_id=device_id)
         logger.info(f"{username}がログイン")
         return {"access_token": access_token,
                 "token_type": "Bearer",
@@ -144,17 +143,18 @@ def login(user_info: LoginUserInfo,
 
 
 @router.post("/logout", status_code=200)
-def logout(device_info: DeviceInfo,
+def logout(device_id: str = Cookie(default=None),
            current_user: dict = Depends(get_current_user),
            db: Session = Depends(get_db),
            response: Response = response):
     try:
         username = current_user['username']
         db.query(db_model.Token).filter(db_model.Token.username == username,
-                                        db_model.Token.device == device_info.device).delete()
+                                        db_model.Token.device_id == device_id).delete()
         db.commit()
         logger.info(f"{username}がログアウト")
         response.delete_cookie(key="refresh_token")
+        response.delete_cookie(key="device_id")
         return {"message": f"{username}がログアウト"}
     except NoResultFound:
         raise HTTPException(status_code=404,
@@ -166,8 +166,8 @@ def logout(device_info: DeviceInfo,
 
 
 @router.post("/token", status_code=200)
-def regenerate_access_token(device_info: DeviceInfo,
-                            refresh_token: str = Cookie(default=None),
+def regenerate_access_token(refresh_token: str = Cookie(default=None),
+                            device_id: str = Cookie(default=None),
                             db: Session = Depends(get_db)):
     """ アクセストークンの期限が切れている場合、リフレッシュトークンを使ってアクセストークンを再発行する """
     try:
@@ -177,7 +177,7 @@ def regenerate_access_token(device_info: DeviceInfo,
         if not user:
             raise HTTPException(status_code=404,
                                 detail="再度ログインしてください")
-        if verify_refresh_token(refresh_token, device_info.device, db=db):
+        if verify_refresh_token(refresh_token, device_id=device_id, db=db):
             return {"access_token": get_token(user, token_type="access"),
                     "token_type": "Bearer"}
         else:

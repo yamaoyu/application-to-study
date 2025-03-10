@@ -23,6 +23,8 @@ class RegisterUserInfo(BaseModel):
 
     @field_validator("email")
     def validate_email(cls, email):
+        if email is None:
+            return None
         try:
             validate_email(email)
             return email
@@ -33,13 +35,8 @@ class RegisterUserInfo(BaseModel):
 class LoginUserInfo(BaseModel):
     username: str
     password: str
-    device: str
 
 
 class ResponseCreatedUser(RegisterUserInfo):
     model_config = ConfigDict(from_attributes=True)
     message: str
-
-
-class DeviceInfo(BaseModel):
-    device: str
