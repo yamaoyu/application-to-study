@@ -52,7 +52,7 @@ def test_register_with_duplicate_user_name(client):
     response = client.post("/users", json=user_info)
     assert response.status_code == 400
     assert response.json() == {
-        "detail": "そのユーザー名は既に登録されています"
+        "detail": "入力された情報は既に使用されています。\n別のユーザー名またはメールアドレスをお試しください"
     }
 
 
@@ -86,7 +86,7 @@ def test_login_with_invalid_password(client):
     response = client.post("/login", json=user_info)
     assert response.status_code == 401
     assert response.json() == {
-        "detail": "パスワードが正しくありません"
+        "detail": "入力情報が正しくありません。\nユーザー名またはパスワードをご確認ください"
     }
 
 
