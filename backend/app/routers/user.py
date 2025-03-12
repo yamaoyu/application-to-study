@@ -55,15 +55,9 @@ def create_user(user: RegisterUserInfo, db: Session = Depends(get_db)):
         raise http_e
     except IntegrityError as sqlalchemy_error:
         db.rollback()
-        if "for key 'users.PRIMARY'" in str(sqlalchemy_error.orig):
-            raise HTTPException(status_code=400,
-                                detail="そのユーザー名は既に登録されています")
-        elif "for key 'users.email'" in str(sqlalchemy_error.orig):
-            raise HTTPException(status_code=400,
-                                detail="そのメールアドレスは既に登録されています")
-        else:
-            logger.warning(f"ユーザー作成に失敗しました\n{str(sqlalchemy_error)}")
-            raise HTTPException(status_code=400, detail="ユーザーの作成に失敗しました")
+        logger.warning(f"ユーザー作成に失敗しました\n{str(sqlalchemy_error)}")
+        raise HTTPException(
+            status_code=400, detail="入力された情報は既に使用されています。\n別のユーザー名またはメールアドレスをお試しください")
     except Exception:
         logger.error(f"ユーザー作成に失敗しました\n{traceback.format_exc()}")
         db.rollback()
@@ -95,15 +89,9 @@ def create_admin_user(user: RegisterUserInfo,
         raise http_e
     except IntegrityError as sqlalchemy_error:
         db.rollback()
-        if "for key 'users.PRIMARY'" in str(sqlalchemy_error.orig):
-            raise HTTPException(status_code=400,
-                                detail="そのユーザー名は既に登録されています")
-        elif "for key 'users.email'" in str(sqlalchemy_error.orig):
-            raise HTTPException(status_code=400,
-                                detail="そのメールアドレスは既に登録されています")
-        else:
-            logger.warning(f"ユーザー作成に失敗しました\n{str(sqlalchemy_error)}")
-            raise HTTPException(status_code=400, detail="ユーザーの作成に失敗しました")
+        logger.warning(f"ユーザー作成に失敗しました\n{str(sqlalchemy_error)}")
+        raise HTTPException(
+            status_code=400, detail="入力された情報は既に使用されています。\n別のユーザー名またはメールアドレスをお試しください")
     except Exception:
         logger.error(f"ユーザー作成に失敗しました\n{traceback.format_exc()}")
         db.rollback()
@@ -118,12 +106,13 @@ def login(user_info: LoginUserInfo,
           response: Response = response):
     username = user_info.username
     plain_password = user_info.password
+    wrong_info_msg = "入力情報が正しくありません。\nユーザー名またはパスワードをご確認ください"
     try:
         user = db.query(db_model.User).filter(
             db_model.User.username == username).one()
         is_password = verify_password(plain_password, user.password)
         if not is_password:
-            raise HTTPException(status_code=401, detail="パスワードが正しくありません")
+            raise HTTPException(status_code=401, detail=wrong_info_msg)
         access_token = get_token(user, token_type="access")
         refresh_token = get_token(user, token_type="refresh",
                                   response=response, db=db, device_id=device_id)
@@ -133,7 +122,7 @@ def login(user_info: LoginUserInfo,
                 "refresh_token": refresh_token}
     except NoResultFound:
         raise HTTPException(status_code=404,
-                            detail=f"{username}は登録されていません")
+                            detail=wrong_info_msg)
     except HTTPException as http_e:
         raise http_e
     except Exception:
