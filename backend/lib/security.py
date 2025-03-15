@@ -1,6 +1,7 @@
 import os
 import uuid
 import traceback
+import re
 from passlib.context import CryptContext
 from typing import Union
 from functools import wraps
@@ -22,6 +23,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 REFRESH_TOKEN_EXPIRE_WEEKS = int(os.getenv("REFRESH_TOKEN_EXPIRE_WEEKS"))
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+special_characters = r"[!@#$%&*()+\-=[\]{};:<>,./?_~|]"
 
 credentials_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -56,6 +58,18 @@ def verify_password(plain_password, hashed_password) -> bool:
 
 def get_password_hash(password) -> str:
     return pwd_context.hash(password)
+
+
+def is_password_complex(password: str) -> bool:
+    if not re.search(r"[a-z]", password):
+        return False
+    if not re.search(r"[A-Z]", password):
+        return False
+    if not re.search(r"[0-9]", password):
+        return False
+    if not re.search(special_characters, password):
+        return False
+    return True
 
 
 def create_access_token(data: dict,

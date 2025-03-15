@@ -18,11 +18,11 @@
       <BFormValidFeedback :state="validateUsername"> OK </BFormValidFeedback>
     </div>
     <div class="form-group mt-3 col-8">
-      <BFormInput type="password" placeholder="パスワード(必須)" v-model="password" :state="validatePassword" required/>
-      <BFormInvalidFeedback :state="validatePassword">
-        パスワードは8文字以上16文字以下にして下さい
+      <BFormInput type="password" placeholder="パスワード(必須)" v-model="password" :state="validatePassword.valid" required/>
+      <BFormInvalidFeedback :state="validatePassword.valid">
+        {{ validatePassword.message }}
       </BFormInvalidFeedback>
-      <BFormValidFeedback :state="validatePassword"> OK </BFormValidFeedback>
+      <BFormValidFeedback :state="validatePassword.valid"> OK </BFormValidFeedback>
     </div>
     <div class="form-group mt-3 col-8">
       <BFormInput type="password" placeholder="パスワード確認(必須)" v-model="passwordCheck" :state="checkPassword" required/>
@@ -78,11 +78,32 @@
         return username.value.length >= 3 && username.value.length <= 16})
 
       const validatePassword = computed(() => {
-        // パスワードが8文字以上16文字以下かどうかを判定
+        // パスワードが条件を満たしているかどうかを判定
         if (password.value.length === 0) {
-          return null
+          // パスワードが未入力の場合は対象外
+          return { valid:null, message: '' }
         }
-        return password.value.length >= 8 && password.value.length <= 16})
+        console.log(password.value)
+
+        const hasLowercase = /[a-z]/;
+        const hasUppercase = /[A-Z]/;
+        const hasNumber = /\d/;
+        const hasSpecialChar = /[!@#$%&*()+\-=[\]{};:<>,./?_~|]/;
+
+        if (password.value.length < 8 || password.value.length > 16){
+          return { valid:false, message: 'パスワードは8文字以上16文字以下にして下さい' }
+        } else if (!hasLowercase.test(password.value)){
+          return { valid:false, message: '小文字が含まれていません' }
+        } else if (!hasUppercase.test(password.value)){
+          return { valid:false, message: '大文字が含まれていません' }
+        } else if (!hasNumber.test(password.value)){
+          return { valid:false, message: '数字が含まれていません' }
+        } else if (!hasSpecialChar.test(password.value)){
+          return { valid:false, message: '記号が含まれていません' }
+        } else {
+          return { valid:true, message: 'OK' }
+        }
+      })
 
       const checkPassword = computed(() => {
         // 入力された2つパスワードが一致しているかどうかを判定

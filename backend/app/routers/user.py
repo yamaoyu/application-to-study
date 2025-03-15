@@ -38,8 +38,7 @@ def create_user(user: RegisterUserInfo, db: Session = Depends(get_db)):
         username = user.username
         plain_password = user.password
         email = user.email
-        valid_roles = ["admin", "general"]
-        role = user.role if user.role in valid_roles else "general"
+        role = user.role if user.role == "admin" else "general"
         hash_password = get_password_hash(plain_password)
         form_data = db_model.User(
             username=username, password=hash_password, email=email, role=role)
@@ -50,7 +49,7 @@ def create_user(user: RegisterUserInfo, db: Session = Depends(get_db)):
                 "password": len(plain_password) * "*",
                 "email": user.email,
                 "message": f"{username}の作成に成功しました",
-                "role": role if role else "general"}
+                "role": role if role == "admin" else "general"}
     except HTTPException as http_e:
         raise http_e
     except IntegrityError as sqlalchemy_error:
