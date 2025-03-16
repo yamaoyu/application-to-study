@@ -4,6 +4,7 @@ import { STATUS_DICT } from "./status";
 import { getStatusColors, getAdjustmentColors, getActivityAlert, getResponseAlert } from "./bootstrapClass";
 import { verifyRefreshToken } from "./token";
 import { commonError, finishActivityError, getActivityError, getMonthlyinfoError } from "./error";
+import { validateUsername, validatePassword, checkPassword, validateEmail } from "./userinfo";
 
 export {
     getMaxMonth, 
@@ -23,5 +24,9 @@ export {
     commonError,
     finishActivityError,
     getActivityError,
-    getMonthlyinfoError
+    getMonthlyinfoError,
+    validateUsername,
+    validatePassword,
+    checkPassword,
+    validateEmail
 }

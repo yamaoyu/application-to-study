@@ -11,32 +11,32 @@
   <h2>ユーザー登録</h2>
   <BForm @submit.prevent="createUser" class="container d-flex flex-column align-items-center">
     <div class="form-group mt-3 col-8">
-      <BFormInput placeholder="ユーザー名(必須)" v-model="username" :state="validateUsername" required/>
-      <BFormInvalidFeedback :state="validateUsername">
+      <BFormInput placeholder="ユーザー名(必須)" v-model="username" :state="isValidUsername" required/>
+      <BFormInvalidFeedback :state="isValidUsername">
         ユーザー名は3文字以上16文字以下にして下さい
       </BFormInvalidFeedback>
-      <BFormValidFeedback :state="validateUsername"> OK </BFormValidFeedback>
+      <BFormValidFeedback :state="isValidUsername"> OK </BFormValidFeedback>
     </div>
     <div class="form-group mt-3 col-8">
-      <BFormInput type="password" placeholder="パスワード(必須)" v-model="password" :state="validatePassword.valid" required/>
-      <BFormInvalidFeedback :state="validatePassword.valid">
-        {{ validatePassword.message }}
+      <BFormInput type="password" placeholder="パスワード(必須)" v-model="password" :state="isValidPassword.valid" required/>
+      <BFormInvalidFeedback :state="isValidPassword.valid">
+        {{ isValidPassword.message }}
       </BFormInvalidFeedback>
-      <BFormValidFeedback :state="validatePassword.valid"> OK </BFormValidFeedback>
+      <BFormValidFeedback :state="isValidPassword.valid"> OK </BFormValidFeedback>
     </div>
     <div class="form-group mt-3 col-8">
-      <BFormInput type="password" placeholder="パスワード確認(必須)" v-model="passwordCheck" :state="checkPassword" required/>
-      <BFormInvalidFeedback :state="checkPassword">
+      <BFormInput type="password" placeholder="パスワード確認(必須)" v-model="passwordCheck" :state="isEqualPassword" required/>
+      <BFormInvalidFeedback :state="isEqualPassword">
         パスワードが一致しません
       </BFormInvalidFeedback>
-      <BFormValidFeedback :state="checkPassword"> OK </BFormValidFeedback>
+      <BFormValidFeedback :state="isEqualPassword"> OK </BFormValidFeedback>
     </div>
     <div class="form-group mt-3 col-8">
-      <BFormInput placeholder="メールアドレス(任意)" type="email" v-model="email" :state="validateEmail" />
-      <BFormInvalidFeedback :state="validateEmail">
+      <BFormInput placeholder="メールアドレス(任意)" type="email" v-model="email" :state="isValidEmail" />
+      <BFormInvalidFeedback :state="isValidEmail">
         メールアドレスの形式で入力して下さい
       </BFormInvalidFeedback>
-      <BFormValidFeedback :state="validateEmail"> OK </BFormValidFeedback>
+      <BFormValidFeedback :state="isValidEmail"> OK </BFormValidFeedback>
     </div>
     <button type="submit" class="btn btn-outline-secondary mt-3">登録</button>
   </BForm>
@@ -51,7 +51,7 @@
   <script>
   import { ref, computed } from 'vue'
   import axios from 'axios'
-  import { getResponseAlert } from './lib';
+  import { getResponseAlert, validateUsername, validatePassword, checkPassword, validateEmail } from './lib';
   import { BForm, BFormInput, BFormInvalidFeedback, BFormValidFeedback } from 'bootstrap-vue-next';
   
   export default {
@@ -70,57 +70,22 @@
       const message = ref('')
       const statusCode = ref()
 
-      const validateUsername = computed(() => {
-        // ユーザー名が3文字以上16文字以下かどうかを判定
-        if (username.value.length === 0) {
-          return null
-        }
-        return username.value.length >= 3 && username.value.length <= 16})
-
-      const validatePassword = computed(() => {
-        // パスワードが条件を満たしているかどうかを判定
-        if (password.value.length === 0) {
-          // パスワードが未入力の場合は対象外
-          return { valid:null, message: '' }
-        }
-        console.log(password.value)
-
-        const hasLowercase = /[a-z]/;
-        const hasUppercase = /[A-Z]/;
-        const hasNumber = /\d/;
-        const hasSpecialChar = /[!@#$%&*()+\-=[\]{};:<>,./?_~|]/;
-
-        if (password.value.length < 8 || password.value.length > 16){
-          return { valid:false, message: 'パスワードは8文字以上16文字以下にして下さい' }
-        } else if (!hasLowercase.test(password.value)){
-          return { valid:false, message: '小文字が含まれていません' }
-        } else if (!hasUppercase.test(password.value)){
-          return { valid:false, message: '大文字が含まれていません' }
-        } else if (!hasNumber.test(password.value)){
-          return { valid:false, message: '数字が含まれていません' }
-        } else if (!hasSpecialChar.test(password.value)){
-          return { valid:false, message: '記号が含まれていません' }
-        } else {
-          return { valid:true, message: 'OK' }
-        }
+      const isValidUsername = computed(() => {
+        return validateUsername(username).validate()
       })
 
-      const checkPassword = computed(() => {
-        // 入力された2つパスワードが一致しているかどうかを判定
-        if (passwordCheck.value.length === 0) {
-          return null
-        }
-        return password.value === passwordCheck.value})
-
-      const validateEmail = computed(() => {
-        // メールアドレスの形式かどうかを判定
-        if (email.value.length === 0) {
-          return null
-        }
-        const emailPattern = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-        return emailPattern.test(email.value);
+      const isValidPassword = computed(() => {
+        return validatePassword(password).validate()
       })
-  
+
+      const isEqualPassword = computed(() => {
+        return checkPassword(password, passwordCheck).validate()
+      })
+
+      const isValidEmail = computed(() => {
+        return validateEmail(email).validate()
+      })
+
       const createUser = async() => {
         // パスワード不一致の場合はリクエストを送信しない
         if (password.value !== passwordCheck.value) {
@@ -172,10 +137,10 @@
         statusCode,
         createUser,
         getResponseAlert,
-        validateUsername,
-        validatePassword,
-        checkPassword,
-        validateEmail
+        isValidUsername,
+        isValidPassword,
+        isEqualPassword,
+        isValidEmail
       }
     }
   }
