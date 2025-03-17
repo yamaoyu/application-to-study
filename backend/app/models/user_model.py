@@ -47,3 +47,16 @@ class ResponseCreatedUser(BaseModel):
     email: Optional[str] = None
     role: Optional[str] = None
     message: str
+
+
+class ChangePasswordInfo(BaseModel):
+    old_password: str
+    new_password: str
+
+    @field_validator("new_password")
+    def validate_password(cls, new_password):
+        if not (8 <= len(new_password) <= 16):
+            raise ValueError("パスワードは8文字以上、16文字以下としてください")
+        elif not is_password_complex(new_password):
+            raise ValueError(f"パスワードは大文字、小文字、数字、記号({special_characters})をそれぞれ1文字以上含む必要があります")
+        return new_password

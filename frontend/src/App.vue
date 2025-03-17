@@ -2,7 +2,7 @@
   <head>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   </head>
-  <nav class="navbar navbar-expand-lg bd-navbar fixed-top bg-dark navbar-dark" v-if="MENU_ALLOWED_ROUTES.includes(this.$route.name)">
+  <nav class="navbar navbar-expand-lg bd-navbar fixed-top bg-dark navbar-dark" v-if="(!MENU_SHOW_ROUTES.includes(this.$route.name))">
     <div class="container-fluid">
       <ul class="navbar-nav me-2" style="color: white;">
         <li class="nav-item" v-if="$router.currentRoute.value.name != 'Home'">
@@ -44,6 +44,9 @@
               <li class="dropdown-item"><router-link class="nav-link" style="color: black;" to="/view/month-activities">月別</router-link></li>
               <li class="dropdown-item"><router-link class="nav-link" style="color: black;" to="/view/all-activities">全期間</router-link></li>
             </ul>
+          </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/user/info">ユーザー情報</router-link>
           </li>
           <li class="nav-item">
             <router-link class="nav-link" to="/register/inquiry">問い合わせ</router-link>
@@ -95,6 +98,9 @@
           </ul>
         </li>
         <li class="nav-item" data-bs-dismiss="offcanvas">
+          <router-link class="nav-link" to="/user/info">ユーザー情報</router-link>
+        </li>
+        <li class="nav-item" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/register/inquiry">問い合わせ</router-link>
         </li>
         <li class="nav-item">
@@ -103,7 +109,7 @@
       </ul>
     </div>
   </nav>
-  <p v-if="logout_msg" class="logout_msg">{{ logout_msg }}</p>
+  <p v-if="logoutMsg" class="logoutMsg">{{ logoutMsg }}</p>
   <BContainer>
     <router-view></router-view>
   </BContainer>
@@ -124,8 +130,8 @@ export default {
   setup() {
     const router = useRouter()
     const authStore = useAuthStore()
-    const logout_msg = ref("")
-    const MENU_ALLOWED_ROUTES = ["Home", "RegisterSalary", "RegisterTarget", "RegisterActual", "MonthlyInfo", "RegisterTodo", "InquiryForm", "finishActivity", "AllPeriodInfo", "EditTodo"]
+    const logoutMsg = ref("")
+    const MENU_SHOW_ROUTES = ["Login", "RegisterUser"]
 
     const logout = async() =>{
       try{
@@ -157,22 +163,22 @@ export default {
                 break;
               case 404:
               case 500:
-                logout_msg.value = logout_err.response.data.detail;
+                logoutMsg.value = logout_err.response.data.detail;
                 break;
               default:
-                logout_msg.value = "ログアウトに失敗しました";}
+                logoutMsg.value = "ログアウトに失敗しました";}
           } else if (logout_err.request){
-            logout_msg.value =  "リクエストがサーバーに到達できませんでした"
+            logoutMsg.value =  "リクエストがサーバーに到達できませんでした"
           } else {
-            logout_msg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
+            logoutMsg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
           }
       }
     }
     
     return {
-      logout_msg,
+      logoutMsg,
       logout,
-      MENU_ALLOWED_ROUTES
+      MENU_SHOW_ROUTES
     }
   }
 }
