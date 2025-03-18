@@ -1,31 +1,46 @@
 <template>
-  <BForm @submit.prevent="submitNewPassword" class="container d-flex flex-column align-items-center">
-    <div class="form-group mt-3 col-8">
-      <BFormInput type="password" placeholder="現在のパスワード(必須)" v-model="oldPassword" required/>
-    </div>
-    <div class="form-group mt-3 col-8">
-      <BFormInput type="password" placeholder="新しいパスワード(必須)" v-model="newPassword" :state="isValidPassword.valid" required/>
-      <BFormInvalidFeedback :state="isValidPassword.valid">
-        {{ isValidPassword.message }}
-      </BFormInvalidFeedback>
-      <BFormValidFeedback :state="isValidPassword.valid"> OK </BFormValidFeedback>
-    </div>
-    <div class="form-group mt-3 col-8">
-      <BFormInput type="password" placeholder="新しいパスワード確認(必須)" v-model="newPasswordCheck" :state="isEqualPassword" required/>
-      <BFormInvalidFeedback :state="isEqualPassword">
-        パスワードが一致しません
-      </BFormInvalidFeedback>
-      <BFormValidFeedback :state="isEqualPassword"> OK </BFormValidFeedback>
+  <h2 class="mb-5">ユーザー管理メニュー</h2>
+  <div class="container col-8 card">
+    <h5 class="card-title mt-3 clickable" @click="toggleFormVisibility">パスワード変更</h5>
+    <hr class="divider">
+
+    <div class="collapse" :class="{ 'show': isFormVisible }">
+      <div class="text-start mt-3">
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="checkbox" id="changePassword" v-model="isPasswordChangeEnabled">
+          <label class="form-check-label" for="changePassword">パスワードを変更する</label>
+        </div>
       </div>
-    <button type="submit" class="btn btn-outline-secondary mt-3">更新</button>
-  </BForm>
+      
+      <BForm @submit.prevent="submitNewPassword">
+        <div class="form-group mt-3">
+          <BFormInput type="password" placeholder="現在のパスワード(必須)" v-model="oldPassword" :disabled="!isPasswordChangeEnabled" required/>
+        </div>
+        <div class="form-group mt-3">
+          <BFormInput type="password" placeholder="新しいパスワード(必須)" v-model="newPassword" :disabled="!isPasswordChangeEnabled" :state="isValidPassword.valid" required/>
+          <BFormInvalidFeedback :state="isValidPassword.valid">
+            {{ isValidPassword.message }}
+          </BFormInvalidFeedback>
+          <BFormValidFeedback :state="isValidPassword.valid"> OK </BFormValidFeedback>
+        </div>
+        <div class="form-group mt-3">
+          <BFormInput type="password" placeholder="新しいパスワード確認(必須)" v-model="newPasswordCheck" :disabled="!isPasswordChangeEnabled" :state="isEqualPassword" required/>
+          <BFormInvalidFeedback :state="isEqualPassword">
+            パスワードが一致しません
+          </BFormInvalidFeedback>
+          <BFormValidFeedback :state="isEqualPassword"> OK </BFormValidFeedback>
+          </div>
+        <button type="submit" class="btn btn-outline-secondary my-3" :disabled="!isPasswordChangeEnabled" >変更</button>
+      </BForm>
+    </div>
+  </div>
   <div class="container d-flex flex-column align-items-center">
     <p v-if="message" class="col-8 mt-3" :class="getResponseAlert(statusCode)">{{ message }}</p>
   </div>
 </template>
   
   <script>
-  import { ref, computed } from 'vue'
+  import { ref, computed, watch } from 'vue'
   import axios from 'axios'
   import { getResponseAlert, verifyRefreshToken, commonError, validatePassword, checkPassword } from './lib';
   import { useRouter } from 'vue-router';
@@ -49,6 +64,8 @@
       const statusCode = ref()
       const router = useRouter()
       const authStore = useAuthStore()
+      const isPasswordChangeEnabled = ref(false)
+      const isFormVisible = ref(false)
       const { handleError } = commonError(statusCode, message, router)
 
       const isValidPassword = computed(() => {
@@ -59,6 +76,12 @@
         return checkPassword(newPassword, newPasswordCheck).validate()
       })
 
+       // フォームの表示/非表示を切り替える
+      const toggleFormVisibility = () => {
+        isFormVisible.value = !isFormVisible.value
+      }
+
+      // パスワード変更オプションが変更されたときに入力をクリア
       const changePassword = async() =>{
         // パスワード変更リクエスト送信処理、submitChangePass関数で呼び出される
         const url = process.env.VUE_APP_BACKEND_URL + 'password'
@@ -104,6 +127,12 @@
         }
       }
   
+      watch(isPasswordChangeEnabled, () => {
+        oldPassword.value = ''
+        newPassword.value = ''
+        newPasswordCheck.value = ''
+    })
+
       return {
         oldPassword,
         newPassword,
@@ -113,7 +142,10 @@
         getResponseAlert,
         submitNewPassword,
         isValidPassword,
-        isEqualPassword
+        isEqualPassword,
+        isPasswordChangeEnabled,
+        isFormVisible,
+        toggleFormVisibility
       }
     }
   }
