@@ -18,18 +18,32 @@
       <BFormValidFeedback :state="isValidUsername"> OK </BFormValidFeedback>
     </div>
     <div class="form-group mt-3 col-8">
-      <BFormInput type="password" placeholder="パスワード(必須)" v-model="password" :state="isValidPassword.valid" required/>
-      <BFormInvalidFeedback :state="isValidPassword.valid">
-        {{ isValidPassword.message }}
-      </BFormInvalidFeedback>
-      <BFormValidFeedback :state="isValidPassword.valid"> OK </BFormValidFeedback>
+      <div class="input-group">
+        <BFormInput :type="!showPassword ? 'password':'text'" placeholder="パスワード(必須)" v-model="password" :state="isValidPassword.valid" required/>
+        <button class="btn btn-outline-secondary" type="button" @click="showPassword = !showPassword">
+          <i :class="['bi', showPassword ? 'bi-eye-slash' : 'bi-eye']"></i>
+        </button>
+      </div>
+      <div class="feedback-container">
+        <BFormInvalidFeedback :state="isValidPassword.valid">
+          {{ isValidPassword.message }}
+        </BFormInvalidFeedback>
+        <BFormValidFeedback :state="isValidPassword.valid"> OK </BFormValidFeedback>
+      </div>
     </div>
     <div class="form-group mt-3 col-8">
-      <BFormInput type="password" placeholder="パスワード確認(必須)" v-model="passwordCheck" :state="isEqualPassword" required/>
-      <BFormInvalidFeedback :state="isEqualPassword">
-        パスワードが一致しません
-      </BFormInvalidFeedback>
-      <BFormValidFeedback :state="isEqualPassword"> OK </BFormValidFeedback>
+      <div class="input-group">
+        <BFormInput :type="!showPasswordCheck ? 'password':'text'" placeholder="パスワード確認(必須)" v-model="passwordCheck" :state="isEqualPassword" required/>
+        <button class="btn btn-outline-secondary" type="button" @click="showPasswordCheck = !showPasswordCheck">
+          <i :class="['bi', showPasswordCheck ? 'bi-eye-slash' : 'bi-eye']"></i>
+        </button>
+      </div>
+      <div class="feedback-container">
+        <BFormInvalidFeedback :state="isEqualPassword">
+          パスワードが一致しません
+        </BFormInvalidFeedback>
+        <BFormValidFeedback :state="isEqualPassword"> OK </BFormValidFeedback>
+      </div>
     </div>
     <div class="form-group mt-3 col-8">
       <BFormInput placeholder="メールアドレス(任意)" type="email" v-model="email" :state="isValidEmail" />
@@ -69,6 +83,8 @@
       const email = ref('')
       const message = ref('')
       const statusCode = ref()
+      const showPassword = ref(false)
+      const showPasswordCheck = ref(false)
 
       const isValidUsername = computed(() => {
         return validateUsername(username).validate()
@@ -140,7 +156,9 @@
         isValidUsername,
         isValidPassword,
         isEqualPassword,
-        isValidEmail
+        isValidEmail,
+        showPassword,
+        showPasswordCheck
       }
     }
   }

@@ -14,22 +14,47 @@
       
       <BForm @submit.prevent="submitNewPassword">
         <div class="form-group mt-3">
-          <BFormInput type="password" placeholder="現在のパスワード(必須)" v-model="oldPassword" :disabled="!isPasswordChangeEnabled" required/>
-        </div>
-        <div class="form-group mt-3">
-          <BFormInput type="password" placeholder="新しいパスワード(必須)" v-model="newPassword" :disabled="!isPasswordChangeEnabled" :state="isValidPassword.valid" required/>
-          <BFormInvalidFeedback :state="isValidPassword.valid">
-            {{ isValidPassword.message }}
-          </BFormInvalidFeedback>
-          <BFormValidFeedback :state="isValidPassword.valid"> OK </BFormValidFeedback>
-        </div>
-        <div class="form-group mt-3">
-          <BFormInput type="password" placeholder="新しいパスワード確認(必須)" v-model="newPasswordCheck" :disabled="!isPasswordChangeEnabled" :state="isEqualPassword" required/>
-          <BFormInvalidFeedback :state="isEqualPassword">
-            パスワードが一致しません
-          </BFormInvalidFeedback>
-          <BFormValidFeedback :state="isEqualPassword"> OK </BFormValidFeedback>
+          <div class="input-group">
+            <BFormInput :type="!showOldPassword ? 'password':'text'" placeholder="現在のパスワード(必須)" v-model="oldPassword" :disabled="!isPasswordChangeEnabled" required/>
+            <button class="btn btn-outline-secondary" type="button" 
+                    @click="showOldPassword = !showOldPassword"
+                    :disabled="!isPasswordChangeEnabled">
+              <i :class="['bi', showOldPassword ? 'bi-eye-slash' : 'bi-eye']"></i>
+            </button>
           </div>
+        </div>
+        <div class="form-group mt-3">
+          <div class="input-group">
+            <BFormInput :type="!showNewPassword ? 'password':'text'" placeholder="新しいパスワード(必須)" v-model="newPassword" :disabled="!isPasswordChangeEnabled" :state="isValidPassword.valid" required/>
+            <button class="btn btn-outline-secondary" type="button"
+                    @click="showNewPassword = !showNewPassword"
+                    :disabled="!isPasswordChangeEnabled">
+              <i :class="['bi', showNewPassword ? 'bi-eye-slash' : 'bi-eye']"></i>
+            </button>
+          </div>
+          <div class="feedback-container">
+            <BFormInvalidFeedback :state="isValidPassword.valid">
+              {{ isValidPassword.message }}
+            </BFormInvalidFeedback>
+            <BFormValidFeedback :state="isValidPassword.valid"> OK </BFormValidFeedback>
+          </div>
+        </div>
+        <div class="form-group mt-3">
+          <div class="input-group">
+            <BFormInput :type="!showNewPasswordCheck ? 'password':'text'" placeholder="新しいパスワード確認(必須)" v-model="newPasswordCheck" :disabled="!isPasswordChangeEnabled" :state="isEqualPassword" required/>
+            <button class="btn btn-outline-secondary" type="button"
+                    @click="showNewPasswordCheck = !showNewPasswordCheck"
+                    :disabled="!isPasswordChangeEnabled">
+              <i :class="['bi', showNewPasswordCheck ? 'bi-eye-slash' : 'bi-eye']"></i>
+            </button>
+          </div>
+          <div class="feedback-container">
+            <BFormInvalidFeedback :state="isEqualPassword">
+              パスワードが一致しません
+            </BFormInvalidFeedback>
+            <BFormValidFeedback :state="isEqualPassword"> OK </BFormValidFeedback>
+          </div>
+        </div>
         <button type="submit" class="btn btn-outline-secondary my-3" :disabled="!isPasswordChangeEnabled" >変更</button>
       </BForm>
     </div>
@@ -66,6 +91,9 @@
       const authStore = useAuthStore()
       const isPasswordChangeEnabled = ref(false)
       const isFormVisible = ref(false)
+      const showOldPassword = ref(false)
+      const showNewPassword = ref(false)
+      const showNewPasswordCheck = ref(false)
       const { handleError } = commonError(statusCode, message, router)
 
       const isValidPassword = computed(() => {
@@ -145,7 +173,10 @@
         isEqualPassword,
         isPasswordChangeEnabled,
         isFormVisible,
-        toggleFormVisibility
+        toggleFormVisibility,
+        showOldPassword,
+        showNewPassword,
+        showNewPasswordCheck
       }
     }
   }

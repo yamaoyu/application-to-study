@@ -5,7 +5,13 @@
       <input type="text" placeholder="username" class="form-control" v-model="username" required>
     </div>
     <div class="mt-3 col-6">
-      <input type="password" placeholder="password" class="form-control" v-model="password" required>
+      <div class="input-group">
+        <input :type="!showPassword ? 'password':'text'" placeholder="password" class="form-control" v-model="password" required>
+        <button class="btn btn-outline-secondary" type="button"
+                    @click="showPassword = !showPassword">
+          <i :class="['bi', showPassword ? 'bi-eye-slash' : 'bi-eye']"></i>
+        </button>
+      </div>
     </div>
     <button type="submit" class="btn btn-outline-secondary mt-3">ログイン</button>
   </form>
@@ -33,6 +39,7 @@
       const statusCode = ref()
       const router =  useRouter()
       const route = useRoute()
+      const showPassword = ref(false)
       const authStore = useAuthStore()
 
 
@@ -89,7 +96,8 @@
         message,
         statusCode,
         getResponseAlert,
-        userLogin
+        userLogin,
+        showPassword
       }
     }
   }
