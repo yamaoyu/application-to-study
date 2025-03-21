@@ -58,9 +58,11 @@ def client(db_session):
 
 
 test_username = "testuser"
-test_plain_password = "password"
+test_plain_password = "P@ssword1"
 test_email = "test@test.com"
-test_device = "test_device"
+
+another_test_user = "testuser2"
+password_for_another_user = "P@ssword2"
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -75,7 +77,7 @@ def create_user(client):
 
 @pytest.fixture(scope="function", autouse=True)
 def login_and_get_token(client):
-    data = {"username": test_username, "password": test_plain_password, "device": test_device}
+    data = {"username": test_username, "password": test_plain_password}
     token = client.post("/login", json=data)
     return token
 
