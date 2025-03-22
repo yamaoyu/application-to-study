@@ -18,6 +18,7 @@ from jose import jwt, JWTError, ExpiredSignatureError
 # openssl rand -hex 32
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
+PEPPER = os.getenv("PEPPER")
 # .envに定義したものは文字列として読み込まれるようなのでint型へ変換する
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 REFRESH_TOKEN_EXPIRE_WEEKS = int(os.getenv("REFRESH_TOKEN_EXPIRE_WEEKS"))
@@ -53,11 +54,11 @@ def get_token(user: db_model, token_type: str, response: Response = None, db=Non
 
 
 def verify_password(plain_password, hashed_password) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return pwd_context.verify((plain_password + PEPPER), hashed_password)
 
 
 def get_password_hash(password) -> str:
-    return pwd_context.hash(password)
+    return pwd_context.hash(password + PEPPER)
 
 
 def is_password_complex(password: str) -> bool:
