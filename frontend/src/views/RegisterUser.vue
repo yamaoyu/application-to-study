@@ -104,7 +104,7 @@
 
       const createUser = async() => {
         // パスワード不一致の場合はリクエストを送信しない
-        if (password.value !== passwordCheck.value) {
+        if (!isEqualPassword.value) {
           statusCode.value = null;
           message.value = "パスワードが一致しません\nパスワードを確認してください";
           return;

@@ -38,7 +38,7 @@ def create_user(user: RegisterUserInfo, db: Session = Depends(get_db)):
         username = user.username
         plain_password = user.password
         email = user.email
-        role = user.role if user.role == "admin" else "general"
+        role = user.role if user.role in ["admin", "general"] else "general"
         hash_password = get_password_hash(plain_password)
         form_data = db_model.User(
             username=username, password=hash_password, email=email, role=role)
