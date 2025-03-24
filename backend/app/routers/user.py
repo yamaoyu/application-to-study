@@ -5,7 +5,7 @@ from lib.security import (get_password_hash, get_token, get_current_user,
 from db.database import get_db
 from lib.log_conf import logger
 from sqlalchemy.orm import Session
-from app.models.user_model import RegisterUserInfo, ResponseCreatedUser, LoginUserInfo
+from app.models.user_model import RegisterUserInfo, ResponseCreatedUser, LoginUserInfo, ChangePasswordInfo
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from fastapi import APIRouter, HTTPException, Depends, Response, Cookie
 
@@ -38,8 +38,7 @@ def create_user(user: RegisterUserInfo, db: Session = Depends(get_db)):
         username = user.username
         plain_password = user.password
         email = user.email
-        valid_roles = ["admin", "general"]
-        role = user.role if user.role in valid_roles else "general"
+        role = user.role if user.role in ["admin", "general"] else "general"
         hash_password = get_password_hash(plain_password)
         form_data = db_model.User(
             username=username, password=hash_password, email=email, role=role)
@@ -50,7 +49,7 @@ def create_user(user: RegisterUserInfo, db: Session = Depends(get_db)):
                 "password": len(plain_password) * "*",
                 "email": user.email,
                 "message": f"{username}の作成に成功しました",
-                "role": role if role else "general"}
+                "role": role if role == "admin" else "general"}
     except HTTPException as http_e:
         raise http_e
     except IntegrityError as sqlalchemy_error:
@@ -160,6 +159,7 @@ def regenerate_access_token(refresh_token: str = Cookie(default=None),
                             db: Session = Depends(get_db)):
     """ アクセストークンの期限が切れている場合、リフレッシュトークンを使ってアクセストークンを再発行する """
     try:
+        # アクセストークンは切れているため、リフレッシュトークンを使用してユーザーを取得する
         current_user = get_current_user(refresh_token, db=db)
         user = db.query(db_model.User).filter(
             db_model.User.username == current_user["username"]).one()
@@ -175,5 +175,29 @@ def regenerate_access_token(refresh_token: str = Cookie(default=None),
         raise http_e
     except Exception:
         logger.error(f"トークンの再発行に失敗しました\n{traceback.format_exc()}")
+        raise HTTPException(
+            status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
+
+
+@router.put("/password", status_code=200)
+def change_password(change_password_info: ChangePasswordInfo,
+                    db: Session = Depends(get_db),
+                    current_user: dict = Depends(get_current_user)):
+    try:
+        old_password = change_password_info.old_password
+        new_password = change_password_info.new_password
+        user = db.query(db_model.User).filter(
+            db_model.User.username == current_user["username"]).one()
+        if not verify_password(old_password, user.password):
+            raise HTTPException(status_code=400, detail="パスワードが正しくありません")
+        user.password = get_password_hash(new_password)
+        db.commit()
+        return {"message": "パスワードの変更に成功しました"}
+    except HTTPException as http_e:
+        raise http_e
+    except NoResultFound:
+        raise HTTPException(status_code=404, detail="ユーザーが見つかりません")
+    except Exception:
+        logger.error(f"パスワード変更に失敗しました\n{traceback.format_exc()}")
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")

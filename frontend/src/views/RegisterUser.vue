@@ -1,26 +1,56 @@
 <template>
+  <nav class="navbar navbar-expand-lg bd-navbar fixed-top bg-dark navbar-dark">
+    <div class="container-fluid">
+      <ul class="navbar-nav ms-auto me-2" style="color: white;">
+        <li class="nav-item">
+          <router-link class="nav-link fs-5 py-1" to="/login">LOGIN</router-link>
+        </li>
+      </ul>
+    </div>
+  </nav>
   <h2>ユーザー登録</h2>
   <BForm @submit.prevent="createUser" class="container d-flex flex-column align-items-center">
     <div class="form-group mt-3 col-8">
-      <BFormInput placeholder="username(必須)" v-model="username" :state="validateUsername" required/>
-      <BFormInvalidFeedback :state="validateUsername">
+      <BFormInput placeholder="ユーザー名(必須)" v-model="username" :state="isValidUsername" required/>
+      <BFormInvalidFeedback :state="isValidUsername">
         ユーザー名は3文字以上16文字以下にして下さい
       </BFormInvalidFeedback>
-      <BFormValidFeedback :state="validateUsername"> OK </BFormValidFeedback>
+      <BFormValidFeedback :state="isValidUsername"> OK </BFormValidFeedback>
     </div>
     <div class="form-group mt-3 col-8">
-      <BFormInput type="password" placeholder="password(必須)" v-model="password" :state="validatePassword" required/>
-      <BFormInvalidFeedback :state="validatePassword">
-        パスワードは8文字以上16文字以下にして下さい
-      </BFormInvalidFeedback>
-      <BFormValidFeedback :state="validatePassword"> OK </BFormValidFeedback>
+      <div class="input-group">
+        <BFormInput :type="!showPassword ? 'password':'text'" placeholder="パスワード(必須)" v-model="password" :state="isValidPassword.valid" required/>
+        <button class="btn btn-outline-secondary" type="button" @click="showPassword = !showPassword">
+          <i :class="['bi', showPassword ? 'bi-eye-slash' : 'bi-eye']"></i>
+        </button>
+      </div>
+      <div class="feedback-container">
+        <BFormInvalidFeedback :state="isValidPassword.valid">
+          {{ isValidPassword.message }}
+        </BFormInvalidFeedback>
+        <BFormValidFeedback :state="isValidPassword.valid"> OK </BFormValidFeedback>
+      </div>
     </div>
     <div class="form-group mt-3 col-8">
-      <BFormInput placeholder="email(任意)" type="email" v-model="email" :state="validateEmail" />
-      <BFormInvalidFeedback :state="validateEmail">
+      <div class="input-group">
+        <BFormInput :type="!showPasswordCheck ? 'password':'text'" placeholder="パスワード確認(必須)" v-model="passwordCheck" :state="isEqualPassword" required/>
+        <button class="btn btn-outline-secondary" type="button" @click="showPasswordCheck = !showPasswordCheck">
+          <i :class="['bi', showPasswordCheck ? 'bi-eye-slash' : 'bi-eye']"></i>
+        </button>
+      </div>
+      <div class="feedback-container">
+        <BFormInvalidFeedback :state="isEqualPassword">
+          パスワードが一致しません
+        </BFormInvalidFeedback>
+        <BFormValidFeedback :state="isEqualPassword"> OK </BFormValidFeedback>
+      </div>
+    </div>
+    <div class="form-group mt-3 col-8">
+      <BFormInput placeholder="メールアドレス(任意)" type="email" v-model="email" :state="isValidEmail" />
+      <BFormInvalidFeedback :state="isValidEmail">
         メールアドレスの形式で入力して下さい
       </BFormInvalidFeedback>
-      <BFormValidFeedback :state="validateEmail"> OK </BFormValidFeedback>
+      <BFormValidFeedback :state="isValidEmail"> OK </BFormValidFeedback>
     </div>
     <button type="submit" class="btn btn-outline-secondary mt-3">登録</button>
   </BForm>
@@ -35,7 +65,7 @@
   <script>
   import { ref, computed } from 'vue'
   import axios from 'axios'
-  import { getResponseAlert } from './lib';
+  import { getResponseAlert, validateUsername, validatePassword, checkPassword, validateEmail } from './lib';
   import { BForm, BFormInput, BFormInvalidFeedback, BFormValidFeedback } from 'bootstrap-vue-next';
   
   export default {
@@ -49,31 +79,37 @@
     setup() {
       const username = ref('')
       const password = ref('')
+      const passwordCheck = ref('')
       const email = ref('')
       const message = ref('')
       const statusCode = ref()
+      const showPassword = ref(false)
+      const showPasswordCheck = ref(false)
 
-      const validateUsername = computed(() => {
-        if (username.value.length === 0) {
-          return null
-        }
-        return username.value.length >= 3 && username.value.length <= 16})
-
-      const validatePassword = computed(() => {
-        if (password.value.length === 0) {
-          return null
-        }
-        return password.value.length >= 8 && password.value.length <= 16})
-
-      const validateEmail = computed(() => {
-        if (email.value.length === 0) {
-          return null
-        }
-        const emailPattern = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-        return emailPattern.test(email.value);
+      const isValidUsername = computed(() => {
+        return validateUsername(username).validate()
       })
-  
+
+      const isValidPassword = computed(() => {
+        return validatePassword(password).validate()
+      })
+
+      const isEqualPassword = computed(() => {
+        return checkPassword(password, passwordCheck).validate()
+      })
+
+      const isValidEmail = computed(() => {
+        return validateEmail(email).validate()
+      })
+
       const createUser = async() => {
+        // パスワード不一致の場合はリクエストを送信しない
+        if (!isEqualPassword.value) {
+          statusCode.value = null;
+          message.value = "パスワードが一致しません\nパスワードを確認してください";
+          return;
+        }
+
         try {
           const url = process.env.VUE_APP_BACKEND_URL + 'users'
           const response = await axios.post(
@@ -111,14 +147,18 @@
       return {
         username,
         password,
+        passwordCheck,
         email,
         message,
         statusCode,
         createUser,
         getResponseAlert,
-        validateUsername,
-        validatePassword,
-        validateEmail
+        isValidUsername,
+        isValidPassword,
+        isEqualPassword,
+        isValidEmail,
+        showPassword,
+        showPasswordCheck
       }
     }
   }

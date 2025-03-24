@@ -1,6 +1,7 @@
 import os
 import uuid
 import traceback
+import re
 from passlib.context import CryptContext
 from typing import Union
 from functools import wraps
@@ -17,11 +18,13 @@ from jose import jwt, JWTError, ExpiredSignatureError
 # openssl rand -hex 32
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
+PEPPER = os.getenv("PEPPER")
 # .envに定義したものは文字列として読み込まれるようなのでint型へ変換する
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 REFRESH_TOKEN_EXPIRE_WEEKS = int(os.getenv("REFRESH_TOKEN_EXPIRE_WEEKS"))
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+special_characters = r"[!@#$%&*()+\-=[\]{};:<>,./?_~|]"
 
 credentials_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -51,11 +54,23 @@ def get_token(user: db_model, token_type: str, response: Response = None, db=Non
 
 
 def verify_password(plain_password, hashed_password) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return pwd_context.verify((plain_password + PEPPER), hashed_password)
 
 
 def get_password_hash(password) -> str:
-    return pwd_context.hash(password)
+    return pwd_context.hash(password + PEPPER)
+
+
+def is_password_complex(password: str) -> bool:
+    if not re.search(r"[a-z]", password):
+        return False
+    if not re.search(r"[A-Z]", password):
+        return False
+    if not re.search(r"[0-9]", password):
+        return False
+    if not re.search(special_characters, password):
+        return False
+    return True
 
 
 def create_access_token(data: dict,

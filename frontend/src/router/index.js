@@ -11,6 +11,7 @@ import finishActivity from '../views/FinishActivity.vue'
 import InquiryForm from '../views/InquiryForm.vue'
 import AllPeriodInfo from '../views/AllPeriodInfo.vue'
 import EditTodo from '../views/EditTodo.vue'
+import UserInfo from '../views/UserInfo.vue'
 
 const routes = [
   {
@@ -72,6 +73,11 @@ const routes = [
     path:"/edit/todo",
     name:"EditTodo",
     component:EditTodo
+  },
+  {
+    path:"/user/info",
+    name:"UserInfo",
+    component:UserInfo
   }
 ]
 

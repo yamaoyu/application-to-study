@@ -1,11 +1,9 @@
 from unittest.mock import patch
 from datetime import timedelta
-from conftest import test_username, test_device
+from conftest import test_username, another_test_user, password_for_another_user
 from lib.security import create_access_token
 
 # テストで使用する変数
-another_test_user = "testuser2"
-test_password = "password"
 test_year = "2024"
 test_month = "6"
 test_salary = 23.0
@@ -20,14 +18,13 @@ def setup_salary_for_test(client, get_headers):
 
 def setup_create_another_user(client):
     user_info = {"username": another_test_user,
-                 "password": test_password, }
+                 "password": password_for_another_user, }
     client.post("/users", json=user_info)
 
 
 def setup_login(client):
     user_info = {"username": another_test_user,
-                 "password": test_password,
-                 "device": test_device}
+                 "password": password_for_another_user}
     response = client.post("/login", json=user_info)
     access_token = response.json()["access_token"]
     return access_token

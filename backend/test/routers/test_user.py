@@ -1,16 +1,16 @@
 import pytest
-from conftest import test_username, test_plain_password, test_device, SECRET_KEY, ALGORITHM
+from conftest import test_username, test_plain_password, SECRET_KEY, ALGORITHM, password_for_another_user
 from jose import jwt
 
 
 def test_register_user(client):
     user_info = {"username": "test",
-                 "password": "testpassword"}
+                 "password": password_for_another_user}
     response = client.post("/users", json=user_info)
     assert response.status_code == 201
     assert response.json() == {
         "username": "test",
-        "password": "************",
+        "password": "*********",
         "email": None,
         "message": "testの作成に成功しました",
         "role": "general"
@@ -20,7 +20,7 @@ def test_register_user(client):
 def test_register_user_with_short_username(client):
     """3文字以上、16文字以下でないユーザー名で登録した場合"""
     user_info = {"username": "t",
-                 "password": "testpassword"}
+                 "password": password_for_another_user}
     response = client.post("/users", json=user_info)
     assert response.status_code == 422
     assert response.json() == {"detail": "ユーザー名は3文字以上、16文字以下としてください"}
@@ -38,7 +38,7 @@ def test_register_user_with_invalid_password(client):
 def test_register_user_with_invalid_email(client):
     """「@」が含まれないメールアドレスを登録した場合"""
     user_info = {"username": "test",
-                 "password": "testpassword",
+                 "password": password_for_another_user,
                  "email": "aaaaa"}
     response = client.post("/users", json=user_info)
     assert response.status_code == 422
@@ -48,7 +48,7 @@ def test_register_user_with_invalid_email(client):
 def test_register_with_duplicate_user_name(client):
     """ 既に登録されているユーザー名で登録した場合 """
     user_info = {"username": test_username,
-                 "password": "testpassword"}
+                 "password": password_for_another_user}
     response = client.post("/users", json=user_info)
     assert response.status_code == 400
     assert response.json() == {
@@ -58,8 +58,7 @@ def test_register_with_duplicate_user_name(client):
 
 def test_login(client):
     user_info = {"username": test_username,
-                 "password": test_plain_password,
-                 "device": test_device}
+                 "password": test_plain_password}
     response = client.post("/login", json=user_info)
     access_token = response.json()["access_token"]
     refresh_token = response.json()["refresh_token"]
@@ -81,8 +80,7 @@ def test_login(client):
 def test_login_with_invalid_password(client):
     """パスワードを間違えた場合"""
     user_info = {"username": test_username,
-                 "password": "invalid_password",
-                 "device": test_device}
+                 "password": "invalid_password"}
     response = client.post("/login", json=user_info)
     assert response.status_code == 401
     assert response.json() == {
@@ -93,22 +91,19 @@ def test_login_with_invalid_password(client):
 def test_login_not_registered_user(client):
     """登録されていないユーザーでログイン"""
     user_info = {"username": "test",
-                 "password": "testpassword",
-                 "device": test_device}
+                 "password": password_for_another_user}
     response = client.post("/login", json=user_info)
     assert response.status_code == 404
 
 
 def test_logout(client, get_headers):
-    device_info = {"device": test_device}
-    response = client.post("/logout", json=device_info, headers=get_headers)
+    response = client.post("/logout", headers=get_headers)
     assert response.status_code == 200
     assert response.json() == {"message": f"{test_username}がログアウト"}
 
 
 def test_regenerate_token(client, get_headers):
-    device_info = {"device": test_device}
-    response = client.post("/token", json=device_info, headers=get_headers)
+    response = client.post("/token", headers=get_headers)
     access_token = response.json()["access_token"]
     assert response.status_code == 200
     assert response.json()["token_type"] == "Bearer"
