@@ -47,6 +47,45 @@ def fetch_one_income(year_month: str, username: str, db: Session):
     return income
 
 
+def get_month_info(activities: list, incomes: list):
+    month_dict = {1: "jan", 2: "feb", 3: "mar", 4: "apr", 5: "may", 6: "jun",
+                  7: "jul", 8: "aug", 9: "sep", 10: "oct", 11: "nov", 12: "dec"}
+    monthly_info = {}
+
+    income_by_month = {int(income.year_month.split("-")[1]): income for income in incomes}
+
+    activities_by_month = {}
+    for act in activities:
+        date = act.date.strftime("%Y-%m-%d")
+        month = int(date.split("-")[1])
+        if month not in activities_by_month:
+            activities_by_month[month] = []
+        activities_by_month[month] += [act]
+
+    for month in range(1, 13):
+        info = {}
+        if month not in income_by_month:
+            monthly_info[month_dict[month]] = info
+            continue
+        income = income_by_month[month]
+        info["salary"] = income.salary
+        info["bonus"] = income.total_bonus
+        info["penalty"] = income.total_penalty
+        info["pay_adjustment"] = round((income.total_bonus - income.total_penalty), 2)
+
+        if month in activities_by_month:
+            success_days = sum(1 for act in activities_by_month[month] if act.status == "success")
+            info["success_days"] = success_days
+            info["fail_days"] = len(activities_by_month[month]) - success_days
+        else:
+            info["success_days"] = 0
+            info["fail_days"] = 0
+
+        monthly_info[month_dict[month]] = info
+
+    return monthly_info
+
+
 @router.get("/activities/{year}/{month}/{day}", status_code=200)
 def get_day_activities(year: int,
                        month: int,
@@ -103,6 +142,9 @@ def register_target_time(target: TargetTimeIn,
         CheckDate(year=year, month=month, day=day)
         date = f"{year}-{month}-{day}"
 
+        # 目標時間を登録する前に、その日の活動実績が存在するか確認
+        fetch_one_income(f"{year}-{month}", username, db)
+
         insert_data = db_model.Activity(
             date=date, target_time=target_time, username=username)
         db.add(insert_data)
@@ -114,6 +156,8 @@ def register_target_time(target: TargetTimeIn,
                 "actual_time": 0,
                 "status": "pending",
                 "message": message}
+    except HTTPException as http_e:
+        raise http_e
     except IntegrityError:
         raise HTTPException(
             status_code=400, detail=f"{date}の目標時間は既に登録済みです")
@@ -269,6 +313,59 @@ def get_month_activities(year: int,
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
+@router.get("/activities/{year:int}", status_code=200)
+def get_year_activities(year: int,
+                        db: Session = Depends(get_db),
+                        current_user: dict = Depends(get_current_user)):
+    """ 特定年のデータを取得 """
+    try:
+        username = current_user["username"]
+        start_date = datetime(year, 1, 1).date()
+        end_date = datetime(year, 12, 31).date()
+        activities = db.query(db_model.Activity).filter(
+            db_model.Activity.date.between(start_date, end_date),
+            db_model.Activity.username == username).order_by(
+                db_model.Activity.date).all()
+        if not activities:
+            raise HTTPException(status_code=404,
+                                detail=f"{year}年の活動は登録されていません")
+        incomes = db.query(db_model.Income).filter(
+            db_model.Income.year_month.like(f"{year}%"),
+            db_model.Income.username == username).all()
+        if not incomes:
+            raise HTTPException(status_code=404, detail=f"{year}年で月収が登録されている月はありません")
+        success_days = sum(1 for act in activities if act.status == "success")
+        fail_days = len(activities) - success_days
+
+        total_bonus = round(sum(income.total_bonus for income in incomes), 2)
+        total_penalty = round(sum(income.total_penalty for income in incomes), 2)
+        annual_income = sum(income.salary for income in incomes)
+        total_annual_income = round((annual_income + total_bonus - total_penalty), 2)
+        pay_adjustment = round((total_bonus - total_penalty), 2)
+
+        monthly_info = get_month_info(activities, incomes)
+
+        logger.info(f"{current_user['username']}が{year}年の活動実績を取得")
+        return {
+            "total_annual_income": total_annual_income,
+            "annual_income": annual_income,
+            "pay_adjustment": pay_adjustment,
+            "bonus": total_bonus,
+            "penalty": total_penalty,
+            "success_days": success_days,
+            "fail_days": fail_days,
+            "monthly_info": monthly_info
+        }
+    except HTTPException as http_e:
+        raise http_e
+    except ValidationError as validate_e:
+        raise HTTPException(status_code=422, detail=str(validate_e.errors()[0]["ctx"]["error"]))
+    except Exception:
+        logger.error(f"月別の活動実績の取得に失敗しました\n{traceback.format_exc()}")
+        raise HTTPException(
+            status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
+
+
 @router.get("/activities/total/", status_code=200)
 def get_all_activities(db: Session = Depends(get_db),
                        current_user: dict = Depends(get_current_user)):
@@ -291,15 +388,15 @@ def get_all_activities(db: Session = Depends(get_db),
         total_penalty = round(sum([income.total_penalty for income in incomes]), 2)
         pay_adjustment = round(total_bonus - total_penalty, 2)
         total_income = round((total_salary + total_bonus - total_penalty), 2)
-        success_days = [act for act in activities if act.status == "success"]
+        success_days = sum(1 for act in activities if act.status == "success")
         logger.info(f"{current_user['username']}が全期間の活動実績を取得")
         return {"total_income": total_income,  # 総収入(総給与 + ボーナス - ペナルティ)
                 "total_salary": total_salary,  # 総給与(月収の合計)
                 "pay_adjustment": pay_adjustment,
                 "total_bonus": total_bonus,
                 "total_penalty": total_penalty,
-                "success_days": len(success_days),
-                "fail_days": len(activities) - len(success_days)}
+                "success_days": success_days,
+                "fail_days": len(activities) - success_days}
     except HTTPException as http_e:
         raise http_e
     except Exception:
