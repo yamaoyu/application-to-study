@@ -1,8 +1,30 @@
+export const MONTH_DICT = {
+    "jan": '1月',
+    "feb": '2月',
+    "mar": '3月',
+    "apr": '4月',
+    "may": '5月',
+    "jun": '6月',
+    "jul": '7月',
+    "aug": '8月',
+    "sep": '9月',
+    "oct": '10月',
+    "nov": '11月',
+    "dec": '12月'
+}
+
 export function getMaxMonth(){
     // 1年後の12月までが範囲となる
     const today = new Date()
     const year = today.getFullYear() + 1
     return `${year}-12`;
+}
+
+export function getMaxYear(){
+    // 1年後までが範囲となる
+    const today = new Date()
+    const year = today.getFullYear() + 1
+    return year
 }
 
 export function changeDate(date, message){
@@ -28,6 +50,7 @@ export function changeDate(date, message){
 
 export function changeYear(selectedMonth){
     const increaseYear = async(step) => {
+        // YYYY-MMの形を受け取り、年にstepを足す
         const [year, month] = selectedMonth.value.split('-').map(Number)
         let newDate = new Date(year + step, month)
         selectedMonth.value = newDate.toISOString().slice(0, 7)
@@ -63,4 +86,10 @@ export function getThisMonth(){
     const year = today.getFullYear()
     const month = `${today.getMonth()+1}`.padStart(2, '0')
     return `${year}-${month}`
+}
+
+export function getThisYear(){
+    const today = new Date()
+    const year = today.getFullYear()
+    return year
 }
