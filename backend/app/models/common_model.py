@@ -29,3 +29,13 @@ class CheckDate(BaseModel):
             return self
         except Exception:
             raise ValueError("日付が不正です")
+
+
+class checkYear(BaseModel):
+    year: int
+
+    @field_validator("year")
+    def check_year(cls, year):
+        if not (2024 <= year <= 2099):
+            raise ValueError("年は2024~2099の範囲で入力してください")
+        return year

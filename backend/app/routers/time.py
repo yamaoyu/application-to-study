@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from app.models.time_model import (
     TargetTimeIn, ActualTimeIn, RegisterActivities
 )
-from app.models.common_model import CheckDate
+from app.models.common_model import CheckDate, checkYear
 from db import db_model
 from db.database import get_db
 from lib.security import get_current_user
@@ -12,6 +12,7 @@ from lib.log_conf import logger
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from pydantic import ValidationError
+from collections import defaultdict
 
 router = APIRouter()
 
@@ -54,13 +55,11 @@ def get_month_info(activities: list, incomes: list):
 
     income_by_month = {int(income.year_month.split("-")[1]): income for income in incomes}
 
-    activities_by_month = {}
+    activities_by_month = defaultdict(list)
     for act in activities:
         date = act.date.strftime("%Y-%m-%d")
         month = int(date.split("-")[1])
-        if month not in activities_by_month:
-            activities_by_month[month] = []
-        activities_by_month[month] += [act]
+        activities_by_month[month].append(act)
 
     for month in range(1, 13):
         info = {}
@@ -319,6 +318,7 @@ def get_year_activities(year: int,
                         current_user: dict = Depends(get_current_user)):
     """ 特定年のデータを取得 """
     try:
+        checkYear(year=year)
         username = current_user["username"]
         start_date = datetime(year, 1, 1).date()
         end_date = datetime(year, 12, 31).date()
