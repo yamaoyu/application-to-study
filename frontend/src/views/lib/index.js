@@ -1,4 +1,4 @@
-import { getMaxMonth, changeDate, changeMonth, changeYear, getToday, getThisMonth } from "./dateUtils";
+import { MONTH_DICT, getMaxMonth, getMaxYear, changeDate, changeMonth, changeYear, getToday, getThisMonth, getThisYear } from "./dateUtils";
 import { generateTimeOptions, changeTime } from "./timeUtils";
 import { STATUS_DICT } from "./status";
 import { getStatusColors, getAdjustmentColors, getActivityAlert, getResponseAlert } from "./bootstrapClass";
@@ -7,12 +7,15 @@ import { commonError, finishActivityError, getActivityError, getMonthlyinfoError
 import { validateUsername, validatePassword, checkPassword, validateEmail } from "./userinfo";
 
 export {
+    MONTH_DICT,
     getMaxMonth, 
+    getMaxYear,
     generateTimeOptions,
     changeDate,
     changeMonth,
     getToday,
     getThisMonth,
+    getThisYear,
     changeYear,
     changeTime,
     STATUS_DICT,

@@ -12,6 +12,7 @@ import InquiryForm from '../views/InquiryForm.vue'
 import AllPeriodInfo from '../views/AllPeriodInfo.vue'
 import EditTodo from '../views/EditTodo.vue'
 import UserInfo from '../views/UserInfo.vue'
+import YearInfo from '../views/YearInfo.vue'
 
 const routes = [
   {
@@ -78,6 +79,11 @@ const routes = [
     path:"/user/info",
     name:"UserInfo",
     component:UserInfo
+  },
+  {
+    path:"/view/year-activities",
+    name:"YearInfo",
+    component:YearInfo
   }
 ]
 

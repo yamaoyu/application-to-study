@@ -41,6 +41,7 @@ def setup_monthly_income_for_test(client, get_headers):
 
 
 def test_register_target(client, get_headers):
+    setup_monthly_income_for_test(client, get_headers)
     data = {"target_time": 5.0}
     response = client.post(f"/activities{test_date_path}/target",
                            json=data,
@@ -71,6 +72,7 @@ def test_register_target_with_expired_token(client):
 
 def test_register_target_twice(client, get_headers):
     """ 既に目標時間が登録されている日の目標時間を登録 """
+    setup_monthly_income_for_test(client, get_headers)
     setup_target_time_for_test(client, get_headers)
     data = {"target_time": 5.0}
     response = client.post(f"/activities{test_date_path}/target",
@@ -123,6 +125,7 @@ def test_register_target_with_invalid_date(client, get_headers):
 
 
 def test_register_actual(client, get_headers):
+    setup_monthly_income_for_test(client, get_headers)
     setup_target_time_for_test(client, get_headers)
     data = {"actual_time": 5.0}
     response = client.put(f"/activities{test_date_path}/actual",
@@ -161,9 +164,9 @@ def test_register_actual_with_invalid_hour(client, get_headers):
 
 def test_register_actual_after_finish(client, get_headers):
     """ 活動を終了した日の活動時間を更新しようとした場合 """
+    setup_monthly_income_for_test(client, get_headers)
     setup_target_time_for_test(client, get_headers)
     setup_actual_time_for_test(client, get_headers)
-    setup_monthly_income_for_test(client, get_headers)
     setup_finish_activity_for_test(client, get_headers)
     data = {"actual_time": 5.0}
     response = client.put(f"/activities{test_date_path}/actual",
@@ -175,9 +178,9 @@ def test_register_actual_after_finish(client, get_headers):
 
 
 def test_finish_activity(client, get_headers):
+    setup_monthly_income_for_test(client, get_headers)
     setup_target_time_for_test(client, get_headers)
     setup_actual_time_for_test(client, get_headers)
-    setup_monthly_income_for_test(client, get_headers)
     response = client.put(f"/activities{test_date_path}/finish",
                           headers=get_headers)
     assert response.status_code == 200
@@ -189,21 +192,10 @@ def test_finish_activity(client, get_headers):
         "message": f"目標達成！{f"{test_bonus}万円({int(test_bonus * 10000)}円)"}ボーナス追加！"}
 
 
-def test_finish_activity_without_register_income(client, get_headers):
-    """ 月収を登録せずに活動を終了しようとした場合 """
-    setup_target_time_for_test(client, get_headers)
-    setup_actual_time_for_test(client, get_headers)
-    response = client.put(f"/activities{test_date_path}/finish",
-                          headers=get_headers)
-    assert response.status_code == 404
-    assert response.json() == {"detail":
-                               f"{test_year}-{test_month}の月収は未登録です"}
-
-
 def test_get_day_activities_registered_target(client, get_headers):
     """ 目標時間登録まで行った日の情報を取得 """
-    setup_target_time_for_test(client, get_headers)
     setup_monthly_income_for_test(client, get_headers)
+    setup_target_time_for_test(client, get_headers)
     date = test_date
     response = client.get(f"/activities{test_date_path}",
                           headers=get_headers)
@@ -218,9 +210,9 @@ def test_get_day_activities_registered_target(client, get_headers):
 
 def test_get_day_activities_registered_actual(client, get_headers):
     """ 活動時間登録まで行った日の情報を取得 """
+    setup_monthly_income_for_test(client, get_headers)
     setup_target_time_for_test(client, get_headers)
     setup_actual_time_for_test(client, get_headers)
-    setup_monthly_income_for_test(client, get_headers)
     date = test_date
     response = client.get(f"/activities{test_date_path}",
                           headers=get_headers)
@@ -235,9 +227,9 @@ def test_get_day_activities_registered_actual(client, get_headers):
 
 def test_get_day_activities(client, get_headers):
     """ 活動終了記録まで行った日の情報を取得 """
+    setup_monthly_income_for_test(client, get_headers)
     setup_target_time_for_test(client, get_headers)
     setup_actual_time_for_test(client, get_headers)
-    setup_monthly_income_for_test(client, get_headers)
     setup_finish_activity_for_test(client, get_headers)
     date = test_date
     response = client.get(f"/activities{test_date_path}",
@@ -277,9 +269,9 @@ def test_get_day_activities_with_expired_token(client, get_headers):
 
 def test_get_month_acitivities(client, get_headers):
     """ 月ごとの情報を取得 """
+    setup_monthly_income_for_test(client, get_headers)
     setup_target_time_for_test(client, get_headers)
     setup_actual_time_for_test(client, get_headers)
-    setup_monthly_income_for_test(client, get_headers)
     setup_finish_activity_for_test(client, get_headers)
     total_monthly_income = test_salary + test_bonus
     response = client.get("/activities/2024/5",
@@ -304,9 +296,9 @@ def test_get_month_acitivities(client, get_headers):
 
 def test_get_all_acitivities(client, get_headers):
     """ 対象ユーザーのすべての情報を取得 """
+    setup_monthly_income_for_test(client, get_headers)
     setup_target_time_for_test(client, get_headers)
     setup_actual_time_for_test(client, get_headers)
-    setup_monthly_income_for_test(client, get_headers)
     setup_finish_activity_for_test(client, get_headers)
     total_monthly_income = test_salary + test_bonus
     response = client.get("/activities/total",
@@ -319,3 +311,41 @@ def test_get_all_acitivities(client, get_headers):
                                "total_penalty": 0,
                                "success_days": 1,
                                "fail_days": 0}
+
+
+def test_get_year_acitivities(client, get_headers):
+    """ 月ごとの情報を取得 """
+    setup_monthly_income_for_test(client, get_headers)
+    setup_target_time_for_test(client, get_headers)
+    setup_actual_time_for_test(client, get_headers)
+    setup_finish_activity_for_test(client, get_headers)
+    total_annual_income = test_salary + test_bonus
+    response = client.get("/activities/2024", headers=get_headers)
+    assert response.status_code == 200
+    assert response.json() == {"total_annual_income": total_annual_income,
+                               "annual_income": test_salary,
+                               "pay_adjustment": test_bonus,
+                               "bonus": test_bonus,
+                               "penalty": 0,
+                               "success_days": 1,
+                               "fail_days": 0,
+                               "monthly_info": {
+                                   "jan": {},
+                                   "feb": {},
+                                   "mar": {},
+                                   "apr": {},
+                                   "may": {
+                                       "salary": test_salary,
+                                       "bonus": test_bonus,
+                                       "penalty": 0.0,
+                                       "pay_adjustment": test_bonus,
+                                       "success_days": 1,
+                                       "fail_days": 0},
+                                   "jun": {},
+                                   "jul": {},
+                                   "aug": {},
+                                   "sep": {},
+                                   "oct": {},
+                                   "nov": {},
+                                   "dec": {}
+                               }}

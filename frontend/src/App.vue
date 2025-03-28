@@ -42,6 +42,7 @@
             </a>
             <ul class="dropdown-menu">
               <li class="dropdown-item"><router-link class="nav-link" style="color: black;" to="/view/month-activities">月別</router-link></li>
+              <li class="dropdown-item"><router-link class="nav-link" style="color: black;" to="/view/year-activities">年別</router-link></li>
               <li class="dropdown-item"><router-link class="nav-link" style="color: black;" to="/view/all-activities">全期間</router-link></li>
             </ul>
           </li>
