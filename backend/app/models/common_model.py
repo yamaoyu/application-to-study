@@ -31,7 +31,7 @@ class CheckDate(BaseModel):
             raise ValueError("日付が不正です")
 
 
-class checkYear(BaseModel):
+class CheckYear(BaseModel):
     year: int
 
     @field_validator("year")
