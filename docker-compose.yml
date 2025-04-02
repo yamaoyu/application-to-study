@@ -3,26 +3,9 @@ services:
     build: ./backend
     ports:
       - "${BACKEND_PORT}:8000"
-    environment:
-      - TEST_MYSQL_DATABASE=${TEST_MYSQL_DATABASE}
-      - TEST_DATABASE_URL=${TEST_DATABASE_URL}
-      - APP_ADMIN_USER=${APP_ADMIN_USER}
-      - APP_ADMIN_PASSWORD=${APP_ADMIN_PASSWORD}
-      - SECRET_KEY=${SECRET_KEY}
-      - ALGORITHM=${ALGORITHM}
-      - PEPPER=${PEPPER}
-      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
-      - REFRESH_TOKEN_EXPIRE_WEEKS=${REFRESH_TOKEN_EXPIRE_WEEKS}
-      - FRONTEND_URL=${FRONTEND_URL}
-      - BACKEND_PORT=${BACKEND_PORT}
-      - ENV=${ENV}
-      - LOGFILE_PATH=${LOGFILE_PATH}
-      - DEV_LOGFILE_PATH=${DEV_LOGFILE_PATH}
-      - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_HOST=${MYSQL_HOST}
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    env_file:
+      - .env
+      - .env.backend
     depends_on:
       db:
         condition: service_healthy
@@ -36,9 +19,9 @@ services:
     build: ./frontend
     ports:
       - "${FRONTEND_PORT}:8080"
-    environment:
-      - VUE_APP_BACKEND_URL=${VUE_APP_BACKEND_URL}
-      - FRONTEND_PORT=${FRONTEND_PORT}
+    env_file:
+      - .env
+      - .env.frontend
     depends_on:
       backend:
         condition: service_healthy
@@ -46,14 +29,9 @@ services:
   db:
     build: ./backend/db
     platform: ${DOCKER_PLATFORM:-linux/arm64}
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_HOST=${MYSQL_HOST}
-      - DB_PORT=${DB_PORT}
-      - DOCKER_PLATFORM=${DOCKER_PLATFORM}
+    env_file:
+      - .env
+      - .env.db
     volumes:
       - db_data:/var/lib/mysql
       - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql

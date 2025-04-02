@@ -24,38 +24,70 @@ jobs:
     - name: Cache Docker
       uses: actions/cache@v3
       with:
-        path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ hashFiles('backend/requirements.txt') }}
+        path: ~/.cache/docker
+        key: ${{ runner.os }}-docker-${{ hashFiles('backend/requirements.txt') }}
         restore-keys: |
-          ${{ runner.os }}-buildx-
+          ${{ runner.os }}-docker-
+
+    - name: create .env
+      run: |
+        cat << EOF > .env
+        MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+        MYSQL_USER=${{ secrets.MYSQL_USER }}
+        MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+        MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
+        MYSQL_HOST=${{ secrets.MYSQL_HOST }}
+        EOF
+
+    - name: create .env.backend
+      run: |
+        cat << EOF > .env.backend
+        APP_ADMIN_USER=${{ secrets.APP_ADMIN_USER }}
+        APP_ADMIN_PASSWORD=${{ secrets.APP_ADMIN_PASSWORD }}
+        SECRET_KEY=${{ secrets.SECRET_KEY }}
+        ALGORITHM=${{ secrets.ALGORITHM }}
+        PEPPER=${{ secrets.PEPPER }}
+        ACCESS_TOKEN_EXPIRE_MINUTES=${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}
+        REFRESH_TOKEN_EXPIRE_WEEKS=${{ secrets.REFRESH_TOKEN_EXPIRE_WEEKS }}
+        ENV=${{ secrets.ENV }}
+        LOGFILE_PATH=${{ secrets.LOGFILE_PATH }}
+        DEV_LOGFILE_PATH=${{ secrets.DEV_LOGFILE_PATH }}
+        TEST_MYSQL_DATABASE=${{ secrets.TEST_MYSQL_DATABASE }}
+        TEST_DATABASE_URL=${{ secrets.TEST_DATABASE_URL }}
+        FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+        BACKEND_PORT=${{ secrets.BACKEND_PORT }}
+        EOF
+
+
+    - name: create .env.db
+      run: |
+        cat << EOF > .env.db
+        DOCKER_PLATFORM=${{ secrets.DOCKER_PLATFORM }}
+        DB_PORT=${{ secrets.DB_PORT }}
+        EOF
+
+    - name: create .env.frontend
+      run: |
+        cat << EOF > .env.frontend
+        VUE_APP_BACKEND_URL=${{ secrets.VUE_APP_BACKEND_URL }}
+        FRONTEND_PORT=${{ secrets.FRONTEND_PORT }}
+        EOF
         
     - name: Start Docker
-      env:
-          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-          MYSQL_USER: ${{ secrets.MYSQL_USER }}
-          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
-          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
-          MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          TEST_MYSQL_DATABASE: ${{ secrets.TEST_MYSQL_DATABASE }}
-          TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
-          APP_ADMIN_USER: ${{ secrets.APP_ADMIN_USER }}
-          APP_ADMIN_PASSWORD: ${{ secrets.APP_ADMIN_PASSWORD }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          ALGORITHM: ${{ secrets.ALGORITHM }}
-          PEPPER: ${{ secrets.PEPPER }}
-          ACCESS_TOKEN_EXPIRE_MINUTES: ${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}
-          REFRESH_TOKEN_EXPIRE_WEEKS: ${{ secrets.REFRESH_TOKEN_EXPIRE_WEEKS }}
-          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
-          BACKEND_PORT: ${{ secrets.BACKEND_PORT }}
-          ENV: ${{ secrets.ENV }}
-          LOGFILE_PATH: ${{ secrets.LOGFILE_PATH }}
-          DEV_LOGFILE_PATH: ${{ secrets.DEV_LOGFILE_PATH }}
-          VUE_APP_BACKEND_URL: ${{ secrets.VUE_APP_BACKEND_URL }}
-          FRONTEND_PORT: ${{ secrets.FRONTEND_PORT }}
       run: |
         docker compose up -d --build
-        docker compose exec -T backend bash -c "timeout 60 bash -c 'until curl -s http://localhost:8000/health; do echo waiting...; sleep 2; done'"
+
+    - name: Check if backend is up
+      run: |
+        for i in {1..30}; do
+          if curl -s http://localhost:8000/health; then
+            echo "Backend is up!"
+            exit 0
+          fi
+          sleep 5
+        done
+        echo "Backend failed to start within 150 seconds."
+        exit 1
     
     - name: Create results directory
       run: mkdir -p results
