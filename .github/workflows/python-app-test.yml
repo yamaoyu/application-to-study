@@ -13,7 +13,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python 3.12
@@ -31,47 +31,39 @@ jobs:
 
     - name: create .env
       run: |
-        cat << EOF > .env
-        MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-        MYSQL_USER=${{ secrets.MYSQL_USER }}
-        MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-        MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
-        MYSQL_HOST=${{ secrets.MYSQL_HOST }}
-        EOF
+        echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> .env
+        echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env
+        echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env
+        echo "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}" >> .env
+        echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" >> .env
 
     - name: create .env.backend
       run: |
-        cat << EOF > .env.backend
-        APP_ADMIN_USER=${{ secrets.APP_ADMIN_USER }}
-        APP_ADMIN_PASSWORD=${{ secrets.APP_ADMIN_PASSWORD }}
-        SECRET_KEY=${{ secrets.SECRET_KEY }}
-        ALGORITHM=${{ secrets.ALGORITHM }}
-        PEPPER=${{ secrets.PEPPER }}
-        ACCESS_TOKEN_EXPIRE_MINUTES=${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}
-        REFRESH_TOKEN_EXPIRE_WEEKS=${{ secrets.REFRESH_TOKEN_EXPIRE_WEEKS }}
-        ENV=${{ secrets.ENV }}
-        LOGFILE_PATH=${{ secrets.LOGFILE_PATH }}
-        DEV_LOGFILE_PATH=${{ secrets.DEV_LOGFILE_PATH }}
-        TEST_MYSQL_DATABASE=${{ secrets.TEST_MYSQL_DATABASE }}
-        TEST_DATABASE_URL=${{ secrets.TEST_DATABASE_URL }}
-        FRONTEND_URL=${{ secrets.FRONTEND_URL }}
-        BACKEND_PORT=${{ secrets.BACKEND_PORT }}
-        EOF
+        echo "APP_ADMIN_USER=${{ secrets.APP_ADMIN_USER }}" >> .env.backend
+        echo "APP_ADMIN_PASSWORD=${{ secrets.APP_ADMIN_PASSWORD }}" >> .env.backend
+        echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env.backend
+        echo "ALGORITHM=${{ secrets.ALGORITHM }}" >> .env.backend
+        echo "PEPPER=${{ secrets.PEPPER }}" >> .env.backend
+        echo "ACCESS_TOKEN_EXPIRE_MINUTES=${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}" >> .env.backend
+        echo "REFRESH_TOKEN_EXPIRE_WEEKS=${{ secrets.REFRESH_TOKEN_EXPIRE_WEEKS }}" >> .env.backend
+        echo "ENV=${{ secrets.ENV }}" >> .env.backend
+        echo "LOGFILE_PATH=${{ secrets.LOGFILE_PATH }}" >> .env.backend
+        echo "DEV_LOGFILE_PATH=${{ secrets.DEV_LOGFILE_PATH }}" >> .env.backend
+        echo "TEST_MYSQL_DATABASE=${{ secrets.TEST_MYSQL_DATABASE }}" >> .env.backend
+        echo "TEST_DATABASE_URL=${{ secrets.TEST_DATABASE_URL }}" >> .env.backend
+        echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env.backend
+        echo "BACKEND_PORT=${{ secrets.BACKEND_PORT }}" >> .env.backend
 
 
     - name: create .env.db
       run: |
-        cat << EOF > .env.db
-        DOCKER_PLATFORM=${{ secrets.DOCKER_PLATFORM }}
-        DB_PORT=${{ secrets.DB_PORT }}
-        EOF
+        echo "DOCKER_PLATFORM=${{ secrets.DOCKER_PLATFORM }}" >> .env.db
+        echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env.db
 
     - name: create .env.frontend
       run: |
-        cat << EOF > .env.frontend
-        VUE_APP_BACKEND_URL=${{ secrets.VUE_APP_BACKEND_URL }}
-        FRONTEND_PORT=${{ secrets.FRONTEND_PORT }}
-        EOF
+        echo "VUE_APP_BACKEND_URL=${{ secrets.VUE_APP_BACKEND_URL }}" >> .env.frontend
+        echo "FRONTEND_PORT=${{ secrets.FRONTEND_PORT }}" >> .env.frontend
         
     - name: Start Docker
       run: |
@@ -106,4 +98,8 @@ jobs:
     - name: Docker logs
       if: ${{ failure() }}
       run: docker compose logs
+
+    - name: Stop Docker Compose
+      if: always()
+      run: docker compose down
 
