@@ -96,8 +96,17 @@ jobs:
         path: results/test-results.xml
         
     - name: Docker logs
-      if: ${{ failure() }}
-      run: docker compose logs
+      if: failure()
+      run: |
+        docker compose logs
+        echo "------"
+        cat .env
+        echo "------"
+        cat .env.db
+        echo "------"
+        cat .env.backend
+        echo "------"
+        cat .env.frontend
 
     - name: Stop Docker Compose
       if: always()
