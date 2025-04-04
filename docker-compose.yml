@@ -5,6 +5,7 @@ services:
       - "${BACKEND_PORT}:8000"
     env_file:
       - .env
+      - .env.backend
     depends_on:
       db:
         condition: service_healthy
@@ -20,15 +21,17 @@ services:
       - "${FRONTEND_PORT}:8080"
     env_file:
       - .env
+      - .env.frontend
     depends_on:
       backend:
         condition: service_healthy
 
   db:
     build: ./backend/db
-    platform: linux/arm64
+    platform: ${DOCKER_PLATFORM:-linux/arm64}
     env_file:
       - .env
+      - .env.db
     volumes:
       - db_data:/var/lib/mysql
       - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
