@@ -67,6 +67,12 @@ jobs:
         
     - name: Start Docker
       run: |
+        set -a
+        source .env
+        source .env.db
+        source .env.backend
+        source .env.frontend
+        set +a
         docker compose up -d --build
 
     - name: Check if backend is up
