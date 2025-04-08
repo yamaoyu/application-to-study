@@ -64,6 +64,9 @@ jobs:
       run: |
         echo "VUE_APP_BACKEND_URL=${{ secrets.VUE_APP_BACKEND_URL }}" >> .env.frontend
         echo "FRONTEND_PORT=${{ secrets.FRONTEND_PORT }}" >> .env.frontend
+
+    - name: Delete Docker Compose before start
+      run: docker compose down -v
         
     - name: Start Docker
       run: |
@@ -116,5 +119,5 @@ jobs:
 
     - name: Stop Docker Compose
       if: always()
-      run: docker compose down
+      run: docker compose down -v
 
