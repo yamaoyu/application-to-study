@@ -81,14 +81,18 @@ jobs:
     - name: Check if backend is up
       run: |
         for i in {1..30}; do
-          if curl -s http://localhost:8000/health; then
+          if curl http://localhost:8000/health; then
             echo "Backend is up!"
             exit 0
           fi
-          sleep 5
+          sleep 10
         done
-        echo "Backend failed to start within 150 seconds."
+        echo "Backend failed to start within 5 minutes."
         exit 1
+
+    - name: Run Alembic migration
+      run: |
+        docker compose exec -T backend alembic upgrade head
     
     - name: Create results directory
       run: mkdir -p results
