@@ -36,6 +36,11 @@ jobs:
         echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env
         echo "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}" >> .env
         echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" >> .env
+        echo "VUE_APP_BACKEND_URL=${{ secrets.VUE_APP_BACKEND_URL }}" >> .env
+        echo "FRONTEND_PORT=${{ secrets.FRONTEND_PORT }}" >> .env
+        echo "DOCKER_PLATFORM=${{ secrets.DOCKER_PLATFORM }}" >> .env
+        echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
+        echo "BACKEND_PORT=${{ secrets.BACKEND_PORT }}" >> .env
 
     - name: create .env.backend
       run: |
@@ -52,18 +57,6 @@ jobs:
         echo "TEST_MYSQL_DATABASE=${{ secrets.TEST_MYSQL_DATABASE }}" >> .env.backend
         echo "TEST_DATABASE_URL=${{ secrets.TEST_DATABASE_URL }}" >> .env.backend
         echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env.backend
-        echo "BACKEND_PORT=${{ secrets.BACKEND_PORT }}" >> .env.backend
-
-
-    - name: create .env.db
-      run: |
-        echo "DOCKER_PLATFORM=${{ secrets.DOCKER_PLATFORM }}" >> .env.db
-        echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env.db
-
-    - name: create .env.frontend
-      run: |
-        echo "VUE_APP_BACKEND_URL=${{ secrets.VUE_APP_BACKEND_URL }}" >> .env.frontend
-        echo "FRONTEND_PORT=${{ secrets.FRONTEND_PORT }}" >> .env.frontend
 
     - name: Delete Docker Compose before start
       run: docker compose down -v
@@ -72,9 +65,7 @@ jobs:
       run: |
         set -a
         source .env
-        source .env.db
         source .env.backend
-        source .env.frontend
         set +a
         docker compose up -d --build
 
