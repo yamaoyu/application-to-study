@@ -34,6 +34,10 @@ jobs:
         sudo mkdir -p /backend/log
         sudo touch ${{ secrets.DEV_LOGFILE_PATH }}
 
+    steps:
+    - name: Set permissions
+      run: sudo chmod -R a+w /backend/log
+
     - name: create .env
       run: |
         echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> .env
@@ -113,6 +117,7 @@ jobs:
         echo "------"
         cat .env.backend
         ls -al
+        ls -al /backend
         ls -al /backend/log
 
     - name: Stop Docker Compose
