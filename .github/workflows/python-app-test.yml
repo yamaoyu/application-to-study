@@ -31,8 +31,8 @@ jobs:
 
     - name: Create log directory
       run: | 
-        mkdir -p ./backend/log
-        touch ${{ secrets.DEV_LOGFILE_PATH }}
+        sudo mkdir -p /backend/log
+        sudo touch ${{ secrets.DEV_LOGFILE_PATH }}
 
     - name: create .env
       run: |
@@ -112,6 +112,8 @@ jobs:
         cat .env
         echo "------"
         cat .env.backend
+        ls -al
+        ls -al /backend/log
 
     - name: Stop Docker Compose
       if: always()
