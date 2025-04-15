@@ -34,8 +34,8 @@ jobs:
         sudo mkdir -p /backend/log
         sudo touch ${{ secrets.DEV_LOGFILE_PATH }}
 
-    - name: Set permissions
-      run: sudo chmod -R a+w /backend/log
+    - name: change owner of log directory
+      run: sudo chown -R runner:docker /backend/log
 
     - name: create .env
       run: |
