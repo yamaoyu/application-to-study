@@ -34,7 +34,6 @@ jobs:
         sudo mkdir -p /backend/log
         sudo touch ${{ secrets.DEV_LOGFILE_PATH }}
 
-    steps:
     - name: Set permissions
       run: sudo chmod -R a+w /backend/log
 
