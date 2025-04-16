@@ -45,10 +45,6 @@ log_conf = {
         "console_format": {
             "()": JSTFormatter,
             "format": "%(asctime)s \n%(message)s"
-        },
-        "file_format": {
-            "()": JSTFormatter,
-            "format": "%(asctime)s %(filename)-12s %(levelname)s \n%(message)s"
         }
     },
     "handlers": {
@@ -57,39 +53,43 @@ log_conf = {
             "level": "INFO",
             "formatter": "console_format",
             "filters": ["console_filter"]
-        },
-        "file_handler": {
-            "class": "logging.handlers.TimedRotatingFileHandler",
-            "backupCount": 3,
-            "formatter": "file_format",
-            "filename": logfile_path,
-            "when": "W6",
-            "level": "WARNING",
-            "filters": ["file_filter"]
         }
     },
     "filters": {
         "console_filter": {
             "()": ConsoleFilter,
             'level': INFO
-        },
-        "file_filter": {
-            "()": FileFilter,
-            'level': WARNING
-        }
-    },
-    "loggers": {
-        "": {
-            "handlers": ["console_handler", "file_handler"],
-            "propagate": False,
-            "level": "INFO"
         }
     },
     "root": {
         "level": DEBUG,
-        "handlers": ["console_handler", "file_handler"]
+        "handlers": ["console_handler"]
     }
 }
+
+# github actionsではログファイルを出力しない
+if ENV != "github":
+    log_conf["formatters"]["file_format"] = {
+        "()": JSTFormatter,
+        "format": "%(asctime)s %(levelname)s %(name)s %(message)s"
+    }
+
+    log_conf["handlers"]["file_handler"] = {
+        "class": "logging.handlers.TimedRotatingFileHandler",
+        "backupCount": 3,
+        "formatter": "file_format",
+        "filename": logfile_path,
+        "when": "W6",
+        "level": "WARNING",
+        "filters": ["file_filter"]
+    }
+
+    log_conf["filters"]["file_filter"] = {
+        "()": FileFilter,
+        'level': WARNING
+    }
+
+    log_conf["root"]["handlers"].append("file_handler")
 
 config.dictConfig(log_conf)
 

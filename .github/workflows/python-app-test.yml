@@ -29,14 +29,6 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-docker-
 
-    - name: Create log directory
-      run: | 
-        sudo mkdir -p /backend/log
-        sudo touch ${{ secrets.DEV_LOGFILE_PATH }}
-
-    - name: change owner of log directory
-      run: sudo chown -R runner:docker /backend/log
-
     - name: create .env
       run: |
         echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> .env
@@ -115,9 +107,6 @@ jobs:
         cat .env
         echo "------"
         cat .env.backend
-        ls -al
-        ls -al /backend
-        ls -al /backend/log
 
     - name: Stop Docker Compose
       if: always()
