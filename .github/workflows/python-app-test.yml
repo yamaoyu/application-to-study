@@ -80,10 +80,6 @@ jobs:
         done
         echo "Backend failed to start within 5 minutes."
         exit 1
-
-    - name: Run Alembic migration
-      run: |
-        docker compose exec -T backend alembic upgrade head
     
     - name: Create results directory
       run: mkdir -p results
