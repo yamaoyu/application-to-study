@@ -87,6 +87,7 @@ jobs:
     - name: Test with pytest
       run: |
         docker compose exec -T backend python -m pytest -vv --junitxml=results/test-results.xml
+        docker compose cp backend:/backend/results/test-results.xml results
         
     - name: Upload test results
       if: always()
