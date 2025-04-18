@@ -1,0 +1,111 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Python application test
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.12"
+
+    - name: Cache Docker
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/docker
+        key: ${{ runner.os }}-docker-${{ hashFiles('backend/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-docker-
+
+    - name: create .env
+      run: |
+        echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> .env
+        echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env
+        echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env
+        echo "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}" >> .env
+        echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" >> .env
+        echo "VUE_APP_BACKEND_URL=${{ secrets.VUE_APP_BACKEND_URL }}" >> .env
+        echo "FRONTEND_PORT=${{ secrets.FRONTEND_PORT }}" >> .env
+        echo "DOCKER_PLATFORM=${{ secrets.DOCKER_PLATFORM }}" >> .env
+        echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
+        echo "BACKEND_PORT=${{ secrets.BACKEND_PORT }}" >> .env
+
+    - name: create .env.backend
+      run: |
+        echo "APP_ADMIN_USER=${{ secrets.APP_ADMIN_USER }}" >> .env.backend
+        echo "APP_ADMIN_PASSWORD=${{ secrets.APP_ADMIN_PASSWORD }}" >> .env.backend
+        echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env.backend
+        echo "ALGORITHM=${{ secrets.ALGORITHM }}" >> .env.backend
+        echo "PEPPER=${{ secrets.PEPPER }}" >> .env.backend
+        echo "ACCESS_TOKEN_EXPIRE_MINUTES=${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}" >> .env.backend
+        echo "REFRESH_TOKEN_EXPIRE_WEEKS=${{ secrets.REFRESH_TOKEN_EXPIRE_WEEKS }}" >> .env.backend
+        echo "ENV=${{ secrets.ENV }}" >> .env.backend
+        echo "LOGFILE_PATH=${{ secrets.LOGFILE_PATH }}" >> .env.backend
+        echo "DEV_LOGFILE_PATH=${{ secrets.DEV_LOGFILE_PATH }}" >> .env.backend
+        echo "TEST_MYSQL_DATABASE=${{ secrets.TEST_MYSQL_DATABASE }}" >> .env.backend
+        echo "TEST_DATABASE_URL=${{ secrets.TEST_DATABASE_URL }}" >> .env.backend
+        echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env.backend
+
+    - name: Delete Docker Compose before start
+      run: docker compose down -v
+        
+    - name: Start Docker
+      run: |
+        set -a
+        source .env
+        source .env.backend
+        set +a
+        docker compose up -d --build
+
+    - name: Check if backend is up
+      run: |
+        for i in {1..30}; do
+          if curl http://localhost:8000/health; then
+            echo "Backend is up!"
+            exit 0
+          fi
+          sleep 10
+        done
+        echo "Backend failed to start within 5 minutes."
+        exit 1
+    
+    - name: Create results directory
+      run: mkdir -p results
+    
+    - name: Test with pytest
+      run: |
+        docker compose exec -T backend python -m pytest -vv --junitxml=results/test-results.xml
+        docker compose cp backend:/backend/results/test-results.xml results
+        
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: results/test-results.xml
+        
+    - name: Docker logs
+      if: failure()
+      run: |
+        docker compose logs
+        echo "------"
+        cat .env
+        echo "------"
+        cat .env.backend
+
+    - name: Stop Docker Compose
+      if: always()
+      run: docker compose down -v
+
