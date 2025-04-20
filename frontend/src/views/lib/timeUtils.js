@@ -5,26 +5,3 @@ export function generateTimeOptions(min, max, step) {
     }
     return timeOptions;
 }
-
-export function changeTime(time) {
-  const increaseHour = async(step) => {
-    if ((time.value + step) <= 12) {
-      time.value += step
-    } else {
-      time.value = 12
-    }
-  }
-
-  const decreaseHour = async(step) => {
-    if ((time.value - step) >= 0) {
-      time.value -= step
-    } else {
-      time.value = 0
-    }
-  }
-
-  return {
-    increaseHour,
-    decreaseHour
-  }
-}

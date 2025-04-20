@@ -14,22 +14,9 @@
       </button>
       <div class="collapse navbar-collapse">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              活動登録
-            </a>
-            <ul class="dropdown-menu">
-              <li class="dropdown-item">
-                <router-link class="nav-link" style="color: black;" to="/register/target">目標時間</router-link>
-              </li>
-              <li class="dropdown-item">
-                <router-link class="nav-link" style="color: black;" to="/register/actual">活動時間</router-link>
-              </li>
-              <li class="dropdown-item">
-                <router-link class="nav-link" style="color: black;" to="/finish/activity">活動終了</router-link>
-              </li>
-            </ul>            
-          </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/register/activity">活動記録</router-link>
+          </li>  
           <li class="nav-item">
             <router-link class="nav-link" to="/register/salary">月収登録</router-link>
           </li>
@@ -67,21 +54,8 @@
         <li class="nav-item" v-if="$router.currentRoute.value.name != 'Home'" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/home">ホーム</router-link>
         </li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            活動登録
-          </a>
-          <ul class="dropdown-menu" data-bs-dismiss="offcanvas">
-            <li class="dropdown-item">
-              <router-link class="nav-link" style="color: black;" to="/register/target">目標時間</router-link>
-            </li>
-            <li class="dropdown-item">
-              <router-link class="nav-link" style="color: black;" to="/register/actual">活動時間</router-link>
-            </li>
-            <li class="dropdown-item">
-              <router-link class="nav-link" style="color: black;" to="/finish/activity">活動終了</router-link>
-            </li>
-          </ul>            
+        <li class="nav-item" data-bs-dismiss="offcanvas">
+          <router-link class="nav-link" to="/register/activity/">活動記録</router-link>
         </li>
         <li class="nav-item" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/register/salary">月収登録</router-link>

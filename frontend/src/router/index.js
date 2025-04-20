@@ -3,16 +3,14 @@ import RegisterUser from '../views/RegisterUser.vue'
 import LoginView from '../views/LoginForm.vue'
 import UserHomeView from '../views/UserHome.vue'
 import RegisterSalary from '../views/RegisterSalary.vue'
-import RegisterTarget from '../views/RegisterTarget.vue'
-import RegisterActual from '../views/RegisterActual.vue'
 import MonthlyInfo from '../views/MonthlyInfo.vue'
 import RegisterTodo from '../views/RegisterTodo.vue'
-import finishActivity from '../views/FinishActivity.vue'
 import InquiryForm from '../views/InquiryForm.vue'
 import AllPeriodInfo from '../views/AllPeriodInfo.vue'
 import EditTodo from '../views/EditTodo.vue'
 import UserInfo from '../views/UserInfo.vue'
 import YearInfo from '../views/YearInfo.vue'
+import ActivityHome from '../views/ActivityHome.vue'
 
 const routes = [
   {
@@ -36,16 +34,6 @@ const routes = [
     component: RegisterSalary
   },
   {
-    path:"/register/target",
-    name:"RegisterTarget",
-    component:RegisterTarget
-  },
-  {
-    path:"/register/actual",
-    name:"RegisterActual",
-    component:RegisterActual
-  },
-  {
     path:"/view/month-activities",
     name:"MonthlyInfo",
     component:MonthlyInfo
@@ -54,11 +42,6 @@ const routes = [
     path:"/register/todo",
     name:"RegisterTodo",
     component:RegisterTodo
-  },
-  {
-    path:"/finish/activity",
-    name:"finishActivity",
-    component:finishActivity
   },
   {
     path:"/register/inquiry",
@@ -84,6 +67,11 @@ const routes = [
     path:"/view/year-activities",
     name:"YearInfo",
     component:YearInfo
+  },
+  {
+    path:"/register/activity",
+    name:"ActivityHomw",
+    component:ActivityHome
   }
 ]
 

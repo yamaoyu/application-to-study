@@ -1,10 +1,11 @@
 import { MONTH_DICT, getMaxMonth, getMaxYear, changeDate, changeMonth, changeYear, getToday, getThisMonth, getThisYear } from "./dateUtils";
-import { generateTimeOptions, changeTime } from "./timeUtils";
+import { generateTimeOptions } from "./timeUtils";
 import { STATUS_DICT } from "./status";
 import { getStatusColors, getAdjustmentColors, getActivityAlert, getResponseAlert } from "./bootstrapClass";
 import { verifyRefreshToken } from "./token";
 import { commonError, finishActivityError, getActivityError, getMonthlyinfoError } from "./error";
 import { validateUsername, validatePassword, checkPassword, validateEmail } from "./userinfo";
+import { updateActivity, registerActivity, finalizeActivity } from "./activity";
 
 export {
     MONTH_DICT,
@@ -17,7 +18,6 @@ export {
     getThisMonth,
     getThisYear,
     changeYear,
-    changeTime,
     STATUS_DICT,
     getStatusColors,
     getAdjustmentColors,
@@ -31,5 +31,8 @@ export {
     validateUsername,
     validatePassword,
     checkPassword,
-    validateEmail
+    validateEmail,
+    updateActivity,
+    registerActivity,
+    finalizeActivity
 }
