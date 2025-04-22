@@ -78,7 +78,7 @@
         <!-- タブによる画面切り替え -->
         <div class="container">
             <div v-show="activeTab === 'target'">
-                <form @submit.prevent="registerTarget">
+                <form @submit.prevent="confirmRegister">
                     <div class="row d-flex justify-content-center mt-4">
                         <div class="input-group">
                             <span class="input-group-text">目標時間</span>
@@ -98,7 +98,7 @@
                 </form>
             </div>
             <div v-show="activeTab === 'actual'">
-                <form @submit.prevent="registerActual">
+                <form @submit.prevent="confirmRegister">
                     <div class="row d-flex justify-content-center mt-4">
                         <div class="input-group">
                             <span class="input-group-text">活動時間</span>
@@ -118,7 +118,7 @@
                 </form>
             </div>
             <div v-show="activeTab === 'finish'">
-                <form @submit.prevent="finishActivity">
+                <form @submit.prevent="confirmRegister">
                     <div class="container">
                         <button type="submit" class="btn btn-outline-secondary mt-3">終了</button>
                     </div>
@@ -130,16 +130,24 @@
             </div>
         </div>
     </div>
+
+    <!-- モーダルコンポーネントで登録前の確認 -->
+    <BModal v-model="showModal" :title="modalTitle" ok-title="はい" cancel-title="いいえ" @ok="sendRequest">
+        <p>{{ modalMessage }}</p>
+        <p v-if="activeTab==='finish'" class="text-danger">確定後は取り消せません</p>
+    </BModal>
+
 </template>
 
 <script>
-import { ref, watch, onMounted } from 'vue';
-import { BButton } from 'bootstrap-vue-next';
+import { ref, watch, onMounted, computed } from 'vue';
+import { BButton, BModal } from 'bootstrap-vue-next';
 import { changeDate, STATUS_DICT, getStatusColors, getToday, getActivityAlert, getResponseAlert, updateActivity, registerActivity, finalizeActivity } from './lib/index';
 
 export default {
     components: {
-        BButton
+        BButton,
+        BModal
     },
 
     setup() {
@@ -162,8 +170,49 @@ export default {
         const { renewActivity } = updateActivity(date, checkMsg, activityRes);
         const { registerTarget, registerActual } = registerActivity(date, statusCode, targetTime, actualTime, message, checkMsg, activityRes);
         const { finishActivity } = finalizeActivity(date, finMsg, activityStatus, checkMsg, activityRes);
-    
+        const showModal = ref(false);
 
+        const confirmRegister = async() =>{
+            showModal.value = true
+        }
+
+        const modalTitle = computed(() =>{
+            if (showModal.value) {
+                switch(activeTab.value) {
+                    case 'target': return '目標時間の登録';
+                    case 'actual': return '活動時間の登録';
+                    case 'finish': return '活動時間の確定';
+                }
+            }
+            return ''
+        });
+
+        const modalMessage = computed(() =>{
+            if (showModal.value) {
+                switch(activeTab.value) {
+                    case 'target': return `${date.value}の目標時間を ${targetTime.value}時間に登録しますか？`;
+                    case 'actual': return `${date.value}の活動時間を ${actualTime.value}時間に登録しますか？`;
+                    case 'finish': return `${date.value}の活動を終了しますか？`;
+                }
+            }
+            return ''
+        });
+
+        const sendRequest = async() =>{
+            if (showModal.value) {
+                switch(activeTab.value) {
+                    case 'target':
+                    registerTarget();
+                    break;
+                case 'actual':
+                    registerActual();
+                    break;
+                case 'finish':
+                    finishActivity();
+                    break;
+                }
+            }
+        }
 
         watch(date, () => {
             renewActivity();
@@ -201,7 +250,12 @@ export default {
             renewActivity,
             registerTarget,
             registerActual,
-            finishActivity
+            finishActivity,
+            showModal,
+            confirmRegister,
+            modalTitle,
+            modalMessage,
+            sendRequest
         }
     }
 }
