@@ -3,9 +3,9 @@ import { generateTimeOptions } from "./timeUtils";
 import { STATUS_DICT } from "./status";
 import { getStatusColors, getAdjustmentColors, getActivityAlert, getResponseAlert } from "./bootstrapClass";
 import { verifyRefreshToken } from "./token";
-import { commonError, finishActivityError, getActivityError, getMonthlyinfoError } from "./error";
+import { commonError, finishActivityError, getActivityError, getMonthlyinfoError, allActivitiesError } from "./error";
 import { validateUsername, validatePassword, checkPassword, validateEmail } from "./userinfo";
-import { updateActivity, registerActivity, finalizeActivity } from "./activity";
+import { updateActivity, registerActivity, finalizeActivity, getActivityByMonth, getActivityByYear, getActivitiesAllPeriod } from "./activity";
 
 export {
     MONTH_DICT,
@@ -28,11 +28,15 @@ export {
     finishActivityError,
     getActivityError,
     getMonthlyinfoError,
+    allActivitiesError,
     validateUsername,
     validatePassword,
     checkPassword,
     validateEmail,
     updateActivity,
     registerActivity,
-    finalizeActivity
+    finalizeActivity,
+    getActivityByMonth,
+    getActivityByYear,
+    getActivitiesAllPeriod
 }

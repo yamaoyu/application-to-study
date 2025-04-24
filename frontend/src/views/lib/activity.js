@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
-import { verifyRefreshToken, getActivityError, commonError, finishActivityError } from './index';
+import { verifyRefreshToken, getActivityError, commonError, finishActivityError, getMonthlyinfoError, allActivitiesError } from './index';
 import { jwtDecode } from 'jwt-decode';
 
 
@@ -215,4 +215,149 @@ export function finalizeActivity(date, finMsg, activityStatus, checkMsg, activit
     return {
         finishActivity
     }
+}
+
+export function getActivityByMonth(selectedMonth, response, activities, message) {
+    const router = useRouter();
+    const authStore = useAuthStore();
+    const { handleError } = getMonthlyinfoError(response, activities, message, router);
+
+    const sendRequestForMonthlyInfo = async() =>{
+        const [year, month] = selectedMonth.value.split('-').map(Number)
+        const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month;
+        response.value = await axios.get(url,
+                                        {headers: {Authorization: authStore.getAuthHeader}})
+        if (response.value.status===200){
+            activities.value = response.value.data.activity_list;
+            message.value = ""
+        } 
+    }
+
+    const getMonthlyInfo = async() =>{
+        // 検索ボタンが押された時の処理
+        try{
+            await sendRequestForMonthlyInfo();
+        } catch (error){
+            if (error.response?.status === 401) {
+                try {
+                    // リフレッシュトークンを検証して新しいアクセストークンを取得
+                    const tokenResponse = await verifyRefreshToken();
+                    // 新しいアクセストークンをストアに保存
+                    await authStore.setAuthData(
+                    tokenResponse.data.access_token,
+                    tokenResponse.data.token_type,
+                    jwtDecode(tokenResponse.data.access_token).exp)
+                    // 再度リクエストを送信
+                    await sendRequestForMonthlyInfo();
+                } catch (refreshError) {
+                    router.push({
+                    path: "/login",
+                    query: { message: "再度ログインしてください" }
+                    });
+                }            
+            } else {
+                handleError(error)
+            }
+        }
+    }
+
+    return {
+        getMonthlyInfo
+    }
+}
+
+export function getActivityByYear(year, response, activities, message){
+    const router = useRouter();
+    const authStore = useAuthStore();
+    const { handleError } = allActivitiesError(message, router);
+
+    const sendRequestForMonthlyInfo = async() =>{
+        const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year.value;
+        response.value = await axios.get(url,
+                                        {headers: {Authorization: authStore.getAuthHeader}})
+        if (response.value.status===200){
+            activities.value = response.value.data.monthly_info;
+            message.value = ""
+            } 
+        }
+    
+    const getYearlyInfo = async() =>{
+        // 検索ボタンが押された時の処理
+        try{
+        await sendRequestForMonthlyInfo();
+        } catch (error){
+        if (error.response?.status === 401) {
+            try {
+            // リフレッシュトークンを検証して新しいアクセストークンを取得
+            const tokenResponse = await verifyRefreshToken();
+            // 新しいアクセストークンをストアに保存
+            await authStore.setAuthData(
+            tokenResponse.data.access_token,
+            tokenResponse.data.token_type,
+            jwtDecode(tokenResponse.data.access_token).exp)
+            // 再度リクエストを送信
+            await sendRequestForMonthlyInfo();
+            } catch (refreshError) {
+            router.push({
+                path: "/login",
+                query: { message: "再度ログインしてください" }
+            });
+            }            
+        } else {
+            handleError(error)
+        }
+        }
+    }
+
+    return {
+        getYearlyInfo
+    }
+}
+
+export function getActivitiesAllPeriod(response, message){
+    const router = useRouter();
+    const authStore = useAuthStore();
+    const { handleError } = allActivitiesError(message, router);
+
+    const sendRequestForAllPeriod = async() =>{
+        const url = process.env.VUE_APP_BACKEND_URL + 'activities/total';
+        response.value = await axios.get(url,
+                                        {headers: {Authorization: authStore.getAuthHeader}})
+        if (response.value.status==200){
+            message.value = ""
+        }
+    }
+
+    const getAllActivities = async() =>{
+        try{
+            await sendRequestForAllPeriod()
+        } catch (error){
+            if (error.response?.status === 401) {
+                try {
+                    // リフレッシュトークンを検証して新しいアクセストークンを取得
+                    const tokenResponse = await verifyRefreshToken();
+                    // 新しいアクセストークンをストアに保存
+                    await authStore.setAuthData(
+                    tokenResponse.data.access_token,
+                    tokenResponse.data.token_type,
+                    jwtDecode(tokenResponse.data.access_token).exp)
+                    // 再度リクエストを送信
+                    await sendRequestForAllPeriod();
+                } catch (refreshError) {
+                    router.push({
+                    path: "/login",
+                    query: { message: "再度ログインしてください" }
+                    });
+                }            
+                } else {
+                    handleError(error)
+                }
+        }
+        
+    }
+
+    return {
+        getAllActivities
+    }
+
 }
