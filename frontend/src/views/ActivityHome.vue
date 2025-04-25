@@ -47,14 +47,15 @@
             </div>
         </div>
 
-        <div class="container mt-5">
-            <div class="row">
+        <div class="container d-flex align-items-baseline justify-content-center mt-5">
+            <div class="row col-8">
                 <div class="input-group">
                     <span class="col-2 p-2 input-group-text">日付</span>
                     <input
                         type="date"
                         v-model="date"
                         min="2024-01-01"
+                        :max="getMaxDate()"
                         class="form-control col-2"
                     />
                     <button
@@ -76,7 +77,7 @@
         </div>
 
         <!-- タブによる画面切り替え -->
-        <div class="container">
+        <div class="container col-8">
             <div v-show="activeTab === 'target'">
                 <form @submit.prevent="confirmRegister">
                     <div class="row d-flex justify-content-center mt-4">
@@ -89,7 +90,6 @@
                                 min="0.5"
                                 max="12"
                                 step="0.5"
-                                placeholder="目標時間(Hour)"
                                 />
                             <span class="input-group-text small">時間(Hour)</span>
                         </div>
@@ -109,7 +109,6 @@
                                 min="0.0"
                                 max="12"
                                 step="0.5"
-                                placeholder="目標時間(Hour)"
                                 />
                             <span class="input-group-text small">時間(Hour)</span>
                         </div>
@@ -142,7 +141,9 @@
 <script>
 import { ref, watch, onMounted, computed } from 'vue';
 import { BButton, BModal } from 'bootstrap-vue-next';
-import { changeDate, STATUS_DICT, getStatusColors, getToday, getActivityAlert, getResponseAlert, updateActivity, registerActivity, finalizeActivity } from './lib/index';
+import { 
+    changeDate, STATUS_DICT, getStatusColors, getToday, getMaxDate,
+    getActivityAlert, getResponseAlert, updateActivity, registerActivity, finalizeActivity } from './lib/index';
 
 export default {
     components: {
@@ -244,6 +245,7 @@ export default {
             activityStatus,
             increaseDay,
             STATUS_DICT,
+            getMaxDate,
             getStatusColors,
             getActivityAlert,
             getResponseAlert,

@@ -75,7 +75,7 @@
             <div>
                 <h2 v-if="activeTab==='monthly'">{{ selectedMonth }}の活動実績</h2>
                 <h2 v-if="activeTab==='yearly'">{{ selectedYear }}の活動実績</h2>
-                <h2 v-if="activeTab=='all'">全期間の集計</h2>
+                <h2 v-if="activeTab==='all'">全期間の集計</h2>
             </div>
             <div class="row justify-content-center mb-4">
                 <div class="col-8">

@@ -13,18 +13,21 @@ export const MONTH_DICT = {
     "dec": '12月'
 }
 
-export function getMaxMonth(){
-    // 1年後の12月までが範囲となる
-    const today = new Date()
-    const year = today.getFullYear() + 1
-    return `${year}-12`;
-}
-
 export function getMaxYear(){
     // 1年後までが範囲となる
     const today = new Date()
     const year = today.getFullYear() + 1
     return year
+}
+
+export function getMaxMonth(){
+    // 1年後の12月までが範囲となる
+    return `${getMaxYear()}-12`
+}
+
+export function getMaxDate(){
+    // 1年後の12月31日までが範囲となる
+    return `${getMaxYear()}-12-31`;
 }
 
 export function changeDate(date, message){
