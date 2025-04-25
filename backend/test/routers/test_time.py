@@ -277,7 +277,7 @@ def test_get_month_acitivities(client, get_headers):
     response = client.get("/activities/2024/5",
                           headers=get_headers)
     assert response.status_code == 200
-    assert response.json() == {"total_monthly_income": total_monthly_income,
+    assert response.json() == {"total_income": total_monthly_income,
                                "salary": test_salary,
                                "pay_adjustment": test_bonus,
                                "bonus": test_bonus,
@@ -305,10 +305,10 @@ def test_get_all_acitivities(client, get_headers):
                           headers=get_headers)
     assert response.status_code == 200
     assert response.json() == {"total_income": total_monthly_income,
-                               "total_salary": test_salary,
+                               "salary": test_salary,
                                "pay_adjustment": test_bonus,
-                               "total_bonus": test_bonus,
-                               "total_penalty": 0,
+                               "bonus": test_bonus,
+                               "penalty": 0,
                                "success_days": 1,
                                "fail_days": 0}
 
@@ -319,11 +319,11 @@ def test_get_year_acitivities(client, get_headers):
     setup_target_time_for_test(client, get_headers)
     setup_actual_time_for_test(client, get_headers)
     setup_finish_activity_for_test(client, get_headers)
-    total_annual_income = test_salary + test_bonus
+    total_income = test_salary + test_bonus
     response = client.get("/activities/2024", headers=get_headers)
     assert response.status_code == 200
-    assert response.json() == {"total_annual_income": total_annual_income,
-                               "annual_income": test_salary,
+    assert response.json() == {"total_income": total_income,
+                               "salary": test_salary,
                                "pay_adjustment": test_bonus,
                                "bonus": test_bonus,
                                "penalty": 0,

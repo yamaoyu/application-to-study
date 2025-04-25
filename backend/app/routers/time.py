@@ -293,7 +293,7 @@ def get_month_activities(year: int,
         pay_adjustment = round((total_bonus - total_penalty), 2)
         logger.info(f"{current_user['username']}が{year_month}の活動実績を取得")
         return {
-            "total_monthly_income": total_monthly_income,
+            "total_income": total_monthly_income,
             "salary": income.salary,
             "pay_adjustment": pay_adjustment,
             "bonus": total_bonus,
@@ -339,16 +339,16 @@ def get_year_activities(year: int,
 
         total_bonus = round(sum(income.total_bonus for income in incomes), 2)
         total_penalty = round(sum(income.total_penalty for income in incomes), 2)
-        annual_income = sum(income.salary for income in incomes)
-        total_annual_income = round((annual_income + total_bonus - total_penalty), 2)
+        salary = sum(income.salary for income in incomes)
+        total_income = round((salary + total_bonus - total_penalty), 2)
         pay_adjustment = round((total_bonus - total_penalty), 2)
 
         monthly_info = get_month_info(activities, incomes)
 
         logger.info(f"{current_user['username']}が{year}年の活動実績を取得")
         return {
-            "total_annual_income": total_annual_income,
-            "annual_income": annual_income,
+            "total_income": total_income,
+            "salary": salary,
             "pay_adjustment": pay_adjustment,
             "bonus": total_bonus,
             "penalty": total_penalty,
@@ -383,18 +383,18 @@ def get_all_activities(db: Session = Depends(get_db),
         if not incomes:
             raise HTTPException(status_code=404,
                                 detail=f"{current_user['username']}の給料は登録されていません")
-        total_salary = round(sum([income.salary for income in incomes]), 2)
+        salary = round(sum([income.salary for income in incomes]), 2)
         total_bonus = round(sum([income.total_bonus for income in incomes]), 2)
         total_penalty = round(sum([income.total_penalty for income in incomes]), 2)
         pay_adjustment = round(total_bonus - total_penalty, 2)
-        total_income = round((total_salary + total_bonus - total_penalty), 2)
+        total_income = round((salary + total_bonus - total_penalty), 2)
         success_days = sum(1 for act in activities if act.status == "success")
         logger.info(f"{current_user['username']}が全期間の活動実績を取得")
         return {"total_income": total_income,  # 総収入(総給与 + ボーナス - ペナルティ)
-                "total_salary": total_salary,  # 総給与(月収の合計)
+                "salary": salary,  # 総給与(ベースとなる月収の合計)
                 "pay_adjustment": pay_adjustment,
-                "total_bonus": total_bonus,
-                "total_penalty": total_penalty,
+                "bonus": total_bonus,
+                "penalty": total_penalty,
                 "success_days": success_days,
                 "fail_days": len(activities) - success_days}
     except HTTPException as http_e:

@@ -14,37 +14,17 @@
       </button>
       <div class="collapse navbar-collapse">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              活動登録
-            </a>
-            <ul class="dropdown-menu">
-              <li class="dropdown-item">
-                <router-link class="nav-link" style="color: black;" to="/register/target">目標時間</router-link>
-              </li>
-              <li class="dropdown-item">
-                <router-link class="nav-link" style="color: black;" to="/register/actual">活動時間</router-link>
-              </li>
-              <li class="dropdown-item">
-                <router-link class="nav-link" style="color: black;" to="/finish/activity">活動終了</router-link>
-              </li>
-            </ul>            
-          </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/register/activity">活動記録</router-link>
+          </li>  
           <li class="nav-item">
             <router-link class="nav-link" to="/register/salary">月収登録</router-link>
           </li>
           <li class="nav-item">
             <router-link class="nav-link" to="/register/todo">Todo登録</router-link>
           </li>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              実績確認
-            </a>
-            <ul class="dropdown-menu">
-              <li class="dropdown-item"><router-link class="nav-link" style="color: black;" to="/view/month-activities">月別</router-link></li>
-              <li class="dropdown-item"><router-link class="nav-link" style="color: black;" to="/view/year-activities">年別</router-link></li>
-              <li class="dropdown-item"><router-link class="nav-link" style="color: black;" to="/view/all-activities">全期間</router-link></li>
-            </ul>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/view/activity/">実績確認</router-link>
           </li>
           <li class="nav-item">
             <router-link class="nav-link" to="/user/info">ユーザー情報</router-link>
@@ -67,21 +47,8 @@
         <li class="nav-item" v-if="$router.currentRoute.value.name != 'Home'" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/home">ホーム</router-link>
         </li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            活動登録
-          </a>
-          <ul class="dropdown-menu" data-bs-dismiss="offcanvas">
-            <li class="dropdown-item">
-              <router-link class="nav-link" style="color: black;" to="/register/target">目標時間</router-link>
-            </li>
-            <li class="dropdown-item">
-              <router-link class="nav-link" style="color: black;" to="/register/actual">活動時間</router-link>
-            </li>
-            <li class="dropdown-item">
-              <router-link class="nav-link" style="color: black;" to="/finish/activity">活動終了</router-link>
-            </li>
-          </ul>            
+        <li class="nav-item" data-bs-dismiss="offcanvas">
+          <router-link class="nav-link" to="/register/activity/">活動記録</router-link>
         </li>
         <li class="nav-item" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/register/salary">月収登録</router-link>
@@ -89,14 +56,8 @@
         <li class="nav-item" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/register/todo">Todo登録</router-link>
         </li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            実績確認
-          </a>
-          <ul class="dropdown-menu" data-bs-dismiss="offcanvas">
-            <li class="dropdown-item"><router-link class="nav-link" style="color: black;" to="/view/month-activities">月別</router-link></li>
-            <li class="dropdown-item"><router-link class="nav-link" style="color: black;" to="/view/all-activities">全期間</router-link></li>
-          </ul>
+        <li class="nav-item" data-bs-dismiss="offcanvas">
+          <router-link class="nav-link" to="/view/activity/">実績確認</router-link>
         </li>
         <li class="nav-item" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/user/info">ユーザー情報</router-link>
@@ -111,6 +72,7 @@
     </div>
   </nav>
   <p v-if="logoutMsg" class="logoutMsg">{{ logoutMsg }}</p>
+  <br>
   <BContainer>
     <router-view></router-view>
   </BContainer>
