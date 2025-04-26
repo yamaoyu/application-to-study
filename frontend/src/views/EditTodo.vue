@@ -51,7 +51,7 @@ import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
 import { useTodoStore } from '@/store/todo';
-import { changeDate, getResponseAlert, verifyRefreshToken, commonError } from './lib/index';
+import { changeDate, getResponseAlert, verifyRefreshToken, errorWithStatusCode } from './lib/index';
 import { jwtDecode } from 'jwt-decode';
 
 export default {
@@ -64,7 +64,7 @@ export default {
     const authStore = useAuthStore()
     const todoStore = useTodoStore()
     const { increaseDay } = changeDate(due, message);
-    const { handleError } = commonError(statusCode, message, router)
+    const { handleError } = errorWithStatusCode(statusCode, message, router)
 
     const updateTodo = async() =>{
       // 更新後のTodoを送信する処理

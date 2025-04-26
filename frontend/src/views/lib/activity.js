@@ -1,14 +1,14 @@
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
-import { verifyRefreshToken, getActivityError, commonError, finishActivityError, getMonthlyinfoError, allActivitiesError } from './index';
+import { verifyRefreshToken, errorWithActivity, errorWithStatusCode, errorWithActivityStatus, errorWithActivities, commonError } from './index';
 import { jwtDecode } from 'jwt-decode';
 
 
 export function updateActivity(date, checkMsg, activityRes) {
     const router = useRouter();
     const authStore = useAuthStore();
-    const { handleError: handleActivityError } = getActivityError(activityRes, checkMsg, router);
+    const { handleError: handleActivityError } = errorWithActivity(activityRes, checkMsg, router);
 
     const getActivity = async() => {
         // 活動情報を取得リクエストを送信する関数
@@ -58,7 +58,7 @@ export function registerActivity(date, statusCode, targetTime, actualTime, messa
     const router = useRouter();
     const authStore = useAuthStore();
     const { renewActivity } = updateActivity(date, checkMsg, activityRes);
-    const { handleError } = commonError(statusCode, message, router);
+    const { handleError } = errorWithStatusCode(statusCode, message, router);
 
     const submitTarget = async() =>{
         // 目標時間を送信する処理
@@ -163,7 +163,7 @@ export function registerActivity(date, statusCode, targetTime, actualTime, messa
 export function finalizeActivity(date, finMsg, activityStatus, checkMsg, activityRes) {
     const router = useRouter();
     const authStore = useAuthStore();
-    const { handleError: handleFinishError } = finishActivityError(activityStatus, finMsg, router);
+    const { handleError: handleFinishError } = errorWithActivityStatus(activityStatus, finMsg, router);
     const { renewActivity } = updateActivity(date, checkMsg, activityRes);
 
     const sendFinishRequest = async() => {
@@ -220,7 +220,7 @@ export function finalizeActivity(date, finMsg, activityStatus, checkMsg, activit
 export function getActivityByMonth(selectedMonth, response, activities, message) {
     const router = useRouter();
     const authStore = useAuthStore();
-    const { handleError } = getMonthlyinfoError(response, activities, message, router);
+    const { handleError } = errorWithActivities(response, activities, message, router);
 
     const sendRequestForMonthlyInfo = async() =>{
         const [year, month] = selectedMonth.value.split('-').map(Number)
@@ -269,7 +269,7 @@ export function getActivityByMonth(selectedMonth, response, activities, message)
 export function getActivityByYear(year, response, activities, message){
     const router = useRouter();
     const authStore = useAuthStore();
-    const { handleError } = allActivitiesError(message, router);
+    const { handleError } = commonError(message, router);
 
     const sendRequestForMonthlyInfo = async() =>{
         const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year.value;
@@ -317,7 +317,7 @@ export function getActivityByYear(year, response, activities, message){
 export function getActivitiesAllPeriod(response, message){
     const router = useRouter();
     const authStore = useAuthStore();
-    const { handleError } = allActivitiesError(message, router);
+    const { handleError } = commonError(message, router);
 
     const sendRequestForAllPeriod = async() =>{
         const url = process.env.VUE_APP_BACKEND_URL + 'activities/total';
