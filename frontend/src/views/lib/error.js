@@ -1,7 +1,6 @@
-export function commonError(statusCode, message, router){
+export function errorWithStatusCode(statusCode, message, router){
     /**
-     * 最も多いパターンのエラー処理
-     * ステータスコードを処理する必要がある場合は、この関数を呼び出す
+     * APIリクエストのステータス番号のリセットが必要な場合
      */
     const handleError = async(error) => {
         statusCode.value = null;
@@ -12,9 +11,6 @@ export function commonError(statusCode, message, router){
                 {"path":"/login",
                 "query":{message:"再度ログインしてください"}
                 })
-                break;
-            case 500:
-                message.value =  "活動時間の登録に失敗しました"
                 break;
             default:
                 message.value = error.response.data.detail;}
@@ -30,10 +26,9 @@ export function commonError(statusCode, message, router){
     }
 }
 
-export function finishActivityError(activityStatus, message, router){
+export function errorWithActivityStatus(activityStatus, message, router){
     /**
-     * 活動終了時のエラー処理
-     * アクティビティステータスを使用する場合は、この関数を呼び出す
+     * activityStatus(未確定、未達成、達成)のリセットが必要な場合
      */
     const handleError = async(error) => {
         activityStatus.value = null;
@@ -44,9 +39,6 @@ export function finishActivityError(activityStatus, message, router){
                 {"path":"/login",
                 "query":{message:"再度ログインしてください"}
                 })
-                break;
-            case 500:
-                message.value =  "活動終了に失敗しました"
                 break;
             default:
                 message.value = error.response.data.detail;}
@@ -62,9 +54,9 @@ export function finishActivityError(activityStatus, message, router){
     }
 }
 
-export function getActivityError(activityRes, checkMsg, router){
+export function errorWithActivity(activityRes, checkMsg, router){
     /**
-     *
+     * activityRes(1日の活動記録)のリセットが必要な場合
      */
     const handleError = async(error) =>{
         activityRes.value = ""
@@ -79,9 +71,6 @@ export function getActivityError(activityRes, checkMsg, router){
             case 422:
                 checkMsg.value = error.response.data.detail;
                 break;
-            case 500:
-                checkMsg.value =  "活動の取得に失敗しました"
-                break;
             default:
                 checkMsg.value = error.response.data.detail;
             }
@@ -93,7 +82,10 @@ export function getActivityError(activityRes, checkMsg, router){
     }
 }
 
-export function getMonthlyinfoError(response, activities, message, router){
+export function errorWithActivities(response, activities, message, router){
+    /**
+     * activities(複数の活動記録)のリセットが必要な場合
+     */
     const handleError = async(error) =>{
         response.value = null
         activities.value = []
@@ -104,9 +96,6 @@ export function getMonthlyinfoError(response, activities, message, router){
                 {"path":"/login",
                  "query":{message:"再度ログインしてください"}
                 })
-                break;
-            case 500:
-                message.value =  "情報の取得に失敗しました"
                 break;
             default:
                 message.value = error.response.data.detail;}
@@ -121,7 +110,10 @@ export function getMonthlyinfoError(response, activities, message, router){
     }
 }
 
-export function allActivitiesError(message, router){
+export function commonError(message, router){
+    /**
+     * エラー処理のみで変数の初期化をしない
+     */
     const handleError = async(error) =>{
         if (error.response){
             switch (error.response.status){
@@ -133,9 +125,6 @@ export function allActivitiesError(message, router){
                     break;
                 case 422:
                     message.value = error.response.data.detail;
-                    break;
-                case 500:
-                    message.value =  "情報の取得に失敗しました"
                     break;
                 default:
                     message.value = error.response.data.detail;

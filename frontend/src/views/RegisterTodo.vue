@@ -50,7 +50,7 @@ import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
-import { changeDate, getResponseAlert, getToday, verifyRefreshToken, commonError } from './lib/index';
+import { changeDate, getResponseAlert, getToday, verifyRefreshToken, errorWithStatusCode } from './lib/index';
 import { jwtDecode } from 'jwt-decode';
 
 export default {
@@ -62,7 +62,7 @@ export default {
     const router = useRouter()
     const authStore = useAuthStore()
     const { increaseDay } = changeDate(due, message);
-    const { handleError } = commonError(message, statusCode, router);
+    const { handleError } = errorWithStatusCode(message, statusCode, router);
 
     const submitTodo = async() =>{
       // Todoを登録する処理

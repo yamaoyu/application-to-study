@@ -67,7 +67,7 @@
   <script>
   import { ref, computed, watch } from 'vue'
   import axios from 'axios'
-  import { getResponseAlert, verifyRefreshToken, commonError, validatePassword, checkPassword } from './lib';
+  import { getResponseAlert, verifyRefreshToken, errorWithStatusCode, validatePassword, checkPassword } from './lib';
   import { useRouter } from 'vue-router';
   import { useAuthStore } from '@/store/authenticate';
   import { jwtDecode } from 'jwt-decode';
@@ -94,7 +94,7 @@
       const showOldPassword = ref(false)
       const showNewPassword = ref(false)
       const showNewPasswordCheck = ref(false)
-      const { handleError } = commonError(statusCode, message, router)
+      const { handleError } = errorWithStatusCode(statusCode, message, router)
 
       const isValidPassword = computed(() => {
         return validatePassword(newPassword).validate()

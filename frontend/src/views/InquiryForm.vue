@@ -28,7 +28,7 @@
   <script>
   import { ref } from 'vue'
   import axios from 'axios'
-  import { getResponseAlert, verifyRefreshToken, commonError } from './lib';
+  import { getResponseAlert, verifyRefreshToken, errorWithStatusCode } from './lib';
   import { useRouter } from 'vue-router';
   import { useAuthStore } from '@/store/authenticate';
   import { jwtDecode } from 'jwt-decode';
@@ -41,7 +41,7 @@
       const statusCode = ref()
       const router = useRouter()
       const authStore = useAuthStore()
-      const { handleError } = commonError(statusCode, message, router)
+      const { handleError } = errorWithStatusCode(statusCode, message, router)
 
       const submitInquiry = async() =>{
         // 問い合わせ送信リクエスト処理、sendInquiry関数で呼び出される

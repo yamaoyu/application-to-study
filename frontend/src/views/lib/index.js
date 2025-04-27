@@ -5,7 +5,7 @@ import { generateTimeOptions } from "./timeUtils";
 import { STATUS_DICT } from "./status";
 import { getStatusColors, getAdjustmentColors, getActivityAlert, getResponseAlert } from "./bootstrapClass";
 import { verifyRefreshToken } from "./token";
-import { commonError, finishActivityError, getActivityError, getMonthlyinfoError, allActivitiesError } from "./error";
+import { errorWithStatusCode, errorWithActivityStatus, errorWithActivity, errorWithActivities, commonError } from "./error";
 import { validateUsername, validatePassword, checkPassword, validateEmail } from "./userinfo";
 import { 
     updateActivity, registerActivity, finalizeActivity, 
@@ -29,11 +29,11 @@ export {
     getActivityAlert,
     getResponseAlert,
     verifyRefreshToken,
+    errorWithStatusCode,
+    errorWithActivityStatus,
+    errorWithActivity,
+    errorWithActivities,
     commonError,
-    finishActivityError,
-    getActivityError,
-    getMonthlyinfoError,
-    allActivitiesError,
     validateUsername,
     validatePassword,
     checkPassword,

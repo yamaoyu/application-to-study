@@ -99,7 +99,7 @@
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { getMaxMonth, changeMonth, changeYear, getResponseAlert, getThisMonth, verifyRefreshToken, commonError } from './lib/index';
+import { getMaxMonth, changeMonth, changeYear, getResponseAlert, getThisMonth, verifyRefreshToken, errorWithStatusCode } from './lib/index';
 import { useAuthStore } from '@/store/authenticate';
 import { jwtDecode } from 'jwt-decode';
 
@@ -121,7 +121,7 @@ export default {
     const isMaxIncome = computed(() => monthlyIncome.value >= 999)
     const { increaseYear } = changeYear(selectedMonth);
     const { increaseMonth } = changeMonth(selectedMonth);
-    const { handleError } = commonError(statusCode, message, router);
+    const { handleError } = errorWithStatusCode(statusCode, message, router);
 
     const updateSalary = async(step) =>{
       // 画面に表示される給料を更新する関数
