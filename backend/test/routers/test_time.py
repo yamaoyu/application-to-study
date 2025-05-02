@@ -358,14 +358,14 @@ def test_get_acitivities_by_status(client, get_headers):
     setup_actual_time_for_test(client, get_headers)
     response = client.get("/activities?status=pending", headers=get_headers)
     assert response.status_code == 200
-    assert response.json() == [{"activity_id": 1,
-                               "date": "2024-05-05",
-                                "target_time": 5.0,
-                                "actual_time": 5.0,
-                                "status": "pending",
-                                "bonus": 0.0,
-                                "penalty": 0.0,
-                                "username": test_username}]
+    assert response.json() == {"activities": [{"activity_id": 1,
+                                               "date": "2024-05-05",
+                                               "target_time": 5.0,
+                                               "actual_time": 5.0,
+                                               "status": "pending",
+                                               "bonus": 0.0,
+                                               "penalty": 0.0,
+                                               "username": test_username}]}
 
 
 def test_get_acitivities_with_wrong_status(client, get_headers):

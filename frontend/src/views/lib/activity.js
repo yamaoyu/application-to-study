@@ -361,3 +361,51 @@ export function getActivitiesAllPeriod(response, message){
     }
 
 }
+
+export function getActivitiesByStatus(pendingActivities, pendingMsg){
+    const router = useRouter();
+    const authStore = useAuthStore();
+    const { handleError } = commonError(pendingMsg, router);
+
+    const sendPendingRequest = async() =>{
+        const url = process.env.VUE_APP_BACKEND_URL + 'activities?status=pending';
+        const response = await axios.get(url,
+                                        {headers: {Authorization: authStore.getAuthHeader}})
+        if (response.status==200){
+            pendingActivities.value = response.data.activities;
+            pendingMsg.value = ""
+        }
+    }
+
+    const getPendingActivities = async() =>{
+        try{
+            await sendPendingRequest()
+        } catch(error){
+            pendingActivities.value = []
+            if (error.response?.status === 401) {
+                try {
+                    // リフレッシュトークンを検証して新しいアクセストークンを取得
+                    const tokenResponse = await verifyRefreshToken();
+                    // 新しいアクセストークンをストアに保存
+                    await authStore.setAuthData(
+                    tokenResponse.data.access_token,
+                    tokenResponse.data.token_type,
+                    jwtDecode(tokenResponse.data.access_token).exp)
+                    // 再度リクエストを送信
+                    await sendPendingRequest();
+                } catch (refreshError) {
+                    router.push({
+                    path: "/login",
+                    query: { message: "再度ログインしてください" }
+                    });
+                }            
+            } else {
+                handleError(error)
+            }
+        }
+    }
+
+    return {
+        getPendingActivities
+    }
+}

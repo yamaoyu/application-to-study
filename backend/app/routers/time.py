@@ -417,10 +417,10 @@ def get_activities_by_status(param: validateStatus = Depends(),
             db_model.Activity.status == status).order_by(
                 db_model.Activity.date).all()
         if not activities:
-            status_dic = {"pending": "未完了", "failure": "未達成", "success": "達成"}
+            status_dic = {"pending": "未確定", "failure": "未達成", "success": "達成"}
             raise HTTPException(status_code=404,
                                 detail=f"ステータスが「{status_dic[status]}」の活動は登録されていません")
-        return activities
+        return {"activities": activities}
     except HTTPException as http_e:
         raise http_e
     except Exception:
