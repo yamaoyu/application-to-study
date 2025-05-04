@@ -45,5 +45,5 @@ class ActualTimeIn(BaseModel):
         return actual_time
 
 
-class validateStatus(BaseModel):
+class ValidateStatus(BaseModel):
     status: Status

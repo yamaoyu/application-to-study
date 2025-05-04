@@ -130,7 +130,11 @@
         </div>
         <br>
         <div class="container card">
-            <h5 class="card-title mt-3 clickable" @click="toggleFormVisibility">未確定の活動日</h5>
+            <h5 class="card-title mt-3 clickable" @click="toggleFormVisibility">
+                未確定の活動日
+                <span v-if="isFormVisible" class="ms-2">▲</span>
+                <span v-else class="ms-2">▼</span>
+            </h5>
             <hr class="divider">
             <div class="collapse" :class="{ 'show': isFormVisible }">
                 <div class="text-start mt-3" v-if="Object.keys(pendingActivities).length > 0">

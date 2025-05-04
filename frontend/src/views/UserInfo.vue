@@ -1,7 +1,11 @@
 <template>
   <h2 class="mb-5">ユーザー管理メニュー</h2>
   <div class="container col-8 card">
-    <h5 class="card-title mt-3 clickable" @click="toggleFormVisibility">パスワード変更</h5>
+    <h5 class="card-title mt-3 clickable" @click="toggleFormVisibility">
+      パスワード変更
+      <span v-if="isFormVisible" class="ms-2">▲</span>
+      <span v-else class="ms-2">▼</span>
+    </h5>
     <hr class="divider">
 
     <div class="collapse" :class="{ 'show': isFormVisible }">

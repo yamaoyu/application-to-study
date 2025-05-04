@@ -2,7 +2,7 @@ import traceback
 from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, Depends
 from app.models.time_model import (
-    TargetTimeIn, ActualTimeIn, RegisterActivities, validateStatus
+    TargetTimeIn, ActualTimeIn, RegisterActivities, ValidateStatus
 )
 from app.models.common_model import CheckDate, CheckYear
 from db import db_model
@@ -406,7 +406,7 @@ def get_all_activities(db: Session = Depends(get_db),
 
 
 @router.get("/activities", status_code=200)
-def get_activities_by_status(param: validateStatus = Depends(),
+def get_activities_by_status(param: ValidateStatus = Depends(),
                              db: Session = Depends(get_db),
                              current_user: dict = Depends(get_current_user)):
     """ 日ごとの活動実績をステータスごとに取得 """
