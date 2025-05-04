@@ -9,7 +9,7 @@ import { errorWithStatusCode, errorWithActivityStatus, errorWithActivity, errorW
 import { validateUsername, validatePassword, checkPassword, validateEmail } from "./userinfo";
 import { 
     updateActivity, registerActivity, finalizeActivity, 
-    getActivityByMonth, getActivityByYear, getActivitiesAllPeriod } from "./activity";
+    getActivityByMonth, getActivityByYear, getActivitiesAllPeriod, getActivitiesByStatus } from "./activity";
 
 export {
     MONTH_DICT,
@@ -43,5 +43,6 @@ export {
     finalizeActivity,
     getActivityByMonth,
     getActivityByYear,
-    getActivitiesAllPeriod
+    getActivitiesAllPeriod,
+    getActivitiesByStatus
 }

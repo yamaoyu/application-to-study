@@ -128,6 +128,39 @@
                 <p v-if="finMsg" class="mt-3 col-12" :class="getActivityAlert(activityStatus)">{{ finMsg }}</p>
             </div>
         </div>
+        <br>
+        <div class="container card">
+            <h5 class="card-title mt-3 clickable" @click="toggleFormVisibility">
+                未確定の活動日
+                <span v-if="isFormVisible" class="ms-2">▲</span>
+                <span v-else class="ms-2">▼</span>
+            </h5>
+            <hr class="divider">
+            <div class="collapse" :class="{ 'show': isFormVisible }">
+                <div class="text-start mt-3" v-if="Object.keys(pendingActivities).length > 0">
+                    <table class="table table-striped table-responsive">
+                    <thead class="table-dark">
+                        <tr>
+                        <th class="col-3">日付</th>
+                        <th>目標時間</th>
+                        <th>活動時間</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(activity, index) in pendingActivities" :key="index">
+                        <td>{{ activity.date }}</td>
+                        <td>{{ activity.target_time }}時間</td>
+                        <td>{{ activity.actual_time }}時間</td>
+                        </tr>
+                    </tbody>
+                    </table>
+                </div>
+                <div v-if="pendingMsg" class="alert alert-success">
+                    {{ pendingMsg }}
+                </div>
+            </div>
+        </div>
+        <br>
     </div>
 
     <!-- モーダルコンポーネントで登録前の確認 -->
@@ -143,7 +176,8 @@ import { ref, watch, onMounted, computed } from 'vue';
 import { BButton, BModal } from 'bootstrap-vue-next';
 import { 
     changeDate, STATUS_DICT, getStatusColors, getToday, getMaxDate,
-    getActivityAlert, getResponseAlert, updateActivity, registerActivity, finalizeActivity } from './lib/index';
+    getActivityAlert, getResponseAlert, updateActivity, registerActivity, 
+    finalizeActivity, getActivitiesByStatus } from './lib/index';
 
 export default {
     components: {
@@ -162,6 +196,9 @@ export default {
         const finMsg = ref("");
         const activityRes = ref("");
         const activityStatus = ref("");
+        const isFormVisible = ref(false)
+        const pendingActivities = ref([]);
+        const pendingMsg = ref("")
         const tabs = [
                     { value: 'target', label: '目標時間' },
                     { value: 'actual', label: '活動時間' },
@@ -171,7 +208,12 @@ export default {
         const { renewActivity } = updateActivity(date, checkMsg, activityRes);
         const { registerTarget, registerActual } = registerActivity(date, statusCode, targetTime, actualTime, message, checkMsg, activityRes);
         const { finishActivity } = finalizeActivity(date, finMsg, activityStatus, checkMsg, activityRes);
+        const { getPendingActivities } = getActivitiesByStatus(pendingActivities, pendingMsg)
         const showModal = ref(false);
+
+        const toggleFormVisibility = () => {
+            isFormVisible.value = !isFormVisible.value
+        }
 
         const confirmRegister = async() =>{
             showModal.value = true
@@ -203,13 +245,16 @@ export default {
             if (showModal.value) {
                 switch(activeTab.value) {
                     case 'target':
-                    registerTarget();
+                    await registerTarget();
+                    await getPendingActivities();
                     break;
                 case 'actual':
-                    registerActual();
+                    await registerActual();
+                    await getPendingActivities();
                     break;
                 case 'finish':
-                    finishActivity();
+                    await finishActivity();
+                    await getPendingActivities();
                     break;
                 }
             }
@@ -229,6 +274,7 @@ export default {
 
         onMounted(() => {
             renewActivity();
+            getPendingActivities();
         });
 
     return {
@@ -243,6 +289,9 @@ export default {
             finMsg,
             activityRes,
             activityStatus,
+            pendingActivities,
+            getPendingActivities,
+            pendingMsg,
             increaseDay,
             STATUS_DICT,
             getMaxDate,
@@ -255,6 +304,8 @@ export default {
             finishActivity,
             showModal,
             confirmRegister,
+            toggleFormVisibility,
+            isFormVisible,
             modalTitle,
             modalMessage,
             sendRequest

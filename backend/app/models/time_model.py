@@ -43,3 +43,7 @@ class ActualTimeIn(BaseModel):
             raise ValueError("活動時間は0.5時間単位で入力してください")
 
         return actual_time
+
+
+class ValidateStatus(BaseModel):
+    status: Status

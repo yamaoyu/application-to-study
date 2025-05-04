@@ -2,7 +2,7 @@ import traceback
 from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, Depends
 from app.models.time_model import (
-    TargetTimeIn, ActualTimeIn, RegisterActivities
+    TargetTimeIn, ActualTimeIn, RegisterActivities, ValidateStatus
 )
 from app.models.common_model import CheckDate, CheckYear
 from db import db_model
@@ -366,10 +366,10 @@ def get_year_activities(year: int,
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.get("/activities/total/", status_code=200)
+@router.get("/activities/total", status_code=200)
 def get_all_activities(db: Session = Depends(get_db),
                        current_user: dict = Depends(get_current_user)):
-    """ 全期間のデータを取得 """
+    """ 全期間を集計したデータを取得 """
     try:
         # 検索範囲の指定
         activities = db.query(db_model.Activity).filter(
@@ -397,6 +397,30 @@ def get_all_activities(db: Session = Depends(get_db),
                 "penalty": total_penalty,
                 "success_days": success_days,
                 "fail_days": len(activities) - success_days}
+    except HTTPException as http_e:
+        raise http_e
+    except Exception:
+        logger.error(f"月別の活動実績の取得に失敗しました\n{traceback.format_exc()}")
+        raise HTTPException(
+            status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
+
+
+@router.get("/activities", status_code=200)
+def get_activities_by_status(param: ValidateStatus = Depends(),
+                             db: Session = Depends(get_db),
+                             current_user: dict = Depends(get_current_user)):
+    """ 日ごとの活動実績をステータスごとに取得 """
+    try:
+        status = param.status
+        activities = db.query(db_model.Activity).filter(
+            db_model.Activity.username == current_user["username"],
+            db_model.Activity.status == status).order_by(
+                db_model.Activity.date).all()
+        if not activities:
+            status_dic = {"pending": "未確定", "failure": "未達成", "success": "達成"}
+            raise HTTPException(status_code=404,
+                                detail=f"ステータスが「{status_dic[status]}」の活動は登録されていません")
+        return {"activities": activities}
     except HTTPException as http_e:
         raise http_e
     except Exception:
