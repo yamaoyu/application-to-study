@@ -131,7 +131,8 @@ import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
 import { useTodoStore } from '@/store/todo';
-import { STATUS_DICT, getAdjustmentColors, getStatusColors, getActivityAlert } from './lib';
+import { jwtDecode } from 'jwt-decode';
+import { STATUS_DICT, getAdjustmentColors, getStatusColors, getActivityAlert, commonError, verifyRefreshToken } from './lib';
 
 export default {
   setup() {
@@ -149,14 +150,15 @@ export default {
     const router = useRouter()
     const authStore = useAuthStore()
     const todoStore = useTodoStore()
+    const { handleError: todoError } = commonError(todoMsg, router)
 
     const updateTodos = async() =>{
       // todo更新後、データを更新する
       try {
-        const todo_url = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
-        const todo_res = await axios.get(todo_url,
+        const todoUrl = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
+        const todoRes = await axios.get(todoUrl,
                                       {headers: {Authorization: authStore.getAuthHeader}})
-        todos.value = todo_res.data;
+        todos.value = todoRes.data;
       } catch (todo_err){
         switch (todo_err.response.status){
           case 404:
@@ -170,75 +172,91 @@ export default {
       }
     }
 
+    const deleteTodoRequest = async(todoId) =>{
+      const deleteUrl = process.env.VUE_APP_BACKEND_URL + 'todos/' + todoId
+      const response = await axios.delete(
+        deleteUrl, 
+        { 
+          headers: {
+          Authorization: authStore.getAuthHeader}
+        }
+      )
+
+      return response
+    }
 
     const deleteTodo = async(todoId) =>{
       try {
-          const delete_url = process.env.VUE_APP_BACKEND_URL + 'todos/' + todoId
-          const response = await axios.delete(
-            delete_url, 
-            { 
-              headers: {
-              Authorization: authStore.getAuthHeader}
-            }
-          )
+          const response = await deleteTodoRequest(todoId)
         if (response.status===204){
             await updateTodos();
           }
       } catch (error) {
-          if (error.response){
-            switch (error.response.status){
-              case 401:
-              router.push(
-                {"path":"/login",
-                  "query":{message:"再度ログインしてください"}
-                })
-                break;
-              case 500:
-                todoMsg.value =  "todoの削除に失敗しました"
-                break;
-              default:
-                todoMsg.value = error.response.data.detail;}
-          } else if (error.request){
-            todoMsg.value =  "リクエストがサーバーに到達できませんでした"
-          } else {
-            todoMsg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
-          }
+        if (error.response?.status === 401) {
+          try {
+            // リフレッシュトークンを検証して新しいアクセストークンを取得
+            const tokenResponse = await verifyRefreshToken();
+            // 新しいアクセストークンをストアに保存
+            await authStore.setAuthData(
+            tokenResponse.data.access_token,
+            tokenResponse.data.token_type,
+            jwtDecode(tokenResponse.data.access_token).exp)
+            // 再度リクエストを送信
+            await deleteTodoRequest(todoId);
+            await updateTodos();
+          } catch (refreshError) {
+            router.push({
+              path: "/login",
+              query: { message: "再度ログインしてください" }
+            });
+          }            
+        } else {
+          todoError(error)
         }
+        }
+    }
+
+    const finishTodoRequest = async(todoId) =>{
+      const finish_url = process.env.VUE_APP_BACKEND_URL + 'todos/finish/' + todoId
+      const response = await axios.put(
+        finish_url, 
+        {},
+        { 
+          headers: {
+          Authorization: authStore.getAuthHeader}
+        }
+      )
+      return response
     }
 
     const finishTodo = async(todoId) =>{
       try {
-          const finish_url = process.env.VUE_APP_BACKEND_URL + 'todos/finish/' + todoId
-          const response = await axios.put(
-            finish_url, 
-            {},
-            { 
-              headers: {
-              Authorization: authStore.getAuthHeader}
-            }
-          )
+        const response = await finishTodoRequest(todoId)
         if (response.status===200){
             await updateTodos();
           }
       } catch (error) {
-          if (error.response){
-            switch (error.response.status){
-              case 401:
-              router.push(
-                {"path":"/login",
-                  "query":{message:"再度ログインしてください"}
-                })
-                break;
-              case 500:
-                todoMsg.value =  "todoの削除に失敗しました"
-                break;
-              default:
-                todoMsg.value = error.response.data.detail;}
-          } else if (error.request){
-            todoMsg.value =  "リクエストがサーバーに到達できませんでした"
-          } else {
-            todoMsg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
-          }
+        if (error.response?.status === 401) {
+          try {
+            // リフレッシュトークンを検証して新しいアクセストークンを取得
+            const tokenResponse = await verifyRefreshToken();
+            // 新しいアクセストークンをストアに保存
+            await authStore.setAuthData(
+            tokenResponse.data.access_token,
+            tokenResponse.data.token_type,
+            jwtDecode(tokenResponse.data.access_token).exp)
+            // 再度リクエストを送信
+            await finishTodoRequest(todoId);
+            await updateTodos();
+          } catch (refreshError) {
+            router.push({
+              path: "/login",
+              query: { message: "再度ログインしてください" }
+            });
+          }            
+        } else {
+          todoError(error)
+        }
         }
     }
 
@@ -323,11 +341,11 @@ export default {
 
         // そのユーザーの未完了のtodoを取得
         try{
-          const todo_url = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
-          const todo_res = await axios.get(todo_url,
+          const todoUrl = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
+          const todoRes = await axios.get(todoUrl,
                                           {headers: {Authorization: authStore.getAuthHeader}})
-          if (todo_res.status==200){
-            todos.value = todo_res.data;
+          if (todoRes.status==200){
+            todos.value = todoRes.data;
           }
         } catch (todo_err) {
           if (todo_err.response){
