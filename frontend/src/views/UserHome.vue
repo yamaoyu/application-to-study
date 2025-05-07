@@ -110,8 +110,8 @@
             <td class="text-center align-middle">{{ todo.action }}</td>
             <td class="text-center align-middle">{{ todo.due }}</td>
             <td><input class="btn btn-outline-primary btn-sm" type="button" value="編集" @click="editTodo(todo)"></td>
-            <td><input class="btn btn-outline-success btn-sm" type="button" value="終了" @click="finishTodo(todo.todo_id)"></td>
-            <td><input class="btn btn-outline-danger btn-sm" type="button" value="削除" @click="deleteTodo(todo.todo_id)"></td>
+            <td><input class="btn btn-outline-success btn-sm" type="button" value="終了" @click="confirmRequest(todo.todo_id, 'finish')"></td>
+            <td><input class="btn btn-outline-danger btn-sm" type="button" value="削除" @click="confirmRequest(todo.todo_id, 'delete')"></td>
           </tr>
         </tbody>
       </table>
@@ -122,6 +122,12 @@
       </p>
     </div>
   </div>
+
+  <!-- モーダルコンポーネントで登録前の確認 -->
+  <BModal v-model="showModal" :title="modalTitle" ok-title="はい" cancel-title="いいえ" @ok="sendRequest">
+    <p class="text-danger">確定後は取り消せません</p>
+  </BModal>
+
 </template>
 
 
@@ -133,8 +139,13 @@ import { useAuthStore } from '@/store/authenticate';
 import { useTodoStore } from '@/store/todo';
 import { jwtDecode } from 'jwt-decode';
 import { STATUS_DICT, getAdjustmentColors, getStatusColors, getActivityAlert, commonError, verifyRefreshToken } from './lib';
+import { BModal } from 'bootstrap-vue-next';
 
 export default {
+  components:{
+    BModal
+  },
+
   setup() {
     const today = new Date()
     const year = today.getFullYear()
@@ -147,10 +158,36 @@ export default {
     const incomeRes = ref()
     const todos = ref([])
     const todoMsg = ref("")
+    const showModal = ref(false)
+    const modalTitle = ref("")
+    const todoId = ref()
+    const todoAction = ref()
     const router = useRouter()
     const authStore = useAuthStore()
     const todoStore = useTodoStore()
     const { handleError: todoError } = commonError(todoMsg, router)
+
+    const confirmRequest = async(id, action) =>{
+        showModal.value = true
+        todoId.value = id
+        todoAction.value = action
+        if (todoAction.value==='finish'){
+          modalTitle.value = "Todo終了確認"
+        } else if (todoAction.value==='delete') {
+          modalTitle.value = "Todo削除確認"
+        }
+    }
+
+    const sendRequest = async() =>{
+      if (todoAction.value==='finish'){
+        await finishTodo(todoId.value)
+      } else if (todoAction.value==='delete') {
+        await deleteTodo(todoId.value)
+      }
+      // データを初期化
+      todoId.value = null
+      todoAction.value = null
+    }
 
     const updateTodos = async() =>{
       // todo更新後、データを更新する
@@ -379,9 +416,15 @@ export default {
       incomeRes,
       todos,
       todoMsg,
+      showModal,
+      modalTitle,
+      todoId,
+      todoAction,
       year,
       month,
       date,
+      confirmRequest,
+      sendRequest,
       updateTodos,
       deleteTodo,
       finishTodo,
