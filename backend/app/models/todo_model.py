@@ -3,5 +3,6 @@ from datetime import date
 
 
 class Todo(BaseModel):
-    action: str
+    title: str
     due: date
+    detail: str
