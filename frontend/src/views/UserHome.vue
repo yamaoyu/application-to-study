@@ -119,7 +119,7 @@
         <tbody v-for="(todo, index) in todos" :key="index">
           <tr>
             <td class="text-center align-middle">{{ index + 1 }}</td>
-            <td class="text-center align-middle">{{ todo.action }}</td>
+            <td class="text-center align-middle todo-title" @click="confirmRequest(todo.todo_id, 'show', todo)">{{ todo.title }}</td>
             <td class="text-center align-middle">{{ todo.due }}</td>
             <td><input class="btn btn-outline-primary btn-sm" type="button" value="編集" @click="editTodo(todo)"></td>
             <td><input class="btn btn-outline-success btn-sm" type="button" value="終了" @click="confirmRequest(todo.todo_id, 'finish')"></td>
@@ -135,9 +135,15 @@
     </div>
   </div>
 
-  <!-- モーダルコンポーネントで登録前の確認 -->
   <BModal v-model="showModal" :title="modalTitle" ok-title="はい" cancel-title="いいえ" @ok="sendTodoRequest">
-    <p class="text-danger">確定後は取り消せません</p>
+    <div v-if="todoAction==='finish' || todoAction==='delete'" class="text-danger">確定後は取り消せません</div>
+    <div v-else-if="todoAction==='show'">
+      <div class="todo-detail">
+        <p><strong>期限:</strong> {{ todo.due }}</p>
+        <p v-if="todo.detail"><strong>詳細:</strong> {{ todo.detail }}</p>
+        <p v-else class="text-muted">Todoの詳細はありません</p>
+      </div>
+    </div>
   </BModal>
 
 </template>
@@ -176,12 +182,13 @@ export default {
     const todoId = ref()
     const todoAction = ref()
     const sortType = ref("id")
+    const todo = ref()
     const router = useRouter()
     const authStore = useAuthStore()
     const todoStore = useTodoStore()
     const { handleError: todoError } = commonError(todoMsg, router)
 
-    const confirmRequest = async(id, action) =>{
+    const confirmRequest = async(id, action, content) =>{
         showModal.value = true
         todoId.value = id
         todoAction.value = action
@@ -189,6 +196,9 @@ export default {
           modalTitle.value = "Todo終了確認"
         } else if (todoAction.value==='delete') {
           modalTitle.value = "Todo削除確認"
+        } else if (todoAction.value==='show') {
+          modalTitle.value = content.title
+          todo.value = content
         }
     }
 
@@ -201,6 +211,7 @@ export default {
       // データを初期化
       todoId.value = null
       todoAction.value = null
+      todo.value = null
     }
 
     const sortTodos = async(type) =>{
@@ -450,6 +461,7 @@ export default {
       year,
       month,
       date,
+      todo,
       confirmRequest,
       sendTodoRequest,
       sortTodos,
@@ -475,5 +487,13 @@ li{
   margin: 0; /* 要素間の余白を削除 */
   padding: 0;
   line-height: 1.5; /* 行の高さを調整 */
+}
+.todo-title {
+  text-decoration: underline;
+  cursor: pointer;
+  color: #0d6efd; /* Bootstrap primary color */
+}
+.todo-title:hover {
+  color: #0a58ca; /* Darker shade on hover */
 }
 </style>
