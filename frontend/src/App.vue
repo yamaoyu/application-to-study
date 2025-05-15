@@ -148,6 +148,10 @@ export default {
 </script>
 
 <style>
+div {
+  white-space: pre-wrap;
+}
+
 .custom-navbar {
   background-color: navy;
   color: white;
