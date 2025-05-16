@@ -66,14 +66,8 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
 import { changeDate, getResponseAlert, getToday, verifyRefreshToken, errorWithStatusCode } from './lib/index';
 import { jwtDecode } from 'jwt-decode';
-// import { BForm, BFormInput } from 'bootstrap-vue-next';
 
 export default {
-  // components: {
-  //   BForm,
-  //   BFormInput
-  // },
-
   setup() {
     const message = ref("")
     const title = ref("")

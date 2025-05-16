@@ -109,12 +109,12 @@ def delete_todo(todo_id: int,
 
 @router.put("/todos/{todo_id}", status_code=200)
 def edit_todo(todo_id: int,
-              new_action: Todo,
+              new_todo: Todo,
               db: Session = Depends(get_db),
               current_user: dict = Depends(get_current_user)):
-    title = new_action.title
-    due = new_action.due
-    detail = new_action.detail
+    title = new_todo.title
+    due = new_todo.due
+    detail = new_todo.detail
     try:
         todo = db.query(db_model.Todo).filter(
             db_model.Todo.todo_id == todo_id,

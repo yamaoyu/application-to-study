@@ -119,18 +119,18 @@
         <tbody v-for="(todo, index) in todos" :key="index">
           <tr>
             <td class="text-center align-middle">{{ index + 1 }}</td>
-            <td class="text-center align-middle todo-title" @click="confirmRequest(todo.todo_id, 'show', todo)">{{ todo.title }}</td>
+            <td class="text-center align-middle todo-title" @click="confirmRequest(todo, 'show')">{{ todo.title }}</td>
             <td class="text-center align-middle">{{ todo.due }}</td>
-            <td><input class="btn btn-outline-primary btn-sm" type="button" value="編集" @click="editTodo(todo)"></td>
-            <td><input class="btn btn-outline-success btn-sm" type="button" value="終了" @click="confirmRequest(todo.todo_id, 'finish')"></td>
-            <td><input class="btn btn-outline-danger btn-sm" type="button" value="削除" @click="confirmRequest(todo.todo_id, 'delete')"></td>
+            <td><input class="btn btn-outline-primary btn-sm" type="button" value="編集" @click="confirmRequest(todo, 'edit')"></td>
+            <td><input class="btn btn-outline-success btn-sm" type="button" value="終了" @click="confirmRequest(todo, 'finish')"></td>
+            <td><input class="btn btn-outline-danger btn-sm" type="button" value="削除" @click="confirmRequest(todo, 'delete')"></td>
           </tr>
         </tbody>
       </table>
     </template>
     <div class="row d-flex align-items-center justify-content-center my-3">
       <p v-if="todoMsg" class="col-8 alert alert-warning p-3">
-          {{ todoMsg }}
+        {{ todoMsg }}
       </p>
     </div>
   </div>
@@ -140,8 +140,49 @@
     <div v-else-if="todoAction==='show'">
       <div class="todo-detail">
         <p><strong>期限:</strong> {{ todo.due }}</p>
+        <p><strong>タイトル:</strong>{{ todo.title }}</p>
         <p v-if="todo.detail"><strong>詳細:</strong> {{ todo.detail }}</p>
         <p v-else class="text-muted">Todoの詳細はありません</p>
+      </div>
+    </div>
+    <div v-else-if="todoAction==='edit'">
+      <label class="mt-3">題名</label>
+      <div class="container d-flex col-10 justify-content-center">
+        <div class="input-group">
+          <input
+            v-model="newTodoTitle"
+            class="form-control col-10"
+            :placeholder=todo.title
+            maxlength="32"
+            />
+          <span v-if="newTodoTitle" class="input-group-text">{{ newTodoTitle.length }}/32</span>
+        </div>
+      </div>
+      <label class="mt-3">詳細</label>
+      <div class="container d-flex justify-content-center mt-3">
+        <div class="input-group">
+          <textarea
+            v-model="newTodoDetail"
+            class="form-control col-10"
+            :placeholder=todo.detail
+            maxlength="200"
+            rows="3"
+            >
+          </textarea>
+          <span v-if="newTodoDetail" class="input-group-text">{{ newTodoDetail.length }}/200</span>
+          <span v-else class="input-group-text">0/200</span>
+        </div>
+      </div>
+      <label class="mt-3">期限</label>
+      <div class="container col-8 d-flex justify-content-center mt-3">
+        <div class="input-group">
+          <input
+            type="date"
+            v-model="newTodoDue"
+            class="form-control col-2"
+            min="2024-01-01"
+          />
+        </div>
       </div>
     </div>
   </BModal>
@@ -154,7 +195,6 @@ import { onMounted, ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
-import { useTodoStore } from '@/store/todo';
 import { jwtDecode } from 'jwt-decode';
 import { STATUS_DICT, getAdjustmentColors, getStatusColors, getActivityAlert, commonError, verifyRefreshToken } from './lib';
 import { BButton, BModal } from 'bootstrap-vue-next';
@@ -175,38 +215,48 @@ export default {
     const activityStatus = ref("")
     const incomeMsg = ref("")
     const incomeRes = ref()
-    const todos = ref([])
+    const todos = ref([]) // todo一覧で表示する用
     const todoMsg = ref("")
     const showModal = ref(false)
     const modalTitle = ref("")
-    const todoId = ref()
-    const todoAction = ref()
-    const sortType = ref("id")
-    const todo = ref()
+    const todoId = ref() // todo操作の対象となるtodoのIDを保持
+    const todoAction = ref() // todoに対して行う操作名(閲覧、編集、終了、削除)
+    const sortType = ref("id") // todoの一覧で表示されるソート順で初期値は登録順(id)
+    const todo = ref() // todoの情報を保持し、Todoの閲覧、編集時に使用する
+    const newTodoTitle = ref("")
+    const newTodoDetail = ref("")
+    const newTodoDue = ref()
     const router = useRouter()
     const authStore = useAuthStore()
-    const todoStore = useTodoStore()
     const { handleError: todoError } = commonError(todoMsg, router)
 
-    const confirmRequest = async(id, action, content) =>{
+    const confirmRequest = async(content, action) =>{
         showModal.value = true
-        todoId.value = id
+        todoId.value = content.todo_id
         todoAction.value = action
         if (todoAction.value==='finish'){
           modalTitle.value = "Todo終了確認"
         } else if (todoAction.value==='delete') {
           modalTitle.value = "Todo削除確認"
         } else if (todoAction.value==='show') {
-          modalTitle.value = content.title
+          modalTitle.value = "Todo閲覧"
+          todo.value = content
+        } else if (todoAction.value==='edit') {
+          modalTitle.value = "Todo編集"
+          newTodoTitle.value = content.title
+          newTodoDetail.value = content.detail
+          newTodoDue.value = content.due
           todo.value = content
         }
     }
 
     const sendTodoRequest = async() =>{
       if (todoAction.value==='finish'){
-        await finishTodo(todoId.value)
+        await finishTodo()
       } else if (todoAction.value==='delete') {
-        await deleteTodo(todoId.value)
+        await deleteTodo()
+      } else if (todoAction.value==='edit'){
+        await editTodo()
       }
       // データを初期化
       todoId.value = null
@@ -227,8 +277,8 @@ export default {
       }
     }
 
-    const updateTodos = async() =>{
-      // todo更新後、データを更新する
+    const renewTodos = async() =>{
+      // todo更新後、データを再取得し、更新する
       try {
         const todoUrl = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
         const todoRes = await axios.get(todoUrl,
@@ -247,8 +297,47 @@ export default {
       }
     }
 
-    const deleteTodoRequest = async(todoId) =>{
-      const deleteUrl = process.env.VUE_APP_BACKEND_URL + 'todos/' + todoId
+    const updateTodo = async() =>{
+      // 更新後のTodoを送信する処理
+      const url = process.env.VUE_APP_BACKEND_URL + 'todos/' + Number(todoId.value)
+      const response = await axios.put(url,
+                                      {title: newTodoTitle.value, detail:newTodoDetail.value, due:newTodoDue.value},
+                                      {headers: {Authorization: authStore.getAuthHeader}})
+      if (response.status===200){
+        await renewTodos()
+      }
+    }
+
+    const editTodo = async() =>{
+      // 更新ボタンを押した時に実行される関数
+      try{
+        await updateTodo()
+      } catch (error) {
+        if (error.response?.status === 401) {
+          try {
+            // リフレッシュトークンを検証して新しいアクセストークンを取得
+            const tokenResponse = await verifyRefreshToken();
+            // 新しいアクセストークンをストアに保存
+            await authStore.setAuthData(
+            tokenResponse.data.access_token,
+            tokenResponse.data.token_type,
+            jwtDecode(tokenResponse.data.access_token).exp)
+            // 再度リクエストを送信
+            await updateTodo();
+          } catch (refreshError) {
+            router.push({
+              path: "/login",
+              query: { message: "再度ログインしてください" }
+            });
+          }            
+        } else {
+          todoError(error)
+        }
+      }
+    }
+
+    const deleteTodoRequest = async() =>{
+      const deleteUrl = process.env.VUE_APP_BACKEND_URL + 'todos/' + todoId.value
       const response = await axios.delete(
         deleteUrl, 
         { 
@@ -260,11 +349,11 @@ export default {
       return response
     }
 
-    const deleteTodo = async(todoId) =>{
+    const deleteTodo = async() =>{
       try {
-          const response = await deleteTodoRequest(todoId)
+          const response = await deleteTodoRequest(todoId.value)
         if (response.status===204){
-            await updateTodos();
+            await renewTodos();
           }
       } catch (error) {
         if (error.response?.status === 401) {
@@ -278,7 +367,7 @@ export default {
             jwtDecode(tokenResponse.data.access_token).exp)
             // 再度リクエストを送信
             await deleteTodoRequest(todoId);
-            await updateTodos();
+            await renewTodos();
           } catch (refreshError) {
             router.push({
               path: "/login",
@@ -291,8 +380,8 @@ export default {
         }
     }
 
-    const finishTodoRequest = async(todoId) =>{
-      const finish_url = process.env.VUE_APP_BACKEND_URL + 'todos/finish/' + todoId
+    const finishTodoRequest = async() =>{
+      const finish_url = process.env.VUE_APP_BACKEND_URL + 'todos/finish/' + todoId.value
       const response = await axios.put(
         finish_url, 
         {},
@@ -304,11 +393,11 @@ export default {
       return response
     }
 
-    const finishTodo = async(todoId) =>{
+    const finishTodo = async() =>{
       try {
-        const response = await finishTodoRequest(todoId)
+        const response = await finishTodoRequest(todoId.value)
         if (response.status===200){
-            await updateTodos();
+            await renewTodos();
           }
       } catch (error) {
         if (error.response?.status === 401) {
@@ -321,8 +410,8 @@ export default {
             tokenResponse.data.token_type,
             jwtDecode(tokenResponse.data.access_token).exp)
             // 再度リクエストを送信
-            await finishTodoRequest(todoId);
-            await updateTodos();
+            await finishTodoRequest(todoId.value);
+            await renewTodos();
           } catch (refreshError) {
             router.push({
               path: "/login",
@@ -334,13 +423,6 @@ export default {
         }
         }
     }
-
-    const editTodo = async(todoInfo) =>{
-      todoStore.saveTodo(todoInfo["todo_id"], todoInfo["action"], todoInfo["due"])
-      router.push({"name":"EditTodo"}
-      )
-    }
-
 
     onMounted( async() =>{
         // その日の活動実績を取得
@@ -466,10 +548,13 @@ export default {
       sendTodoRequest,
       sortTodos,
       sortType,
-      updateTodos,
+      renewTodos,
       deleteTodo,
       finishTodo,
       editTodo,
+      newTodoTitle,
+      newTodoDetail,
+      newTodoDue,
       STATUS_DICT,
       getAdjustmentColors,
       getStatusColors,
