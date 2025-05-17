@@ -14,7 +14,7 @@
       </div>
     </div>
     <label class="mt-3">詳細</label>
-    <div class="container d-flex justify-content-center mt-3">
+    <div class="container d-flex col-10 justify-content-center mt-3">
       <div class="input-group">
         <textarea
           v-model="detail"
