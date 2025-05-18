@@ -43,6 +43,8 @@ def create_todo(todo: Todo,
 
 @router.get("/todos", status_code=200)
 def get_all_todo(status: Optional[bool] = None,
+                 start_due: Optional[str] = None,
+                 end_due: Optional[str] = None,
                  db: Session = Depends(get_db),
                  current_user: dict = Depends(get_current_user)):
     try:
@@ -50,6 +52,10 @@ def get_all_todo(status: Optional[bool] = None,
             db_model.Todo.username == current_user['username'])
         if status is not None:
             sqlstatement = sqlstatement.filter(db_model.Todo.status == status)
+        if start_due:
+            sqlstatement = sqlstatement.filter(db_model.Todo.due >= start_due)
+        if end_due:
+            sqlstatement = sqlstatement.filter(db_model.Todo.due <= end_due)
         todos = sqlstatement.all()
         if not todos:
             raise HTTPException(status_code=404,

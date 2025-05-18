@@ -351,11 +351,12 @@ def test_get_year_acitivities(client, get_headers):
                                }}
 
 
-def test_get_acitivities_by_status(client, get_headers):
-    """ ステータスで活動を絞って取得 """
+def test_get_acitivities_with_query_parameters(client, get_headers):
+    """ クエリパラメータで活動を絞って取得 """
     setup_monthly_income_for_test(client, get_headers)
     setup_target_time_for_test(client, get_headers)
     setup_actual_time_for_test(client, get_headers)
+    # ステータスで絞る
     response = client.get("/activities?status=pending", headers=get_headers)
     assert response.status_code == 200
     assert response.json() == {"activities": [{"activity_id": 1,
@@ -366,6 +367,9 @@ def test_get_acitivities_by_status(client, get_headers):
                                                "bonus": 0.0,
                                                "penalty": 0.0,
                                                "username": test_username}]}
+    # 期限で絞る(期限外は表示されない)
+    response = client.get("/activities?status=pending&start_due=2024/5/6", headers=get_headers)
+    assert response.status_code == 404
 
 
 def test_get_acitivities_with_wrong_status(client, get_headers):
