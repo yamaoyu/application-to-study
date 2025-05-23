@@ -93,7 +93,7 @@
   <div class="container">
     <div class="position-relative mb-3">
       <!-- 中央に配置するためのコンテナ -->
-      <h2 class="text-center">Todo一覧</h2>
+      <h2 class="text-center">未完了のTodo</h2>
       <!-- 右側に絶対配置でボタンを配置 -->
       <div class="btn-group position-absolute top-50 end-0 translate-middle-y">
         <BButton class="btn btn-outline-secondary bi-sort-down btn-sm" :variant="sortType === 'id' ? 'secondary text-white' : 'outline-secondary'" @click="sortTodos('id')">

@@ -27,6 +27,9 @@
             <router-link class="nav-link" to="/view/activity/">実績確認</router-link>
           </li>
           <li class="nav-item">
+            <router-link class="nav-link" to="/view/todo">Todo確認</router-link>
+          </li>
+          <li class="nav-item">
             <router-link class="nav-link" to="/user/info">ユーザー情報</router-link>
           </li>
           <li class="nav-item">
@@ -58,6 +61,9 @@
         </li>
         <li class="nav-item" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/view/activity/">実績確認</router-link>
+        </li>
+        <li class="nav-item">
+          <router-link class="nav-link" to="/view/todo">Todo確認</router-link>
         </li>
         <li class="nav-item" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/user/info">ユーザー情報</router-link>

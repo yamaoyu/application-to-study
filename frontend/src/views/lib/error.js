@@ -134,6 +134,7 @@ export function commonError(message, router){
             } else {
                 message.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
         }
+        return message.value
     }
 
     return {

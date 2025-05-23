@@ -8,6 +8,7 @@ import InquiryForm from '../views/InquiryForm.vue'
 import UserInfo from '../views/UserInfo.vue'
 import ActivityHome from '../views/ActivityHome.vue'
 import ActivityInfo from '../views/ActivityInfo.vue'
+import ShowTodo from '../views/ShowTodo.vue'
 
 const routes = [
   {
@@ -54,6 +55,11 @@ const routes = [
     path:"/view/activity",
     name:"ActivityInfo",
     component:ActivityInfo
+  },
+  {
+    path:"/view/todo",
+    name:"ShowTodo",
+    component:ShowTodo
   }
 ]
 
