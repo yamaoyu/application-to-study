@@ -375,7 +375,7 @@ export default {
             });
           }            
         } else {
-          todoError(error)
+          todoMsg.value = await todoError(error)
         }
         }
     }

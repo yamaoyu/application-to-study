@@ -41,6 +41,10 @@
                     <input type="date" class="form-control" v-model="endDue">
                 </div>
             </div>
+            <div class="mt-3">
+                <label>タイトル</label>
+                <input type="text" class="form-control" v-model="title">
+            </div>
             <div class="d-flex justify-content-end mt-3">
                 <BButton variant="secondary" class="me-2" @click="resetFilter">リセット</BButton>
                 <BButton variant="primary" @click="applyFilter">フィルター適用</BButton>
@@ -73,10 +77,62 @@
             </tbody>
         </table>
     </template>
-    <div v-else class="alert alert-warning">
+    <div v-if="todoMsg" class="alert alert-warning">
         {{ todoMsg }}
     </div>
     </div>
+
+    <BModal v-model="showModal" :title="modalTitle" ok-title="はい" cancel-title="いいえ" @ok="sendTodoRequest">
+        <div v-if="todoAction==='finish' || todoAction==='delete'" class="text-danger">確定後は取り消せません</div>
+            <div v-else-if="todoAction==='show'">
+                <div class="todo-detail">
+                    <p><strong>期限:</strong> {{ todo.due }}</p>
+                    <p><strong>タイトル:</strong>{{ todo.title }}</p>
+                    <p v-if="todo.detail"><strong>詳細:</strong> {{ todo.detail }}</p>
+                    <p v-else class="text-muted">Todoの詳細はありません</p>
+                </div>
+            </div>
+        <div v-else-if="todoAction==='edit'">
+        <label class="mt-3">題名</label>
+        <div class="container d-flex col-10 justify-content-center">
+            <div class="input-group">
+            <input
+                v-model="newTodoTitle"
+                class="form-control col-10"
+                :placeholder=todo.title
+                maxlength="32"
+                />
+            <span v-if="newTodoTitle" class="input-group-text">{{ newTodoTitle.length }}/32</span>
+            </div>
+        </div>
+        <label class="mt-3">詳細</label>
+        <div class="container d-flex justify-content-center mt-3">
+            <div class="input-group">
+            <textarea
+                v-model="newTodoDetail"
+                class="form-control col-10"
+                :placeholder=todo.detail
+                maxlength="200"
+                rows="3"
+                >
+            </textarea>
+            <span v-if="newTodoDetail" class="input-group-text">{{ newTodoDetail.length }}/200</span>
+            <span v-else class="input-group-text">0/200</span>
+            </div>
+        </div>
+        <label class="mt-3">期限</label>
+        <div class="container col-8 d-flex justify-content-center mt-3">
+            <div class="input-group">
+            <input
+                type="date"
+                v-model="newTodoDue"
+                class="form-control col-2"
+                min="2024-01-01"
+            />
+            </div>
+        </div>
+        </div>
+    </BModal>
 </template>
 
 <script>
@@ -86,25 +142,31 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
 import { jwtDecode } from 'jwt-decode';
 import { commonError, verifyRefreshToken } from './lib';
-import { BButton } from 'bootstrap-vue-next';
+import { BButton,BModal } from 'bootstrap-vue-next';
 
 
 export default{
     components:{
-        BButton
+        BButton,
+        BModal
     },
 
     setup() {
         const statusFilter = ref("")
         const startDue = ref()
         const endDue = ref()
+        const title = ref()
         const todos = ref([])
         const todoMsg = ref("")
-        const todoId = ref()
+        const showModal = ref(false)
+        const modalTitle = ref()
+        const todoId = ref() // todo操作の対象となるtodoのIDを保持
+        const todoAction = ref() // todoに対して行う操作名(閲覧、編集、終了、削除)
+        const sortType = ref("id") // todoの一覧で表示されるソート順で初期値は登録順(id)
+        const todo = ref() // todoの情報を保持し、Todoの閲覧、編集時に使用する
         const newTodoTitle = ref("")
         const newTodoDetail = ref("")
         const newTodoDue = ref()
-        const sortType = ref("id")
         const isFormVisible = ref(false)
         const router = useRouter()
         const authStore = useAuthStore()
@@ -137,38 +199,53 @@ export default{
             statusFilter.value = ""
             startDue.value = ""
             endDue.value = ""
+            title.value = ""
         }
 
-        const renewTodos = async() =>{
-        // todo更新後、データを再取得し、更新する
-        try {
-            const todoUrl = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
-            const todoRes = await axios.get(todoUrl,
-                                        {headers: {Authorization: authStore.getAuthHeader}})
-            todos.value = todoRes.data;
-        } catch (todo_err){
-            switch (todo_err.response.status){
-            case 404:
-            case 500:
-                todos.value = []
-                todoMsg.value = todo_err.response.data.detail;
-                break
-            default:
-                todoMsg.value = "todoの取得に失敗しました"
+        const confirmRequest = async(content, action) =>{
+            showModal.value = true
+            todoId.value = content.todo_id
+            todoAction.value = action
+            if (todoAction.value==='finish'){
+                modalTitle.value = "Todo終了確認"
+            } else if (todoAction.value==='delete') {
+                modalTitle.value = "Todo削除確認"
+            } else if (todoAction.value==='show') {
+                modalTitle.value = "Todo閲覧"
+                todo.value = content
+            } else if (todoAction.value==='edit') {
+                modalTitle.value = "Todo編集"
+                newTodoTitle.value = content.title
+                newTodoDetail.value = content.detail
+                newTodoDue.value = content.due
+                todo.value = content
             }
         }
+
+        const sendTodoRequest = async() =>{
+            if (todoAction.value==='finish'){
+                await finishTodo()
+            } else if (todoAction.value==='delete') {
+                await deleteTodo()
+            } else if (todoAction.value==='edit'){
+                await editTodo()
+            }
+            // データを初期化
+            todoId.value = null
+            todoAction.value = null
+            todo.value = null
         }
 
         const updateTodo = async() =>{
             // 更新後のTodoを送信する処理
-            const url = process.env.VUE_APP_BACKEND_URL + 'todos/' + Number(todoId.value)
+            const url = process.env.VUE_APP_BACKEND_URL + 'todos/' + todoId.value
             const response = await axios.put(url,
                                             {title: newTodoTitle.value, detail:newTodoDetail.value, due:newTodoDue.value},
                                             {headers: {Authorization: authStore.getAuthHeader}})
             if (response.status===200){
-                await renewTodos()
+                await sendGetTodoRequest()
             }
-            }
+        }
 
         const editTodo = async() =>{
             // 更新ボタンを押した時に実行される関数
@@ -193,7 +270,96 @@ export default{
                     });
                 }            
                 } else {
-                    todoError(error);
+                    todoMsg.value = await todoError(error);
+                }
+            }
+        }
+
+        const sendFinishTodoRequest = async() =>{
+            const finish_url = process.env.VUE_APP_BACKEND_URL + 'todos/finish/' + todoId.value
+            const response = await axios.put(
+                finish_url, 
+                {},
+                { 
+                headers: {
+                Authorization: authStore.getAuthHeader}
+                }
+            )
+            return response
+        }
+
+        const finishTodo = async() =>{
+            try {
+                const response = await sendFinishTodoRequest(todoId.value)
+                if (response.status===200){
+                    await sendGetTodoRequest();
+                }
+            } catch (error) {
+                if (error.response?.status === 401) {
+                    try {
+                        // リフレッシュトークンを検証して新しいアクセストークンを取得
+                        const tokenResponse = await verifyRefreshToken();
+                        // 新しいアクセストークンをストアに保存
+                        await authStore.setAuthData(
+                        tokenResponse.data.access_token,
+                        tokenResponse.data.token_type,
+                        jwtDecode(tokenResponse.data.access_token).exp)
+                        // 再度リクエストを送信
+                        await sendFinishTodoRequest(todoId.value);
+                        await sendGetTodoRequest();
+                    } catch (refreshError) {
+                        router.push({
+                        path: "/login",
+                        query: { message: "再度ログインしてください" }
+                        });
+                    }            
+                } else {
+                    todoMsg.value = await todoError(error)
+                    console.log(todoMsg.value)
+                }
+            }
+        }
+
+        const deleteTodoRequest = async() =>{
+            const deleteUrl = process.env.VUE_APP_BACKEND_URL + 'todos/' + todoId.value
+            const response = await axios.delete(
+                deleteUrl, 
+                { 
+                headers: {
+                Authorization: authStore.getAuthHeader}
+                }
+            )
+
+            return response
+        }
+
+        const deleteTodo = async() =>{
+            try {
+                const response = await deleteTodoRequest(todoId.value)
+                if (response.status===204){
+                    await sendGetTodoRequest();
+                }
+            } catch (error) {
+                if (error.response?.status === 401) {
+                try {
+                    // リフレッシュトークンを検証して新しいアクセストークンを取得
+                    const tokenResponse = await verifyRefreshToken();
+                    // 新しいアクセストークンをストアに保存
+                    await authStore.setAuthData(
+                    tokenResponse.data.access_token,
+                    tokenResponse.data.token_type,
+                    jwtDecode(tokenResponse.data.access_token).exp)
+                    // 再度リクエストを送信
+                    await deleteTodoRequest(todoId);
+                    await sendGetTodoRequest();
+                } catch (refreshError) {
+                    router.push({
+                    path: "/login",
+                    query: { message: "再度ログインしてください" }
+                    });
+                }            
+                } else {
+                    todoMsg.value = await todoError(error)
                 }
             }
         }
@@ -205,10 +371,22 @@ export default{
                 queryParameter += "status=" + statusFilter.value
             } 
             if (startDue.value){
+                if (queryParameter){
+                    queryParameter += "&"
+                }
                 queryParameter += "start_due=" + startDue.value
             }
             if (endDue.value){
+                if (queryParameter){
+                    queryParameter += "&"
+                }
                 queryParameter += "end_due=" + endDue.value
+            }
+            if (title.value){
+                if (queryParameter){
+                    queryParameter += "&"
+                }
+                queryParameter += "title=" + title.value
             }
             if (queryParameter){
                 todoUrl += "?" + queryParameter
@@ -244,7 +422,6 @@ export default{
                 } else {
                     todos.value = [];
                     todoMsg.value = await todoError(todoErr);
-                    console.log(todoMsg.value)
                 }
             }
         }
@@ -255,16 +432,28 @@ export default{
 
         return {
             todos,
+            todo,
             todoMsg,
+            showModal,
+            modalTitle,
+            todoAction,
             toggleFormVisibility,
             applyFilter,
             resetFilter,
+            confirmRequest,
+            sendTodoRequest,
             statusFilter,
             startDue,
             endDue,
+            title,
             sortType,
             sortTodos,
+            finishTodo,
+            deleteTodo,
             editTodo,
+            newTodoTitle,
+            newTodoDetail,
+            newTodoDue,
             isFormVisible,
             BOOL_TO_STATUS
         }
