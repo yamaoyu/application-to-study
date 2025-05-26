@@ -195,8 +195,7 @@ import { onMounted, ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
-import { jwtDecode } from 'jwt-decode';
-import { STATUS_DICT, getAdjustmentColors, getStatusColors, getActivityAlert, commonError, verifyRefreshToken } from './lib';
+import { STATUS_DICT, getAdjustmentColors, getStatusColors, getActivityAlert, getTodoRequest, editTodoRequest, finishTodoRequest, deleteTodoRequest } from './lib';
 import { BButton, BModal } from 'bootstrap-vue-next';
 
 export default {
@@ -228,7 +227,14 @@ export default {
     const newTodoDue = ref()
     const router = useRouter()
     const authStore = useAuthStore()
-    const { handleError: todoError } = commonError(todoMsg, router)
+    const statusFilter = ref("false")
+    const startDue = ref()
+    const endDue = ref()
+    const title = ref()
+    const getTodos = getTodoRequest(statusFilter, startDue, endDue, title, todos, todoMsg)
+    const editTodo = editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue, todoMsg, getTodos)
+    const finishTodo = finishTodoRequest(todoId, todoMsg, getTodos)
+    const deleteTodo = deleteTodoRequest(todoId, todoMsg, getTodos)
 
     const confirmRequest = async(content, action) =>{
         showModal.value = true
@@ -295,133 +301,6 @@ export default {
             todoMsg.value = "todoの取得に失敗しました"
         }
       }
-    }
-
-    const updateTodo = async() =>{
-      // 更新後のTodoを送信する処理
-      const url = process.env.VUE_APP_BACKEND_URL + 'todos/' + Number(todoId.value)
-      const response = await axios.put(url,
-                                      {title: newTodoTitle.value, detail:newTodoDetail.value, due:newTodoDue.value},
-                                      {headers: {Authorization: authStore.getAuthHeader}})
-      if (response.status===200){
-        await renewTodos()
-      }
-    }
-
-    const editTodo = async() =>{
-      // 更新ボタンを押した時に実行される関数
-      try{
-        await updateTodo()
-      } catch (error) {
-        if (error.response?.status === 401) {
-          try {
-            // リフレッシュトークンを検証して新しいアクセストークンを取得
-            const tokenResponse = await verifyRefreshToken();
-            // 新しいアクセストークンをストアに保存
-            await authStore.setAuthData(
-            tokenResponse.data.access_token,
-            tokenResponse.data.token_type,
-            jwtDecode(tokenResponse.data.access_token).exp)
-            // 再度リクエストを送信
-            await updateTodo();
-          } catch (refreshError) {
-            router.push({
-              path: "/login",
-              query: { message: "再度ログインしてください" }
-            });
-          }            
-        } else {
-          todoError(error)
-        }
-      }
-    }
-
-    const deleteTodoRequest = async() =>{
-      const deleteUrl = process.env.VUE_APP_BACKEND_URL + 'todos/' + todoId.value
-      const response = await axios.delete(
-        deleteUrl, 
-        { 
-          headers: {
-          Authorization: authStore.getAuthHeader}
-        }
-      )
-
-      return response
-    }
-
-    const deleteTodo = async() =>{
-      try {
-          const response = await deleteTodoRequest(todoId.value)
-        if (response.status===204){
-            await renewTodos();
-          }
-      } catch (error) {
-        if (error.response?.status === 401) {
-          try {
-            // リフレッシュトークンを検証して新しいアクセストークンを取得
-            const tokenResponse = await verifyRefreshToken();
-            // 新しいアクセストークンをストアに保存
-            await authStore.setAuthData(
-            tokenResponse.data.access_token,
-            tokenResponse.data.token_type,
-            jwtDecode(tokenResponse.data.access_token).exp)
-            // 再度リクエストを送信
-            await deleteTodoRequest(todoId);
-            await renewTodos();
-          } catch (refreshError) {
-            router.push({
-              path: "/login",
-              query: { message: "再度ログインしてください" }
-            });
-          }            
-        } else {
-          todoMsg.value = await todoError(error)
-        }
-        }
-    }
-
-    const finishTodoRequest = async() =>{
-      const finish_url = process.env.VUE_APP_BACKEND_URL + 'todos/finish/' + todoId.value
-      const response = await axios.put(
-        finish_url, 
-        {},
-        { 
-          headers: {
-          Authorization: authStore.getAuthHeader}
-        }
-      )
-      return response
-    }
-
-    const finishTodo = async() =>{
-      try {
-        const response = await finishTodoRequest(todoId.value)
-        if (response.status===200){
-            await renewTodos();
-          }
-      } catch (error) {
-        if (error.response?.status === 401) {
-          try {
-            // リフレッシュトークンを検証して新しいアクセストークンを取得
-            const tokenResponse = await verifyRefreshToken();
-            // 新しいアクセストークンをストアに保存
-            await authStore.setAuthData(
-            tokenResponse.data.access_token,
-            tokenResponse.data.token_type,
-            jwtDecode(tokenResponse.data.access_token).exp)
-            // 再度リクエストを送信
-            await finishTodoRequest(todoId.value);
-            await renewTodos();
-          } catch (refreshError) {
-            router.push({
-              path: "/login",
-              query: { message: "再度ログインしてください" }
-            });
-          }            
-        } else {
-          todoError(error)
-        }
-        }
     }
 
     onMounted( async() =>{
@@ -497,34 +376,7 @@ export default {
         }
 
         // そのユーザーの未完了のtodoを取得
-        try{
-          const todoUrl = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
-          const todoRes = await axios.get(todoUrl,
-                                          {headers: {Authorization: authStore.getAuthHeader}})
-          if (todoRes.status==200){
-            todos.value = todoRes.data;
-          }
-        } catch (todo_err) {
-          if (todo_err.response){
-            switch (todo_err.response.status){
-              case 401:
-              router.push(
-                {"path":"/login",
-                  "query":{message:"再度ログインしてください"}
-                })
-                break;
-              case 404:
-              case 500:
-                todoMsg.value = todo_err.response.data.detail;
-                break;
-              default:
-                todoMsg.value = "情報の取得に失敗しました";}
-          } else if (todo_err.request){
-            todoMsg.value =  "リクエストがサーバーに到達できませんでした"
-          } else {
-            todoMsg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
-          }
-        }
+        await getTodos()
       }
     )
 

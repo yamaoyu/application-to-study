@@ -137,11 +137,7 @@
 
 <script>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/store/authenticate';
-import { jwtDecode } from 'jwt-decode';
-import { commonError, verifyRefreshToken } from './lib';
+import { getTodoRequest, editTodoRequest, finishTodoRequest, deleteTodoRequest } from './lib';
 import { BButton,BModal } from 'bootstrap-vue-next';
 
 
@@ -168,9 +164,10 @@ export default{
         const newTodoDetail = ref("")
         const newTodoDue = ref()
         const isFormVisible = ref(false)
-        const router = useRouter()
-        const authStore = useAuthStore()
-        const { handleError: todoError } = commonError(todoMsg, router)
+        const getTodos = getTodoRequest(statusFilter, startDue, endDue, title, todos, todoMsg)
+        const editTodo = editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue, todoMsg, getTodos)
+        const finishTodo = finishTodoRequest(todoId, todoMsg, getTodos)
+        const deleteTodo = deleteTodoRequest(todoId, todoMsg, getTodos)
 
         const BOOL_TO_STATUS = { "true":"完了", "false":"未完了" }
 
@@ -192,7 +189,7 @@ export default{
         }
 
         const applyFilter = async() =>{
-            await sendGetTodoRequest()
+            await getTodos()
         }
 
         const resetFilter = async() =>{
@@ -236,198 +233,8 @@ export default{
             todo.value = null
         }
 
-        const updateTodo = async() =>{
-            // 更新後のTodoを送信する処理
-            const url = process.env.VUE_APP_BACKEND_URL + 'todos/' + todoId.value
-            const response = await axios.put(url,
-                                            {title: newTodoTitle.value, detail:newTodoDetail.value, due:newTodoDue.value},
-                                            {headers: {Authorization: authStore.getAuthHeader}})
-            if (response.status===200){
-                await sendGetTodoRequest()
-            }
-        }
-
-        const editTodo = async() =>{
-            // 更新ボタンを押した時に実行される関数
-            try{
-                await updateTodo()
-            } catch (error) {
-                if (error.response?.status === 401) {
-                try {
-                    // リフレッシュトークンを検証して新しいアクセストークンを取得
-                    const tokenResponse = await verifyRefreshToken();
-                    // 新しいアクセストークンをストアに保存
-                    await authStore.setAuthData(
-                        tokenResponse.data.access_token,
-                        tokenResponse.data.token_type,
-                        jwtDecode(tokenResponse.data.access_token).exp);
-                    // 再度リクエストを送信
-                    await updateTodo();
-                } catch (refreshError) {
-                    router.push({
-                    path: "/login",
-                    query: { message: "再度ログインしてください" }
-                    });
-                }            
-                } else {
-                    todoMsg.value = await todoError(error);
-                }
-            }
-        }
-
-        const sendFinishTodoRequest = async() =>{
-            const finish_url = process.env.VUE_APP_BACKEND_URL + 'todos/finish/' + todoId.value
-            const response = await axios.put(
-                finish_url, 
-                {},
-                { 
-                headers: {
-                Authorization: authStore.getAuthHeader}
-                }
-            )
-            return response
-        }
-
-        const finishTodo = async() =>{
-            try {
-                const response = await sendFinishTodoRequest(todoId.value)
-                if (response.status===200){
-                    await sendGetTodoRequest();
-                }
-            } catch (error) {
-                if (error.response?.status === 401) {
-                    try {
-                        // リフレッシュトークンを検証して新しいアクセストークンを取得
-                        const tokenResponse = await verifyRefreshToken();
-                        // 新しいアクセストークンをストアに保存
-                        await authStore.setAuthData(
-                        tokenResponse.data.access_token,
-                        tokenResponse.data.token_type,
-                        jwtDecode(tokenResponse.data.access_token).exp)
-                        // 再度リクエストを送信
-                        await sendFinishTodoRequest(todoId.value);
-                        await sendGetTodoRequest();
-                    } catch (refreshError) {
-                        router.push({
-                        path: "/login",
-                        query: { message: "再度ログインしてください" }
-                        });
-                    }            
-                } else {
-                    todoMsg.value = await todoError(error)
-                    console.log(todoMsg.value)
-                }
-            }
-        }
-
-        const deleteTodoRequest = async() =>{
-            const deleteUrl = process.env.VUE_APP_BACKEND_URL + 'todos/' + todoId.value
-            const response = await axios.delete(
-                deleteUrl, 
-                { 
-                headers: {
-                Authorization: authStore.getAuthHeader}
-                }
-            )
-
-            return response
-        }
-
-        const deleteTodo = async() =>{
-            try {
-                const response = await deleteTodoRequest(todoId.value)
-                if (response.status===204){
-                    await sendGetTodoRequest();
-                }
-            } catch (error) {
-                if (error.response?.status === 401) {
-                try {
-                    // リフレッシュトークンを検証して新しいアクセストークンを取得
-                    const tokenResponse = await verifyRefreshToken();
-                    // 新しいアクセストークンをストアに保存
-                    await authStore.setAuthData(
-                    tokenResponse.data.access_token,
-                    tokenResponse.data.token_type,
-                    jwtDecode(tokenResponse.data.access_token).exp)
-                    // 再度リクエストを送信
-                    await deleteTodoRequest(todoId);
-                    await sendGetTodoRequest();
-                } catch (refreshError) {
-                    router.push({
-                    path: "/login",
-                    query: { message: "再度ログインしてください" }
-                    });
-                }            
-                } else {
-                    todoMsg.value = await todoError(error)
-                }
-            }
-        }
-
-        const getTodos = async() =>{
-            let todoUrl = process.env.VUE_APP_BACKEND_URL + 'todos'
-            let queryParameter = ""
-            if (statusFilter.value){
-                queryParameter += "status=" + statusFilter.value
-            } 
-            if (startDue.value){
-                if (queryParameter){
-                    queryParameter += "&"
-                }
-                queryParameter += "start_due=" + startDue.value
-            }
-            if (endDue.value){
-                if (queryParameter){
-                    queryParameter += "&"
-                }
-                queryParameter += "end_due=" + endDue.value
-            }
-            if (title.value){
-                if (queryParameter){
-                    queryParameter += "&"
-                }
-                queryParameter += "title=" + title.value
-            }
-            if (queryParameter){
-                todoUrl += "?" + queryParameter
-            }
-            return await axios.get(todoUrl, {headers: {Authorization: authStore.getAuthHeader}})
-        }
-
-        const sendGetTodoRequest = async() =>{
-            try{
-                const todoRes = await getTodos()
-                if (todoRes.status==200){
-                    todos.value = todoRes.data;
-                    todoMsg.value = ""
-                }
-                } catch (todoErr) {
-                if (todoErr.response?.status === 401) {
-                try {
-                    // リフレッシュトークンを検証して新しいアクセストークンを取得
-                    const tokenResponse = await verifyRefreshToken();
-                    // 新しいアクセストークンをストアに保存
-                    await authStore.setAuthData(
-                        tokenResponse.data.access_token,
-                        tokenResponse.data.token_type,
-                        jwtDecode(tokenResponse.data.access_token).exp);
-                    // 再度リクエストを送信
-                    await updateTodo();
-                } catch (refreshError) {
-                    router.push({
-                    path: "/login",
-                    query: { message: "再度ログインしてください" }
-                    });
-                }            
-                } else {
-                    todos.value = [];
-                    todoMsg.value = await todoError(todoErr);
-                }
-            }
-        }
-
         onMounted( async()=>{
-            await sendGetTodoRequest();
+            await getTodos();
         })
 
         return {
