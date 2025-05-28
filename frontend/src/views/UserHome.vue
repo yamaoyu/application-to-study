@@ -135,7 +135,7 @@
     </div>
   </div>
 
-  <BModal v-model="showModal" :title="modalTitle" ok-title="はい" cancel-title="いいえ" @ok="sendTodoRequest">
+  <BModal v-model="showModal" :title="modalTitle" :ok-title="todoAction==='show' ? 'OK' : '送信'" :cancel-title="todoAction==='show' ? '閉じる' : 'いいえ'" @ok="sendTodoRequest">
     <div v-if="todoAction==='finish' || todoAction==='delete'" class="text-danger">確定後は取り消せません</div>
     <div v-else-if="todoAction==='show'">
       <div class="todo-detail">
