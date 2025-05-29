@@ -116,7 +116,7 @@
             <th style="width: 8%;"></th>
           </tr>
         </thead>
-        <tbody v-for="(todo, index) in todos" :key="index">
+        <tbody v-for="(todo, index) in paginatedTodos" :key="index">
           <tr>
             <td class="text-center align-middle">{{ index + 1 }}</td>
             <td class="text-center align-middle todo-title" @click="confirmRequest(todo, 'show')">{{ todo.title }}</td>
@@ -134,6 +134,37 @@
       </p>
     </div>
   </div>
+  <nav>
+    <ul class="pagination justify-content-center">
+        <li class="page-item" :class="{ disabled: currentPage === 1 }">
+            <button class="page-link" @click="goToPage(1)" :disabled="currentPage === 1">
+                最初
+            </button>
+        </li>
+        <li class="page-item" :class="{ disabled: currentPage === 1 }">
+            <button class="page-link" @click="goToPage(currentPage - 1)" :disabled="currentPage === 1">
+                前へ
+            </button>
+        </li>
+        
+        <li v-for="page in visiblePages" :key="page" class="page-item" :class="{ active: page === currentPage }">
+            <button class="page-link" @click="goToPage(page)">
+                {{ page }}
+            </button>
+        </li>
+        
+        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+            <button class="page-link" @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages">
+                次へ
+            </button>
+        </li>
+        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+            <button class="page-link" @click="goToPage(totalPages)" :disabled="currentPage === totalPages">
+                最後
+            </button>
+        </li>
+      </ul>
+    </nav>
 
   <BModal v-model="showModal" :title="modalTitle" :ok-title="todoAction==='show' ? 'OK' : '送信'" :cancel-title="todoAction==='show' ? '閉じる' : 'いいえ'" @ok="sendTodoRequest">
     <div v-if="todoAction==='finish' || todoAction==='delete'" class="text-danger">確定後は取り消せません</div>
@@ -191,7 +222,7 @@
 
 
 <script>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
@@ -214,7 +245,7 @@ export default {
     const activityStatus = ref("")
     const incomeMsg = ref("")
     const incomeRes = ref()
-    const todos = ref([]) // todo一覧で表示する用
+    const todos = ref([]) // 取得した全てのtodo
     const todoMsg = ref("")
     const showModal = ref(false)
     const modalTitle = ref("")
@@ -236,24 +267,60 @@ export default {
     const finishTodo = finishTodoRequest(todoId, todoMsg, getTodos)
     const deleteTodo = deleteTodoRequest(todoId, todoMsg, getTodos)
 
+    const currentPage = ref(1)
+    const itemsPerPage = ref(5)
+    const totalItems = computed(() => todos.value.length)
+    const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value))
+    const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value)
+    const endIndex = computed(() => Math.min(startIndex.value + itemsPerPage.value, totalItems.value))
+
+    const paginatedTodos = computed(() =>{
+      return todos.value.slice(startIndex.value, endIndex.value)
+      }
+    )
+
+    const goToPage = (page) =>{
+      if (page >= 1 && page <= totalPages.value) {
+        currentPage.value = page
+      }
+    }
+
+    const visiblePages = computed(() =>{
+      const pages = []
+      const maxVisiblePages = 5
+      let start = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2))
+      let end = Math.min(totalPages.value, start + maxVisiblePages - 1)
+
+      // 最後のページが表示範囲に入るように調整
+      if (end - start + 1 < maxVisiblePages) {
+          start = Math.max(1, end - maxVisiblePages + 1)
+      }
+
+      for (let i = start; i <= end; i ++){
+        pages.push(i)
+      }
+
+      return pages
+    })
+
     const confirmRequest = async(content, action) =>{
-        showModal.value = true
-        todoId.value = content.todo_id
-        todoAction.value = action
-        if (todoAction.value==='finish'){
-          modalTitle.value = "Todo終了確認"
-        } else if (todoAction.value==='delete') {
-          modalTitle.value = "Todo削除確認"
-        } else if (todoAction.value==='show') {
-          modalTitle.value = "Todo閲覧"
-          todo.value = content
-        } else if (todoAction.value==='edit') {
-          modalTitle.value = "Todo編集"
-          newTodoTitle.value = content.title
-          newTodoDetail.value = content.detail
-          newTodoDue.value = content.due
-          todo.value = content
-        }
+      showModal.value = true
+      todoId.value = content.todo_id
+      todoAction.value = action
+      if (todoAction.value==='finish'){
+        modalTitle.value = "Todo終了確認"
+      } else if (todoAction.value==='delete') {
+        modalTitle.value = "Todo削除確認"
+      } else if (todoAction.value==='show') {
+        modalTitle.value = "Todo閲覧"
+        todo.value = content
+      } else if (todoAction.value==='edit') {
+        modalTitle.value = "Todo編集"
+        newTodoTitle.value = content.title
+        newTodoDetail.value = content.detail
+        newTodoDue.value = content.due
+        todo.value = content
+      }
     }
 
     const sendTodoRequest = async() =>{
@@ -410,7 +477,13 @@ export default {
       STATUS_DICT,
       getAdjustmentColors,
       getStatusColors,
-      getActivityAlert
+      getActivityAlert,
+      totalItems,
+      totalPages,
+      currentPage,
+      visiblePages,
+      paginatedTodos,
+      goToPage
     }
   }
 }

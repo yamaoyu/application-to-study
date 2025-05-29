@@ -33,11 +33,11 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">検索範囲(以降)</label>
+                    <label class="form-label">期限(以降)</label>
                     <input type="date" class="form-control" v-model="startDue">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">検索範囲(以前)</label>
+                    <label class="form-label">期限(以前)</label>
                     <input type="date" class="form-control" v-model="endDue">
                 </div>
             </div>
@@ -51,7 +51,7 @@
             </div>
         </div>
     </div>
-    <template v-if="todos.length">
+    <template v-if="paginatedTodos.length">
         <table class="table table-striped table-responsive">
             <thead class="table-dark">
                 <tr>
@@ -64,9 +64,9 @@
                     <th style="width: 8%;"></th>
                 </tr>
             </thead>
-            <tbody v-for="(todo, index) in todos" :key="index">
+            <tbody v-for="(todo, index) in paginatedTodos" :key="index">
                 <tr>
-                    <td class="text-center align-middle">{{ index + 1 }}</td>
+                    <td class="text-center align-middle">{{ index + currentPage * 10 - 10 + 1 }}</td>
                     <td class="text-center align-middle todo-title" @click="confirmRequest(todo, 'show')">{{ todo.title }}</td>
                     <td class="text-center align-middle">{{ todo.due }}</td>
                     <td class="text-center align-middle fw-bold" :class="todo.status===true ? 'text-success' : 'text-danger' ">{{ BOOL_TO_STATUS[todo.status] }}</td>
@@ -77,6 +77,39 @@
             </tbody>
         </table>
     </template>
+
+    <nav>
+        <ul class="pagination justify-content-center">
+            <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                <button class="page-link" @click="goToPage(1)" :disabled="currentPage === 1">
+                    最初
+                </button>
+            </li>
+            <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                <button class="page-link" @click="goToPage(currentPage - 1)" :disabled="currentPage === 1">
+                    前へ
+                </button>
+            </li>
+            
+            <li v-for="page in visiblePages" :key="page" class="page-item" :class="{ active: page === currentPage }">
+                <button class="page-link" @click="goToPage(page)">
+                    {{ page }}
+                </button>
+            </li>
+            
+            <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                <button class="page-link" @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages">
+                    次へ
+                </button>
+            </li>
+            <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                <button class="page-link" @click="goToPage(totalPages)" :disabled="currentPage === totalPages">
+                    最後
+                </button>
+            </li>
+        </ul>
+    </nav>
+
     <div v-if="todoMsg" class="alert alert-warning">
         {{ todoMsg }}
     </div>
@@ -136,7 +169,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { getTodoRequest, editTodoRequest, finishTodoRequest, deleteTodoRequest } from './lib';
 import { BButton,BModal } from 'bootstrap-vue-next';
 
@@ -168,8 +201,43 @@ export default{
         const editTodo = editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue, todoMsg, getTodos)
         const finishTodo = finishTodoRequest(todoId, todoMsg, getTodos)
         const deleteTodo = deleteTodoRequest(todoId, todoMsg, getTodos)
-
         const BOOL_TO_STATUS = { "true":"完了", "false":"未完了" }
+
+        // ページネーション用の変数
+        const currentPage = ref(1)
+        const itemsPerPage = ref(10)
+        const totalItems = computed(() => todos.value.length)
+        const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value))
+        const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value)
+        const endIndex = computed(() => Math.min(startIndex.value + itemsPerPage.value, totalItems.value))
+        
+        const paginatedTodos = computed(() => {
+            return todos.value.slice(startIndex.value, endIndex.value)
+        })
+
+        const goToPage = (page) => {
+            if (page >= 1 && page <= totalPages.value) {
+                currentPage.value = page
+            }
+        }
+
+        // 表示するページ番号の範囲を計算
+        const visiblePages = computed(() => {
+            const pages = []
+            const maxVisiblePages = 5
+            let start = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2))
+            let end = Math.min(totalPages.value, start + maxVisiblePages - 1)
+            
+            // 最後のページが表示範囲に入るように調整
+            if (end - start + 1 < maxVisiblePages) {
+                start = Math.max(1, end - maxVisiblePages + 1)
+            }
+            
+            for (let i = start; i <= end; i++) {
+                pages.push(i)
+            }
+            return pages
+        })
 
         const toggleFormVisibility = () => {
             isFormVisible.value = !isFormVisible.value
@@ -238,7 +306,6 @@ export default{
         })
 
         return {
-            todos,
             todo,
             todoMsg,
             showModal,
@@ -262,7 +329,13 @@ export default{
             newTodoDetail,
             newTodoDue,
             isFormVisible,
-            BOOL_TO_STATUS
+            BOOL_TO_STATUS,
+            totalItems,
+            totalPages,
+            currentPage,
+            visiblePages,
+            paginatedTodos,
+            goToPage
         }
     }
 }
