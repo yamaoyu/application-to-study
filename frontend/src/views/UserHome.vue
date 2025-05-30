@@ -177,42 +177,51 @@
       </div>
     </div>
     <div v-else-if="todoAction==='edit'">
-      <label class="mt-3">題名</label>
-      <div class="container d-flex col-10 justify-content-center">
-        <div class="input-group">
-          <input
-            v-model="newTodoTitle"
-            class="form-control col-10"
-            :placeholder=todo.title
-            maxlength="32"
+      <div class="input-group">
+        <span>題名</span>
+        <div class="container d-flex justify-content-center">
+          <div class="input-group">
+            <input
+              v-model="newTodoTitle"
+              class="form-control"
+              :placeholder=todo.title
+              maxlength="32"
+              />
+            <small class="form-text text-muted position-absolute" style="right: 8px; bottom: -20px;">
+              {{ (newTodoTitle || '').length }}/32
+            </small>
+          </div>
+        </div>
+      </div>
+      <div class="input-group mt-3">
+        <span>詳細</span>
+        <div class="container d-flex justify-content-center">
+          <div class="input-group">
+            <textarea
+              v-model="newTodoDetail"
+              class="form-control"
+              :placeholder=todo.detail
+              maxlength="200"
+              rows="3"
+              >
+            </textarea>
+            <small class="form-text text-muted position-absolute" style="right: 8px; bottom: -20px;">
+              {{ (newTodoDetail || '').length }}/200
+            </small>
+          </div>
+        </div>
+      </div>
+      <div class="input-group mt-3">
+        <span>期限</span>
+        <div class="container d-flex justify-content-center">
+          <div class="input-group">
+            <input
+              type="date"
+              v-model="newTodoDue"
+              class="form-control col-2"
+              min="2024-01-01"
             />
-          <span v-if="newTodoTitle" class="input-group-text">{{ newTodoTitle.length }}/32</span>
-        </div>
-      </div>
-      <label class="mt-3">詳細</label>
-      <div class="container d-flex justify-content-center mt-3">
-        <div class="input-group">
-          <textarea
-            v-model="newTodoDetail"
-            class="form-control col-10"
-            :placeholder=todo.detail
-            maxlength="200"
-            rows="3"
-            >
-          </textarea>
-          <span v-if="newTodoDetail" class="input-group-text">{{ newTodoDetail.length }}/200</span>
-          <span v-else class="input-group-text">0/200</span>
-        </div>
-      </div>
-      <label class="mt-3">期限</label>
-      <div class="container col-8 d-flex justify-content-center mt-3">
-        <div class="input-group">
-          <input
-            type="date"
-            v-model="newTodoDue"
-            class="form-control col-2"
-            min="2024-01-01"
-          />
+          </div>
         </div>
       </div>
     </div>
@@ -371,76 +380,76 @@ export default {
     }
 
     onMounted( async() =>{
-        // その日の活動実績を取得
-        try {
-          const act_url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month + '/' + date;
-          activityRes.value = await axios.get(act_url,
-                                              {headers: {Authorization: authStore.getAuthHeader}})
-          if (activityRes.value.status===200){
-            activityStatus.value = activityRes.value.data.status
-            const bonusInYen = parseInt(activityRes.value.data.bonus * 10000, 10)
-            const penaltyInYen = parseInt(activityRes.value.data.penalty * 10000, 10)
-            if (activityRes.value.data.status === "success"){
-              activityMsg.value = `目標達成!|\nボーナス:${activityRes.value.data.bonus}万円(${bonusInYen}円)`
-            } else if(activityRes.value.data.status === "failure"){
-              activityMsg.value = `目標失敗...\nペナルティ:${activityRes.value.data.penalty}万円(${penaltyInYen}円)`
+      // その日の活動実績を取得
+      try {
+        const act_url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month + '/' + date;
+        activityRes.value = await axios.get(act_url,
+                                            {headers: {Authorization: authStore.getAuthHeader}})
+        if (activityRes.value.status===200){
+          activityStatus.value = activityRes.value.data.status
+          const bonusInYen = parseInt(activityRes.value.data.bonus * 10000, 10)
+          const penaltyInYen = parseInt(activityRes.value.data.penalty * 10000, 10)
+          if (activityRes.value.data.status === "success"){
+            activityMsg.value = `目標達成!|\nボーナス:${activityRes.value.data.bonus}万円(${bonusInYen}円)`
+          } else if(activityRes.value.data.status === "failure"){
+            activityMsg.value = `目標失敗...\nペナルティ:${activityRes.value.data.penalty}万円(${penaltyInYen}円)`
+          } else {
+            if (activityRes.value.data.target_time <= activityRes.value.data.actual_time) {
+            activityMsg.value = `目標達成!活動を終了してください\n確定後のボーナス:${activityRes.value.data.bonus}万円(${bonusInYen}円)`
             } else {
-              if (activityRes.value.data.target_time <= activityRes.value.data.actual_time) {
-              activityMsg.value = `目標達成!活動を終了してください\n確定後のボーナス:${activityRes.value.data.bonus}万円(${bonusInYen}円)`
-              } else {
-              activityMsg.value = `このままだと、${activityRes.value.data.penalty}万円(${penaltyInYen}円)のペナルティが発生`}
-            }
-          }
-        } catch (act_err) {
-          activityStatus.value = ""
-          if (act_err.response){
-            switch (act_err.response.status){
-              case 401:
-                router.push(
-                  {"path":"/login",
-                    "query":{message:"再度ログインしてください"}
-                  })
-                break;
-              case 404:
-              case 500:
-                activityMsg.value = act_err.response.data.detail;
-                break;
-              default:
-                activityMsg.value = "情報の取得に失敗しました";}
-          } else if (act_err.request){
-            activityMsg.value =  "リクエストがサーバーに到達できませんでした"
-          } else {
-            activityMsg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
+            activityMsg.value = `このままだと、${activityRes.value.data.penalty}万円(${penaltyInYen}円)のペナルティが発生`}
           }
         }
+      } catch (act_err) {
+        activityStatus.value = ""
+        if (act_err.response){
+          switch (act_err.response.status){
+            case 401:
+              router.push(
+                {"path":"/login",
+                  "query":{message:"再度ログインしてください"}
+                })
+              break;
+            case 404:
+            case 500:
+              activityMsg.value = act_err.response.data.detail;
+              break;
+            default:
+              activityMsg.value = "情報の取得に失敗しました";}
+        } else if (act_err.request){
+          activityMsg.value =  "リクエストがサーバーに到達できませんでした"
+        } else {
+          activityMsg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
+        }
+      }
 
-        // その月の月収を取得
-        try{
-          const income_url = process.env.VUE_APP_BACKEND_URL + 'incomes/' + year + '/' + month;
-          incomeRes.value = await axios.get(income_url,
-                                          {headers: {Authorization: authStore.getAuthHeader}}
-          )
-        } catch (income_err) {
-          if (income_err.response){
-            switch (income_err.response.status){
-              case 401:
-                router.push(
-                  {"path":"/login",
-                    "query":{message:"再度ログインしてください"}
-                  })
-                break;
-              case 404:
-              case 500:
-                incomeMsg.value = income_err.response.data.detail;
-                break;
-              default:
-                incomeMsg.value = "情報の取得に失敗しました";}
-          } else if (income_err.request){
-            incomeMsg.value =  "リクエストがサーバーに到達できませんでした"
-          } else {
-            incomeMsg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
-          }
+      // その月の月収を取得
+      try{
+        const income_url = process.env.VUE_APP_BACKEND_URL + 'incomes/' + year + '/' + month;
+        incomeRes.value = await axios.get(income_url,
+                                        {headers: {Authorization: authStore.getAuthHeader}}
+        )
+      } catch (income_err) {
+        if (income_err.response){
+          switch (income_err.response.status){
+            case 401:
+              router.push(
+                {"path":"/login",
+                  "query":{message:"再度ログインしてください"}
+                })
+              break;
+            case 404:
+            case 500:
+              incomeMsg.value = income_err.response.data.detail;
+              break;
+            default:
+              incomeMsg.value = "情報の取得に失敗しました";}
+        } else if (income_err.request){
+          incomeMsg.value =  "リクエストがサーバーに到達できませんでした"
+        } else {
+          incomeMsg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
         }
+      }
 
         // そのユーザーの未完了のtodoを取得
         await getTodos()

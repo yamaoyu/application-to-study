@@ -126,44 +126,53 @@
                 </div>
             </div>
         <div v-else-if="todoAction==='edit'">
-        <label class="mt-3">題名</label>
-        <div class="container d-flex col-10 justify-content-center">
             <div class="input-group">
-            <input
-                v-model="newTodoTitle"
-                class="form-control col-10"
-                :placeholder=todo.title
-                maxlength="32"
-                />
-            <span v-if="newTodoTitle" class="input-group-text">{{ newTodoTitle.length }}/32</span>
+                <span>題名</span>
+                <div class="container d-flex justify-content-center">
+                    <div class="input-group">
+                        <input
+                        v-model="newTodoTitle"
+                        class="form-control"
+                        :placeholder=todo.title
+                        maxlength="32"
+                        />
+                        <small class="form-text text-muted position-absolute" style="right: 8px; bottom: -20px;">
+                        {{ (newTodoTitle || '').length }}/32
+                        </small>
+                    </div>
+                </div>
             </div>
-        </div>
-        <label class="mt-3">詳細</label>
-        <div class="container d-flex justify-content-center mt-3">
-            <div class="input-group">
-            <textarea
-                v-model="newTodoDetail"
-                class="form-control col-10"
-                :placeholder=todo.detail
-                maxlength="200"
-                rows="3"
-                >
-            </textarea>
-            <span v-if="newTodoDetail" class="input-group-text">{{ newTodoDetail.length }}/200</span>
-            <span v-else class="input-group-text">0/200</span>
+            <div class="input-group mt-3">
+                <span>詳細</span>
+                <div class="container d-flex justify-content-center">
+                    <div class="input-group">
+                        <textarea
+                        v-model="newTodoDetail"
+                        class="form-control"
+                        :placeholder=todo.detail
+                        maxlength="200"
+                        rows="3"
+                        >
+                        </textarea>
+                        <small class="form-text text-muted position-absolute" style="right: 8px; bottom: -20px;">
+                        {{ (newTodoDetail || '').length }}/200
+                        </small>
+                    </div>
+                </div>
             </div>
-        </div>
-        <label class="mt-3">期限</label>
-        <div class="container col-8 d-flex justify-content-center mt-3">
-            <div class="input-group">
-            <input
-                type="date"
-                v-model="newTodoDue"
-                class="form-control col-2"
-                min="2024-01-01"
-            />
+            <div class="input-group mt-3">
+                <span>期限</span>
+                <div class="container d-flex justify-content-center">
+                    <div class="input-group">
+                        <input
+                        type="date"
+                        v-model="newTodoDue"
+                        class="form-control col-2"
+                        min="2024-01-01"
+                        />
+                    </div>
+                </div>
             </div>
-        </div>
         </div>
     </BModal>
 </template>
