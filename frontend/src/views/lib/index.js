@@ -10,6 +10,7 @@ import { validateUsername, validatePassword, checkPassword, validateEmail } from
 import { 
     updateActivity, registerActivity, finalizeActivity, 
     getActivityByMonth, getActivityByYear, getActivitiesAllPeriod, getActivitiesByStatus } from "./activity";
+import { getTodoRequest, editTodoRequest, finishTodoRequest, deleteTodoRequest } from "./todo";
 
 export {
     MONTH_DICT,
@@ -44,5 +45,9 @@ export {
     getActivityByMonth,
     getActivityByYear,
     getActivitiesAllPeriod,
-    getActivitiesByStatus
+    getActivitiesByStatus,
+    getTodoRequest,
+    editTodoRequest,
+    finishTodoRequest,
+    deleteTodoRequest
 }

@@ -13,18 +13,21 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <router-link class="nav-link" to="/register/activity">活動記録</router-link>
-          </li>  
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">  
           <li class="nav-item">
             <router-link class="nav-link" to="/register/salary">月収登録</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/register/activity">活動記録</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/view/activity/">実績確認</router-link>
           </li>
           <li class="nav-item">
             <router-link class="nav-link" to="/register/todo">Todo登録</router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link" to="/view/activity/">実績確認</router-link>
+            <router-link class="nav-link" to="/view/todo">Todo確認</router-link>
           </li>
           <li class="nav-item">
             <router-link class="nav-link" to="/user/info">ユーザー情報</router-link>
@@ -48,16 +51,19 @@
           <router-link class="nav-link" to="/home">ホーム</router-link>
         </li>
         <li class="nav-item" data-bs-dismiss="offcanvas">
+          <router-link class="nav-link" to="/register/salary">月収登録</router-link>
+        </li>
+        <li class="nav-item" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/register/activity/">活動記録</router-link>
         </li>
         <li class="nav-item" data-bs-dismiss="offcanvas">
-          <router-link class="nav-link" to="/register/salary">月収登録</router-link>
+          <router-link class="nav-link" to="/view/activity/">実績確認</router-link>
         </li>
         <li class="nav-item" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/register/todo">Todo登録</router-link>
         </li>
         <li class="nav-item" data-bs-dismiss="offcanvas">
-          <router-link class="nav-link" to="/view/activity/">実績確認</router-link>
+          <router-link class="nav-link" to="/view/todo">Todo確認</router-link>
         </li>
         <li class="nav-item" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/user/info">ユーザー情報</router-link>
@@ -148,6 +154,10 @@ export default {
 </script>
 
 <style>
+div {
+  white-space: pre-wrap;
+}
+
 .custom-navbar {
   background-color: navy;
   color: white;

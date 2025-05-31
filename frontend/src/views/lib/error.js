@@ -132,8 +132,10 @@ export function commonError(message, router){
             } else if (error.request){
                 message.value =  "リクエストがサーバーに到達できませんでした"
             } else {
+                console.log(error)
                 message.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
         }
+        return message.value
     }
 
     return {

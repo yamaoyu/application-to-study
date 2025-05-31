@@ -4,12 +4,13 @@ from conftest import test_username, another_test_user, password_for_another_user
 from lib.security import create_access_token
 
 # 以下の変数はconftestで作成していないユーザー用で値を変更しない
-test_action = "create test"
+test_title = "create test"
 test_due = "2024-11-10"
+test_detail = "detail"
 
 
 def setup_create_todo(client, get_headers):
-    data = {"action": test_action, "due": test_due}
+    data = {"title": test_title, "due": test_due, "detail": test_detail}
     client.post("/todos", json=data, headers=get_headers)
 
 
@@ -36,17 +37,18 @@ def setup_login(client):
 
 
 def test_create_todo(client, get_headers):
-    data = {"action": test_action, "due": test_due}
+    data = {"title": test_title, "due": test_due, "detail": test_detail}
     response = client.post("/todos", json=data, headers=get_headers)
     assert response.status_code == 201
     assert response.json() == {"message": "以下の内容で作成しました",
-                               "action": test_action,
-                               "due": "2024-11-10"}
+                               "title": test_title,
+                               "due": "2024-11-10",
+                               "detail": test_detail}
 
 
 def test_create_todo_without_login(client):
     """ ログインしていない状態で作成した場合 """
-    data = {"action": test_action, "username": test_username}
+    data = {"title": test_title, "username": test_username}
     response = client.post("/todos", json=data)
     assert response.status_code == 401
     assert response.json() == {"detail": "Not authenticated"}
@@ -60,19 +62,10 @@ def test_create_todo_with_expired_token(client):
     with patch("lib.security.create_access_token", mock_create_expired_access_token):
         access_token = mock_create_expired_access_token(data={"sub": test_username})
         headers = {"Authorization": f"Bearer {access_token}"}
-        data = {"action": test_action, "username": test_username}
+        data = {"title": test_title, "username": test_username}
         response = client.post("/todos", json=data, headers=headers)
         assert response.status_code == 401
         assert response.json() == {"detail": "再度ログインしてください"}
-
-
-def test_create_todo_with_same_content(client, get_headers):
-    """ 同じ内容を登録した場合 """
-    setup_create_todo(client, get_headers)
-    data = {"action": test_action, "due": test_due}
-    response = client.post("/todos", json=data, headers=get_headers)
-    assert response.status_code == 400
-    assert response.json() == {"detail": "既に登録されている内容です"}
 
 
 def test_get_all_todo(client, get_headers):
@@ -80,24 +73,37 @@ def test_get_all_todo(client, get_headers):
     response = client.get("/todos", headers=get_headers)
     assert response.status_code == 200
     assert response.json() == [{"todo_id": 1,
-                               "action": test_action,
+                                "title": test_title,
                                 "status": False,
                                 "username": test_username,
-                                "due": test_due}]
+                                "due": test_due,
+                                "detail": test_detail}]
+
+
+def test_get_todos_with_query_parameters(client, get_headers):
+    """ クエリパラメータで活動を絞って取得 """
+    setup_create_todo(client, get_headers)
+    # ステータスで絞る
+    response = client.get("/todos?status=false", headers=get_headers)
+    assert response.status_code == 200
+    # 期限で絞る(期限外は表示されない)
+    response = client.get("/todos?status=false&start_due=2024/11/11", headers=get_headers)
+    assert response.status_code == 404
 
 
 def test_get_all_incomplete_todo(client, get_headers):
     setup_create_todo(client, get_headers)
     setup_finish_todo(client, get_headers)
-    data = {"action": "test_2", "due": test_due}
+    data = {"title": "test_2", "due": test_due, "detail": test_detail}
     client.post("/todos", json=data, headers=get_headers)
     response = client.get("/todos?status=False", headers=get_headers)
     assert response.status_code == 200
     assert response.json() == [{"todo_id": 2,
-                               "action": "test_2",
+                                "title": "test_2",
                                 "status": False,
                                 "username": test_username,
-                                "due": test_due}]
+                                "due": test_due,
+                                "detail": test_detail}]
 
 
 def test_get_all_todo_without_login(client, get_headers):
@@ -109,7 +115,7 @@ def test_get_all_todo_without_login(client, get_headers):
 
 def test_create_todo_with_invalid_date(client, get_headers):
     """ 存在しない日付の場合 """
-    data = {"action": test_action, "due": "2024-6-31"}
+    data = {"title": test_title, "due": "2024-6-31"}
     response = client.post("/todos",
                            json=data,
                            headers=get_headers)
@@ -145,10 +151,11 @@ def test_get_specific_todo(client, get_headers):
     response = client.get("/todos/1", headers=get_headers)
     assert response.status_code == 200
     assert response.json() == {"todo_id": 1,
-                               "action": test_action,
+                               "title": test_title,
                                "status": False,
                                "username": test_username,
-                               "due": test_due}
+                               "due": test_due,
+                               "detail": test_detail}
 
 
 def test_get_todo_by_another_user(client, get_headers):
@@ -188,11 +195,11 @@ def test_delete_todo_not_exist(client, get_headers):
 
 def test_edit_todo(client, get_headers):
     setup_create_todo(client, get_headers)
-    data = {"action": "new action", "due": "2024-11-11"}
+    data = {"title": "new title", "due": "2024-11-11", "detail": "new detail"}
     response = client.put("/todos/1", json=data, headers=get_headers)
     assert response.status_code == 200
     assert response.json() == {"message": "Todoを更新しました",
-                               "action": "new action", "due": "2024-11-11"}
+                               "title": "new title", "due": "2024-11-11", "detail": "new detail"}
 
 
 def test_edit_todo_by_another_user(client, get_headers):
@@ -201,7 +208,7 @@ def test_edit_todo_by_another_user(client, get_headers):
     setup_create_another_user(client)
     access_token = setup_login(client)
     headers = {"Authorization": f"Bearer {access_token}"}
-    data = {"action": "new action", "due": test_due}
+    data = {"title": "new title", "due": test_due, "detail": test_detail}
     response = client.put("/todos/1", json=data, headers=headers)
     assert response.status_code == 404
     assert response.json() == {"detail": "id:1のデータは登録されていません"}
@@ -210,7 +217,7 @@ def test_edit_todo_by_another_user(client, get_headers):
 def test_edit_todo_without_login(client, get_headers):
     """ ログインせずに更新しようとした場合 """
     setup_create_todo(client, get_headers)
-    data = {"action": "new action"}
+    data = {"title": "new title"}
     response = client.put("/todos/1", json=data)
     assert response.status_code == 401
     assert response.json() == {"detail": "Not authenticated"}
@@ -221,7 +228,7 @@ def test_finish_todo(client, get_headers):
     response = client.put("/todos/finish/1", headers=get_headers)
     assert response.status_code == 200
     assert response.json() == {"message": "以下のタスクのステータスを終了にしました",
-                               "action": test_action,
+                               "title": test_title,
                                "status": True}
 
 

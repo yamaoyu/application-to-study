@@ -43,12 +43,12 @@
                 </div>
             </div>
             <div v-if="checkMsg" class="row d-flex justify-content-center mt-3">
-                <p class="alert alert-warning col-8">{{ checkMsg }}</p>
+                <p class="alert alert-warning">{{ checkMsg }}</p>
             </div>
         </div>
 
-        <div class="container d-flex align-items-baseline justify-content-center mt-5">
-            <div class="row col-8">
+        <div class="container d-flex align-items-baseline justify-content-center mt-4">
+            <div class="row">
                 <div class="input-group">
                     <span class="col-2 p-2 input-group-text">日付</span>
                     <input
@@ -56,7 +56,7 @@
                         v-model="date"
                         min="2024-01-01"
                         :max="getMaxDate()"
-                        class="form-control col-2"
+                        class="form-control"
                     />
                     <button
                         type="button"
@@ -77,7 +77,7 @@
         </div>
 
         <!-- タブによる画面切り替え -->
-        <div class="container col-8">
+        <div class="container">
             <div v-show="activeTab === 'target'">
                 <form @submit.prevent="confirmRegister">
                     <div class="row d-flex justify-content-center mt-4">
