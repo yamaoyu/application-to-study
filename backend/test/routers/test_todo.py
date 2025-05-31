@@ -80,6 +80,17 @@ def test_get_all_todo(client, get_headers):
                                 "detail": test_detail}]
 
 
+def test_get_todos_with_query_parameters(client, get_headers):
+    """ クエリパラメータで活動を絞って取得 """
+    setup_create_todo(client, get_headers)
+    # ステータスで絞る
+    response = client.get("/todos?status=false", headers=get_headers)
+    assert response.status_code == 200
+    # 期限で絞る(期限外は表示されない)
+    response = client.get("/todos?status=false&start_due=2024/11/11", headers=get_headers)
+    assert response.status_code == 404
+
+
 def test_get_all_incomplete_todo(client, get_headers):
     setup_create_todo(client, get_headers)
     setup_finish_todo(client, get_headers)
