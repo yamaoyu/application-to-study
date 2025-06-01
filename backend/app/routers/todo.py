@@ -17,15 +17,16 @@ router = APIRouter()
 def create_todo(todo: Todo,
                 db: Session = Depends(get_db),
                 current_user: dict = Depends(get_current_user)):
-    action = todo.action
+    title = todo.title
     due = todo.due
+    detail = todo.detail
     username = current_user['username']
     try:
-        data = db_model.Todo(action=action, username=username, due=due)
+        data = db_model.Todo(title=title, username=username, due=due, detail=detail)
         db.add(data)
         db.commit()
-        logger.info(f"{username}がTodo作成 内容:{action}")
-        return {"message": "以下の内容で作成しました", "action": action, "due": due}
+        logger.info(f"{username}がTodo作成 内容:{title}")
+        return {"message": "以下の内容で作成しました", "title": title, "due": due, "detail": detail}
     except IntegrityError as sqlalchemy_error:
         db.rollback()
         if "Duplicate entry" in str(sqlalchemy_error.orig):
@@ -42,6 +43,9 @@ def create_todo(todo: Todo,
 
 @router.get("/todos", status_code=200)
 def get_all_todo(status: Optional[bool] = None,
+                 start_due: Optional[str] = None,
+                 end_due: Optional[str] = None,
+                 title: Optional[str] = None,
                  db: Session = Depends(get_db),
                  current_user: dict = Depends(get_current_user)):
     try:
@@ -49,6 +53,12 @@ def get_all_todo(status: Optional[bool] = None,
             db_model.Todo.username == current_user['username'])
         if status is not None:
             sqlstatement = sqlstatement.filter(db_model.Todo.status == status)
+        if start_due:
+            sqlstatement = sqlstatement.filter(db_model.Todo.due >= start_due)
+        if end_due:
+            sqlstatement = sqlstatement.filter(db_model.Todo.due <= end_due)
+        if title:
+            sqlstatement = sqlstatement.filter(db_model.Todo.title.like(f"%{title}%"))
         todos = sqlstatement.all()
         if not todos:
             raise HTTPException(status_code=404,
@@ -108,22 +118,24 @@ def delete_todo(todo_id: int,
 
 @router.put("/todos/{todo_id}", status_code=200)
 def edit_todo(todo_id: int,
-              new_action: Todo,
+              new_todo: Todo,
               db: Session = Depends(get_db),
               current_user: dict = Depends(get_current_user)):
-    action = new_action.action
-    due = new_action.due
+    title = new_todo.title
+    due = new_todo.due
+    detail = new_todo.detail
     try:
         todo = db.query(db_model.Todo).filter(
             db_model.Todo.todo_id == todo_id,
             db_model.Todo.username == current_user['username']).one()
         if todo.status:
             raise HTTPException(status_code=400, detail="終了したアクションは更新できません")
-        todo.action = action
+        todo.title = title
         todo.due = due
+        todo.detail = detail
         db.commit()
         logger.info(f"{current_user['username']}がTodoを編集 ID:{todo.todo_id}")
-        return {"message": "Todoを更新しました", "action": action, "due": due}
+        return {"message": "Todoを更新しました", "title": title, "due": due, "detail": detail}
     except NoResultFound:
         raise HTTPException(status_code=404,
                             detail=f"id:{todo_id}のデータは登録されていません")
@@ -158,7 +170,7 @@ def finish_todo(todo_id: int,
         logger.info(f"{current_user['username']}がTodoを完了 ID:{todo.todo_id}")
         db.commit()
         return {"message": "以下のタスクのステータスを終了にしました",
-                "action": todo.action,
+                "title": todo.title,
                 "status": todo.status}
     except NoResultFound:
         raise HTTPException(status_code=404,

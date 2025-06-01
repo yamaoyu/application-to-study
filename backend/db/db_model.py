@@ -35,11 +35,11 @@ class Income(Base):
 class Todo(Base):
     __tablename__ = "todos"
     todo_id = Column(Integer, primary_key=True, autoincrement=True)
-    action = Column(VARCHAR(32), nullable=False)
+    title = Column(VARCHAR(32), nullable=False)
     status = Column(Boolean, default=False)
     due = Column(Date, nullable=False)
     username = Column(VARCHAR(16), ForeignKey("users.username"), nullable=False)
-    __table_args__ = (UniqueConstraint(action, username),)
+    detail = Column(VARCHAR(200))
 
     user = relationship('User', back_populates='todos')
 
