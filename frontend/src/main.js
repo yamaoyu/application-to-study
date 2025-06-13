@@ -8,7 +8,7 @@ import { createBootstrap } from 'bootstrap-vue-next';
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue-next/dist/bootstrap-vue-next.css";
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
-import { verifyRefreshToken } from './views/lib/token';
+import { verifyRefreshToken } from './views/lib';
 
 const pinia = createPinia();
 
@@ -37,7 +37,7 @@ router.beforeEach(async (to) => {
           jwtDecode(response.data.access_token).exp)
       }
     } catch(error){
-      return { name: 'Login' }
+      return { name: 'Login', message: '再度ログインしてください' }
     }
   }
 }

@@ -41,6 +41,24 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+
+  https-portal:
+    image: steveltn/https-portal:1
+    ports:
+      - "80:80"
+      - "443:443"
+    env_file:
+      - .env
+    environment:
+      DOMAINS:
+        "${FRONTEND_DOMAIN} -> http://frontend:${FRONTEND_PORT}, ${BACKEND_DOMAIN} -> http://backend:${BACKEND_PORT}"
+      STAGE: ${HTTPS_STAGE}
+    volumes:
+      - ./data/certs:/var/lib/https-portal
+    restart: always
+    depends_on:
+      - backend
+      - frontend
     
 volumes:
   db_data:
