@@ -41,6 +41,9 @@ jobs:
         echo "DOCKER_PLATFORM=${{ secrets.DOCKER_PLATFORM }}" >> .env
         echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
         echo "BACKEND_PORT=${{ secrets.BACKEND_PORT }}" >> .env
+        echo "FRONTEND_DOMAIN=${{ secrets.FRONTEND_DOMAIN }}" >> .env
+        echo "BACKEND_DOMAIN=${{ secrets.BACKEND_DOMAIN }}" >> .env
+        echo "HTTPS_STAGE=${{ secrets.HTTPS_STAGE }}" >> .env
 
     - name: create .env.backend
       run: |
