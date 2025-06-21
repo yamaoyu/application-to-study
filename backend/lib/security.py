@@ -197,7 +197,7 @@ def get_current_user(token: str = Depends(oauth2_scheme),
     except HTTPException as http_e:
         raise http_e
     except Exception:
-        logger.error(f"トークンの作成中にエラーが発生しました\n{traceback.format_exc()}")
+        logger.error(f"ユーザーの認証に失敗しました\n{traceback.format_exc()}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="ユーザーの認証に失敗しました")
 

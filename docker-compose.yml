@@ -2,7 +2,7 @@ services:
   backend:
     build: ./backend
     ports:
-      - "${BACKEND_PORT}:8000"
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
     env_file:
       - .env
       - .env.backend
@@ -18,7 +18,7 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "${FRONTEND_PORT}:8080"
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
     env_file:
       - .env
     depends_on:
