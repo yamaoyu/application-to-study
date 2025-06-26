@@ -135,13 +135,13 @@ def create_refresh_token(data: dict,
         response.set_cookie(
             key="refresh_token",
             value=refresh_token,
-            secure=True if os.getenv("ENV") != "test" else False,
+            secure=os.getenv("ENV") != "test",
             httponly=True,
             expires=expire)
         response.set_cookie(
             key="device_id",
             value=device_id,
-            secure=True if os.getenv("ENV") != "test" else False,
+            secure=os.getenv("ENV") != "test",
             httponly=True)
         return refresh_token
     except HTTPException as http_e:

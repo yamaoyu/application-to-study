@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse
 app = FastAPI()
 router = APIRouter()
 
-FRONTEND_DOMAIN = os.getenv(("FRONTEND_DOMAIN"))
+FRONTEND_DOMAIN = os.getenv("FRONTEND_DOMAIN")
 
 app.add_middleware(
     CORSMiddleware,
