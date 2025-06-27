@@ -114,3 +114,14 @@ def test_regenerate_token(client, get_headers):
         assert decoded_token["sub"] == "testuser"
     except jwt.JWTError as e:
         pytest.fail(f"Invalid JWT token {str(e)}")
+
+
+def test_change_password(client, get_headers):
+    new_password = "newP@ssword1"
+    data = {
+        "old_password": test_plain_password,
+        "new_password": new_password
+    }
+    response = client.put("/password", json=data, headers=get_headers)
+    assert response.status_code == 200
+    assert response.json() == {"message": "パスワードの変更に成功しました"}

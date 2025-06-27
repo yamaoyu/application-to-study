@@ -170,7 +170,7 @@ def regenerate_access_token(refresh_token: str = Cookie(default=None),
             return {"access_token": get_token(user, token_type="access"),
                     "token_type": "Bearer"}
         else:
-            raise HTTPException(status_code=401)
+            raise HTTPException(status_code=401, detail="再度ログインしてください")
     except HTTPException as http_e:
         raise http_e
     except Exception:

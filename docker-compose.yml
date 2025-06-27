@@ -2,7 +2,7 @@ services:
   backend:
     build: ./backend
     ports:
-      - "${BACKEND_PORT}:8000"
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
     env_file:
       - .env
       - .env.backend
@@ -10,7 +10,7 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "${VUE_APP_BACKEND_URL}health"]
+      test: ["CMD", "curl", "http://localhost:8000/health"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -18,7 +18,7 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "${FRONTEND_PORT}:8080"
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
     env_file:
       - .env
     depends_on:
@@ -41,6 +41,24 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+
+  https-portal:
+    image: steveltn/https-portal:1
+    ports:
+      - "80:80"
+      - "443:443"
+    env_file:
+      - .env
+    environment:
+      DOMAINS:
+        "${FRONTEND_DOMAIN} -> http://frontend:${FRONTEND_PORT}, ${BACKEND_DOMAIN} -> http://backend:${BACKEND_PORT}"
+      STAGE: ${HTTPS_STAGE}
+    volumes:
+      - ./data/certs:/var/lib/https-portal
+    restart: always
+    depends_on:
+      - backend
+      - frontend
     
 volumes:
   db_data:

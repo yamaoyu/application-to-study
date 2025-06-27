@@ -13,11 +13,11 @@ from fastapi.responses import JSONResponse
 app = FastAPI()
 router = APIRouter()
 
-FRONTEND_URL = os.getenv(("FRONTEND_URL"))
+FRONTEND_DOMAIN = os.getenv("FRONTEND_DOMAIN")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL],  # フロントエンドのURL
+    allow_origins=[f"https://{FRONTEND_DOMAIN}"],  # フロントエンドのドメインを指定
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
