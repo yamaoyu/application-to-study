@@ -31,6 +31,14 @@ class TargetTimeIn(BaseModel):
         return target_time
 
 
+class TargetTimeWithDate(TargetTimeIn):
+    date: str
+
+
+class MultiTargetTimeIn(BaseModel):
+    activities: list
+
+
 class ActualTimeIn(BaseModel):
     actual_time: float = Field(ge=0.0, le=12.0)
 

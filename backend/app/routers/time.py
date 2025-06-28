@@ -2,7 +2,7 @@ import traceback
 from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, Depends
 from app.models.time_model import (
-    TargetTimeIn, ActualTimeIn, RegisterActivities, ValidateStatus
+    TargetTimeIn, MultiTargetTimeIn, TargetTimeWithDate, ActualTimeIn, RegisterActivities, ValidateStatus
 )
 from app.models.common_model import CheckDate, CheckYear
 from db import db_model
@@ -167,6 +167,58 @@ def register_target_time(target: TargetTimeIn,
         db.rollback()
         raise HTTPException(status_code=500,
                             detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
+
+
+@router.post("/activities/multi/target", status_code=201)
+def register_multi_target_time(activities: MultiTargetTimeIn,
+                               db: Session = Depends(get_db),
+                               current_user: dict = Depends(get_current_user)):
+    """ 複数日の目標時間を登録する """
+    error_count = 0
+    response_messages = ""
+    for activity in activities.activities:
+        username = current_user["username"]
+        target_time = activity["target_time"]
+        date = activity["date"]
+        try:
+            # 目標時間の形式をチェック
+            TargetTimeWithDate(target_time=target_time, date=date)
+            # 日付の形式をチェック
+            CheckDate(year=int(date.split("-")[0]),
+                      month=int(date.split("-")[1]),
+                      day=int(date.split("-")[2]))
+
+            # 目標時間を登録する前に、その日の活動実績が存在するか確認
+            year_month = date.split("-")[0] + "-" + date.split("-")[1]
+            fetch_one_income(year_month, username, db)
+
+            insert_data = db_model.Activity(
+                date=date, target_time=target_time, username=username)
+            db.add(insert_data)
+            db.commit()
+            logger.info(f"{current_user['username']}が複数日の目標時間を登録")
+            response_messages += f"{date}の目標時間を{target_time}時間に登録しました\n"
+        except HTTPException:
+            error_count += 1
+            response_messages += f"{date}の目標時間登録に失敗: この月の月収が登録されていません\n"
+            db.rollback()
+        except IntegrityError:
+            error_count += 1
+            response_messages += f"{date}の目標時間登録に失敗: 目標時間は既に登録済みです\n"
+            db.rollback()
+        except ValidationError as validate_e:
+            error_count += 1
+            response_messages += f"{date}の目標時間登録に失敗: {str(validate_e.errors()[0]['ctx']['error'])}\n"
+            db.rollback()
+        except Exception:
+            error_count += 1
+            response_messages += f"{date}の目標時間登録に失敗: サーバーでエラーが発生しました。管理者にお問い合わせください\n"
+            db.rollback()
+            logger.error(f"複数日の目標時間の登録に失敗しました\n{traceback.format_exc()}")
+
+    if error_count > 0:
+        raise HTTPException(status_code=400, detail=response_messages[:-1])
+    return {"message": response_messages[:-1]}  # 最後の改行を削除して返す
 
 
 @router.put("/activities/{year}/{month}/{day}/actual",

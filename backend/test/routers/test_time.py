@@ -54,6 +54,87 @@ def test_register_target(client, get_headers):
                                "message": f"{test_date}の目標時間を5.0時間に設定しました"}
 
 
+def test_register_multi_target(client, get_headers):
+    """ 複数の目標時間を登録した場合 """
+    setup_monthly_income_for_test(client, get_headers)
+    data = {
+        "activities": [
+            {"date": "2024-5-5", "target_time": 5.0},
+            {"date": "2024-5-6", "target_time": 6.0},
+            {"date": "2024-5-7", "target_time": 7.0}
+        ]
+    }
+    response = client.post("/activities/multi/target",
+                           json=data,
+                           headers=get_headers)
+    assert response.status_code == 201
+    assert response.json() == {
+        "message": (
+            "2024-5-5の目標時間を5.0時間に登録しました\n"
+            "2024-5-6の目標時間を6.0時間に登録しました\n"
+            "2024-5-7の目標時間を7.0時間に登録しました"
+        )
+    }
+
+
+def test_register_multi_target_with_invalid_data(client, get_headers):
+    """ 複数の目標時間を登録する際に不正なデータが含まれている場合 """
+    setup_monthly_income_for_test(client, get_headers)
+    # 目標時間が不正
+    data = {
+        "activities": [
+            {"date": "2024-5-5", "target_time": 5.2},
+            {"date": "2024-5-6", "target_time": 6.0},
+            {"date": "2024-5-7", "target_time": 15.0}
+        ]
+    }
+    response = client.post("/activities/multi/target",
+                           json=data,
+                           headers=get_headers)
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": (
+            "2024-5-5の目標時間登録に失敗: 目標時間は0.5時間単位で入力してください\n"
+            "2024-5-6の目標時間を6.0時間に登録しました\n"
+            "2024-5-7の目標時間登録に失敗: 目標時間は0.5~12.0の範囲で入力してください"
+        )
+    }
+
+    # 日付が不正
+    data = {
+        "activities": [
+            {"date": "2024-5-5", "target_time": 5.0},
+            {"date": "2024-5-35", "target_time": 5.0},
+            {"date": "2024-13-6", "target_time": 6.0}
+        ]
+    }
+    response = client.post("/activities/multi/target",
+                           json=data,
+                           headers=get_headers)
+    assert response.status_code == 400
+    assert response.json() == {
+        'detail': '2024-5-5の目標時間を5.0時間に登録しました\n'
+        '2024-5-35の目標時間登録に失敗: 日付が不正です\n'
+        '2024-13-6の目標時間登録に失敗: 月は1~12の範囲で入力してください'
+    }
+
+
+def test_register_multi_target_without_monthly_income(client, get_headers):
+    """ 月収が登録されていない状態で目標時間を登録しようとした場合 """
+    data = {
+        "activities": [
+            {"date": "2024-5-5", "target_time": 5.0}
+        ]
+    }
+    response = client.post("/activities/multi/target",
+                           json=data,
+                           headers=get_headers)
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": f"{test_date}の目標時間登録に失敗: この月の月収が登録されていません"
+    }
+
+
 def test_register_target_with_expired_token(client):
     """ 期限の切れたトークンで目標時間を登録しようとした場合 """
     def mock_create_access_token(data, expires_delta=timedelta(minutes=-30)):
