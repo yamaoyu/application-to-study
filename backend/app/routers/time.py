@@ -2,7 +2,9 @@ import traceback
 from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, Depends
 from app.models.time_model import (
-    TargetTimeIn, MultiTargetTimeIn, TargetTimeWithDate, ActualTimeIn, RegisterActivities, ValidateStatus
+    TargetTimeIn, MultiTargetTimeIn, TargetTimeWithDate,
+    ActualTimeIn, ActualTimeWithDate, MultiActualTimeIn,
+    RegisterActivities, ValidateStatus
 )
 from app.models.common_model import CheckDate, CheckYear
 from db import db_model
@@ -215,6 +217,55 @@ def register_multi_target_time(activities: MultiTargetTimeIn,
             response_messages += f"{date}の目標時間登録に失敗: サーバーでエラーが発生しました。管理者にお問い合わせください\n"
             db.rollback()
             logger.error(f"複数日の目標時間の登録に失敗しました\n{traceback.format_exc()}")
+
+    if error_count > 0:
+        raise HTTPException(status_code=400, detail=response_messages[:-1])
+    return {"message": response_messages[:-1]}  # 最後の改行を削除して返す
+
+
+@router.put("/activities/multi/actual", status_code=200)
+def update_multi_actual_time(activities: MultiActualTimeIn,
+                             db: Session = Depends(get_db),
+                             current_user: dict = Depends(get_current_user)):
+    """ 複数日の活動時間を登録する """
+    error_count = 0
+    response_messages = ""
+    for activity in activities.activities:
+        username = current_user["username"]
+        actual_time = activity["actual_time"]
+        date = activity["date"]
+        try:
+            # 活動時間の形式をチェック
+            ActualTimeWithDate(actual_time=actual_time, date=date)
+            # 日付の形式をチェック
+            CheckDate(year=int(date.split("-")[0]),
+                      month=int(date.split("-")[1]),
+                      day=int(date.split("-")[2]))
+
+            activity = fetch_one_activity(
+                date, username, db, error_msg="目標時間を先に登録してください")
+            if activity.bonus == 0 and activity.penalty == 0:
+                activity.actual_time = actual_time
+                db.commit()
+                logger.info(f"{current_user['username']}が{date}の活動時間を登録")
+                response_messages += f"{date}の活動時間を{actual_time}時間に登録しました\n"
+            else:
+                error_count += 1
+                response_messages += f"{date}の活動時間登録に失敗: \n"
+                db.rollback()
+        except HTTPException as http_e:
+            error_count += 1
+            response_messages += f"{date}の活動時間登録に失敗: {http_e.detail}\n"
+            db.rollback()
+        except ValidationError as validate_e:
+            error_count += 1
+            response_messages += f"{date}の活動時間登録に失敗: {str(validate_e.errors()[0]['ctx']['error'])}\n"
+            db.rollback()
+        except Exception:
+            error_count += 1
+            response_messages += f"{date}の活動時間登録に失敗: サーバーでエラーが発生しました。管理者にお問い合わせください\n"
+            db.rollback()
+            logger.error(f"複数日の活動時間の登録に失敗しました\n{traceback.format_exc()}")
 
     if error_count > 0:
         raise HTTPException(status_code=400, detail=response_messages[:-1])

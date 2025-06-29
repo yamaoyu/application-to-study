@@ -1,6 +1,6 @@
 import re
 from enum import Enum
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, field_validator
 
 
 class Status(str, Enum):
@@ -40,7 +40,7 @@ class MultiTargetTimeIn(BaseModel):
 
 
 class ActualTimeIn(BaseModel):
-    actual_time: float = Field(ge=0.0, le=12.0)
+    actual_time: float
 
     @field_validator("actual_time")
     def validate_actual_time(cls, actual_time):
@@ -51,6 +51,14 @@ class ActualTimeIn(BaseModel):
             raise ValueError("活動時間は0.5時間単位で入力してください")
 
         return actual_time
+
+
+class ActualTimeWithDate(ActualTimeIn):
+    date: str
+
+
+class MultiActualTimeIn(BaseModel):
+    activities: list
 
 
 class ValidateStatus(BaseModel):
