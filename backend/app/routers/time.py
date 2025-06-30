@@ -1,6 +1,6 @@
 import traceback
 from datetime import datetime, timedelta
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Body
 from app.models.time_model import (
     TargetTimeIn, MultiTargetTimeIn, TargetTimeWithDate,
     ActualTimeIn, ActualTimeWithDate, MultiActualTimeIn,
@@ -372,6 +372,72 @@ def finish_activity(year: int,
         db.rollback()
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
+
+
+@router.put("/activities/multi/finish", status_code=200)
+def finish_multi_activities(request: dict = Body(),
+                            db: Session = Depends(get_db),
+                            current_user: dict = Depends(get_current_user)):
+    """ 複数日の活動を確定する """
+    error_count = 0
+    message = ""
+    dates = request.get("dates", [])
+    if len(dates) == 0:
+        raise HTTPException(status_code=400, detail="日付を指定してください")
+    for date in dates:
+        try:
+            year, month, day = map(int, date.split("-"))
+            CheckDate(year=year, month=month, day=day)
+            date = f"{year}-{month}-{day}"
+            username = current_user["username"]
+            activity = fetch_one_activity(date, username, db)
+            if activity.status != "pending":
+                raise HTTPException(status_code=400,
+                                    detail=f"{date}の実績は確定済みです")
+            target_time = activity.target_time
+            actual_time = activity.actual_time
+            income = fetch_one_income(f"{year}-{month}", username, db)
+            monthly_activities = fetch_monthly_activities(year, month, username, db)
+            # 達成している場合はincomesテーブルのボーナスを、達成していない場合はpenaltyを加算する。
+            if actual_time >= target_time:
+                activity.status = "success"
+                bonus = round(((income.salary / 200) * actual_time), 2)
+                activity.bonus = bonus
+                # 対象日のbonusをコミット
+                db.commit()
+                db.refresh(activity)
+                # activitiesテーブルのbonusの合計を計算し、incomesテーブルに反映する
+                income.total_bonus = sum([act.bonus for act in monthly_activities])
+                message += f"{date}の活動を終了:ボーナス{bonus}万円({int(bonus * 10000)}円)\n"
+            else:
+                activity.status = "failure"
+                diff = round((target_time - actual_time), 1)
+                penalty = round(((income.salary / 200) * diff), 2)
+                activity.penalty = penalty
+                # 対象日のpenaltyをコミット
+                db.commit()
+                db.refresh(activity)
+                # activitiesテーブルのpenaltyの合計を計算し、incomesテーブルに反映する
+                income.total_penalty = sum([act.penalty for act in monthly_activities])
+                message += f"{date}の活動を終了:ペナルティ{penalty}万円({int(penalty * 10000)}円)\n"
+            db.commit()
+            logger.info(f"{current_user['username']}が{date}の活動を終了")
+        except HTTPException as http_e:
+            error_count += 1
+            message += f"{date}の活動終了に失敗: {http_e.detail}\n"
+            db.rollback()
+        except ValidationError as validate_e:
+            error_count += 1
+            message += f"{date}の活動終了に失敗: {str(validate_e.errors()[0]['ctx']['error'])}\n"
+            db.rollback()
+        except Exception:
+            error_count += 1
+            message += f"{date}の活動終了に失敗: サーバーでエラーが発生しました。管理者にお問い合わせください\n"
+            db.rollback()
+            logger.error(f"複数日の活動終了処理に失敗しました\n{traceback.format_exc()}")
+    if error_count > 0:
+        raise HTTPException(status_code=400, detail=message[:-1])
+    return {"message": message[:-1]}
 
 
 @router.get("/activities/{year}/{month}", status_code=200)

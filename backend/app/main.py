@@ -44,6 +44,9 @@ def validation_exception_handler(request, exc):
             case "date_from_datetime_parsing":
                 return JSONResponse(status_code=422,
                                     content={"detail": "不正な日付です"})
+            case "list_type":
+                return JSONResponse(status_code=422,
+                                    content={"detail": "リスト形式で入力してください"})
             case "missing":
                 return JSONResponse(status_code=422,
                                     content={"detail": "入力データが不足しています"})
