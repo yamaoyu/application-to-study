@@ -54,71 +54,6 @@ def test_register_target(client, get_headers):
                                "message": f"{test_date}の目標時間を5.0時間に設定しました"}
 
 
-def test_register_multi_target(client, get_headers):
-    """ 複数の目標時間を登録した場合 """
-    setup_monthly_income_for_test(client, get_headers)
-    data = {
-        "activities": [
-            {"date": "2024-5-5", "target_time": 5.0},
-            {"date": "2024-5-6", "target_time": 6.0},
-            {"date": "2024-5-7", "target_time": 7.0}
-        ]
-    }
-    response = client.post("/activities/multi/target",
-                           json=data,
-                           headers=get_headers)
-    assert response.status_code == 201
-    assert response.json() == {
-        "message": (
-            "2024-5-5の目標時間を5.0時間に登録しました\n"
-            "2024-5-6の目標時間を6.0時間に登録しました\n"
-            "2024-5-7の目標時間を7.0時間に登録しました"
-        )
-    }
-
-
-def test_register_multi_target_with_invalid_data(client, get_headers):
-    """ 複数の目標時間を登録する際に不正なデータが含まれている場合 """
-    setup_monthly_income_for_test(client, get_headers)
-    # 目標時間が不正
-    data = {
-        "activities": [
-            {"date": "2024-5-5", "target_time": 5.2},
-            {"date": "2024-5-6", "target_time": 6.0},
-            {"date": "2024-5-7", "target_time": 15.0}
-        ]
-    }
-    response = client.post("/activities/multi/target",
-                           json=data,
-                           headers=get_headers)
-    assert response.status_code == 400
-    assert response.json() == {
-        "detail": (
-            "2024-5-5の目標時間登録に失敗: 目標時間は0.5時間単位で入力してください\n"
-            "2024-5-6の目標時間を6.0時間に登録しました\n"
-            "2024-5-7の目標時間登録に失敗: 目標時間は0.5~12.0の範囲で入力してください"
-        )
-    }
-
-    # 日付が不正
-    data = {
-        "activities": [
-            {"date": "2024-5-5", "target_time": 5.0},
-            {"date": "2024-5-35", "target_time": 5.0},
-            {"date": "2024-13-6", "target_time": 6.0}
-        ]
-    }
-    response = client.post("/activities/multi/target",
-                           json=data,
-                           headers=get_headers)
-    assert response.status_code == 400
-    assert response.json() == {
-        'detail': '2024-5-5の目標時間を5.0時間に登録しました\n'
-        '2024-5-35の目標時間登録に失敗: 日付が不正です\n'
-        '2024-13-6の目標時間登録に失敗: 月は1~12の範囲で入力してください'
-    }
-
-
 def test_register_multi_target_without_monthly_income(client, get_headers):
     """ 月収が登録されていない状態で目標時間を登録しようとした場合 """
     data = {
@@ -205,6 +140,71 @@ def test_register_target_with_invalid_date(client, get_headers):
     assert response.json() == {"detail": "日付が不正です"}
 
 
+def test_register_multi_target(client, get_headers):
+    """ 複数の目標時間を登録した場合 """
+    setup_monthly_income_for_test(client, get_headers)
+    data = {
+        "activities": [
+            {"date": "2024-5-5", "target_time": 5.0},
+            {"date": "2024-5-6", "target_time": 6.0},
+            {"date": "2024-5-7", "target_time": 7.0}
+        ]
+    }
+    response = client.post("/activities/multi/target",
+                           json=data,
+                           headers=get_headers)
+    assert response.status_code == 201
+    assert response.json() == {
+        "message": (
+            "2024-5-5の目標時間を5.0時間に登録しました\n"
+            "2024-5-6の目標時間を6.0時間に登録しました\n"
+            "2024-5-7の目標時間を7.0時間に登録しました"
+        )
+    }
+
+
+def test_register_multi_target_with_invalid_data(client, get_headers):
+    """ 複数の目標時間を登録する際に不正なデータが含まれている場合 """
+    setup_monthly_income_for_test(client, get_headers)
+    # 目標時間が不正
+    data = {
+        "activities": [
+            {"date": "2024-5-5", "target_time": 5.2},
+            {"date": "2024-5-6", "target_time": 6.0},
+            {"date": "2024-5-7", "target_time": 15.0}
+        ]
+    }
+    response = client.post("/activities/multi/target",
+                           json=data,
+                           headers=get_headers)
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": (
+            "2024-5-5の目標時間登録に失敗: 目標時間は0.5時間単位で入力してください\n"
+            "2024-5-6の目標時間を6.0時間に登録しました\n"
+            "2024-5-7の目標時間登録に失敗: 目標時間は0.5~12.0の範囲で入力してください"
+        )
+    }
+
+    # 日付が不正
+    data = {
+        "activities": [
+            {"date": "2024-5-5", "target_time": 5.0},
+            {"date": "2024-5-35", "target_time": 5.0},
+            {"date": "2024-13-6", "target_time": 6.0}
+        ]
+    }
+    response = client.post("/activities/multi/target",
+                           json=data,
+                           headers=get_headers)
+    assert response.status_code == 400
+    assert response.json() == {
+        'detail': '2024-5-5の目標時間を5.0時間に登録しました\n'
+        '2024-5-35の目標時間登録に失敗: 日付が不正です\n'
+        '2024-13-6の目標時間登録に失敗: 月は1~12の範囲で入力してください'
+    }
+
+
 def test_register_actual(client, get_headers):
     setup_monthly_income_for_test(client, get_headers)
     setup_target_time_for_test(client, get_headers)
@@ -258,6 +258,96 @@ def test_register_actual_after_finish(client, get_headers):
                                f"{test_date}の活動実績は既に確定済みです。変更できません"}
 
 
+def test_register_multi_actual(client, get_headers):
+    """ 複数の活動時間を登録した場合 """
+    setup_monthly_income_for_test(client, get_headers)
+    # 目標時間を複数登録
+    data = {
+        "activities": [
+            {"date": "2024-5-5", "target_time": 5.0},
+            {"date": "2024-5-6", "target_time": 6.0},
+            {"date": "2024-5-7", "target_time": 7.0}
+        ]
+    }
+    client.post("/activities/multi/target",
+                json=data,
+                headers=get_headers)
+    # 活動時間を登録
+    data = {
+        "activities": [
+            {"date": "2024-5-5", "actual_time": 5.0},
+            {"date": "2024-5-6", "actual_time": 6.0},
+            {"date": "2024-5-7", "actual_time": 7.0}
+        ]
+    }
+    response = client.put("/activities/multi/actual",
+                          json=data,
+                          headers=get_headers)
+    assert response.status_code == 200
+    assert response.json() == {
+        "message": (
+            "2024-5-5の活動時間を5.0時間に登録しました\n"
+            "2024-5-6の活動時間を6.0時間に登録しました\n"
+            "2024-5-7の活動時間を7.0時間に登録しました"
+        )
+    }
+
+
+def test_register_multi_actual_with_invalid_data(client, get_headers):
+    """ 複数の活動時間を登録する際に不正なデータが含まれている場合 """
+    setup_monthly_income_for_test(client, get_headers)
+    # 目標時間を複数登録
+    data = {
+        "activities": [
+            {"date": "2024-5-5", "target_time": 5.0},
+            {"date": "2024-5-6", "target_time": 6.0},
+            {"date": "2024-5-7", "target_time": 7.0}
+        ]
+    }
+    client.post("/activities/multi/target",
+                json=data,
+                headers=get_headers)
+    # 活動時間を登録
+    data = {
+        "activities": [
+            {"date": "2024-5-5", "actual_time": 5.2},  # 不正な活動時間
+            {"date": "2024-5-6", "actual_time": 6.0},
+            {"date": "2024-5-7", "actual_time": 15.0}  # 上限を超える活動時間
+        ]
+    }
+    response = client.put("/activities/multi/actual",
+                          json=data,
+                          headers=get_headers)
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": (
+            "2024-5-5の活動時間登録に失敗: 活動時間は0.5時間単位で入力してください\n"
+            "2024-5-6の活動時間を6.0時間に登録しました\n"
+            "2024-5-7の活動時間登録に失敗: 活動時間は0.0~12.0の範囲で入力してください"
+        )
+    }
+
+    data = {
+        "activities": [
+            {"date": "20240-5-5", "actual_time": 5.0},
+            {"date": "2024-15-6", "actual_time": 6.0},
+            {"date": "2024-5-7", "actual_time": 7.0}
+        ]
+    }
+
+    response = client.put("/activities/multi/actual",
+                          json=data,
+                          headers=get_headers)
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": (
+            "20240-5-5の活動時間登録に失敗: 年は2024~2099の範囲で入力してください\n"
+            "2024-15-6の活動時間登録に失敗: 月は1~12の範囲で入力してください\n"
+            "2024-5-7の活動時間を7.0時間に登録しました"
+        )
+    }
+
+
 def test_finish_activity(client, get_headers):
     setup_monthly_income_for_test(client, get_headers)
     setup_target_time_for_test(client, get_headers)
@@ -271,6 +361,107 @@ def test_finish_activity(client, get_headers):
         "actual_time": 5.0,
         "status": "success",
         "message": f"目標達成！{f"{test_bonus}万円({int(test_bonus * 10000)}円)"}ボーナス追加！"}
+
+
+def test_finish_multi_activity(client, get_headers):
+    """ 複数の活動を終了させた場合 """
+    setup_monthly_income_for_test(client, get_headers)
+    setup_target_time_for_test(client, get_headers)
+    setup_actual_time_for_test(client, get_headers)
+    # 複数の目標時間を登録
+    data = {
+        "activities": [
+            {"date": "2024-5-5", "target_time": 5.0},
+            {"date": "2024-5-6", "target_time": 6.0},
+            {"date": "2024-5-7", "target_time": 7.0}
+        ]
+    }
+    client.post("/activities/multi/target",
+                json=data,
+                headers=get_headers)
+    # 複数の活動時間を登録
+    data = {
+        "activities": [
+            {"date": "2024-5-5", "actual_time": 5.0},
+            {"date": "2024-5-6", "actual_time": 3.0},
+            {"date": "2024-5-7", "actual_time": 7.0}
+        ]
+    }
+    client.put("/activities/multi/actual",
+               json=data,
+               headers=get_headers)
+    # 活動を終了
+    data = {
+        "dates": ["2024-5-5", "2024-5-6", "2024-5-7"]
+    }
+    response = client.put("/activities/multi/finish",
+                          json=data,
+                          headers=get_headers)
+    assert response.status_code == 200
+    assert response.json() == {
+        "message": (
+            "2024-5-5の活動を終了:ボーナス0.58万円(5800円)\n"
+            "2024-5-6の活動を終了:ペナルティ0.35万円(3500円)\n"
+            "2024-5-7の活動を終了:ボーナス0.81万円(8100円)"
+        )
+    }
+
+
+def test_finish_multi_activity_with_invalid_data(client, get_headers):
+    """ 複数の活動を終了させた場合に不正なデータが含まれている場合 """
+    setup_monthly_income_for_test(client, get_headers)
+    # 複数の目標時間を登録
+    data = {
+        "activities": [
+            {"date": "2024-5-5", "target_time": 5.0},
+            {"date": "2024-5-6", "target_time": 6.0},
+            {"date": "2024-5-7", "target_time": 7.0}
+        ]
+    }
+    client.post("/activities/multi/target",
+                json=data,
+                headers=get_headers)
+    # 複数の活動時間を登録
+    data = {
+        "activities": [
+            {"date": "2024-5-5", "actual_time": 5.0},
+            {"date": "2024-5-6", "actual_time": 6.0}
+        ]
+    }
+    client.put("/activities/multi/actual",
+               json=data,
+               headers=get_headers)
+    # 活動を終了
+    # 既に終了した日のテストのために2024-5-6のみ終了にする
+    client.put("/activities/multi/finish",
+               json={"dates": ["2024-5-6"]}, headers=get_headers)
+    data = {
+        "dates": ["2024-5-5", "2024-5-6", "2024-5-8", "20241-5-5", "2024-15-6", "2024-5-71"]
+    }
+    response = client.put("/activities/multi/finish",
+                          json=data,
+                          headers=get_headers)
+    assert response.status_code == 400
+    # 登録に成功した日/既に終了した日/目標時間の登録がない日/不正な年/不正な月/不正な日付
+    assert response.json() == {
+        "detail": (
+            "2024-5-5の活動を終了:ボーナス0.58万円(5800円)\n"
+            "2024-5-6の活動終了に失敗: 2024-5-6の実績は確定済みです\n"
+            "2024-5-8の活動終了に失敗: 2024-5-8の活動記録は未登録です\n"
+            "20241-5-5の活動終了に失敗: 年は2024~2099の範囲で入力してください\n"
+            "2024-15-6の活動終了に失敗: 月は1~12の範囲で入力してください\n"
+            "2024-5-71の活動終了に失敗: 日付が不正です"
+        )
+    }
+
+
+def test_finish_multi_acitivity_with_no_dates(client, get_headers):
+    """ 複数の活動を終了させた場合に日付が指定されていない場合 """
+    response = client.put("/activities/multi/finish",
+                          json={},
+                          headers=get_headers)
+    assert response.status_code == 400
+    assert response.json() == {"detail": "日付を指定してください"}
 
 
 def test_get_day_activities_registered_target(client, get_headers):
