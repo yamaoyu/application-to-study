@@ -2,6 +2,17 @@
     <div class="container">
         <div class="d-flex mb-3 align-items-baseline justify-content-center">
             <BButton 
+                v-for="type in types" 
+                :key="type.value"
+                @click="registertype = type.value"
+                :variant="registertype === type.value ? 'primary' : 'outline-secondary'"
+                class="me-2"
+            >
+                {{ type.label }}
+            </BButton>
+        </div>
+        <div class="d-flex mb-3 align-items-baseline justify-content-center">
+            <BButton 
                 v-for="tab in tabs" 
                 :key="tab.value"
                 @click="activeTab = tab.value"
@@ -78,7 +89,7 @@
 
         <!-- タブによる画面切り替え -->
         <div class="container">
-            <div v-show="activeTab === 'target'">
+            <div v-show="activeTab === 'target' && registertype === 'single'">
                 <form @submit.prevent="confirmRegister">
                     <div class="row d-flex justify-content-center mt-4">
                         <div class="input-group">
@@ -97,7 +108,7 @@
                     <button type="submit" class="btn btn-outline-secondary mt-3">登録</button>
                 </form>
             </div>
-            <div v-show="activeTab === 'actual'">
+            <div v-show="activeTab === 'actual' && registertype === 'single'">
                 <form @submit.prevent="confirmRegister">
                     <div class="row d-flex justify-content-center mt-4">
                         <div class="input-group">
@@ -116,16 +127,63 @@
                     <button type="submit" class="btn btn-outline-secondary mt-3">登録</button>
                 </form>
             </div>
-            <div v-show="activeTab === 'finish'">
+            <div v-show="activeTab === 'finish' && registertype === 'single'">
                 <form @submit.prevent="confirmRegister">
                     <div class="container">
                         <button type="submit" class="btn btn-outline-secondary mt-3">終了</button>
                     </div>
                 </form>
             </div>
+            <div v-show="activeTab === 'target' && registertype === 'multi'">
+                target
+            </div>
+            <div v-show="activeTab === 'actual' && registertype === 'multi'">
+                actual
+            </div>
+            <div v-show="activeTab === 'finish' && registertype === 'multi'">
+                <div v-if="Object.keys(pendingActivities).length > 0" class="mt-3">
+                    <h5>終了する日付を選択してください</h5>
+                    <table class="table table-striped table-responsive">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="col-1"></th>
+                                <th class="col-2">日付</th>
+                                <th class="col-2">目標時間</th>
+                                <th class="col-2">活動時間</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(activity, index) in pendingActivities" :key="index">
+                                <td>
+                                    <input 
+                                        class="form-check-input" 
+                                        type="checkbox"
+                                        :value="activity.date"
+                                        v-model="selectedActivities"
+                                    >
+                                </td>
+                                <td>{{ activity.date }}</td>
+                                <td>{{ activity.target_time }}時間</td>
+                                <td>{{ activity.actual_time }}時間</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button 
+                        type="button" 
+                        class="btn btn-outline-secondary mt-3"
+                        @click="confirmRegister"
+                        :disabled="selectedActivities.length === 0"
+                    >
+                        まとめて終了
+                    </button>
+                </div>
+                <div v-else class="mt-3">
+                    <p class="text-muted">確定可能な活動がありません</p>
+                </div>
+            </div>
             <div class="container d-flex justify-content-center">
                 <p v-if="message" class="mt-3 col-12" :class="getResponseAlert(statusCode)">{{ message }}</p>
-                <p v-if="finMsg" class="mt-3 col-12" :class="getActivityAlert(activityStatus)">{{ finMsg }}</p>
+                <p v-if="finMsg" class="mt-3 col-12" :class="getResponseAlert(statusCode)">{{ finMsg }}</p>
             </div>
         </div>
         <br>
@@ -177,7 +235,7 @@ import { BButton, BModal } from 'bootstrap-vue-next';
 import { 
     changeDate, STATUS_DICT, getStatusColors, getToday, getMaxDate,
     getActivityAlert, getResponseAlert, updateActivity, registerActivity, 
-    finalizeActivity, getActivitiesByStatus } from './lib/index';
+    finalizeActivity,finalizeMultiActivities, getActivitiesByStatus } from './lib/index';
 
 export default {
     components: {
@@ -187,6 +245,8 @@ export default {
 
     setup() {
         const activeTab = ref("target");
+        const registertype = ref("single");
+        const selectedActivities = ref([]);
         const date = ref(getToday());
         const statusCode = ref();
         const targetTime = ref(0.5);
@@ -195,7 +255,6 @@ export default {
         const checkMsg = ref("");
         const finMsg = ref("");
         const activityRes = ref("");
-        const activityStatus = ref("");
         const isFormVisible = ref(false)
         const pendingActivities = ref([]);
         const pendingMsg = ref("")
@@ -204,10 +263,16 @@ export default {
                     { value: 'actual', label: '活動時間' },
                     { value: 'finish', label: '活動終了' }
                     ];
+        const types = [
+                    { value: 'single', label: '個別' },
+                    { value: 'multi', label: '一括' }
+                    ];
+        const MultiActivities = ref();
         const { increaseDay } = changeDate(date, message);
         const { renewActivity } = updateActivity(date, checkMsg, activityRes);
         const { registerTarget, registerActual } = registerActivity(date, statusCode, targetTime, actualTime, message, checkMsg, activityRes);
-        const { finishActivity } = finalizeActivity(date, finMsg, activityStatus, checkMsg, activityRes);
+        const { finishActivity } = finalizeActivity(date, finMsg, statusCode, checkMsg, activityRes);
+        const { finishMultiActivities } = finalizeMultiActivities(selectedActivities, finMsg, statusCode);
         const { getPendingActivities } = getActivitiesByStatus(pendingActivities, pendingMsg)
         const showModal = ref(false);
 
@@ -243,19 +308,32 @@ export default {
 
         const sendRequest = async() =>{
             if (showModal.value) {
-                switch(activeTab.value) {
-                    case 'target':
-                    await registerTarget();
-                    await getPendingActivities();
-                    break;
-                case 'actual':
-                    await registerActual();
-                    await getPendingActivities();
-                    break;
-                case 'finish':
-                    await finishActivity();
-                    await getPendingActivities();
-                    break;
+                if (registertype.value === 'single') {
+                    switch(activeTab.value) {
+                        case 'target':
+                        await registerTarget();
+                        await getPendingActivities();
+                        break;
+                    case 'actual':
+                        await registerActual();
+                        await getPendingActivities();
+                        break;
+                    case 'finish':
+                        await finishActivity();
+                        await getPendingActivities();
+                        break;
+                    }
+                } else if (registertype.value === 'multi') {
+                    switch(activeTab.value) {
+                        case 'target':
+                            break;
+                        case 'actual':
+                            break;
+                        case 'finish':
+                            await finishMultiActivities();
+                            await getPendingActivities();
+                            break;
+                    }
                 }
             }
         }
@@ -269,8 +347,12 @@ export default {
         watch(activeTab, () => {
             message.value = "";
             finMsg.value = "";
-        }
-    )
+        })
+
+        watch(registertype, () => {
+            message.value = "";
+            finMsg.value = "";
+        })
 
         onMounted(() => {
             renewActivity();
@@ -279,7 +361,11 @@ export default {
 
     return {
             activeTab,
+            registertype,
             tabs,
+            types,
+            selectedActivities,
+            MultiActivities,
             date,
             statusCode,
             targetTime,
@@ -288,7 +374,6 @@ export default {
             checkMsg,
             finMsg,
             activityRes,
-            activityStatus,
             pendingActivities,
             getPendingActivities,
             pendingMsg,
@@ -302,6 +387,7 @@ export default {
             registerTarget,
             registerActual,
             finishActivity,
+            finishMultiActivities,
             showModal,
             confirmRegister,
             toggleFormVisibility,

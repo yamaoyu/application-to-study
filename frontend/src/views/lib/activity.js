@@ -160,10 +160,10 @@ export function registerActivity(date, statusCode, targetTime, actualTime, messa
     }
 }
 
-export function finalizeActivity(date, finMsg, activityStatus, checkMsg, activityRes) {
+export function finalizeActivity(date, finMsg, statusCode, checkMsg, activityRes) {
     const router = useRouter();
     const authStore = useAuthStore();
-    const { handleError: handleFinishError } = errorWithActivityStatus(activityStatus, finMsg, router);
+    const { handleError: handleFinishError } = errorWithActivityStatus(statusCode, finMsg, router);
     const { renewActivity } = updateActivity(date, checkMsg, activityRes);
 
     const sendFinishRequest = async() => {
@@ -178,7 +178,7 @@ export function finalizeActivity(date, finMsg, activityStatus, checkMsg, activit
                                         {},
                                         {headers: {Authorization: authStore.getAuthHeader}})
         if (response.status===200){
-            activityStatus.value = response.data.status;
+            statusCode.value = response.status;
             finMsg.value = response.data.message;
         }
     }
@@ -215,6 +215,58 @@ export function finalizeActivity(date, finMsg, activityStatus, checkMsg, activit
     return {
         finishActivity
     }
+}
+
+export function finalizeMultiActivities(selectedActivities, finMsg, statusCode) {
+    const router = useRouter();
+    const authStore = useAuthStore();
+    const { handleError: handleFinishError } = errorWithActivityStatus(statusCode, finMsg, router);
+
+    const sendFinishMultiRequest = async() => {
+        // 選択された活動を終了するリクエストを送信する関数
+        const url = process.env.VUE_APP_BACKEND_URL + 'activities/multi/finish';
+        console.log(selectedActivities);
+        const response = await axios.put(url,
+                                    {"dates":selectedActivities.value},
+                                    {headers: {Authorization: authStore.getAuthHeader}}
+                                )
+                                console.log(response);
+        if (response.status===200){
+            statusCode.value = response.status;
+            finMsg.value = response.data.message;
+            selectedActivities.value = [];
+        }
+    }
+
+    const finishMultiActivities = async() =>{
+        // 選択された活動を終了するボタンがクリックされたときに実行される
+        try {
+            await sendFinishMultiRequest();
+        } catch (error) {
+            console.error("Error in finishMultiActivities:", error);
+            if (error.response?.status === 401) {
+                // リフレッシュトークンを検証して新しいアクセストークンを取得
+                try {
+                    const tokenResponse = await verifyRefreshToken();
+                    await authStore.setAuthData(
+                    tokenResponse.data.access_token,
+                    tokenResponse.data.token_type,
+                    jwtDecode(tokenResponse.data.access_token).exp)
+                    // 再度リクエストを送信
+                    await sendFinishMultiRequest();
+                } catch (refreshError) {
+                    router.push({path: "/login",
+                    query: { message: "再度ログインしてください" }
+                    });
+                }
+            } else {
+                handleFinishError(error)
+            }
+        }
+    }
+    return {
+            finishMultiActivities
+        }
 }
 
 export function getActivityByMonth(selectedMonth, response, activities, message) {

@@ -8,7 +8,7 @@ import { verifyRefreshToken } from "./token";
 import { errorWithStatusCode, errorWithActivityStatus, errorWithActivity, errorWithActivities, commonError } from "./error";
 import { validateUsername, validatePassword, checkPassword, validateEmail } from "./userinfo";
 import { 
-    updateActivity, registerActivity, finalizeActivity, 
+    updateActivity, registerActivity, finalizeActivity, finalizeMultiActivities,
     getActivityByMonth, getActivityByYear, getActivitiesAllPeriod, getActivitiesByStatus } from "./activity";
 import { getTodoRequest, editTodoRequest, finishTodoRequest, deleteTodoRequest } from "./todo";
 
@@ -42,6 +42,7 @@ export {
     updateActivity,
     registerActivity,
     finalizeActivity,
+    finalizeMultiActivities,
     getActivityByMonth,
     getActivityByYear,
     getActivitiesAllPeriod,
