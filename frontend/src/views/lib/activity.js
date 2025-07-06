@@ -54,11 +54,11 @@ export function updateActivity(date, checkMsg, activityRes) {
     }
 }
 
-export function registerActivity(date, statusCode, targetTime, actualTime, message, checkMsg, activityRes) {
+export function registerActivity(date, statusCode, targetTime, actualTime, reqMsg, checkMsg, activityRes) {
     const router = useRouter();
     const authStore = useAuthStore();
     const { renewActivity } = updateActivity(date, checkMsg, activityRes);
-    const { handleError } = errorWithStatusCode(statusCode, message, router);
+    const { handleError } = errorWithStatusCode(statusCode, reqMsg, router);
 
     const submitTarget = async() =>{
         // 目標時間を送信する処理
@@ -73,7 +73,7 @@ export function registerActivity(date, statusCode, targetTime, actualTime, messa
                                         {headers: {Authorization: authStore.getAuthHeader}})
         statusCode.value = response.status
         if (response.status===201){
-            message.value = response.data.message
+            reqMsg.value = response.data.message
             }
         }
     
@@ -120,7 +120,7 @@ export function registerActivity(date, statusCode, targetTime, actualTime, messa
                                         {headers: {Authorization: authStore.getAuthHeader}})
         statusCode.value = response.status
         if (response.status===200){
-            message.value = response.data.message
+            reqMsg.value = response.data.message
             }
         }
     
@@ -160,10 +160,65 @@ export function registerActivity(date, statusCode, targetTime, actualTime, messa
     }
 }
 
-export function finalizeActivity(date, finMsg, statusCode, checkMsg, activityRes) {
+export function registerMultiActivities(date, statusCode, reqMsg, selectedActivities, checkMsg, activityRes) {
     const router = useRouter();
     const authStore = useAuthStore();
-    const { handleError: handleFinishError } = errorWithActivityStatus(statusCode, finMsg, router);
+    const { renewActivity } = updateActivity(date, checkMsg, activityRes);
+    const { handleError } = errorWithStatusCode(statusCode, reqMsg, router);
+
+    const submitMultiActivities = async() => {
+        console.log("selectedActivities", selectedActivities.value)
+
+        // 複数の活動を登録する処理
+        const url = process.env.VUE_APP_BACKEND_URL + 'activities/multi/actual';
+        const response = await axios.put(url,
+                                        {activities: selectedActivities.value},
+                                        {headers: {Authorization: authStore.getAuthHeader}})
+        statusCode.value = response.status
+        if (response.status===200){
+            reqMsg.value = response.data.message
+            }
+        }
+    
+    const registerMultiActual = async() =>{
+        // 登録ボタンクリック時に実行される関数
+        try {
+            await submitMultiActivities();
+            // 更新後の活動情報を取得
+            await renewActivity();
+        } catch (error) {
+        if (error.response?.status === 401) {
+            try {
+            // リフレッシュトークンを検証して新しいアクセストークンを取得
+            const tokenResponse = await verifyRefreshToken();
+            // 新しいアクセストークンをストアに保存
+            await authStore.setAuthData(
+            tokenResponse.data.access_token,
+            tokenResponse.data.token_type,
+            jwtDecode(tokenResponse.data.access_token).exp)
+            // 再度リクエストを送信
+            await submitMultiActivities();
+            } catch (refreshError) {
+            router.push({
+                path: "/login",
+                query: { message: "再度ログインしてください" }
+            });
+            }
+        }
+        else {
+            handleError(error)
+        }
+        }
+    }
+    return {
+        registerMultiActual
+    }
+}
+
+export function finalizeActivity(date, reqMsg, statusCode, checkMsg, activityRes) {
+    const router = useRouter();
+    const authStore = useAuthStore();
+    const { handleError: handleFinishError } = errorWithActivityStatus(statusCode, reqMsg, router);
     const { renewActivity } = updateActivity(date, checkMsg, activityRes);
 
     const sendFinishRequest = async() => {
@@ -179,7 +234,7 @@ export function finalizeActivity(date, finMsg, statusCode, checkMsg, activityRes
                                         {headers: {Authorization: authStore.getAuthHeader}})
         if (response.status===200){
             statusCode.value = response.status;
-            finMsg.value = response.data.message;
+            reqMsg.value = response.data.message;
         }
     }
 
@@ -217,15 +272,15 @@ export function finalizeActivity(date, finMsg, statusCode, checkMsg, activityRes
     }
 }
 
-export function finalizeMultiActivities(selectedActivities, finMsg, statusCode) {
+export function finalizeMultiActivities(date, selectedActivities, reqMsg, statusCode, checkMsg, activityRes) {
     const router = useRouter();
     const authStore = useAuthStore();
-    const { handleError: handleFinishError } = errorWithActivityStatus(statusCode, finMsg, router);
+    const { renewActivity } = updateActivity(date, checkMsg, activityRes);
+    const { handleError: handleFinishError } = errorWithActivityStatus(statusCode, reqMsg, router);
 
     const sendFinishMultiRequest = async() => {
         // 選択された活動を終了するリクエストを送信する関数
         const url = process.env.VUE_APP_BACKEND_URL + 'activities/multi/finish';
-        console.log(selectedActivities);
         const response = await axios.put(url,
                                     {"dates":selectedActivities.value},
                                     {headers: {Authorization: authStore.getAuthHeader}}
@@ -233,7 +288,7 @@ export function finalizeMultiActivities(selectedActivities, finMsg, statusCode) 
                                 console.log(response);
         if (response.status===200){
             statusCode.value = response.status;
-            finMsg.value = response.data.message;
+            reqMsg.value = response.data.message;
             selectedActivities.value = [];
         }
     }
@@ -242,6 +297,8 @@ export function finalizeMultiActivities(selectedActivities, finMsg, statusCode) 
         // 選択された活動を終了するボタンがクリックされたときに実行される
         try {
             await sendFinishMultiRequest();
+            // 更新後の活動情報を取得
+            await renewActivity();
         } catch (error) {
             console.error("Error in finishMultiActivities:", error);
             if (error.response?.status === 401) {
@@ -269,10 +326,10 @@ export function finalizeMultiActivities(selectedActivities, finMsg, statusCode) 
         }
 }
 
-export function getActivityByMonth(selectedMonth, response, activities, message) {
+export function getActivityByMonth(selectedMonth, response, activities, reqMsg) {
     const router = useRouter();
     const authStore = useAuthStore();
-    const { handleError } = errorWithActivities(response, activities, message, router);
+    const { handleError } = errorWithActivities(response, activities, reqMsg, router);
 
     const sendRequestForMonthlyInfo = async() =>{
         const [year, month] = selectedMonth.value.split('-').map(Number)
@@ -281,7 +338,7 @@ export function getActivityByMonth(selectedMonth, response, activities, message)
                                         {headers: {Authorization: authStore.getAuthHeader}})
         if (response.value.status===200){
             activities.value = response.value.data.activity_list;
-            message.value = ""
+            reqMsg.value = ""
         } 
     }
 
@@ -318,10 +375,10 @@ export function getActivityByMonth(selectedMonth, response, activities, message)
     }
 }
 
-export function getActivityByYear(year, response, activities, message){
+export function getActivityByYear(year, response, activities, reqMsg){
     const router = useRouter();
     const authStore = useAuthStore();
-    const { handleError } = commonError(message, router);
+    const { handleError } = commonError(reqMsg, router);
 
     const sendRequestForMonthlyInfo = async() =>{
         const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year.value;
@@ -329,7 +386,7 @@ export function getActivityByYear(year, response, activities, message){
                                         {headers: {Authorization: authStore.getAuthHeader}})
         if (response.value.status===200){
             activities.value = response.value.data.monthly_info;
-            message.value = ""
+            reqMsg.value = ""
             } 
         }
     
@@ -366,17 +423,17 @@ export function getActivityByYear(year, response, activities, message){
     }
 }
 
-export function getActivitiesAllPeriod(response, message){
+export function getActivitiesAllPeriod(response, reqMsg){
     const router = useRouter();
     const authStore = useAuthStore();
-    const { handleError } = commonError(message, router);
+    const { handleError } = commonError(reqMsg, router);
 
     const sendRequestForAllPeriod = async() =>{
         const url = process.env.VUE_APP_BACKEND_URL + 'activities/total';
         response.value = await axios.get(url,
                                         {headers: {Authorization: authStore.getAuthHeader}})
         if (response.value.status==200){
-            message.value = ""
+            reqMsg.value = ""
         }
     }
 

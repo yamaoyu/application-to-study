@@ -138,7 +138,55 @@
                 target
             </div>
             <div v-show="activeTab === 'actual' && registertype === 'multi'">
-                actual
+                <div v-if="Object.keys(pendingActivities).length > 0" class="mt-3">
+                    <h5>日付を選択し、活動時間を入力してください</h5>
+                    <table class="table table-striped table-responsive">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="col-1"></th>
+                                <th class="col-2">日付</th>
+                                <th class="col-2">目標時間</th>
+                                <th class="col-2">活動時間</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(activity, index) in pendingActivities" :key="index">
+                                <td>
+                                    <input 
+                                        class="form-check-input" 
+                                        type="checkbox"
+                                        :value="activity"
+                                        v-model="selectedActivities"
+                                    >
+                                </td>
+                                <td>{{ activity.date }}</td>
+                                <td>{{ activity.target_time }}時間</td>
+                                <td>
+                                <div class="input-group">
+                                    <input
+                                        type="number"
+                                        v-model="activity.actual_time"
+                                        class="form-control text-center"
+                                        min="0.0"
+                                        max="12"
+                                        step="0.5"
+                                        placeholder="0.0"
+                                    />
+                                    <span class="input-group-text small">時間</span>
+                                </div>
+                            </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button 
+                        type="button" 
+                        class="btn btn-outline-secondary mt-3"
+                        @click="confirmRegister"
+                        :disabled="selectedActivities.length === 0"
+                    >
+                        まとめて登録
+                    </button>
+                </div>
             </div>
             <div v-show="activeTab === 'finish' && registertype === 'multi'">
                 <div v-if="Object.keys(pendingActivities).length > 0" class="mt-3">
@@ -182,8 +230,7 @@
                 </div>
             </div>
             <div class="container d-flex justify-content-center">
-                <p v-if="message" class="mt-3 col-12" :class="getResponseAlert(statusCode)">{{ message }}</p>
-                <p v-if="finMsg" class="mt-3 col-12" :class="getResponseAlert(statusCode)">{{ finMsg }}</p>
+                <p v-if="reqMsg" class="mt-3 col-12" :class="getResponseAlert(statusCode)">{{ reqMsg }}</p>
             </div>
         </div>
         <br>
@@ -234,8 +281,9 @@ import { ref, watch, onMounted, computed } from 'vue';
 import { BButton, BModal } from 'bootstrap-vue-next';
 import { 
     changeDate, STATUS_DICT, getStatusColors, getToday, getMaxDate,
-    getActivityAlert, getResponseAlert, updateActivity, registerActivity, 
-    finalizeActivity,finalizeMultiActivities, getActivitiesByStatus } from './lib/index';
+    getResponseAlert, updateActivity, registerActivity, 
+    finalizeActivity,finalizeMultiActivities, getActivitiesByStatus, 
+    registerMultiActivities} from './lib/index';
 
 export default {
     components: {
@@ -251,9 +299,8 @@ export default {
         const statusCode = ref();
         const targetTime = ref(0.5);
         const actualTime = ref(0);
-        const message = ref("");
-        const checkMsg = ref("");
-        const finMsg = ref("");
+        const reqMsg = ref(""); // リクエスト結果を表示するためのメッセージ
+        const checkMsg = ref(""); // 活動の詳細を確認するためのメッセージ
         const activityRes = ref("");
         const isFormVisible = ref(false)
         const pendingActivities = ref([]);
@@ -268,11 +315,12 @@ export default {
                     { value: 'multi', label: '一括' }
                     ];
         const MultiActivities = ref();
-        const { increaseDay } = changeDate(date, message);
+        const { increaseDay } = changeDate(date, reqMsg);
         const { renewActivity } = updateActivity(date, checkMsg, activityRes);
-        const { registerTarget, registerActual } = registerActivity(date, statusCode, targetTime, actualTime, message, checkMsg, activityRes);
-        const { finishActivity } = finalizeActivity(date, finMsg, statusCode, checkMsg, activityRes);
-        const { finishMultiActivities } = finalizeMultiActivities(selectedActivities, finMsg, statusCode);
+        const { registerTarget, registerActual } = registerActivity(date, statusCode, targetTime, actualTime, reqMsg, checkMsg, activityRes);
+        const { registerMultiActual } = registerMultiActivities(date, statusCode, reqMsg, selectedActivities, checkMsg, activityRes);
+        const { finishActivity } = finalizeActivity(date, reqMsg, statusCode, checkMsg, activityRes);
+        const { finishMultiActivities } = finalizeMultiActivities(date, selectedActivities, reqMsg, statusCode, checkMsg, activityRes);
         const { getPendingActivities } = getActivitiesByStatus(pendingActivities, pendingMsg)
         const showModal = ref(false);
 
@@ -297,37 +345,50 @@ export default {
 
         const modalMessage = computed(() =>{
             if (showModal.value) {
-                switch(activeTab.value) {
-                    case 'target': return `${date.value}の目標時間を ${targetTime.value}時間に登録しますか？`;
-                    case 'actual': return `${date.value}の活動時間を ${actualTime.value}時間に登録しますか？`;
-                    case 'finish': return `${date.value}の活動を終了しますか？`;
+                switch(registertype.value){
+                    case 'single':
+                        switch(activeTab.value) {
+                            case 'target': return `${date.value}の目標時間を ${targetTime.value}時間に登録しますか？`;
+                            case 'actual': return `${date.value}の活動時間を ${actualTime.value}時間に登録しますか？`;
+                            case 'finish': return `${date.value}の活動を終了しますか？`;
+                        }
+                        break;
+                    case 'multi':
+                        switch(activeTab.value) {
+                            case 'target': return `選択した日の目標時間を登録しますか？`;
+                            case 'actual': return `選択した日の活動時間を登録しますか？`;
+                            case 'finish': return `選択した日の活動を終了しますか？`
+                        }
+                        break;
                 }
             }
             return ''
-        });
+        })
 
         const sendRequest = async() =>{
             if (showModal.value) {
                 if (registertype.value === 'single') {
                     switch(activeTab.value) {
                         case 'target':
-                        await registerTarget();
-                        await getPendingActivities();
-                        break;
-                    case 'actual':
-                        await registerActual();
-                        await getPendingActivities();
-                        break;
-                    case 'finish':
-                        await finishActivity();
-                        await getPendingActivities();
-                        break;
+                            await registerTarget();
+                            await getPendingActivities();
+                            break;
+                        case 'actual':
+                            await registerActual();
+                            await getPendingActivities();
+                            break;
+                        case 'finish':
+                            await finishActivity();
+                            await getPendingActivities();
+                            break;
                     }
                 } else if (registertype.value === 'multi') {
                     switch(activeTab.value) {
                         case 'target':
                             break;
                         case 'actual':
+                            await registerMultiActual();
+                            await getPendingActivities();
                             break;
                         case 'finish':
                             await finishMultiActivities();
@@ -340,18 +401,15 @@ export default {
 
         watch(date, () => {
             renewActivity();
-            message.value = "";
-            finMsg.value = "";
+            reqMsg.value = "";
         });
 
         watch(activeTab, () => {
-            message.value = "";
-            finMsg.value = "";
+            reqMsg.value = "";
         })
 
         watch(registertype, () => {
-            message.value = "";
-            finMsg.value = "";
+            reqMsg.value = "";
         })
 
         onMounted(() => {
@@ -370,9 +428,8 @@ export default {
             statusCode,
             targetTime,
             actualTime,
-            message,
+            reqMsg,
             checkMsg,
-            finMsg,
             activityRes,
             pendingActivities,
             getPendingActivities,
@@ -381,7 +438,6 @@ export default {
             STATUS_DICT,
             getMaxDate,
             getStatusColors,
-            getActivityAlert,
             getResponseAlert,
             renewActivity,
             registerTarget,
