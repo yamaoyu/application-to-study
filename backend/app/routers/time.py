@@ -182,16 +182,17 @@ def register_multi_target_time(activities: MultiTargetTimeIn,
         username = current_user["username"]
         target_time = activity["target_time"]
         date = activity["date"]
+        year = int(date.split("-")[0])
+        month = int(date.split("-")[1])
+        day = int(date.split("-")[2])
         try:
             # 目標時間の形式をチェック
             TargetTimeWithDate(target_time=target_time, date=date)
             # 日付の形式をチェック
-            CheckDate(year=int(date.split("-")[0]),
-                      month=int(date.split("-")[1]),
-                      day=int(date.split("-")[2]))
+            CheckDate(year=year, month=month, day=day)
 
             # 目標時間を登録する前に、その日の活動実績が存在するか確認
-            year_month = date.split("-")[0] + "-" + date.split("-")[1]
+            year_month = f"{year}-{month}"
             fetch_one_income(year_month, username, db)
 
             insert_data = db_model.Activity(

@@ -135,7 +135,67 @@
                 </form>
             </div>
             <div v-show="activeTab === 'target' && registertype === 'multi'">
-                target
+                <h5>日付を選択し、目標時間を入力してください</h5>
+                    <table class="table table-striped table-responsive">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="col-2">日付</th>
+                                <th class="col-2">目標時間</th>
+                                <th class="col-1"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(activity, index) in targetActivities" :key="index">
+                                <td>
+                                    <div class="input-group">
+                                        <input type="date" v-model="activity.date" class="form-control" />
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <input
+                                            type="number"
+                                            v-model="activity.target_time"
+                                            class="form-control text-center"
+                                            min="0.5"
+                                            max="12"
+                                            step="0.5"
+                                            placeholder="0.5"
+                                        />
+                                        <span class="input-group-text small">時間</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <button 
+                                        type="button" 
+                                        class="btn btn-outline-danger btn-sm"
+                                        @click="removeTargetActivity(index)"
+                                    >
+                                        削除
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="table-secondary">
+                                <td colspan="3" class="text-center">
+                                    <button 
+                                        type="button" 
+                                        class="btn btn-outline-primary"
+                                        @click="addTargetActivity"
+                                    >
+                                        + 行を追加
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button 
+                        type="button" 
+                        class="btn btn-outline-secondary mt-3"
+                        @click="confirmRegister"
+                        :disabled="targetActivities.length === 0"
+                    >
+                        まとめて登録
+                    </button>
             </div>
             <div v-show="activeTab === 'actual' && registertype === 'multi'">
                 <div v-if="Object.keys(pendingActivities).length > 0" class="mt-3">
@@ -295,6 +355,7 @@ export default {
         const activeTab = ref("target");
         const registertype = ref("single");
         const selectedActivities = ref([]);
+        const targetActivities = ref([{ date: '', target_time: 0.5 }]);
         const date = ref(getToday());
         const statusCode = ref();
         const targetTime = ref(0.5);
@@ -318,7 +379,7 @@ export default {
         const { increaseDay } = changeDate(date, reqMsg);
         const { renewActivity } = updateActivity(date, checkMsg, activityRes);
         const { registerTarget, registerActual } = registerActivity(date, statusCode, targetTime, actualTime, reqMsg, checkMsg, activityRes);
-        const { registerMultiActual } = registerMultiActivities(date, statusCode, reqMsg, selectedActivities, checkMsg, activityRes);
+        const { registerMultiTarget, registerMultiActual } = registerMultiActivities(date, statusCode, reqMsg, targetActivities, selectedActivities, checkMsg, activityRes);
         const { finishActivity } = finalizeActivity(date, reqMsg, statusCode, checkMsg, activityRes);
         const { finishMultiActivities } = finalizeMultiActivities(date, selectedActivities, reqMsg, statusCode, checkMsg, activityRes);
         const { getPendingActivities } = getActivitiesByStatus(pendingActivities, pendingMsg)
@@ -331,6 +392,19 @@ export default {
         const confirmRegister = async() =>{
             showModal.value = true
         }
+
+        const addTargetActivity = () => {
+            targetActivities.value.push({ date: '', target_time: 0.5 });
+        };
+
+        const removeTargetActivity = (index) => {
+            if (targetActivities.value.length > 1) {
+                targetActivities.value.splice(index, 1);
+            } else{
+                targetActivities.value[0].target_time = 0.5;
+                targetActivities.value[0].date = "";
+            }
+        };
 
         const modalTitle = computed(() =>{
             if (showModal.value) {
@@ -385,6 +459,8 @@ export default {
                 } else if (registertype.value === 'multi') {
                     switch(activeTab.value) {
                         case 'target':
+                            await registerMultiTarget();
+                            await getPendingActivities();
                             break;
                         case 'actual':
                             await registerMultiActual();
@@ -423,6 +499,7 @@ export default {
             tabs,
             types,
             selectedActivities,
+            targetActivities,
             MultiActivities,
             date,
             statusCode,
@@ -446,6 +523,8 @@ export default {
             finishMultiActivities,
             showModal,
             confirmRegister,
+            addTargetActivity,
+            removeTargetActivity,
             toggleFormVisibility,
             isFormVisible,
             modalTitle,

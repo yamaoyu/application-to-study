@@ -160,11 +160,58 @@ export function registerActivity(date, statusCode, targetTime, actualTime, reqMs
     }
 }
 
-export function registerMultiActivities(date, statusCode, reqMsg, selectedActivities, checkMsg, activityRes) {
+export function registerMultiActivities(date, statusCode, reqMsg, targetActivities, selectedActivities, checkMsg, activityRes) {
     const router = useRouter();
     const authStore = useAuthStore();
     const { renewActivity } = updateActivity(date, checkMsg, activityRes);
     const { handleError } = errorWithStatusCode(statusCode, reqMsg, router);
+
+    const submitMultiTarget = async() =>{
+        // 複数の目標時間を送信する処理
+        const url = process.env.VUE_APP_BACKEND_URL + 'activities/multi/target';
+        const response = await axios.post(url,
+                                        {activities: targetActivities.value},
+                                        {headers: {Authorization: authStore.getAuthHeader}})
+        statusCode.value = response.status
+        if (response.status===201){
+            reqMsg.value = response.data.message
+            }
+        // 選択された活動をリセット
+        targetActivities.value = [{"date": "", "target_time" : 0.5}]
+        }
+
+    const registerMultiTarget = async() =>{
+        // 登録ボタンクリック時に実行される関数
+        try {
+            await submitMultiTarget();
+            // 更新後の活動情報を取得
+            await renewActivity();
+        } catch (error) {
+            if (error.response?.status === 401) {
+                try {
+                // リフレッシュトークンを検証して新しいアクセストークンを取得
+                const tokenResponse = await verifyRefreshToken();
+                // 新しいアクセストークンをストアに保存
+                await authStore.setAuthData(
+                tokenResponse.data.access_token,
+                tokenResponse.data.token_type,
+                jwtDecode(tokenResponse.data.access_token).exp)
+                // 再度リクエストを送信
+                await submitMultiTarget();
+                } catch (refreshError) {
+                router.push({
+                    path: "/login",
+                    query: { message: "再度ログインしてください" }
+                });
+                }
+            }
+            else {
+                handleError(error)
+                // 選択された活動をリセット
+                targetActivities.value = [{"date": "", "target_time" : 0.5}]
+            }
+        }
+    }
 
     const submitMultiActivities = async() => {
         console.log("selectedActivities", selectedActivities.value)
@@ -207,10 +254,13 @@ export function registerMultiActivities(date, statusCode, reqMsg, selectedActivi
         }
         else {
             handleError(error)
+            // 選択された活動をリセット
+            selectedActivities.value = []
         }
         }
     }
     return {
+        registerMultiTarget,
         registerMultiActual
     }
 }
