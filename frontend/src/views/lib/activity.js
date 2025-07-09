@@ -214,8 +214,6 @@ export function registerMultiActivities(date, statusCode, reqMsg, targetActiviti
     }
 
     const submitMultiActivities = async() => {
-        console.log("selectedActivities", selectedActivities.value)
-
         // 複数の活動を登録する処理
         const url = process.env.VUE_APP_BACKEND_URL + 'activities/multi/actual';
         const response = await axios.put(url,
@@ -335,7 +333,6 @@ export function finalizeMultiActivities(date, selectedActivities, reqMsg, status
                                     {"dates":selectedActivities.value},
                                     {headers: {Authorization: authStore.getAuthHeader}}
                                 )
-                                console.log(response);
         if (response.status===200){
             statusCode.value = response.status;
             reqMsg.value = response.data.message;
@@ -350,7 +347,6 @@ export function finalizeMultiActivities(date, selectedActivities, reqMsg, status
             // 更新後の活動情報を取得
             await renewActivity();
         } catch (error) {
-            console.error("Error in finishMultiActivities:", error);
             if (error.response?.status === 401) {
                 // リフレッシュトークンを検証して新しいアクセストークンを取得
                 try {

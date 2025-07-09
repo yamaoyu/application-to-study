@@ -135,71 +135,89 @@
                 </form>
             </div>
             <div v-show="activeTab === 'target' && registertype === 'multi'">
-                <h5>日付を選択し、目標時間を入力してください</h5>
-                    <table class="table table-striped table-responsive">
-                        <thead class="table-dark">
-                            <tr>
-                                <th class="col-2">日付</th>
-                                <th class="col-2">目標時間</th>
-                                <th class="col-1"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="(activity, index) in targetActivities" :key="index">
-                                <td>
-                                    <div class="input-group">
-                                        <input type="date" v-model="activity.date" class="form-control" />
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="input-group">
-                                        <input
-                                            type="number"
-                                            v-model="activity.target_time"
-                                            class="form-control text-center"
-                                            min="0.5"
-                                            max="12"
-                                            step="0.5"
-                                            placeholder="0.5"
-                                        />
-                                        <span class="input-group-text small">時間</span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <button 
-                                        type="button" 
-                                        class="btn btn-outline-danger btn-sm"
-                                        @click="removeTargetActivity(index)"
-                                    >
-                                        削除
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr class="table-secondary">
-                                <td colspan="3" class="text-center">
-                                    <button 
-                                        type="button" 
-                                        class="btn btn-outline-primary"
-                                        @click="addTargetActivity"
-                                    >
-                                        + 行を追加
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <button 
-                        type="button" 
-                        class="btn btn-outline-secondary mt-3"
-                        @click="confirmRegister"
-                        :disabled="targetActivities.length === 0"
-                    >
-                        まとめて登録
-                    </button>
+                <BCard class="border-0 shadow-sm mt-3" bg-variant="light">
+                    <div class="text-center">
+                        <h5 class="card-title text-primary fw-bold mb-2">
+                            <i class="bi bi-target me-2"></i>目標時間の設定
+                        </h5>
+                        <BCardText class="text-muted small mb-0">
+                            日付を選択し、目標時間を入力してください
+                        </BCardText>
+                    </div>
+                </BCard>
+                <table class="table table-striped table-responsive">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="col-2">日付</th>
+                            <th class="col-2">目標時間</th>
+                            <th class="col-1"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(activity, index) in targetActivities" :key="index">
+                            <td>
+                                <div class="input-group">
+                                    <input type="date" v-model="activity.date" class="form-control" />
+                                </div>
+                            </td>
+                            <td>
+                                <div class="input-group">
+                                    <input
+                                        type="number"
+                                        v-model="activity.target_time"
+                                        class="form-control text-center"
+                                        min="0.5"
+                                        max="12"
+                                        step="0.5"
+                                        placeholder="0.5"
+                                    />
+                                    <span class="input-group-text small">時間</span>
+                                </div>
+                            </td>
+                            <td>
+                                <button 
+                                    type="button" 
+                                    class="btn btn-outline-danger btn-sm"
+                                    @click="removeTargetActivity(index)"
+                                >
+                                    削除
+                                </button>
+                            </td>
+                        </tr>
+                        <tr class="table-secondary">
+                            <td colspan="3" class="text-center">
+                                <button 
+                                    type="button" 
+                                    class="btn btn-outline-primary"
+                                    @click="addTargetActivity"
+                                >
+                                    + 行を追加
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button 
+                    type="button" 
+                    class="btn btn-outline-secondary mt-3"
+                    @click="confirmRegister"
+                    :disabled="!isValidActivities"
+                >
+                    まとめて登録
+                </button>
             </div>
             <div v-show="activeTab === 'actual' && registertype === 'multi'">
                 <div v-if="Object.keys(pendingActivities).length > 0" class="mt-3">
-                    <h5>日付を選択し、活動時間を入力してください</h5>
+                    <BCard class="border-0 shadow-sm mt-3" bg-variant="light">
+                        <div class="text-center">
+                            <h5 class="card-title text-primary fw-bold mb-2">
+                                <i class="bi bi-target me-2"></i>活動時間の設定
+                            </h5>
+                            <BCardText class="text-muted small mb-0">
+                                日付を選択し、活動時間を入力してください
+                            </BCardText>
+                        </div>
+                    </BCard>
                     <table class="table table-striped table-responsive">
                         <thead class="table-dark">
                             <tr>
@@ -210,7 +228,12 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(activity, index) in pendingActivities" :key="index">
+                            <tr v-for="(activity, index) in pendingActivities" 
+                                :key="index" 
+                                @click="toggleActivity(activity)"
+                                :class="{ 'table-active': isSelected(activity) }"
+                                style="cursor: pointer;"
+                            >
                                 <td>
                                     <input 
                                         class="form-check-input" 
@@ -250,7 +273,16 @@
             </div>
             <div v-show="activeTab === 'finish' && registertype === 'multi'">
                 <div v-if="Object.keys(pendingActivities).length > 0" class="mt-3">
-                    <h5>終了する日付を選択してください</h5>
+                    <BCard class="border-0 shadow-sm mt-3" bg-variant="light">
+                        <div class="text-center">
+                            <h5 class="card-title text-primary fw-bold mb-2">
+                                <i class="bi bi-target me-2"></i>活動の終了
+                            </h5>
+                            <BCardText class="text-muted small mb-0">
+                                活動を終了する日を選択してください
+                            </BCardText>
+                        </div>
+                    </BCard>
                     <table class="table table-striped table-responsive">
                         <thead class="table-dark">
                             <tr>
@@ -261,7 +293,12 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(activity, index) in pendingActivities" :key="index">
+                            <tr v-for="(activity, index) in pendingActivities" 
+                                :key="index" 
+                                @click="toggleActivity(activity)"
+                                :class="{ 'table-active': isSelected(activity) }"
+                                style="cursor: pointer;"
+                            >
                                 <td>
                                     <input 
                                         class="form-check-input" 
@@ -338,7 +375,7 @@
 
 <script>
 import { ref, watch, onMounted, computed } from 'vue';
-import { BButton, BModal } from 'bootstrap-vue-next';
+import { BButton, BModal, BCard, BCardText } from 'bootstrap-vue-next';
 import { 
     changeDate, STATUS_DICT, getStatusColors, getToday, getMaxDate,
     getResponseAlert, updateActivity, registerActivity, 
@@ -348,7 +385,9 @@ import {
 export default {
     components: {
         BButton,
-        BModal
+        BModal,
+        BCard,
+        BCardText
     },
 
     setup() {
@@ -389,6 +428,18 @@ export default {
             isFormVisible.value = !isFormVisible.value
         }
 
+        const toggleActivity = (activity) => {
+            if (isSelected(activity)) {
+                selectedActivities.value.splice(selectedActivities.value.indexOf(activity), 1);
+            } else {
+                selectedActivities.value.push(activity)
+            }
+        }
+
+        const isSelected = (activity) => {
+            return selectedActivities.value.includes(activity);
+        };
+
         const confirmRegister = async() =>{
             showModal.value = true
         }
@@ -400,11 +451,20 @@ export default {
         const removeTargetActivity = (index) => {
             if (targetActivities.value.length > 1) {
                 targetActivities.value.splice(index, 1);
-            } else{
+            } else {
                 targetActivities.value[0].target_time = 0.5;
                 targetActivities.value[0].date = "";
             }
         };
+
+        const isValidActivities = computed(() => {
+            // 目標時間送信用の変数(targetActivities)で日付と目標時間が入力されているか確認
+            if (targetActivities.value.some(activity => !activity.date || !activity.target_time)) {
+                return false
+            } else {
+                return true
+            }
+        });
 
         const modalTitle = computed(() =>{
             if (showModal.value) {
@@ -429,7 +489,7 @@ export default {
                         break;
                     case 'multi':
                         switch(activeTab.value) {
-                            case 'target': return `選択した日の目標時間を登録しますか？`;
+                            case 'target': return `入力した日の目標時間を登録しますか？`;
                             case 'actual': return `選択した日の活動時間を登録しますか？`;
                             case 'finish': return `選択した日の活動を終了しますか？`
                         }
@@ -524,7 +584,10 @@ export default {
             showModal,
             confirmRegister,
             addTargetActivity,
+            isValidActivities,
+            isSelected,
             removeTargetActivity,
+            toggleActivity,
             toggleFormVisibility,
             isFormVisible,
             modalTitle,
