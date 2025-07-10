@@ -222,6 +222,7 @@ export function registerMultiActivities(date, statusCode, reqMsg, targetActiviti
         statusCode.value = response.status
         if (response.status===200){
             reqMsg.value = response.data.message
+            selectedActivities.value = []
             }
         }
     
@@ -330,7 +331,7 @@ export function finalizeMultiActivities(date, selectedActivities, reqMsg, status
         // 選択された活動を終了するリクエストを送信する関数
         const url = process.env.VUE_APP_BACKEND_URL + 'activities/multi/finish';
         const response = await axios.put(url,
-                                    {"dates":selectedActivities.value},
+                                    {"dates": selectedActivities.value},
                                     {headers: {Authorization: authStore.getAuthHeader}}
                                 )
         if (response.status===200){

@@ -295,8 +295,8 @@
                         <tbody>
                             <tr v-for="(activity, index) in pendingActivities" 
                                 :key="index" 
-                                @click="toggleActivity(activity)"
-                                :class="{ 'table-active': isSelected(activity) }"
+                                @click="toggleActivity(activity.date)"
+                                :class="{ 'table-active': isSelected(activity.date) }"
                                 style="cursor: pointer;"
                             >
                                 <td>
@@ -542,6 +542,7 @@ export default {
 
         watch(activeTab, () => {
             reqMsg.value = "";
+            selectedActivities.value = [];
         })
 
         watch(registertype, () => {
