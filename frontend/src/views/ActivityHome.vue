@@ -378,9 +378,9 @@ import { ref, watch, onMounted, computed } from 'vue';
 import { BButton, BModal, BCard, BCardText } from 'bootstrap-vue-next';
 import { 
     changeDate, STATUS_DICT, getStatusColors, getToday, getMaxDate,
-    getResponseAlert, updateActivity, registerActivity, 
+    getResponseAlert, updateActivity, registerTarget, registerActual, 
     finalizeActivity,finalizeMultiActivities, getActivitiesByStatus, 
-    registerMultiActivities} from './lib/index';
+    registerMultiTarget, registerMultiActual} from './lib/index';
 
 export default {
     components: {
@@ -417,8 +417,10 @@ export default {
         const MultiActivities = ref();
         const { increaseDay } = changeDate(date, reqMsg);
         const { renewActivity } = updateActivity(date, checkMsg, activityRes);
-        const { registerTarget, registerActual } = registerActivity(date, statusCode, targetTime, actualTime, reqMsg, checkMsg, activityRes);
-        const { registerMultiTarget, registerMultiActual } = registerMultiActivities(date, statusCode, reqMsg, targetActivities, selectedActivities, checkMsg, activityRes);
+        const { register: submitTarget } = registerTarget(date, statusCode, targetTime, reqMsg, checkMsg, activityRes);
+        const { register: submitActual } = registerActual(date, statusCode, actualTime, reqMsg, checkMsg, activityRes);
+        const { register: submitMultiTarget } = registerMultiTarget(date, statusCode, reqMsg, targetActivities, checkMsg, activityRes);
+        const { register: submitMultiActual } = registerMultiActual(date, statusCode, reqMsg, selectedActivities, checkMsg, activityRes);
         const { finishActivity } = finalizeActivity(date, reqMsg, statusCode, checkMsg, activityRes);
         const { finishMultiActivities } = finalizeMultiActivities(date, selectedActivities, reqMsg, statusCode, checkMsg, activityRes);
         const { getPendingActivities } = getActivitiesByStatus(pendingActivities, pendingMsg)
@@ -504,11 +506,11 @@ export default {
                 if (registertype.value === 'single') {
                     switch(activeTab.value) {
                         case 'target':
-                            await registerTarget();
+                            await submitTarget();
                             await getPendingActivities();
                             break;
                         case 'actual':
-                            await registerActual();
+                            await submitActual();
                             await getPendingActivities();
                             break;
                         case 'finish':
@@ -519,11 +521,11 @@ export default {
                 } else if (registertype.value === 'multi') {
                     switch(activeTab.value) {
                         case 'target':
-                            await registerMultiTarget();
+                            await submitMultiTarget();
                             await getPendingActivities();
                             break;
                         case 'actual':
-                            await registerMultiActual();
+                            await submitMultiActual();
                             await getPendingActivities();
                             break;
                         case 'finish':
@@ -578,10 +580,6 @@ export default {
             getStatusColors,
             getResponseAlert,
             renewActivity,
-            registerTarget,
-            registerActual,
-            finishActivity,
-            finishMultiActivities,
             showModal,
             confirmRegister,
             addTargetActivity,

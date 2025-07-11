@@ -54,215 +54,263 @@ export function updateActivity(date, checkMsg, activityRes) {
     }
 }
 
-export function registerActivity(date, statusCode, targetTime, actualTime, reqMsg, checkMsg, activityRes) {
-    const router = useRouter();
-    const authStore = useAuthStore();
-    const { renewActivity } = updateActivity(date, checkMsg, activityRes);
-    const { handleError } = errorWithStatusCode(statusCode, reqMsg, router);
+function registerActivity(config) {
+    return function(date, statusCode, time, reqMsg, checkMsg, activityRes) {
+        const router = useRouter();
+        const authStore = useAuthStore();
+        const { renewActivity } = updateActivity(date, checkMsg, activityRes);
+        const { handleError } = errorWithStatusCode(statusCode, reqMsg, router);
 
-    const submitTarget = async() =>{
-        // 目標時間を送信する処理
-        const dateParts = date.value.split('-');
-        const year = dateParts[0];
-        // 月と日が一桁の場合、表記を変更 例)09→9
-        const month = parseInt(dateParts[1], 10);
-        const day = parseInt(dateParts[2], 10);
-        const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month + '/' + day + '/target';
-        const response = await axios.post(url, 
-                                        {target_time: Number(targetTime.value)},
-                                        {headers: {Authorization: authStore.getAuthHeader}})
-        statusCode.value = response.status
-        if (response.status===201){
-            reqMsg.value = response.data.message
+        const submitActivity = async() => {
+            const dateParts = date.value.split('-');
+            const year = dateParts[0];
+            const month = parseInt(dateParts[1], 10);
+            const day = parseInt(dateParts[2], 10);
+            const url = `${process.env.VUE_APP_BACKEND_URL}activities/${year}/${month}/${day}/${config.endpoint}`;
+            
+            const response = await axios[config.method](url, 
+                {[config.valueKey]: Number(time.value)},
+                {headers: {Authorization: authStore.getAuthHeader}})
+            
+            statusCode.value = response.status;
+            if (response.status === config.expectedStatus) {
+                reqMsg.value = response.data.message;
             }
         }
-    
-    const registerTarget = async() =>{
-        // 登録ボタンクリック時に実行される関数
-        try {
-            await submitTarget();
-            // 更新後の活動情報を取得
-            await renewActivity();
-        } catch (error) {
-        if (error.response?.status === 401) {
+
+        const register = async() => {
             try {
-            // リフレッシュトークンを検証して新しいアクセストークンを取得
-            const tokenResponse = await verifyRefreshToken();
-            // 新しいアクセストークンをストアに保存
-            await authStore.setAuthData(
-            tokenResponse.data.access_token,
-            tokenResponse.data.token_type,
-            jwtDecode(tokenResponse.data.access_token).exp)
-            // 再度リクエストを送信
-            await submitTarget();
-            } catch (refreshError) {
-            router.push({
-                path: "/login",
-                query: { message: "再度ログインしてください" }
-            });
-            }            
-        } else {
-            handleError(error)
-        }
-        }
-    }
-
-    const submitActual = async() =>{
-        // 目標時間を登録する処理
-        const dateParts = date.value.split('-');
-        const year = dateParts[0];
-        // 月と日が一桁の場合、表記を変更 例)09→9
-        const month = parseInt(dateParts[1], 10);
-        const day = parseInt(dateParts[2], 10);
-        const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month + '/' + day +  '/actual';
-        const response = await axios.put(url, 
-                                        {actual_time: Number(actualTime.value)},
-                                        {headers: {Authorization: authStore.getAuthHeader}})
-        statusCode.value = response.status
-        if (response.status===200){
-            reqMsg.value = response.data.message
-            }
-        }
-    
-    const registerActual = async() =>{
-        // 登録ボタンクリック時に実行される関数
-        try {
-            await submitActual();
-            // 更新後の活動情報を取得
-            await renewActivity();
-        } catch (error) {
-        if (error.response?.status === 401) {
-            try {
-            // リフレッシュトークンを検証して新しいアクセストークンを取得
-            const tokenResponse = await verifyRefreshToken();
-            // 新しいアクセストークンをストアに保存
-            await authStore.setAuthData(
-            tokenResponse.data.access_token,
-            tokenResponse.data.token_type,
-            jwtDecode(tokenResponse.data.access_token).exp)
-            // 再度リクエストを送信
-            await submitActual();
-            } catch (refreshError) {
-            router.push({
-                path: "/login",
-                query: { message: "再度ログインしてください" }
-            });
-            }            
-        } else {
-            handleError(error)
-        }
-        }
-    }
-
-    return {
-        registerTarget,
-        registerActual,
-    }
-}
-
-export function registerMultiActivities(date, statusCode, reqMsg, targetActivities, selectedActivities, checkMsg, activityRes) {
-    const router = useRouter();
-    const authStore = useAuthStore();
-    const { renewActivity } = updateActivity(date, checkMsg, activityRes);
-    const { handleError } = errorWithStatusCode(statusCode, reqMsg, router);
-
-    const submitMultiTarget = async() =>{
-        // 複数の目標時間を送信する処理
-        const url = process.env.VUE_APP_BACKEND_URL + 'activities/multi/target';
-        const response = await axios.post(url,
-                                        {activities: targetActivities.value},
-                                        {headers: {Authorization: authStore.getAuthHeader}})
-        statusCode.value = response.status
-        if (response.status===201){
-            reqMsg.value = response.data.message
-            }
-        // 選択された活動をリセット
-        targetActivities.value = [{"date": "", "target_time" : 0.5}]
-        }
-
-    const registerMultiTarget = async() =>{
-        // 登録ボタンクリック時に実行される関数
-        try {
-            await submitMultiTarget();
-            // 更新後の活動情報を取得
-            await renewActivity();
-        } catch (error) {
-            if (error.response?.status === 401) {
-                try {
-                // リフレッシュトークンを検証して新しいアクセストークンを取得
-                const tokenResponse = await verifyRefreshToken();
-                // 新しいアクセストークンをストアに保存
-                await authStore.setAuthData(
-                tokenResponse.data.access_token,
-                tokenResponse.data.token_type,
-                jwtDecode(tokenResponse.data.access_token).exp)
-                // 再度リクエストを送信
-                await submitMultiTarget();
-                } catch (refreshError) {
-                router.push({
-                    path: "/login",
-                    query: { message: "再度ログインしてください" }
-                });
+                await submitActivity();
+                await renewActivity();
+            } catch (error) {
+                if (error.response?.status === 401) {
+                    try {
+                        // リフレッシュトークンを検証して新しいアクセストークンを取得
+                        const tokenResponse = await verifyRefreshToken();
+                        // 新しいアクセストークンをストアに保存
+                        await authStore.setAuthData(
+                        tokenResponse.data.access_token,
+                        tokenResponse.data.token_type,
+                        jwtDecode(tokenResponse.data.access_token).exp)
+                        // 再度リクエストを送信
+                        await submitActivity();
+                    } catch (refreshError) {
+                        router.push({
+                            path: "/login",
+                            query: { message: "再度ログインしてください" }
+                        });
+                    }            
+                } else {
+                    handleError(error)
                 }
             }
-            else {
-                handleError(error)
-                // 選択された活動をリセット
-                targetActivities.value = [{"date": "", "target_time" : 0.5}]
-            }
         }
-    }
 
-    const submitMultiActivities = async() => {
-        // 複数の活動を登録する処理
-        const url = process.env.VUE_APP_BACKEND_URL + 'activities/multi/actual';
-        const response = await axios.put(url,
-                                        {activities: selectedActivities.value},
-                                        {headers: {Authorization: authStore.getAuthHeader}})
-        statusCode.value = response.status
-        if (response.status===200){
-            reqMsg.value = response.data.message
-            selectedActivities.value = []
-            }
-        }
-    
-    const registerMultiActual = async() =>{
-        // 登録ボタンクリック時に実行される関数
-        try {
-            await submitMultiActivities();
-            // 更新後の活動情報を取得
-            await renewActivity();
-        } catch (error) {
-        if (error.response?.status === 401) {
-            try {
-            // リフレッシュトークンを検証して新しいアクセストークンを取得
-            const tokenResponse = await verifyRefreshToken();
-            // 新しいアクセストークンをストアに保存
-            await authStore.setAuthData(
-            tokenResponse.data.access_token,
-            tokenResponse.data.token_type,
-            jwtDecode(tokenResponse.data.access_token).exp)
-            // 再度リクエストを送信
-            await submitMultiActivities();
-            } catch (refreshError) {
-            router.push({
-                path: "/login",
-                query: { message: "再度ログインしてください" }
-            });
-            }
-        }
-        else {
-            handleError(error)
-            // 選択された活動をリセット
-            selectedActivities.value = []
-        }
-        }
-    }
-    return {
-        registerMultiTarget,
-        registerMultiActual
+        return { register };
     }
 }
+
+export const registerTarget = registerActivity({
+    endpoint: 'target',
+    method: 'post',
+    valueKey: 'target_time',
+    expectedStatus: 201
+});
+
+export const registerActual = registerActivity({
+    endpoint: 'actual',
+    method: 'put',
+    valueKey: 'actual_time',
+    expectedStatus: 200
+});
+
+
+// export function registerMultiActivities(date, statusCode, reqMsg, targetActivities, selectedActivities, checkMsg, activityRes) {
+//     const router = useRouter();
+//     const authStore = useAuthStore();
+//     const { renewActivity } = updateActivity(date, checkMsg, activityRes);
+//     const { handleError } = errorWithStatusCode(statusCode, reqMsg, router);
+
+//     const submitMultiTarget = async() =>{
+//         // 複数の目標時間を送信する処理
+//         const url = process.env.VUE_APP_BACKEND_URL + 'activities/multi/target';
+//         const response = await axios.post(url,
+//                                         {activities: targetActivities.value},
+//                                         {headers: {Authorization: authStore.getAuthHeader}})
+//         statusCode.value = response.status
+//         if (response.status===201){
+//             reqMsg.value = response.data.message
+//             }
+//         // 選択された活動をリセット
+//         targetActivities.value = [{"date": "", "target_time" : 0.5}]
+//         }
+
+//     const registerMultiTarget = async() =>{
+//         // 登録ボタンクリック時に実行される関数
+//         try {
+//             await submitMultiTarget();
+//             // 更新後の活動情報を取得
+//             await renewActivity();
+//         } catch (error) {
+//             if (error.response?.status === 401) {
+//                 try {
+//                 // リフレッシュトークンを検証して新しいアクセストークンを取得
+//                 const tokenResponse = await verifyRefreshToken();
+//                 // 新しいアクセストークンをストアに保存
+//                 await authStore.setAuthData(
+//                 tokenResponse.data.access_token,
+//                 tokenResponse.data.token_type,
+//                 jwtDecode(tokenResponse.data.access_token).exp)
+//                 // 再度リクエストを送信
+//                 await submitMultiTarget();
+//                 } catch (refreshError) {
+//                 router.push({
+//                     path: "/login",
+//                     query: { message: "再度ログインしてください" }
+//                 });
+//                 }
+//             }
+//             else {
+//                 handleError(error)
+//                 // 選択された活動をリセット
+//                 targetActivities.value = [{"date": "", "target_time" : 0.5}]
+//             }
+//         }
+//     }
+
+//     const submitMultiActivities = async() => {
+//         // 複数の活動を登録する処理
+//         const url = process.env.VUE_APP_BACKEND_URL + 'activities/multi/actual';
+//         const response = await axios.put(url,
+//                                         {activities: selectedActivities.value},
+//                                         {headers: {Authorization: authStore.getAuthHeader}})
+//         statusCode.value = response.status
+//         if (response.status===200){
+//             reqMsg.value = response.data.message
+//             selectedActivities.value = []
+//             }
+//         }
+    
+//     const registerMultiActual = async() =>{
+//         // 登録ボタンクリック時に実行される関数
+//         try {
+//             await submitMultiActivities();
+//             // 更新後の活動情報を取得
+//             await renewActivity();
+//         } catch (error) {
+//         if (error.response?.status === 401) {
+//             try {
+//                 // リフレッシュトークンを検証して新しいアクセストークンを取得
+//                 const tokenResponse = await verifyRefreshToken();
+//                 // 新しいアクセストークンをストアに保存
+//                 await authStore.setAuthData(
+//                 tokenResponse.data.access_token,
+//                 tokenResponse.data.token_type,
+//                 jwtDecode(tokenResponse.data.access_token).exp)
+//                 // 再度リクエストを送信
+//                 await submitMultiActivities();
+//             } catch (error) {
+//                 router.push({
+//                     path: "/login",
+//                     query: { message: "再度ログインしてください" }
+//                 });
+//             }
+//         }
+//         else {
+//             handleError(error)
+//             // 選択された活動をリセット
+//             selectedActivities.value = []
+//         }
+//         }
+//     }
+//     return {
+//         registerMultiTarget,
+//         registerMultiActual
+//     }
+// }
+
+function registerMultiActivities(config){
+    return function(date, statusCode, reqMsg, activities, checkMsg, activityRes) {
+        const router = useRouter();
+        const authStore = useAuthStore();
+        const { renewActivity } = updateActivity(date, checkMsg, activityRes);
+        const { handleError } = errorWithStatusCode(statusCode, reqMsg, router);
+
+        const submitMultiActivities = async() => {
+            // 複数の活動を登録する処理
+            const url = process.env.VUE_APP_BACKEND_URL + "activities/multi/" + config.endpoint;
+            const response = await axios[config.method](url,
+                                            {activities: activities.value},
+                                            {headers: {Authorization: authStore.getAuthHeader}})
+            statusCode.value = response.status
+            if (response.status===config.expectedStatus){
+                reqMsg.value = response.data.message
+                }
+        }
+
+        const register = async() =>{
+            //
+            try {
+                await submitMultiActivities();
+                // 更新後の活動情報を取得
+                await renewActivity();
+            } catch (error) {
+            if (error.response?.status === 401) {
+                try {
+                    // リフレッシュトークンを検証して新しいアクセストークンを取得
+                    const tokenResponse = await verifyRefreshToken();
+                    // 新しいアクセストークンをストアに保存
+                    await authStore.setAuthData(
+                    tokenResponse.data.access_token,
+                    tokenResponse.data.token_type,
+                    jwtDecode(tokenResponse.data.access_token).exp)
+                    // 再度リクエストを送信
+                    await submitMultiActivities();
+                } catch (error) {
+                    if (error.response?.status === 401) {
+                        try {
+                            // リフレッシュトークンを検証して新しいアクセストークンを取得
+                            const tokenResponse = await verifyRefreshToken();
+                            // 新しいアクセストークンをストアに保存
+                            await authStore.setAuthData(
+                            tokenResponse.data.access_token,
+                            tokenResponse.data.token_type,
+                            jwtDecode(tokenResponse.data.access_token).exp)
+                            // 再度リクエストを送信
+                            await submitMultiActivities();
+                        } catch (refreshError) {
+                            router.push({
+                                path: "/login",
+                                query: { message: "再度ログインしてください" }
+                            });
+                        }   
+                    }
+                }
+            } else {
+                handleError(error)
+                // 選択された活動をリセット
+                activities.value = []
+                }
+            }
+        }
+
+        return {
+            register
+        }
+    }
+}
+
+export const registerMultiTarget = registerMultiActivities({
+    endpoint: 'target',
+    method: 'post',
+    expectedStatus: 201
+});
+
+export const registerMultiActual = registerMultiActivities({
+    endpoint: 'actual',
+    method: 'put',
+    expectedStatus: 200
+});
 
 export function finalizeActivity(date, reqMsg, statusCode, checkMsg, activityRes) {
     const router = useRouter();
