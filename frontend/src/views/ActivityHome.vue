@@ -229,12 +229,11 @@
                         </thead>
                         <tbody>
                             <tr v-for="(activity, index) in pendingActivities" 
-                                :key="index" 
-                                @click="toggleActivity(activity)"
+                                :key="index"
                                 :class="{ 'table-active': isSelected(activity) }"
                                 style="cursor: pointer;"
                             >
-                                <td>
+                                <td @click="toggleActivity(activity)">
                                     <input 
                                         class="form-check-input" 
                                         type="checkbox"
@@ -242,8 +241,8 @@
                                         v-model="selectedActivities"
                                     >
                                 </td>
-                                <td>{{ activity.date }}</td>
-                                <td>{{ activity.target_time }}時間</td>
+                                <td @click="toggleActivity(activity)">{{ activity.date }}</td>
+                                <td @click="toggleActivity(activity)">{{ activity.target_time }}時間</td>
                                 <td>
                                 <div class="input-group">
                                     <input
