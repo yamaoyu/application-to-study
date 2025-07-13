@@ -101,6 +101,7 @@
                                 min="0.5"
                                 max="12"
                                 step="0.5"
+                                @input="validateTime($event, targetTime)"
                                 />
                             <span class="input-group-text small">時間(Hour)</span>
                         </div>
@@ -120,6 +121,7 @@
                                 min="0.0"
                                 max="12"
                                 step="0.5"
+                                @input="validateTime($event, actualTime)"
                                 />
                             <span class="input-group-text small">時間(Hour)</span>
                         </div>
@@ -157,7 +159,13 @@
                         <tr v-for="(activity, index) in targetActivities" :key="index">
                             <td>
                                 <div class="input-group">
-                                    <input type="date" v-model="activity.date" class="form-control" />
+                                    <input 
+                                        type="date" 
+                                        v-model="activity.date" 
+                                        class="form-control" 
+                                        min="2024-01-01"
+                                        :max="getMaxDate()"
+                                    />
                                 </div>
                             </td>
                             <td>
@@ -169,7 +177,7 @@
                                         min="0.5"
                                         max="12"
                                         step="0.5"
-                                        placeholder="0.5"
+                                        @input="validateTime($event, activity.target_time)"
                                     />
                                     <span class="input-group-text small">時間</span>
                                 </div>
@@ -252,7 +260,7 @@
                                         min="0.0"
                                         max="12"
                                         step="0.5"
-                                        placeholder="0.0"
+                                        @input="validateTime($event, activity.actual_time)"
                                     />
                                     <span class="input-group-text small">時間</span>
                                 </div>
@@ -264,11 +272,12 @@
                         type="button" 
                         class="btn btn-outline-secondary mt-3"
                         @click="confirmRegister"
-                        :disabled="selectedActivities.length === 0"
+                        :disabled="selectedActivities.length === 0 || !isValidActivities"
                     >
                         まとめて登録
                     </button>
                 </div>
+                <div v-else class="mt-3 alert alert-warning">登録対象の活動がありません</div>
             </div>
             <div v-show="activeTab === 'finish' && registertype === 'multi'">
                 <div v-if="Object.keys(pendingActivities).length > 0" class="mt-3">
@@ -321,9 +330,7 @@
                         まとめて終了
                     </button>
                 </div>
-                <div v-else class="mt-3">
-                    <p class="text-muted">確定可能な活動がありません</p>
-                </div>
+                <div v-else class="mt-3 alert alert-warning">確定可能な活動がありません</div>
             </div>
             <div class="container d-flex justify-content-center">
                 <p v-if="reqMsg" class="mt-3 col-12" :class="getResponseAlert(statusCode)">{{ reqMsg }}</p>
@@ -458,6 +465,26 @@ export default {
             }
         };
 
+
+        const validateTime = (event, time) =>{
+            if (activeTab.value == "target" && time < 0.5) {
+                // 時間が0.5時間未満の場合のエラーメッセージ
+                event.target.setCustomValidity("時間は0.5時間以上入力してください");
+                event.target.reportValidity();
+
+            } else if (typeof(time) != 'number') {
+                // 時間が入力されていない場合のエラーメッセージ
+                event.target.setCustomValidity("時間を入力してください");
+                event.target.reportValidity();
+            } else if (time * 2 % 1 != 0){
+                // 時間が0.5時間単位でない場合のエラーメッセージ
+                event.target.setCustomValidity("時間は0.5時間単位で入力してください");
+                event.target.reportValidity();
+            } else {
+                event.target.setCustomValidity("");
+            }
+        };
+
         const isValidActivities = computed(() => {
             // 目標時間送信用の変数(targetActivities)で日付と目標時間が入力されているか確認
             if (targetActivities.value.some(activity => !activity.date || !activity.target_time)) {
@@ -571,20 +598,19 @@ export default {
             checkMsg,
             activityRes,
             pendingActivities,
-            getPendingActivities,
             pendingMsg,
             increaseDay,
             STATUS_DICT,
             getMaxDate,
             getStatusColors,
             getResponseAlert,
-            renewActivity,
             showModal,
             confirmRegister,
             addTargetActivity,
             isValidActivities,
             isSelected,
             removeTargetActivity,
+            validateTime,
             toggleActivity,
             toggleFormVisibility,
             isFormVisible,
