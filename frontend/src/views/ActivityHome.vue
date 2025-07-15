@@ -215,7 +215,7 @@
                 </button>
             </div>
             <div v-show="activeTab === 'actual' && registertype === 'multi'">
-                <div v-if="Object.keys(pendingActivities).length > 0" class="mt-3">
+                <div v-if="Object.keys(editActivities).length > 0" class="mt-3">
                     <BCard class="border-0 shadow-sm mt-3" bg-variant="light">
                         <div class="text-center">
                             <h5 class="card-title text-primary fw-bold mb-2">
@@ -236,10 +236,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(activity, index) in pendingActivities" 
+                            <tr v-for="(activity, index) in editActivities" 
                                 :key="index"
                                 :class="{ 'table-active': isSelected(activity) }"
-                                style="cursor: pointer;"
                             >
                                 <td @click="toggleActivity(activity)">
                                     <input 
@@ -272,7 +271,7 @@
                         type="button" 
                         class="btn btn-outline-secondary mt-3"
                         @click="confirmRegister"
-                        :disabled="selectedActivities.length === 0 || !isValidActivities"
+                        :disabled="selectedActivities.length === 0"
                     >
                         まとめて登録
                     </button>
@@ -305,7 +304,6 @@
                                 :key="index" 
                                 @click="toggleActivity(activity.date)"
                                 :class="{ 'table-active': isSelected(activity.date) }"
-                                style="cursor: pointer;"
                             >
                                 <td>
                                     <input 
@@ -409,7 +407,8 @@ export default {
         const checkMsg = ref(""); // 活動の詳細を確認するためのメッセージ
         const activityRes = ref("");
         const isFormVisible = ref(false)
-        const pendingActivities = ref([]);
+        const pendingActivities = ref([]); // 未完了のアクティビティを表示する用
+        const editActivities = ref([]); //未完了のアクティビティを編集するときに使用(pendingActivitiesに影響を及ぼさないため)
         const pendingMsg = ref("")
         const tabs = [
                     { value: 'target', label: '目標時間' },
@@ -577,6 +576,15 @@ export default {
             reqMsg.value = "";
         })
 
+        watch(pendingActivities, () => {
+            editActivities.value = pendingActivities.value.map(activity =>({
+                ...activity})
+            )}, { 
+                immediate: true,  // 初回実行
+            }
+        );
+        
+
         onMounted(() => {
             renewActivity();
             getPendingActivities();
@@ -598,6 +606,7 @@ export default {
             checkMsg,
             activityRes,
             pendingActivities,
+            editActivities,
             pendingMsg,
             increaseDay,
             STATUS_DICT,
