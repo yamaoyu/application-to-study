@@ -25,7 +25,7 @@ export const getActivityAlert = (status) => {
     } else if (status === 'failure') {
         return 'alert alert-danger';
     } else {
-        // 登録はあるがステータスが未確定の場合
+        // 登録はあるがステータスが未確定(pending)の場合
         return 'alert alert-warning';
     }
 }

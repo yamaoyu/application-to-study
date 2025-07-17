@@ -330,8 +330,9 @@
                 </div>
                 <div v-else class="mt-3 alert alert-warning">確定可能な活動がありません</div>
             </div>
-            <div class="container d-flex justify-content-center">
-                <p v-if="reqMsg" class="mt-3 col-12" :class="getResponseAlert(statusCode)">{{ reqMsg }}</p>
+            <div class="container d-flex justify-content-center" v-if="reqMsg">
+                <p v-if="activeTab==='finish'&&registertype==='single'" class="mt-3 col-12" :class="getActivityAlert(activityStatus)">{{ reqMsg }}</p>
+                <p v-else class="mt-3 col-12" :class="getResponseAlert(statusCode)">{{ reqMsg }}</p>
             </div>
         </div>
         <br>
@@ -384,7 +385,7 @@ import {
     changeDate, STATUS_DICT, getStatusColors, getToday, getMaxDate,
     getResponseAlert, updateActivity, registerTarget, registerActual, 
     finalizeActivity,finalizeMultiActivities, getActivitiesByStatus, 
-    registerMultiTarget, registerMultiActual} from './lib/index';
+    registerMultiTarget, registerMultiActual, getActivityAlert} from './lib/index';
 
 export default {
     components: {
@@ -401,6 +402,7 @@ export default {
         const targetActivities = ref([{ date: '', target_time: 0.5 }]);
         const date = ref(getToday());
         const statusCode = ref();
+        const activityStatus = ref();
         const targetTime = ref(0.5);
         const actualTime = ref(0);
         const reqMsg = ref(""); // リクエスト結果を表示するためのメッセージ
@@ -426,7 +428,7 @@ export default {
         const { register: submitActual } = registerActual(date, statusCode, actualTime, reqMsg, checkMsg, activityRes);
         const { register: submitMultiTarget } = registerMultiTarget(date, statusCode, reqMsg, targetActivities, checkMsg, activityRes);
         const { register: submitMultiActual } = registerMultiActual(date, statusCode, reqMsg, selectedActivities, checkMsg, activityRes);
-        const { finishActivity } = finalizeActivity(date, reqMsg, statusCode, checkMsg, activityRes);
+        const { finishActivity } = finalizeActivity(date, reqMsg, activityStatus, checkMsg, activityRes);
         const { finishMultiActivities } = finalizeMultiActivities(date, selectedActivities, reqMsg, statusCode, checkMsg, activityRes);
         const { getPendingActivities } = getActivitiesByStatus(pendingActivities, pendingMsg)
         const showModal = ref(false);
@@ -600,6 +602,7 @@ export default {
             MultiActivities,
             date,
             statusCode,
+            activityStatus,
             targetTime,
             actualTime,
             reqMsg,
@@ -612,6 +615,7 @@ export default {
             STATUS_DICT,
             getMaxDate,
             getStatusColors,
+            getActivityAlert,
             getResponseAlert,
             showModal,
             confirmRegister,

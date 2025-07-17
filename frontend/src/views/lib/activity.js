@@ -207,10 +207,10 @@ export const registerMultiActual = registerMultiActivities({
     expectedStatus: 200
 });
 
-export function finalizeActivity(date, reqMsg, statusCode, checkMsg, activityRes) {
+export function finalizeActivity(date, reqMsg, activityStatus, checkMsg, activityRes) {
     const router = useRouter();
     const authStore = useAuthStore();
-    const { handleError: handleFinishError } = errorWithActivityStatus(statusCode, reqMsg, router);
+    const { handleError: handleFinishError } = errorWithActivityStatus(activityStatus, reqMsg, router);
     const { renewActivity } = updateActivity(date, checkMsg, activityRes);
 
     const sendFinishRequest = async() => {
@@ -225,7 +225,7 @@ export function finalizeActivity(date, reqMsg, statusCode, checkMsg, activityRes
                                         {},
                                         {headers: {Authorization: authStore.getAuthHeader}})
         if (response.status===200){
-            statusCode.value = response.status;
+            activityStatus.value = response.data.status;
             reqMsg.value = response.data.message;
         }
     }
@@ -268,7 +268,7 @@ export function finalizeMultiActivities(date, selectedActivities, reqMsg, status
     const router = useRouter();
     const authStore = useAuthStore();
     const { renewActivity } = updateActivity(date, checkMsg, activityRes);
-    const { handleError: handleFinishError } = errorWithActivityStatus(statusCode, reqMsg, router);
+    const { handleError: handleFinishError } = errorWithStatusCode(statusCode, reqMsg, router);
 
     const sendFinishMultiRequest = async() => {
         // 選択された活動を終了するリクエストを送信する関数
