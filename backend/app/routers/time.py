@@ -1,8 +1,10 @@
 import traceback
 from datetime import datetime, timedelta
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Body
 from app.models.time_model import (
-    TargetTimeIn, ActualTimeIn, RegisterActivities, ValidateStatus
+    TargetTimeIn, MultiTargetTimeIn, TargetTimeWithDate,
+    ActualTimeIn, ActualTimeWithDate, MultiActualTimeIn,
+    RegisterActivities, ValidateStatus
 )
 from app.models.common_model import CheckDate, CheckYear
 from db import db_model
@@ -169,6 +171,106 @@ def register_target_time(target: TargetTimeIn,
                             detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
+@router.post("/activities/multi/target", status_code=201)
+def register_multi_target_time(activities: MultiTargetTimeIn,
+                               db: Session = Depends(get_db),
+                               current_user: dict = Depends(get_current_user)):
+    """ 複数日の目標時間を登録する """
+    error_count = 0
+    response_messages = ""
+    for activity in activities.activities:
+        username = current_user["username"]
+        target_time = activity["target_time"]
+        date = activity["date"]
+        try:
+            # 目標時間の形式をチェック
+            TargetTimeWithDate(target_time=target_time, date=date)
+            # 日付の形式をチェック
+            year, month, day = map(int, date.split("-"))
+            CheckDate(year=year, month=month, day=day)
+
+            # 目標時間を登録する前に、その日の活動実績が存在するか確認
+            year_month = f"{year}-{month}"
+            fetch_one_income(year_month, username, db)
+
+            insert_data = db_model.Activity(
+                date=date, target_time=target_time, username=username)
+            db.add(insert_data)
+            db.commit()
+            logger.info(f"{current_user['username']}が複数日の目標時間を登録")
+            response_messages += f"{date}の目標時間を{target_time}時間に登録しました\n"
+        except HTTPException as http_e:
+            error_count += 1
+            response_messages += f"{date}の目標時間登録に失敗: {http_e.detail}\n"
+            db.rollback()
+        except IntegrityError:
+            error_count += 1
+            response_messages += f"{date}の目標時間登録に失敗: 目標時間は既に登録済みです\n"
+            db.rollback()
+        except ValidationError as validate_e:
+            error_count += 1
+            response_messages += f"{date}の目標時間登録に失敗: {str(validate_e.errors()[0]['ctx']['error'])}\n"
+            db.rollback()
+        except Exception:
+            error_count += 1
+            response_messages += f"{date}の目標時間登録に失敗: サーバーでエラーが発生しました。管理者にお問い合わせください\n"
+            db.rollback()
+            logger.error(f"複数日の目標時間の登録に失敗しました\n{traceback.format_exc()}")
+
+    if error_count > 0:
+        raise HTTPException(status_code=400, detail=response_messages[:-1])
+    return {"message": response_messages[:-1]}  # 最後の改行を削除して返す
+
+
+@router.put("/activities/multi/actual", status_code=200)
+def update_multi_actual_time(activities: MultiActualTimeIn,
+                             db: Session = Depends(get_db),
+                             current_user: dict = Depends(get_current_user)):
+    """ 複数日の活動時間を登録する """
+    error_count = 0
+    response_messages = ""
+    for activity in activities.activities:
+        username = current_user["username"]
+        actual_time = activity["actual_time"]
+        date = activity["date"]
+        try:
+            # 活動時間の形式をチェック
+            ActualTimeWithDate(actual_time=actual_time, date=date)
+            # 日付の形式をチェック
+            CheckDate(year=int(date.split("-")[0]),
+                      month=int(date.split("-")[1]),
+                      day=int(date.split("-")[2]))
+
+            activity = fetch_one_activity(
+                date, username, db, error_msg="目標時間を先に登録してください")
+            if activity.status == "pending":
+                activity.actual_time = actual_time
+                db.commit()
+                logger.info(f"{current_user['username']}が{date}の活動時間を登録")
+                response_messages += f"{date}の活動時間を{actual_time}時間に登録しました\n"
+            else:
+                error_count += 1
+                response_messages += f"{date}の活動時間登録に失敗: 既に確定されています\n"
+                db.rollback()
+        except HTTPException as http_e:
+            error_count += 1
+            response_messages += f"{date}の活動時間登録に失敗: {http_e.detail}\n"
+            db.rollback()
+        except ValidationError as validate_e:
+            error_count += 1
+            response_messages += f"{date}の活動時間登録に失敗: {str(validate_e.errors()[0]['ctx']['error'])}\n"
+            db.rollback()
+        except Exception:
+            error_count += 1
+            response_messages += f"{date}の活動時間登録に失敗: サーバーでエラーが発生しました。管理者にお問い合わせください\n"
+            db.rollback()
+            logger.error(f"複数日の活動時間の登録に失敗しました\n{traceback.format_exc()}")
+
+    if error_count > 0:
+        raise HTTPException(status_code=400, detail=response_messages[:-1])
+    return {"message": response_messages[:-1]}  # 最後の改行を削除して返す
+
+
 @router.put("/activities/{year}/{month}/{day}/actual",
             status_code=200,
             response_model=RegisterActivities)
@@ -189,12 +291,13 @@ def update_actual_time(actual: ActualTimeIn,
         if activity.bonus == 0 and activity.penalty == 0:
             activity.actual_time = actual_time
             db.commit()
+            message = f"{date}の活動時間を{actual_time}時間に設定しました"
             logger.info(f"{current_user['username']}が{date}の活動時間を登録")
             return {"date": date,
                     "target_time": activity.target_time,
                     "actual_time": actual_time,
                     "status": "pending",
-                    "message": f"活動時間を{actual_time}時間に設定しました"}
+                    "message": message}
         else:
             raise HTTPException(status_code=400,
                                 detail=f"{date}の活動実績は既に確定済みです。変更できません")
@@ -269,6 +372,72 @@ def finish_activity(year: int,
         db.rollback()
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
+
+
+@router.put("/activities/multi/finish", status_code=200)
+def finish_multi_activities(request: dict = Body(),
+                            db: Session = Depends(get_db),
+                            current_user: dict = Depends(get_current_user)):
+    """ 複数日の活動を確定する """
+    error_count = 0
+    message = ""
+    dates = request.get("dates", [])
+    if len(dates) == 0:
+        raise HTTPException(status_code=400, detail="日付を指定してください")
+    for date in dates:
+        try:
+            year, month, day = map(int, date.split("-"))
+            CheckDate(year=year, month=month, day=day)
+            date = f"{year}-{month}-{day}"
+            username = current_user["username"]
+            activity = fetch_one_activity(date, username, db)
+            if activity.status != "pending":
+                raise HTTPException(status_code=400,
+                                    detail=f"{date}の実績は確定済みです")
+            target_time = activity.target_time
+            actual_time = activity.actual_time
+            income = fetch_one_income(f"{year}-{month}", username, db)
+            monthly_activities = fetch_monthly_activities(year, month, username, db)
+            # 達成している場合はincomesテーブルのボーナスを、達成していない場合はpenaltyを加算する。
+            if actual_time >= target_time:
+                activity.status = "success"
+                bonus = round(((income.salary / 200) * actual_time), 2)
+                activity.bonus = bonus
+                # 対象日のbonusをコミット
+                db.commit()
+                db.refresh(activity)
+                # activitiesテーブルのbonusの合計を計算し、incomesテーブルに反映する
+                income.total_bonus = sum([act.bonus for act in monthly_activities])
+                message += f"{date}の活動を終了:ボーナス{bonus}万円({int(bonus * 10000)}円)\n"
+            else:
+                activity.status = "failure"
+                diff = round((target_time - actual_time), 1)
+                penalty = round(((income.salary / 200) * diff), 2)
+                activity.penalty = penalty
+                # 対象日のpenaltyをコミット
+                db.commit()
+                db.refresh(activity)
+                # activitiesテーブルのpenaltyの合計を計算し、incomesテーブルに反映する
+                income.total_penalty = sum([act.penalty for act in monthly_activities])
+                message += f"{date}の活動を終了:ペナルティ{penalty}万円({int(penalty * 10000)}円)\n"
+            db.commit()
+            logger.info(f"{current_user['username']}が{date}の活動を終了")
+        except HTTPException as http_e:
+            error_count += 1
+            message += f"{date}の活動終了に失敗: {http_e.detail}\n"
+            db.rollback()
+        except ValidationError as validate_e:
+            error_count += 1
+            message += f"{date}の活動終了に失敗: {str(validate_e.errors()[0]['ctx']['error'])}\n"
+            db.rollback()
+        except Exception:
+            error_count += 1
+            message += f"{date}の活動終了に失敗: サーバーでエラーが発生しました。管理者にお問い合わせください\n"
+            db.rollback()
+            logger.error(f"複数日の活動終了処理に失敗しました\n{traceback.format_exc()}")
+    if error_count > 0:
+        raise HTTPException(status_code=400, detail=message[:-1])
+    return {"message": message[:-1]}
 
 
 @router.get("/activities/{year}/{month}", status_code=200)

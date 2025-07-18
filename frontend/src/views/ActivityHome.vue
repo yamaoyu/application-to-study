@@ -2,11 +2,24 @@
     <div class="container">
         <div class="d-flex mb-3 align-items-baseline justify-content-center">
             <BButton 
+                v-for="type in types" 
+                :key="type.value"
+                @click="registertype = type.value"
+                :variant="registertype === type.value ? 'primary' : 'outline-secondary'"
+                class="me-2"
+                :title="`${type.label}登録フォームへ切り替え`"
+            >
+                {{ type.label }}
+            </BButton>
+        </div>
+        <div class="d-flex mb-3 align-items-baseline justify-content-center">
+            <BButton 
                 v-for="tab in tabs" 
                 :key="tab.value"
                 @click="activeTab = tab.value"
                 :variant="activeTab === tab.value ? 'primary' : 'outline-secondary'"
                 class="me-2"
+                :title="`${tab.label}登録フォームへ切り替え`"
             >
                 {{ tab.label }}
             </BButton>
@@ -78,7 +91,7 @@
 
         <!-- タブによる画面切り替え -->
         <div class="container">
-            <div v-show="activeTab === 'target'">
+            <div v-show="activeTab === 'target' && registertype === 'single'">
                 <form @submit.prevent="confirmRegister">
                     <div class="row d-flex justify-content-center mt-4">
                         <div class="input-group">
@@ -90,6 +103,7 @@
                                 min="0.5"
                                 max="12"
                                 step="0.5"
+                                @input="validateTime($event, targetTime)"
                                 />
                             <span class="input-group-text small">時間(Hour)</span>
                         </div>
@@ -97,7 +111,7 @@
                     <button type="submit" class="btn btn-outline-secondary mt-3">登録</button>
                 </form>
             </div>
-            <div v-show="activeTab === 'actual'">
+            <div v-show="activeTab === 'actual' && registertype === 'single'">
                 <form @submit.prevent="confirmRegister">
                     <div class="row d-flex justify-content-center mt-4">
                         <div class="input-group">
@@ -109,6 +123,7 @@
                                 min="0.0"
                                 max="12"
                                 step="0.5"
+                                @input="validateTime($event, actualTime)"
                                 />
                             <span class="input-group-text small">時間(Hour)</span>
                         </div>
@@ -116,16 +131,210 @@
                     <button type="submit" class="btn btn-outline-secondary mt-3">登録</button>
                 </form>
             </div>
-            <div v-show="activeTab === 'finish'">
+            <div v-show="activeTab === 'finish' && registertype === 'single'">
                 <form @submit.prevent="confirmRegister">
                     <div class="container">
                         <button type="submit" class="btn btn-outline-secondary mt-3">終了</button>
                     </div>
                 </form>
             </div>
-            <div class="container d-flex justify-content-center">
-                <p v-if="message" class="mt-3 col-12" :class="getResponseAlert(statusCode)">{{ message }}</p>
-                <p v-if="finMsg" class="mt-3 col-12" :class="getActivityAlert(activityStatus)">{{ finMsg }}</p>
+            <div v-show="activeTab === 'target' && registertype === 'multi'">
+                <BCard class="border-0 shadow-sm mt-3" bg-variant="light">
+                    <div class="text-center">
+                        <h5 class="card-title text-primary fw-bold mb-2">
+                            <i class="bi bi-target me-2"></i>目標時間の設定
+                        </h5>
+                        <BCardText class="text-muted small mb-0">
+                            日付を選択し、目標時間を入力してください
+                        </BCardText>
+                    </div>
+                </BCard>
+                <table class="table table-striped table-responsive">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="col-2">日付</th>
+                            <th class="col-2">目標時間</th>
+                            <th class="col-1"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(activity, index) in targetActivities" :key="index">
+                            <td>
+                                <div class="input-group">
+                                    <input 
+                                        type="date" 
+                                        v-model="activity.date" 
+                                        class="form-control" 
+                                        min="2024-01-01"
+                                        :max="getMaxDate()"
+                                    />
+                                </div>
+                            </td>
+                            <td>
+                                <div class="input-group">
+                                    <input
+                                        type="number"
+                                        v-model="activity.target_time"
+                                        class="form-control text-center"
+                                        min="0.5"
+                                        max="12"
+                                        step="0.5"
+                                        @input="validateTime($event, activity.target_time)"
+                                    />
+                                    <span class="input-group-text small">時間</span>
+                                </div>
+                            </td>
+                            <td>
+                                <button 
+                                    type="button" 
+                                    class="btn btn-outline-danger btn-sm"
+                                    @click="removeTargetActivity(index)"
+                                >
+                                    削除
+                                </button>
+                            </td>
+                        </tr>
+                        <tr class="table-secondary">
+                            <td colspan="3" class="text-center">
+                                <button 
+                                    type="button" 
+                                    class="btn btn-outline-primary"
+                                    @click="addTargetActivity"
+                                >
+                                    + 行を追加
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button 
+                    type="button" 
+                    class="btn btn-outline-secondary mt-3"
+                    @click="confirmRegister"
+                    :disabled="!isValidActivities"
+                >
+                    まとめて登録
+                </button>
+            </div>
+            <div v-show="activeTab === 'actual' && registertype === 'multi'">
+                <div v-if="Object.keys(editActivities).length > 0" class="mt-3">
+                    <BCard class="border-0 shadow-sm mt-3" bg-variant="light">
+                        <div class="text-center">
+                            <h5 class="card-title text-primary fw-bold mb-2">
+                                <i class="bi bi-target me-2"></i>活動時間の設定
+                            </h5>
+                            <BCardText class="text-muted small mb-0">
+                                日付を選択し、活動時間を入力してください
+                            </BCardText>
+                        </div>
+                    </BCard>
+                    <table class="table table-striped table-responsive">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="col-1"></th>
+                                <th class="col-2">日付</th>
+                                <th class="col-2">目標時間</th>
+                                <th class="col-2">活動時間</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(activity, index) in editActivities" 
+                                :key="index"
+                                :class="{ 'table-active': isSelected(activity) }"
+                            >
+                                <td @click="toggleActivity(activity)">
+                                    <input 
+                                        class="form-check-input" 
+                                        type="checkbox"
+                                        :value="activity"
+                                        v-model="selectedActivities"
+                                    >
+                                </td>
+                                <td @click="toggleActivity(activity)">{{ activity.date }}</td>
+                                <td @click="toggleActivity(activity)">{{ activity.target_time }}時間</td>
+                                <td>
+                                <div class="input-group">
+                                    <input
+                                        type="number"
+                                        v-model="activity.actual_time"
+                                        class="form-control text-center"
+                                        min="0.0"
+                                        max="12"
+                                        step="0.5"
+                                        @input="validateTime($event, activity.actual_time)"
+                                    />
+                                    <span class="input-group-text small">時間</span>
+                                </div>
+                            </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button 
+                        type="button" 
+                        class="btn btn-outline-secondary mt-3"
+                        @click="confirmRegister"
+                        :disabled="selectedActivities.length === 0"
+                    >
+                        まとめて登録
+                    </button>
+                </div>
+                <div v-else class="mt-3 alert alert-warning">登録対象の活動がありません</div>
+            </div>
+            <div v-show="activeTab === 'finish' && registertype === 'multi'">
+                <div v-if="Object.keys(pendingActivities).length > 0" class="mt-3">
+                    <BCard class="border-0 shadow-sm mt-3" bg-variant="light">
+                        <div class="text-center">
+                            <h5 class="card-title text-primary fw-bold mb-2">
+                                <i class="bi bi-target me-2"></i>活動の終了
+                            </h5>
+                            <BCardText class="text-muted small mb-0">
+                                活動を終了する日を選択してください
+                            </BCardText>
+                        </div>
+                    </BCard>
+                    <table class="table table-striped table-responsive">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="col-1"></th>
+                                <th class="col-2">日付</th>
+                                <th class="col-2">目標時間</th>
+                                <th class="col-2">活動時間</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(activity, index) in pendingActivities" 
+                                :key="index" 
+                                @click="toggleActivity(activity.date)"
+                                :class="{ 'table-active': isSelected(activity.date) }"
+                            >
+                                <td>
+                                    <input 
+                                        class="form-check-input" 
+                                        type="checkbox"
+                                        :value="activity.date"
+                                        v-model="selectedActivities"
+                                    >
+                                </td>
+                                <td>{{ activity.date }}</td>
+                                <td>{{ activity.target_time }}時間</td>
+                                <td>{{ activity.actual_time }}時間</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button 
+                        type="button" 
+                        class="btn btn-outline-secondary mt-3"
+                        @click="confirmRegister"
+                        :disabled="selectedActivities.length === 0"
+                    >
+                        まとめて終了
+                    </button>
+                </div>
+                <div v-else class="mt-3 alert alert-warning">確定可能な活動がありません</div>
+            </div>
+            <div class="container d-flex justify-content-center" v-if="reqMsg">
+                <p v-if="activeTab==='finish'&&registertype==='single'" class="mt-3 col-12" :class="getActivityAlert(activityStatus)">{{ reqMsg }}</p>
+                <p v-else class="mt-3 col-12" :class="getResponseAlert(statusCode)">{{ reqMsg }}</p>
             </div>
         </div>
         <br>
@@ -173,41 +382,56 @@
 
 <script>
 import { ref, watch, onMounted, computed } from 'vue';
-import { BButton, BModal } from 'bootstrap-vue-next';
+import { BButton, BModal, BCard, BCardText } from 'bootstrap-vue-next';
 import { 
     changeDate, STATUS_DICT, getStatusColors, getToday, getMaxDate,
-    getActivityAlert, getResponseAlert, updateActivity, registerActivity, 
-    finalizeActivity, getActivitiesByStatus } from './lib/index';
+    getResponseAlert, updateActivity, registerTarget, registerActual, 
+    finalizeActivity,finalizeMultiActivities, getActivitiesByStatus, 
+    registerMultiTarget, registerMultiActual, getActivityAlert} from './lib/index';
 
 export default {
     components: {
         BButton,
-        BModal
+        BModal,
+        BCard,
+        BCardText
     },
 
     setup() {
         const activeTab = ref("target");
+        const registertype = ref("single");
+        const selectedActivities = ref([]);
+        const targetActivities = ref([{ date: '', target_time: 0.5 }]);
         const date = ref(getToday());
         const statusCode = ref();
+        const activityStatus = ref();
         const targetTime = ref(0.5);
         const actualTime = ref(0);
-        const message = ref("");
-        const checkMsg = ref("");
-        const finMsg = ref("");
+        const reqMsg = ref(""); // リクエスト結果を表示するためのメッセージ
+        const checkMsg = ref(""); // 活動の詳細を確認するためのメッセージ
         const activityRes = ref("");
-        const activityStatus = ref("");
         const isFormVisible = ref(false)
-        const pendingActivities = ref([]);
+        const pendingActivities = ref([]); // 未完了のアクティビティを表示する用
+        const editActivities = ref([]); //未完了のアクティビティを編集するときに使用(pendingActivitiesに影響を及ぼさないため)
         const pendingMsg = ref("")
         const tabs = [
                     { value: 'target', label: '目標時間' },
                     { value: 'actual', label: '活動時間' },
                     { value: 'finish', label: '活動終了' }
                     ];
-        const { increaseDay } = changeDate(date, message);
+        const types = [
+                    { value: 'single', label: '個別' },
+                    { value: 'multi', label: '一括' }
+                    ];
+        const MultiActivities = ref();
+        const { increaseDay } = changeDate(date, reqMsg);
         const { renewActivity } = updateActivity(date, checkMsg, activityRes);
-        const { registerTarget, registerActual } = registerActivity(date, statusCode, targetTime, actualTime, message, checkMsg, activityRes);
-        const { finishActivity } = finalizeActivity(date, finMsg, activityStatus, checkMsg, activityRes);
+        const { register: submitTarget } = registerTarget(date, statusCode, targetTime, reqMsg, checkMsg, activityRes);
+        const { register: submitActual } = registerActual(date, statusCode, actualTime, reqMsg, checkMsg, activityRes);
+        const { register: submitMultiTarget } = registerMultiTarget(date, statusCode, reqMsg, targetActivities, checkMsg, activityRes);
+        const { register: submitMultiActual } = registerMultiActual(date, statusCode, reqMsg, selectedActivities, checkMsg, activityRes);
+        const { finishActivity } = finalizeActivity(date, reqMsg, activityStatus, checkMsg, activityRes);
+        const { finishMultiActivities } = finalizeMultiActivities(date, selectedActivities, reqMsg, statusCode, checkMsg, activityRes);
         const { getPendingActivities } = getActivitiesByStatus(pendingActivities, pendingMsg)
         const showModal = ref(false);
 
@@ -215,9 +439,63 @@ export default {
             isFormVisible.value = !isFormVisible.value
         }
 
+        const toggleActivity = (activity) => {
+            if (isSelected(activity)) {
+                selectedActivities.value.splice(selectedActivities.value.indexOf(activity), 1);
+            } else {
+                selectedActivities.value.push(activity)
+            }
+        }
+
+        const isSelected = (activity) => {
+            return selectedActivities.value.includes(activity);
+        };
+
         const confirmRegister = async() =>{
             showModal.value = true
         }
+
+        const addTargetActivity = () => {
+            targetActivities.value.push({ date: '', target_time: 0.5 });
+        };
+
+        const removeTargetActivity = (index) => {
+            if (targetActivities.value.length > 1) {
+                targetActivities.value.splice(index, 1);
+            } else {
+                targetActivities.value[0].target_time = 0.5;
+                targetActivities.value[0].date = "";
+            }
+        };
+
+
+        const validateTime = (event, time) =>{
+            if (activeTab.value == "target" && time < 0.5) {
+                // 時間が0.5時間未満の場合のエラーメッセージ
+                event.target.setCustomValidity("時間は0.5時間以上入力してください");
+                event.target.reportValidity();
+
+            } else if (typeof(time) != 'number') {
+                // 時間が入力されていない場合のエラーメッセージ
+                event.target.setCustomValidity("時間を入力してください");
+                event.target.reportValidity();
+            } else if (time * 2 % 1 != 0){
+                // 時間が0.5時間単位でない場合のエラーメッセージ
+                event.target.setCustomValidity("時間は0.5時間単位で入力してください");
+                event.target.reportValidity();
+            } else {
+                event.target.setCustomValidity("");
+            }
+        };
+
+        const isValidActivities = computed(() => {
+            // 目標時間送信用の変数(targetActivities)で日付と目標時間が入力されているか確認
+            if (targetActivities.value.some(activity => !activity.date || !activity.target_time)) {
+                return false
+            } else {
+                return true
+            }
+        });
 
         const modalTitle = computed(() =>{
             if (showModal.value) {
@@ -232,45 +510,84 @@ export default {
 
         const modalMessage = computed(() =>{
             if (showModal.value) {
-                switch(activeTab.value) {
-                    case 'target': return `${date.value}の目標時間を ${targetTime.value}時間に登録しますか？`;
-                    case 'actual': return `${date.value}の活動時間を ${actualTime.value}時間に登録しますか？`;
-                    case 'finish': return `${date.value}の活動を終了しますか？`;
+                switch(registertype.value){
+                    case 'single':
+                        switch(activeTab.value) {
+                            case 'target': return `${date.value}の目標時間を ${targetTime.value}時間に登録しますか？`;
+                            case 'actual': return `${date.value}の活動時間を ${actualTime.value}時間に登録しますか？`;
+                            case 'finish': return `${date.value}の活動を終了しますか？`;
+                        }
+                        break;
+                    case 'multi':
+                        switch(activeTab.value) {
+                            case 'target': return `入力した日の目標時間を登録しますか？`;
+                            case 'actual': return `選択した日の活動時間を登録しますか？`;
+                            case 'finish': return `選択した日の活動を終了しますか？`
+                        }
+                        break;
                 }
             }
             return ''
-        });
+        })
 
         const sendRequest = async() =>{
             if (showModal.value) {
-                switch(activeTab.value) {
-                    case 'target':
-                    await registerTarget();
-                    await getPendingActivities();
-                    break;
-                case 'actual':
-                    await registerActual();
-                    await getPendingActivities();
-                    break;
-                case 'finish':
-                    await finishActivity();
-                    await getPendingActivities();
-                    break;
+                if (registertype.value === 'single') {
+                    switch(activeTab.value) {
+                        case 'target':
+                            await submitTarget();
+                            await getPendingActivities();
+                            break;
+                        case 'actual':
+                            await submitActual();
+                            await getPendingActivities();
+                            break;
+                        case 'finish':
+                            await finishActivity();
+                            await getPendingActivities();
+                            break;
+                    }
+                } else if (registertype.value === 'multi') {
+                    switch(activeTab.value) {
+                        case 'target':
+                            await submitMultiTarget();
+                            await getPendingActivities();
+                            break;
+                        case 'actual':
+                            await submitMultiActual();
+                            await getPendingActivities();
+                            break;
+                        case 'finish':
+                            await finishMultiActivities();
+                            await getPendingActivities();
+                            break;
+                    }
                 }
             }
         }
 
         watch(date, () => {
             renewActivity();
-            message.value = "";
-            finMsg.value = "";
+            reqMsg.value = "";
         });
 
         watch(activeTab, () => {
-            message.value = "";
-            finMsg.value = "";
-        }
-    )
+            reqMsg.value = "";
+            selectedActivities.value = [];
+        })
+
+        watch(registertype, () => {
+            reqMsg.value = "";
+        })
+
+        watch(pendingActivities, () => {
+            editActivities.value = pendingActivities.value.map(activity =>({
+                ...activity})
+            )}, { 
+                immediate: true,  // 初回実行
+            }
+        );
+        
 
         onMounted(() => {
             renewActivity();
@@ -279,18 +596,22 @@ export default {
 
     return {
             activeTab,
+            registertype,
             tabs,
+            types,
+            selectedActivities,
+            targetActivities,
+            MultiActivities,
             date,
             statusCode,
+            activityStatus,
             targetTime,
             actualTime,
-            message,
+            reqMsg,
             checkMsg,
-            finMsg,
             activityRes,
-            activityStatus,
             pendingActivities,
-            getPendingActivities,
+            editActivities,
             pendingMsg,
             increaseDay,
             STATUS_DICT,
@@ -298,12 +619,14 @@ export default {
             getStatusColors,
             getActivityAlert,
             getResponseAlert,
-            renewActivity,
-            registerTarget,
-            registerActual,
-            finishActivity,
             showModal,
             confirmRegister,
+            addTargetActivity,
+            isValidActivities,
+            isSelected,
+            removeTargetActivity,
+            validateTime,
+            toggleActivity,
             toggleFormVisibility,
             isFormVisible,
             modalTitle,
