@@ -66,7 +66,7 @@ def test_register_multi_target_without_monthly_income(client, get_headers):
                            headers=get_headers)
     assert response.status_code == 400
     assert response.json() == {
-        "detail": f"{test_date}の目標時間登録に失敗: この月の月収が登録されていません"
+        "detail": f"{test_date}の目標時間登録に失敗: 2024-5の月収は未登録です"
     }
 
 
@@ -218,7 +218,7 @@ def test_register_actual(client, get_headers):
         "target_time": 5.0,
         "actual_time": data["actual_time"],
         "status": "pending",
-        "message": f"活動時間を{data['actual_time']}時間に設定しました"
+        "message": f"{test_date}の活動時間を{data['actual_time']}時間に設定しました"
     }
 
 
@@ -344,6 +344,49 @@ def test_register_multi_actual_with_invalid_data(client, get_headers):
             "20240-5-5の活動時間登録に失敗: 年は2024~2099の範囲で入力してください\n"
             "2024-15-6の活動時間登録に失敗: 月は1~12の範囲で入力してください\n"
             "2024-5-7の活動時間を7.0時間に登録しました"
+        )
+    }
+
+
+def test_update_already_finished_activity(client, get_headers):
+    """ 既に終了した活動の時間を更新しようとした場合 """
+    setup_monthly_income_for_test(client, get_headers)
+    setup_target_time_for_test(client, get_headers)
+    setup_actual_time_for_test(client, get_headers)
+    setup_finish_activity_for_test(client, get_headers)
+    # 目標時間を登録する活動の中に既に終了した活動が含まれている場合
+    data = {
+        "activities": [
+            {"date": "2024-5-5", "target_time": 5.0},
+            {"date": "2024-5-6", "target_time": 6.0}
+        ]
+    }
+    response = client.post("/activities/multi/target",
+                           json=data,
+                           headers=get_headers)
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": (
+            "2024-5-5の目標時間登録に失敗: 目標時間は既に登録済みです\n"
+            "2024-5-6の目標時間を6.0時間に登録しました"
+        )
+    }
+
+    # 活動時間を登録する活動の中に既に終了した活動が含まれている場合
+    data = {
+        "activities": [
+            {"date": "2024-5-5", "actual_time": 5.0},
+            {"date": "2024-5-6", "actual_time": 6.0}
+        ]
+    }
+    response = client.put("/activities/multi/actual",
+                          json=data,
+                          headers=get_headers)
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": (
+            "2024-5-5の活動時間登録に失敗: 既に確定されています\n"
+            "2024-5-6の活動時間を6.0時間に登録しました"
         )
     }
 

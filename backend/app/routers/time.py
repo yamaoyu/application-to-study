@@ -182,13 +182,11 @@ def register_multi_target_time(activities: MultiTargetTimeIn,
         username = current_user["username"]
         target_time = activity["target_time"]
         date = activity["date"]
-        year = int(date.split("-")[0])
-        month = int(date.split("-")[1])
-        day = int(date.split("-")[2])
         try:
             # 目標時間の形式をチェック
             TargetTimeWithDate(target_time=target_time, date=date)
             # 日付の形式をチェック
+            year, month, day = map(int, date.split("-"))
             CheckDate(year=year, month=month, day=day)
 
             # 目標時間を登録する前に、その日の活動実績が存在するか確認
@@ -201,9 +199,9 @@ def register_multi_target_time(activities: MultiTargetTimeIn,
             db.commit()
             logger.info(f"{current_user['username']}が複数日の目標時間を登録")
             response_messages += f"{date}の目標時間を{target_time}時間に登録しました\n"
-        except HTTPException:
+        except HTTPException as http_e:
             error_count += 1
-            response_messages += f"{date}の目標時間登録に失敗: この月の月収が登録されていません\n"
+            response_messages += f"{date}の目標時間登録に失敗: {http_e.detail}\n"
             db.rollback()
         except IntegrityError:
             error_count += 1
@@ -245,14 +243,14 @@ def update_multi_actual_time(activities: MultiActualTimeIn,
 
             activity = fetch_one_activity(
                 date, username, db, error_msg="目標時間を先に登録してください")
-            if activity.bonus == 0 and activity.penalty == 0:
+            if activity.status == "pending":
                 activity.actual_time = actual_time
                 db.commit()
                 logger.info(f"{current_user['username']}が{date}の活動時間を登録")
                 response_messages += f"{date}の活動時間を{actual_time}時間に登録しました\n"
             else:
                 error_count += 1
-                response_messages += f"{date}の活動時間登録に失敗: \n"
+                response_messages += f"{date}の活動時間登録に失敗: 既に確定されています\n"
                 db.rollback()
         except HTTPException as http_e:
             error_count += 1
@@ -293,12 +291,13 @@ def update_actual_time(actual: ActualTimeIn,
         if activity.bonus == 0 and activity.penalty == 0:
             activity.actual_time = actual_time
             db.commit()
+            message = f"{date}の活動時間を{actual_time}時間に設定しました"
             logger.info(f"{current_user['username']}が{date}の活動時間を登録")
             return {"date": date,
                     "target_time": activity.target_time,
                     "actual_time": actual_time,
                     "status": "pending",
-                    "message": f"活動時間を{actual_time}時間に設定しました"}
+                    "message": message}
         else:
             raise HTTPException(status_code=400,
                                 detail=f"{date}の活動実績は既に確定済みです。変更できません")

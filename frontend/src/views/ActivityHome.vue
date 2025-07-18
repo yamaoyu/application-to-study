@@ -7,6 +7,7 @@
                 @click="registertype = type.value"
                 :variant="registertype === type.value ? 'primary' : 'outline-secondary'"
                 class="me-2"
+                :title="`${type.label}登録フォームへ切り替え`"
             >
                 {{ type.label }}
             </BButton>
@@ -18,6 +19,7 @@
                 @click="activeTab = tab.value"
                 :variant="activeTab === tab.value ? 'primary' : 'outline-secondary'"
                 class="me-2"
+                :title="`${tab.label}登録フォームへ切り替え`"
             >
                 {{ tab.label }}
             </BButton>
