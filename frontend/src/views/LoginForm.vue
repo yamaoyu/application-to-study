@@ -1,19 +1,19 @@
 <template>
   <h3>ログイン</h3>
-  <form @submit.prevent="userLogin" class="container d-flex flex-column align-items-center">
+  <form @submit.prevent="userLogin" class="container d-flex flex-column align-items-center" data-testid="login-form">
     <div class="mt-3 col-6">
-      <input type="text" placeholder="username" class="form-control" v-model="username" required>
+      <input type="text" placeholder="username" class="form-control" v-model="username" data-testid="username" required>
     </div>
     <div class="mt-3 col-6">
       <div class="input-group">
-        <input :type="!showPassword ? 'password':'text'" placeholder="password" class="form-control" v-model="password" required>
+        <input :type="!showPassword ? 'password':'text'" placeholder="password" class="form-control" v-model="password" data-testid="password" required>
         <button class="btn btn-outline-secondary" type="button"
                     @click="showPassword = !showPassword">
           <i :class="['bi', showPassword ? 'bi-eye-slash' : 'bi-eye']"></i>
         </button>
       </div>
     </div>
-    <button type="submit" class="btn btn-outline-secondary mt-3">ログイン</button>
+    <button type="submit" class="btn btn-outline-secondary mt-3" data-testid="login-button">ログイン</button>
   </form>
   <div class="container d-flex flex-column align-items-center">
     <p v-if="message" :class="getResponseAlert(statusCode)" class="mt-3 col-8">{{ message }}</p>
@@ -52,8 +52,15 @@
       })
   
       const userLogin = async() => {
+          if (!username.value) {
+            message.value = 'ユーザー名を入力してください'
+            return
+          }
+          if (!password.value) {
+            message.value = 'パスワードを入力してください'
+            return
+          }
         try {
-          // デバイス情報を取得 HTTPSにするまでの一時的な対応としてplatform(非推奨)を使用
           const url = process.env.VUE_APP_BACKEND_URL + "login"
           const response = await axios.post(url, {
             username: username.value,

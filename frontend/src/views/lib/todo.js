@@ -1,9 +1,10 @@
 import axios from 'axios';
-import router from 'vue-router';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
 import { jwtDecode } from 'jwt-decode';
 import { commonError, verifyRefreshToken } from '../lib';
 
+const router = useRouter();
 
 export function getTodoRequest(statusFilter, startDue, endDue, title, todos, todoMsg){
     const { handleError: todoError } = commonError(todoMsg, router);
