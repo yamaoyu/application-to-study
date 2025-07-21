@@ -6,7 +6,7 @@ describe('ユーザー作成', () => {
     let wrapper;
 
     beforeEach(() => {
-        vi.clearAllMocks()
+        vi.resetAllMocks() // 呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
         wrapper = mountComponent(RegisterUser)
     })
 
@@ -52,7 +52,7 @@ describe('ユーザー名を入力せずにリクエスト送信', () => {
     let wrapper;
 
     beforeEach(() => {
-        vi.clearAllMocks()
+        vi.resetAllMocks() // 呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
         wrapper = mountComponent(RegisterUser)
     })
 

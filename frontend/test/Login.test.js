@@ -6,7 +6,7 @@ describe('Login', () => {
     let wrapper;
 
     beforeEach(() => {
-        vi.clearAllMocks()
+        vi.resetAllMocks() // 呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
         wrapper = mountComponent(Login)
     })
 
@@ -46,7 +46,7 @@ describe('ユーザー名を入力せずにログインしようとする', () =
     let wrapper;
 
     beforeEach(() => {
-        vi.clearAllMocks()
+        vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
         wrapper = mountComponent(Login)
     })
 
@@ -67,7 +67,7 @@ describe('パスワードを入力せずにログインしようとする', () =
     let wrapper;
 
     beforeEach(() => {
-        vi.clearAllMocks()
+        vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
         wrapper = mountComponent(Login)
     })
 
