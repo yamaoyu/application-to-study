@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import RegisterTodo from '@/views/RegisterTodo.vue'
-import { mockAxios, mountComponent } from './vitest.setup';
+import { mountComponent } from './vitest.setup';
+import axios from 'axios';
+
 
 describe('Todoを送信に成功', () => {
     let wrapper;
@@ -19,7 +21,7 @@ describe('Todoを送信に成功', () => {
         };
         const expectedMessage = '以下の内容で作成しました';
 
-        mockAxios.post.mockResolvedValue({
+        axios.post.mockResolvedValue({
             status: 201,
             data:  {
                 message: expectedMessage,
@@ -42,8 +44,8 @@ describe('Todoを送信に成功', () => {
         await flushPromises();
 
         // APIが正しいパラメータで呼び出されたことを確認
-        expect(mockAxios.post).toHaveBeenCalledTimes(1);
-        expect(mockAxios.post).toHaveBeenCalledWith(
+        expect(axios.post).toHaveBeenCalledTimes(1);
+        expect(axios.post).toHaveBeenCalledWith(
             process.env.VUE_APP_BACKEND_URL + 'todos', 
             expectedTodo,
             {
@@ -79,6 +81,6 @@ describe('データを入力せずにリクエストが送信されないパタ�
         await wrapper.find('[data-testid="submit-todo"]').trigger('submit');
 
         // リクエストが送信されないことを確認
-        expect(mockAxios.post).toHaveBeenCalledTimes(0);
+        expect(axios.post).toHaveBeenCalledTimes(0);
     });
 });

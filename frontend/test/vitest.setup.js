@@ -1,5 +1,4 @@
 import { vi } from 'vitest';
-import axios from 'axios';
 import { pinia } from "@/main.js";
 import { mount } from '@vue/test-utils'
 
@@ -20,7 +19,6 @@ vi.mock('vue-router', async () => {
 
 // モックのaxiosを作成
 vi.mock("axios")
-export const mockAxios = vi.mocked(axios)
 
 export const mountComponent = (component) => {
     return mount(component, {

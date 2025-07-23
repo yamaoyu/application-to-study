@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import Login from '@/views/LoginForm.vue'
-import { mockAxios, mountComponent } from './vitest.setup';
+import { mountComponent } from './vitest.setup';
+import axios from 'axios';
 
 describe('Login', () => {
     let wrapper;
@@ -11,7 +12,7 @@ describe('Login', () => {
     })
 
     it('ログインに成功', async () => {
-        mockAxios.post.mockResolvedValue({
+        axios.post.mockResolvedValue({
             status: 200,
             data: {
                 access_token: 'mock-token',
@@ -28,8 +29,8 @@ describe('Login', () => {
         expect(wrapper.find('[data-testid="login-button"]').exists()).toBe(true);
         await wrapper.find('[data-testid="login-button"]').trigger('submit');
         // リクエストが正しく行われたことを確認
-        expect(mockAxios.post).toHaveBeenCalledTimes(1)
-        expect(mockAxios.post).toHaveBeenCalledWith(
+        expect(axios.post).toHaveBeenCalledTimes(1)
+        expect(axios.post).toHaveBeenCalledWith(
             process.env.VUE_APP_BACKEND_URL + "login",  // 正しいURL
             {
                 username: "testuser",    // 正しいパラメータ
@@ -59,7 +60,7 @@ describe('ユーザー名を入力せずにログインしようとする', () =
         expect(usernameInput.element.validity.valid).toBe(false);
         expect(usernameInput.element.validity.valueMissing).toBe(true);
         // リクエストが送信されないことを確認
-        expect(mockAxios.post).toHaveBeenCalledTimes(0);
+        expect(axios.post).toHaveBeenCalledTimes(0);
     })
 })
 
@@ -83,6 +84,6 @@ describe('パスワードを入力せずにログインしようとする', () =
         expect(passwordInput.element.validity.valid).toBe(false);
         expect(passwordInput.element.validity.valueMissing).toBe(true);
         // リクエストが送信されないことを確認
-        expect(mockAxios.post).toHaveBeenCalledTimes(0);
+        expect(axios.post).toHaveBeenCalledTimes(0);
     })
 })
