@@ -546,12 +546,12 @@ def get_all_activities(db: Session = Depends(get_db),
                 db_model.Activity.date).all()
         if not activities:
             raise HTTPException(status_code=404,
-                                detail=f"{current_user['username']}の活動は登録されていません")
+                                detail="活動は登録されていません")
         incomes = db.query(db_model.Income).filter(
             db_model.Income.username == current_user["username"]).all()
         if not incomes:
             raise HTTPException(status_code=404,
-                                detail=f"{current_user['username']}の給料は登録されていません")
+                                detail="給料が登録されていません")
         salary = round(sum([income.salary for income in incomes]), 2)
         total_bonus = round(sum([income.total_bonus for income in incomes]), 2)
         total_penalty = round(sum([income.total_penalty for income in incomes]), 2)

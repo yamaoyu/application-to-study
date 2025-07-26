@@ -448,9 +448,9 @@ export function getActivitiesAllPeriod(response, reqMsg){
                     query: { message: "再度ログインしてください" }
                     });
                 }            
-                } else {
-                    handleError(error)
-                }
+            } else {
+                handleError(error)
+            }
         }
         
     }
