@@ -286,7 +286,12 @@ export function finalizeMultiActivities(date, selectedActivities, reqMsg, status
                                 )
         if (response.status===200){
             statusCode.value = response.status;
-            reqMsg.value = response.data.message;
+            reqMsg.value = [
+                `ボーナス+ペナルティ：${response.data.pay_adjustment}\n`,
+                `ボーナス：${response.data.total_bonus}\n`,
+                `ペナルティ：${response.data.total_penalty}\n`,
+                response.data.message
+            ].join('');
             selectedActivities.value = [];
         }
     }
