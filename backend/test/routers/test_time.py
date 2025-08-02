@@ -411,6 +411,10 @@ def test_finish_multi_activity(client, get_headers):
     setup_monthly_income_for_test(client, get_headers)
     setup_target_time_for_test(client, get_headers)
     setup_actual_time_for_test(client, get_headers)
+    # 今回のテストでのボーナス等を定義
+    pay_adjustment = 1.04
+    total_bonus = 1.39
+    total_penalty = 0.35
     # 複数の目標時間を登録
     data = {
         "activities": [
@@ -446,7 +450,10 @@ def test_finish_multi_activity(client, get_headers):
             "2024-5-5の活動を終了:ボーナス0.58万円(5800円)\n"
             "2024-5-6の活動を終了:ペナルティ0.35万円(3500円)\n"
             "2024-5-7の活動を終了:ボーナス0.81万円(8100円)"
-        )
+        ),
+        "pay_adjustment": f"{pay_adjustment}万円({int(pay_adjustment * 10000)}円)",
+        "total_bonus": f"{total_bonus}万円({int(total_bonus * 10000)}円)",
+        "total_penalty": f"{total_penalty}万円({int(total_penalty * 10000)}円)"
     }
 
 

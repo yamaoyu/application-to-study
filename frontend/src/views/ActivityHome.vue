@@ -432,18 +432,18 @@ export default {
         const { register: submitMultiActual } = registerMultiActual(date, statusCode, reqMsg, selectedActivities, checkMsg, activityRes);
         const { finishActivity } = finalizeActivity(date, reqMsg, activityStatus, checkMsg, activityRes);
         const { finishMultiActivities } = finalizeMultiActivities(date, selectedActivities, reqMsg, statusCode, checkMsg, activityRes);
-        const { getPendingActivities } = getActivitiesByStatus(pendingActivities, pendingMsg)
+        const { getPendingActivities } = getActivitiesByStatus(pendingActivities, pendingMsg);
         const showModal = ref(false);
 
         const toggleFormVisibility = () => {
-            isFormVisible.value = !isFormVisible.value
+            isFormVisible.value = !isFormVisible.value;
         }
 
         const toggleActivity = (activity) => {
             if (isSelected(activity)) {
                 selectedActivities.value.splice(selectedActivities.value.indexOf(activity), 1);
             } else {
-                selectedActivities.value.push(activity)
+                selectedActivities.value.push(activity);
             }
         }
 
@@ -452,7 +452,7 @@ export default {
         };
 
         const confirmRegister = async() =>{
-            showModal.value = true
+            showModal.value = true;
         }
 
         const addTargetActivity = () => {

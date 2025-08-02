@@ -382,6 +382,10 @@ def finish_multi_activities(request: dict = Body(),
     error_count = 0
     message = ""
     dates = request.get("dates", [])
+    # まとめて終了された活動の合計を集計
+    pay_adjustment = 0
+    total_bonus = 0
+    total_penalty = 0
     if len(dates) == 0:
         raise HTTPException(status_code=400, detail="日付を指定してください")
     for date in dates:
@@ -402,6 +406,7 @@ def finish_multi_activities(request: dict = Body(),
             if actual_time >= target_time:
                 activity.status = "success"
                 bonus = round(((income.salary / 200) * actual_time), 2)
+                total_bonus = round((total_bonus + bonus), 2)
                 activity.bonus = bonus
                 # 対象日のbonusをコミット
                 db.commit()
@@ -413,6 +418,7 @@ def finish_multi_activities(request: dict = Body(),
                 activity.status = "failure"
                 diff = round((target_time - actual_time), 1)
                 penalty = round(((income.salary / 200) * diff), 2)
+                total_penalty = round((total_penalty + penalty), 2)
                 activity.penalty = penalty
                 # 対象日のpenaltyをコミット
                 db.commit()
@@ -437,7 +443,13 @@ def finish_multi_activities(request: dict = Body(),
             logger.error(f"複数日の活動終了処理に失敗しました\n{traceback.format_exc()}")
     if error_count > 0:
         raise HTTPException(status_code=400, detail=message[:-1])
-    return {"message": message[:-1]}
+    pay_adjustment = round((total_bonus - total_penalty), 2)
+    return {
+        "message": message[:-1],
+        "pay_adjustment": f"{pay_adjustment}万円({int(pay_adjustment * 10000)}円)",
+        "total_bonus": f"{total_bonus}万円({int(total_bonus * 10000)}円)",
+        "total_penalty": f"{total_penalty}万円({int(total_penalty * 10000)}円)"
+    }
 
 
 @router.get("/activities/{year}/{month}", status_code=200)

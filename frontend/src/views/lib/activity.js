@@ -136,56 +136,46 @@ function registerMultiActivities(config){
             const url = process.env.VUE_APP_BACKEND_URL + "activities/multi/" + config.endpoint;
             const response = await axios[config.method](url,
                                             {activities: activities.value},
-                                            {headers: {Authorization: authStore.getAuthHeader}})
-            statusCode.value = response.status
+                                            {headers: {Authorization: authStore.getAuthHeader}});
+            statusCode.value = response.status;
             if (response.status===config.expectedStatus){
-                reqMsg.value = response.data.message
+                reqMsg.value = response.data.message;
                 }
         }
 
         const register = async() =>{
-            //
+            // 送信ボタンを押した際に実行される処理
             try {
                 await submitMultiActivities();
                 // 更新後の活動情報を取得
                 await renewActivity();
             } catch (error) {
-            if (error.response?.status === 401) {
-                try {
+                if (error.response?.status === 401) {
                     // リフレッシュトークンを検証して新しいアクセストークンを取得
-                    const tokenResponse = await verifyRefreshToken();
-                    // 新しいアクセストークンをストアに保存
-                    await authStore.setAuthData(
-                    tokenResponse.data.access_token,
-                    tokenResponse.data.token_type,
-                    jwtDecode(tokenResponse.data.access_token).exp)
-                    // 再度リクエストを送信
-                    await submitMultiActivities();
-                } catch (error) {
-                    if (error.response?.status === 401) {
-                        try {
-                            // リフレッシュトークンを検証して新しいアクセストークンを取得
-                            const tokenResponse = await verifyRefreshToken();
-                            // 新しいアクセストークンをストアに保存
-                            await authStore.setAuthData(
-                            tokenResponse.data.access_token,
-                            tokenResponse.data.token_type,
-                            jwtDecode(tokenResponse.data.access_token).exp)
-                            // 再度リクエストを送信
-                            await submitMultiActivities();
-                        } catch (refreshError) {
-                            router.push({
-                                path: "/login",
-                                query: { message: "再度ログインしてください" }
-                            });
-                        }   
-                    }
+                    try {
+                        const tokenResponse = await verifyRefreshToken();
+                        await authStore.setAuthData(
+                        tokenResponse.data.access_token,
+                        tokenResponse.data.token_type,
+                        jwtDecode(tokenResponse.data.access_token).exp)
+                        // 再度リクエストを送信
+                        await submitMultiActivities();
+                    } catch (refreshError) {
+                        router.push({
+                        path: "/login",
+                        query: { message: "再度ログインしてください" }
+                        });
+                    }            
+                } else {
+                    handleError(error);
                 }
+            }
+        
+            // 結果に関わらず、活動のリストを初期値にリセット
+            if (config.endpoint==="target"){
+                activities.value.splice(0, activities.value.length, ...config.default.map(obj => ({ ...obj })));
             } else {
-                handleError(error)
-                // 選択された活動をリセット
-                activities.value = []
-                }
+                activities.value.length = config.default;
             }
         }
 
@@ -198,13 +188,15 @@ function registerMultiActivities(config){
 export const registerMultiTarget = registerMultiActivities({
     endpoint: 'target',
     method: 'post',
-    expectedStatus: 201
+    expectedStatus: 201,
+    default: [{ date: '', target_time: 0.5 }]
 });
 
 export const registerMultiActual = registerMultiActivities({
     endpoint: 'actual',
     method: 'put',
-    expectedStatus: 200
+    expectedStatus: 200,
+    default: 0
 });
 
 export function finalizeActivity(date, reqMsg, activityStatus, checkMsg, activityRes) {
@@ -231,32 +223,32 @@ export function finalizeActivity(date, reqMsg, activityStatus, checkMsg, activit
     }
 
     const finishActivity = async() =>{
-    // 活動終了ボタンがクリックされたときに実行される
-    try {
-        await sendFinishRequest();
-        // 更新後の活動情報を取得
-        await renewActivity();
-    } catch (error) {
-        if (error.response?.status === 401) {
-        // リフレッシュトークンを検証して新しいアクセストークンを取得
+        // 活動終了ボタンがクリックされたときに実行される
         try {
-            const tokenResponse = await verifyRefreshToken();
-            await authStore.setAuthData(
-            tokenResponse.data.access_token,
-            tokenResponse.data.token_type,
-            jwtDecode(tokenResponse.data.access_token).exp)
-            // 再度リクエストを送信
             await sendFinishRequest();
-        } catch (refreshError) {
-            router.push({
-            path: "/login",
-            query: { message: "再度ログインしてください" }
-            });
-        }            
-        } else {
-            handleFinishError(error)
+            // 更新後の活動情報を取得
+            await renewActivity();
+        } catch (error) {
+            if (error.response?.status === 401) {
+                // リフレッシュトークンを検証して新しいアクセストークンを取得
+                try {
+                    const tokenResponse = await verifyRefreshToken();
+                    await authStore.setAuthData(
+                    tokenResponse.data.access_token,
+                    tokenResponse.data.token_type,
+                    jwtDecode(tokenResponse.data.access_token).exp)
+                    // 再度リクエストを送信
+                    await sendFinishRequest();
+                } catch (refreshError) {
+                    router.push({
+                    path: "/login",
+                    query: { message: "再度ログインしてください" }
+                    });
+                }            
+            } else {
+                handleFinishError(error)
+            }
         }
-    }
     }
 
     return {
@@ -279,7 +271,12 @@ export function finalizeMultiActivities(date, selectedActivities, reqMsg, status
                                 )
         if (response.status===200){
             statusCode.value = response.status;
-            reqMsg.value = response.data.message;
+            let msg = '';
+            if (response.data.pay_adjustment) msg += `ボーナス+ペナルティ：${response.data.pay_adjustment}\n`;
+            if (response.data.total_bonus) msg += `ボーナス：${response.data.total_bonus}\n`;
+            if (response.data.total_penalty) msg += `ペナルティ：${response.data.total_penalty}\n`;
+            if (response.data.message) msg += response.data.message;
+            reqMsg.value = msg;
             selectedActivities.value = [];
         }
     }
@@ -383,28 +380,28 @@ export function getActivityByYear(year, response, activities, reqMsg){
     const getYearlyInfo = async() =>{
         // 検索ボタンが押された時の処理
         try{
-        await sendRequestForMonthlyInfo();
-        } catch (error){
-        if (error.response?.status === 401) {
-            try {
-            // リフレッシュトークンを検証して新しいアクセストークンを取得
-            const tokenResponse = await verifyRefreshToken();
-            // 新しいアクセストークンをストアに保存
-            await authStore.setAuthData(
-            tokenResponse.data.access_token,
-            tokenResponse.data.token_type,
-            jwtDecode(tokenResponse.data.access_token).exp)
-            // 再度リクエストを送信
             await sendRequestForMonthlyInfo();
-            } catch (refreshError) {
-            router.push({
-                path: "/login",
-                query: { message: "再度ログインしてください" }
-            });
-            }            
-        } else {
-            handleError(error)
-        }
+        } catch (error){
+            if (error.response?.status === 401) {
+                try {
+                    // リフレッシュトークンを検証して新しいアクセストークンを取得
+                    const tokenResponse = await verifyRefreshToken();
+                    // 新しいアクセストークンをストアに保存
+                    await authStore.setAuthData(
+                    tokenResponse.data.access_token,
+                    tokenResponse.data.token_type,
+                    jwtDecode(tokenResponse.data.access_token).exp)
+                    // 再度リクエストを送信
+                    await sendRequestForMonthlyInfo();
+                } catch (refreshError) {
+                    router.push({
+                        path: "/login",
+                        query: { message: "再度ログインしてください" }
+                    });
+                }            
+            } else {
+                handleError(error)
+            }
         }
     }
 
@@ -472,7 +469,7 @@ export function getActivitiesByStatus(pendingActivities, pendingMsg){
                                         {headers: {Authorization: authStore.getAuthHeader}})
         if (response.status==200){
             pendingActivities.value = response.data.activities;
-            pendingMsg.value = ""
+            pendingMsg.value = "";
         }
     }
 
@@ -499,7 +496,7 @@ export function getActivitiesByStatus(pendingActivities, pendingMsg){
                     });
                 }            
             } else {
-                handleError(error)
+                handleError(error);
             }
         }
     }
