@@ -151,36 +151,21 @@ function registerMultiActivities(config){
                 await renewActivity();
             } catch (error) {
                 if (error.response?.status === 401) {
+                    // リフレッシュトークンを検証して新しいアクセストークンを取得
                     try {
-                        // リフレッシュトークンを検証して新しいアクセストークンを取得
                         const tokenResponse = await verifyRefreshToken();
-                        // 新しいアクセストークンをストアに保存
                         await authStore.setAuthData(
                         tokenResponse.data.access_token,
                         tokenResponse.data.token_type,
                         jwtDecode(tokenResponse.data.access_token).exp)
                         // 再度リクエストを送信
                         await submitMultiActivities();
-                    } catch (error) {
-                        if (error.response?.status === 401) {
-                            try {
-                                // リフレッシュトークンを検証して新しいアクセストークンを取得
-                                const tokenResponse = await verifyRefreshToken();
-                                // 新しいアクセストークンをストアに保存
-                                await authStore.setAuthData(
-                                tokenResponse.data.access_token,
-                                tokenResponse.data.token_type,
-                                jwtDecode(tokenResponse.data.access_token).exp)
-                                // 再度リクエストを送信
-                                await submitMultiActivities();
-                            } catch (refreshError) {
-                                router.push({
-                                    path: "/login",
-                                    query: { message: "再度ログインしてください" }
-                                });
-                            }   
-                        }
-                    }
+                    } catch (refreshError) {
+                        router.push({
+                        path: "/login",
+                        query: { message: "再度ログインしてください" }
+                        });
+                    }            
                 } else {
                     handleError(error);
                 }
@@ -238,32 +223,32 @@ export function finalizeActivity(date, reqMsg, activityStatus, checkMsg, activit
     }
 
     const finishActivity = async() =>{
-    // 活動終了ボタンがクリックされたときに実行される
-    try {
-        await sendFinishRequest();
-        // 更新後の活動情報を取得
-        await renewActivity();
-    } catch (error) {
-        if (error.response?.status === 401) {
-        // リフレッシュトークンを検証して新しいアクセストークンを取得
+        // 活動終了ボタンがクリックされたときに実行される
         try {
-            const tokenResponse = await verifyRefreshToken();
-            await authStore.setAuthData(
-            tokenResponse.data.access_token,
-            tokenResponse.data.token_type,
-            jwtDecode(tokenResponse.data.access_token).exp)
-            // 再度リクエストを送信
             await sendFinishRequest();
-        } catch (refreshError) {
-            router.push({
-            path: "/login",
-            query: { message: "再度ログインしてください" }
-            });
-        }            
-        } else {
-            handleFinishError(error)
+            // 更新後の活動情報を取得
+            await renewActivity();
+        } catch (error) {
+            if (error.response?.status === 401) {
+                // リフレッシュトークンを検証して新しいアクセストークンを取得
+                try {
+                    const tokenResponse = await verifyRefreshToken();
+                    await authStore.setAuthData(
+                    tokenResponse.data.access_token,
+                    tokenResponse.data.token_type,
+                    jwtDecode(tokenResponse.data.access_token).exp)
+                    // 再度リクエストを送信
+                    await sendFinishRequest();
+                } catch (refreshError) {
+                    router.push({
+                    path: "/login",
+                    query: { message: "再度ログインしてください" }
+                    });
+                }            
+            } else {
+                handleFinishError(error)
+            }
         }
-    }
     }
 
     return {
@@ -286,12 +271,12 @@ export function finalizeMultiActivities(date, selectedActivities, reqMsg, status
                                 )
         if (response.status===200){
             statusCode.value = response.status;
-            reqMsg.value = [
-                `ボーナス+ペナルティ：${response.data.pay_adjustment}\n`,
-                `ボーナス：${response.data.total_bonus}\n`,
-                `ペナルティ：${response.data.total_penalty}\n`,
-                response.data.message
-            ].join('');
+            let msg = '';
+            if (response.data.pay_adjustment) msg += `ボーナス+ペナルティ：${response.data.pay_adjustment}\n`;
+            if (response.data.total_bonus) msg += `ボーナス：${response.data.total_bonus}\n`;
+            if (response.data.total_penalty) msg += `ペナルティ：${response.data.total_penalty}\n`;
+            if (response.data.message) msg += response.data.message;
+            reqMsg.value = msg;
             selectedActivities.value = [];
         }
     }
@@ -395,28 +380,28 @@ export function getActivityByYear(year, response, activities, reqMsg){
     const getYearlyInfo = async() =>{
         // 検索ボタンが押された時の処理
         try{
-        await sendRequestForMonthlyInfo();
-        } catch (error){
-        if (error.response?.status === 401) {
-            try {
-            // リフレッシュトークンを検証して新しいアクセストークンを取得
-            const tokenResponse = await verifyRefreshToken();
-            // 新しいアクセストークンをストアに保存
-            await authStore.setAuthData(
-            tokenResponse.data.access_token,
-            tokenResponse.data.token_type,
-            jwtDecode(tokenResponse.data.access_token).exp)
-            // 再度リクエストを送信
             await sendRequestForMonthlyInfo();
-            } catch (refreshError) {
-            router.push({
-                path: "/login",
-                query: { message: "再度ログインしてください" }
-            });
-            }            
-        } else {
-            handleError(error)
-        }
+        } catch (error){
+            if (error.response?.status === 401) {
+                try {
+                    // リフレッシュトークンを検証して新しいアクセストークンを取得
+                    const tokenResponse = await verifyRefreshToken();
+                    // 新しいアクセストークンをストアに保存
+                    await authStore.setAuthData(
+                    tokenResponse.data.access_token,
+                    tokenResponse.data.token_type,
+                    jwtDecode(tokenResponse.data.access_token).exp)
+                    // 再度リクエストを送信
+                    await sendRequestForMonthlyInfo();
+                } catch (refreshError) {
+                    router.push({
+                        path: "/login",
+                        query: { message: "再度ログインしてください" }
+                    });
+                }            
+            } else {
+                handleError(error)
+            }
         }
     }
 
