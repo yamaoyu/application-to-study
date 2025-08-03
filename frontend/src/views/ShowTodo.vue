@@ -110,8 +110,8 @@
         </ul>
     </nav>
 
-    <div v-if="todoMsg" class="alert alert-warning">
-        {{ todoMsg }}
+    <div v-if="paginatedTodos.length<=0" class="alert alert-warning">
+        登録された情報はありません
     </div>
     </div>
 

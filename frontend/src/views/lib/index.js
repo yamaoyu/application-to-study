@@ -8,9 +8,11 @@ import { verifyRefreshToken } from "./token";
 import { errorWithStatusCode, errorWithActivityStatus, errorWithActivity, errorWithActivities, commonError } from "./error";
 import { validateUsername, validatePassword, checkPassword, validateEmail } from "./userinfo";
 import { 
-    updateActivity, registerTarget, registerActual, registerMultiTarget, registerMultiActual, finalizeActivity, finalizeMultiActivities,
-    getActivityByMonth, getActivityByYear, getActivitiesAllPeriod, getActivitiesByStatus } from "./activity";
+    updateActivity, registerTarget, registerActual, registerMultiTarget, registerMultiActual, 
+    finalizeActivity, finalizeMultiActivities,
+    getActivityByDay, getActivityByMonth, getActivityByYear, getActivitiesAllPeriod, getActivitiesByStatus } from "./activity";
 import { getTodoRequest, editTodoRequest, finishTodoRequest, deleteTodoRequest } from "./todo";
+import { getIncomeByMonth } from "./income";
 
 export {
     MONTH_DICT,
@@ -46,6 +48,7 @@ export {
     registerMultiActual,
     finalizeActivity,
     finalizeMultiActivities,
+    getActivityByDay,
     getActivityByMonth,
     getActivityByYear,
     getActivitiesAllPeriod,
@@ -53,5 +56,6 @@ export {
     getTodoRequest,
     editTodoRequest,
     finishTodoRequest,
-    deleteTodoRequest
+    deleteTodoRequest,
+    getIncomeByMonth
 }
