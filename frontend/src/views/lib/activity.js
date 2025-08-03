@@ -313,6 +313,47 @@ export function finalizeMultiActivities(date, selectedActivities, reqMsg, status
         }
 }
 
+export function getActivityByDay(year, month, date, activityRes, activityStatus, message) {
+    const router = useRouter();
+    const authStore = useAuthStore();
+    const { handleError } = errorWithActivityStatus(activityStatus, message, router);
+
+    const sendRequestForDailyInfo = async() =>{
+        const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month + '/' + date;
+        activityRes.value = await axios.get(url,
+                                        {headers: {Authorization: authStore.getAuthHeader}})
+    }
+
+    const getDailyInfo = async() =>{
+        try{
+            await sendRequestForDailyInfo();
+        } catch (error){
+            if (error.response?.status === 401) {
+                try {
+                    // リフレッシュトークンを検証して新しいアクセストークンを取得
+                    const tokenResponse = await verifyRefreshToken();
+                    // 新しいアクセストークンをストアに保存
+                    await authStore.setAuthData(
+                    tokenResponse.data.access_token,
+                    tokenResponse.data.token_type,
+                    jwtDecode(tokenResponse.data.access_token).exp)
+                    // 再度リクエストを送信
+                    await sendRequestForDailyInfo();
+                } catch (refreshError) {
+                    router.push({
+                    path: "/login",
+                    query: { message: "再度ログインしてください" }
+                    });
+                }            
+            } else {
+                handleError(error)
+            }
+        }
+    }
+
+    return getDailyInfo
+}
+
 export function getActivityByMonth(selectedMonth, response, activities, reqMsg) {
     const router = useRouter();
     const authStore = useAuthStore();

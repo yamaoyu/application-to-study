@@ -44,7 +44,6 @@ export function getTodoRequest(statusFilter, startDue, endDue, title, todos, tod
             const todoRes = await sendGetTodoRequest()
             if (todoRes.status==200){
                 todos.value = todoRes.data;
-                todoMsg.value = ""
             }
             } catch (todoErr) {
             if (todoErr.response?.status === 401) {
@@ -87,7 +86,8 @@ export function editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue,
                                         {title: newTodoTitle.value, detail:newTodoDetail.value, due:newTodoDue.value},
                                         {headers: {Authorization: authStore.getAuthHeader}})
         if (response.status===200){
-            await getTodos()
+            todoMsg.value = response.data.message;
+            await getTodos();
         }
     }
 
@@ -144,6 +144,7 @@ export function finishTodoRequest(todoId, todoMsg, getTodos) {
         try {
             const response = await sendFinishTodoRequest(todoId.value)
             if (response.status===200){
+                todoMsg.value = response.data.message;
                 await getTodos();
             }
         } catch (error) {
@@ -192,8 +193,9 @@ export function deleteTodoRequest(todoId, todoMsg, getTodos) {
 
     const deleteTodo = async() =>{
         try {
-            const response = await sendDeleteTodoRequest(todoId.value)
-            if (response.status===204){
+            const response = await sendDeleteTodoRequest(todoId.value);
+            if (response.status===200){
+                todoMsg.value = response.data.message;
                 await getTodos();
             }
         } catch (error) {

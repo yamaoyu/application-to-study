@@ -68,9 +68,6 @@ export function errorWithActivity(activityRes, checkMsg, router){
                 "query":{message:"再度ログインしてください"}
                 })
                 break;
-            case 422:
-                checkMsg.value = error.response.data.detail;
-                break;
             default:
                 checkMsg.value = error.response.data.detail;
             }
@@ -122,9 +119,6 @@ export function commonError(message, router){
                         {"path":"/login",
                         "query":{message:"再度ログインしてください"}
                     })
-                    break;
-                case 422:
-                    message.value = error.response.data.detail;
                     break;
                 default:
                     message.value = error.response.data.detail;
