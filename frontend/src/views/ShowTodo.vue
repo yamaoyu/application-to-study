@@ -110,8 +110,8 @@
         </ul>
     </nav>
 
-    <div v-if="paginatedTodos.length<=0" class="alert alert-warning">
-        登録された情報はありません
+    <div v-if="paginatedTodos.length===0" class="alert alert-warning">
+        登録されたTodoはありません
     </div>
     </div>
 
@@ -190,45 +190,45 @@ export default{
     },
 
     setup() {
-        const statusFilter = ref("")
-        const startDue = ref()
-        const endDue = ref()
-        const title = ref()
-        const todos = ref([])
-        const todoMsg = ref("")
-        const showModal = ref(false)
-        const modalTitle = ref()
-        const todoId = ref() // todo操作の対象となるtodoのIDを保持
-        const todoAction = ref() // todoに対して行う操作名(閲覧、編集、終了、削除)
-        const sortType = ref("id") // todoの一覧で表示されるソート順で初期値は登録順(id)
-        const todo = ref() // todoの情報を保持し、Todoの閲覧、編集時に使用する
-        const newTodoTitle = ref("")
-        const newTodoDetail = ref("")
-        const newTodoDue = ref()
-        const isFormVisible = ref(false)
-        const getTodos = getTodoRequest(statusFilter, startDue, endDue, title, todos, todoMsg)
-        const editTodo = editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue, todoMsg, getTodos)
-        const finishTodo = finishTodoRequest(todoId, todoMsg, getTodos)
-        const deleteTodo = deleteTodoRequest(todoId, todoMsg, getTodos)
-        const BOOL_TO_STATUS = { "true":"完了", "false":"未完了" }
+        const statusFilter = ref("");
+        const startDue = ref();
+        const endDue = ref();
+        const title = ref();
+        const todos = ref([]);
+        const todoMsg = ref("");
+        const showModal = ref(false);
+        const modalTitle = ref();
+        const todoId = ref(); // todo操作の対象となるtodoのIDを保持
+        const todoAction = ref(); // todoに対して行う操作名(閲覧、編集、終了、削除)
+        const sortType = ref("id"); // todoの一覧で表示されるソート順で初期値は登録順(id)
+        const todo = ref(); // todoの情報を保持し、Todoの閲覧、編集時に使用する
+        const newTodoTitle = ref("");
+        const newTodoDetail = ref("");
+        const newTodoDue = ref();
+        const isFormVisible = ref(false);
+        const getTodos = getTodoRequest(statusFilter, startDue, endDue, title, todos, todoMsg);
+        const editTodo = editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue, todoMsg, getTodos);
+        const finishTodo = finishTodoRequest(todoId, todoMsg, getTodos);
+        const deleteTodo = deleteTodoRequest(todoId, todoMsg, getTodos);
+        const BOOL_TO_STATUS = { "true":"完了", "false":"未完了" };
 
         // ページネーション用の変数
-        const currentPage = ref(1)
-        const itemsPerPage = ref(10)
-        const totalItems = computed(() => todos.value.length)
-        const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value))
-        const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value)
-        const endIndex = computed(() => Math.min(startIndex.value + itemsPerPage.value, totalItems.value))
+        const currentPage = ref(1);
+        const itemsPerPage = ref(10);
+        const totalItems = computed(() => todos.value.length);
+        const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value));
+        const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value);
+        const endIndex = computed(() => Math.min(startIndex.value + itemsPerPage.value, totalItems.value));
         
         const paginatedTodos = computed(() => {
             return todos.value.slice(startIndex.value, endIndex.value)
-        })
+        });
 
         const goToPage = (page) => {
             if (page >= 1 && page <= totalPages.value) {
                 currentPage.value = page
             }
-        }
+        };
 
         // 表示するページ番号の範囲を計算
         const visiblePages = computed(() => {
@@ -246,11 +246,11 @@ export default{
                 pages.push(i)
             }
             return pages
-        })
+        });
 
         const toggleFormVisibility = () => {
             isFormVisible.value = !isFormVisible.value
-        }
+        };
 
         const sortTodos = async(type) =>{
             sortType.value = type
@@ -263,18 +263,18 @@ export default{
                 return 0;
                 });
             }
-        }
+        };
 
         const applyFilter = async() =>{
             await getTodos()
-        }
+        };
 
         const resetFilter = async() =>{
             statusFilter.value = ""
             startDue.value = ""
             endDue.value = ""
             title.value = ""
-        }
+        };
 
         const confirmRequest = async(content, action) =>{
             showModal.value = true
@@ -294,7 +294,7 @@ export default{
                 newTodoDue.value = content.due
                 todo.value = content
             }
-        }
+        };
 
         const sendTodoRequest = async() =>{
             if (todoAction.value==='finish'){
@@ -308,11 +308,11 @@ export default{
             todoId.value = null
             todoAction.value = null
             todo.value = null
-        }
+        };
 
         onMounted( async()=>{
             await getTodos();
-        })
+        });
 
         return {
             todo,

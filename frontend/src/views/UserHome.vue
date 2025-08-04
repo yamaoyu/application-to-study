@@ -272,26 +272,26 @@ export default {
     const editTodo = editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue, todoMsg, getTodos);
     const finishTodo = finishTodoRequest(todoId, todoMsg, getTodos);
     const deleteTodo = deleteTodoRequest(todoId, todoMsg, getTodos);
-    const getTodayActivity = getActivityByDay(year, month, date, activityRes, activityStatus, activityMsg)
+    const getTodayActivity = getActivityByDay(year, month, date, activityRes, activityStatus, activityMsg);
     const getThisMonthIncome = getIncomeByMonth(incomeRes, incomeMsg, year, month);
 
-    const currentPage = ref(1)
-    const itemsPerPage = ref(5)
-    const totalItems = computed(() => todos.value.length)
-    const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value))
-    const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value)
-    const endIndex = computed(() => Math.min(startIndex.value + itemsPerPage.value, totalItems.value))
+    const currentPage = ref(1);
+    const itemsPerPage = ref(5);
+    const totalItems = computed(() => todos.value.length);
+    const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value));
+    const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value);
+    const endIndex = computed(() => Math.min(startIndex.value + itemsPerPage.value, totalItems.value));
 
     const paginatedTodos = computed(() =>{
       return todos.value.slice(startIndex.value, endIndex.value)
       }
-    )
+    );
 
     const goToPage = (page) =>{
       if (page >= 1 && page <= totalPages.value) {
         currentPage.value = page
       }
-    }
+    };
 
     const visiblePages = computed(() =>{
       const pages = []
@@ -309,7 +309,7 @@ export default {
       }
 
       return pages
-    })
+    });
 
     const confirmRequest = async(content, action) =>{
       showModal.value = true
@@ -329,7 +329,7 @@ export default {
         newTodoDue.value = content.due
         todo.value = content
       }
-    }
+    };
 
     const sendTodoRequest = async() =>{
       if (todoAction.value==='finish'){
@@ -343,7 +343,7 @@ export default {
       todoId.value = null
       todoAction.value = null
       todo.value = null
-    }
+    };
 
     const sortTodos = async(type) =>{
       sortType.value = type
@@ -356,7 +356,7 @@ export default {
           return 0;
         });
       }
-    }
+    };
 
     onMounted( async() =>{
       // その日の活動実績を取得
