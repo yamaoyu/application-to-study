@@ -94,7 +94,7 @@ def get_specific_todo(todo_id: int,
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.delete("/todos/{todo_id}", status_code=200)
+@router.delete("/todos/{todo_id}", status_code=204)
 def delete_todo(todo_id: int,
                 db: Session = Depends(get_db),
                 current_user: dict = Depends(get_current_user)):
@@ -106,7 +106,6 @@ def delete_todo(todo_id: int,
             raise HTTPException(status_code=404, detail="選択されたタスクは存在しません")
         db.commit()
         logger.info(f"{current_user['username']}がTodoを削除 ID:{todo_id}")
-        return {"message": "選択したTodoを削除しました"}
     except HTTPException as http_exception:
         raise http_exception
     except Exception:
