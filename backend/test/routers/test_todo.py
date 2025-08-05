@@ -172,8 +172,7 @@ def test_get_todo_by_another_user(client, get_headers):
 def test_delete_todo(client, get_headers):
     setup_create_todo(client, get_headers)
     response = client.delete("/todos/1", headers=get_headers)
-    assert response.status_code == 200
-    assert response.json() == {"message": "選択したTodoを削除しました"}
+    assert response.status_code == 204
 
 
 def test_delete_todo_by_another_user(client, get_headers):
