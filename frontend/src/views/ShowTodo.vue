@@ -110,7 +110,7 @@
         </ul>
     </nav>
 
-    <div v-if="paginatedTodos.length===0" class="alert alert-warning">
+    <div v-if="!paginatedTodos.length" class="alert alert-warning">
         登録されたTodoはありません
     </div>
     </div>
