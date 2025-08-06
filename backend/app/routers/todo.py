@@ -106,7 +106,6 @@ def delete_todo(todo_id: int,
             raise HTTPException(status_code=404, detail="選択されたタスクは存在しません")
         db.commit()
         logger.info(f"{current_user['username']}がTodoを削除 ID:{todo_id}")
-        return {"message": "選択したタスクを削除しました"}
     except HTTPException as http_exception:
         raise http_exception
     except Exception:
@@ -169,7 +168,7 @@ def finish_todo(todo_id: int,
         todo.status = True
         logger.info(f"{current_user['username']}がTodoを完了 ID:{todo.todo_id}")
         db.commit()
-        return {"message": "以下のタスクのステータスを終了にしました",
+        return {"message": "選択したTodoを終了しました",
                 "title": todo.title,
                 "status": todo.status}
     except NoResultFound:

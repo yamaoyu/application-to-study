@@ -84,7 +84,7 @@
         </div>
       </div>
     </div>
-    <div class="row d-flex align-items-center justify-content-center my-3">
+    <div v-else class="row d-flex align-items-center justify-content-center my-3">
       <p v-if="incomeMsg" class="col-8 alert alert-warning p-3">
           {{ incomeMsg }}
       </p>
@@ -128,11 +128,6 @@
         </tbody>
       </table>
     </template>
-    <div class="row d-flex align-items-center justify-content-center my-3">
-      <p v-if="todoMsg" class="col-8 alert alert-warning p-3">
-        {{ todoMsg }}
-      </p>
-    </div>
   </div>
   <nav>
     <ul class="pagination justify-content-center">
@@ -165,6 +160,11 @@
         </li>
       </ul>
     </nav>
+    <div class="row d-flex align-items-center justify-content-center my-3">
+      <p v-if="todoMsg" class="col-8 alert alert-success p-3">
+        {{ todoMsg }}
+      </p>
+    </div>
 
   <BModal v-model="showModal" :title="modalTitle" :ok-title="todoAction==='show' ? 'OK' : '送信'" :cancel-title="todoAction==='show' ? '閉じる' : 'いいえ'" @ok="sendTodoRequest">
     <div v-if="todoAction==='finish' || todoAction==='delete'" class="text-danger">確定後は取り消せません</div>
@@ -232,10 +232,9 @@
 
 <script>
 import { onMounted, ref, computed } from 'vue';
-import axios from 'axios';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/store/authenticate';
-import { STATUS_DICT, getAdjustmentColors, getStatusColors, getActivityAlert, getTodoRequest, editTodoRequest, finishTodoRequest, deleteTodoRequest } from './lib';
+import { STATUS_DICT, getAdjustmentColors, getStatusColors, 
+        getActivityAlert, getTodoRequest, editTodoRequest, getActivityByDay,
+        finishTodoRequest, deleteTodoRequest, getIncomeByMonth } from './lib';
 import { BButton, BModal } from 'bootstrap-vue-next';
 
 export default {
@@ -245,54 +244,54 @@ export default {
   },
 
   setup() {
-    const today = new Date()
-    const year = today.getFullYear()
+    const today = new Date();
+    const year = today.getFullYear();
     const month = today.getMonth() + 1;
     const date = today.getDate();
-    const activityMsg = ref("")
-    const activityRes = ref()
-    const activityStatus = ref("")
-    const incomeMsg = ref("")
-    const incomeRes = ref()
-    const todos = ref([]) // 取得した全てのtodo
-    const todoMsg = ref("")
-    const showModal = ref(false)
-    const modalTitle = ref("")
-    const todoId = ref() // todo操作の対象となるtodoのIDを保持
-    const todoAction = ref() // todoに対して行う操作名(閲覧、編集、終了、削除)
-    const sortType = ref("id") // todoの一覧で表示されるソート順で初期値は登録順(id)
-    const todo = ref() // todoの情報を保持し、Todoの閲覧、編集時に使用する
-    const newTodoTitle = ref("")
-    const newTodoDetail = ref("")
-    const newTodoDue = ref()
-    const router = useRouter()
-    const authStore = useAuthStore()
-    const statusFilter = ref("false")
-    const startDue = ref()
-    const endDue = ref()
-    const title = ref()
-    const getTodos = getTodoRequest(statusFilter, startDue, endDue, title, todos, todoMsg)
-    const editTodo = editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue, todoMsg, getTodos)
-    const finishTodo = finishTodoRequest(todoId, todoMsg, getTodos)
-    const deleteTodo = deleteTodoRequest(todoId, todoMsg, getTodos)
+    const activityMsg = ref("");
+    const activityRes = ref();
+    const activityStatus = ref("");
+    const incomeMsg = ref("");
+    const incomeRes = ref();
+    const todos = ref([]); // 取得した全てのtodo
+    const todoMsg = ref("");
+    const showModal = ref(false);
+    const modalTitle = ref("");
+    const todoId = ref(); // todo操作の対象となるtodoのIDを保持
+    const todoAction = ref(); // todoに対して行う操作名(閲覧、編集、終了、削除)
+    const sortType = ref("id"); // todoの一覧で表示されるソート順で初期値は登録順(id)
+    const todo = ref(); // todoの情報を保持し、Todoの閲覧、編集時に使用する
+    const newTodoTitle = ref("");
+    const newTodoDetail = ref("");
+    const newTodoDue = ref();
+    const statusFilter = ref("false");
+    const startDue = ref();
+    const endDue = ref();
+    const title = ref();
+    const getTodos = getTodoRequest(statusFilter, startDue, endDue, title, todos, todoMsg);
+    const editTodo = editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue, todoMsg, getTodos);
+    const finishTodo = finishTodoRequest(todoId, todoMsg, getTodos);
+    const deleteTodo = deleteTodoRequest(todoId, todoMsg, getTodos);
+    const getTodayActivity = getActivityByDay(year, month, date, activityRes, activityStatus, activityMsg);
+    const getThisMonthIncome = getIncomeByMonth(incomeRes, incomeMsg, year, month);
 
-    const currentPage = ref(1)
-    const itemsPerPage = ref(5)
-    const totalItems = computed(() => todos.value.length)
-    const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value))
-    const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value)
-    const endIndex = computed(() => Math.min(startIndex.value + itemsPerPage.value, totalItems.value))
+    const currentPage = ref(1);
+    const itemsPerPage = ref(5);
+    const totalItems = computed(() => todos.value.length);
+    const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value));
+    const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value);
+    const endIndex = computed(() => Math.min(startIndex.value + itemsPerPage.value, totalItems.value));
 
     const paginatedTodos = computed(() =>{
       return todos.value.slice(startIndex.value, endIndex.value)
       }
-    )
+    );
 
     const goToPage = (page) =>{
       if (page >= 1 && page <= totalPages.value) {
         currentPage.value = page
       }
-    }
+    };
 
     const visiblePages = computed(() =>{
       const pages = []
@@ -310,7 +309,7 @@ export default {
       }
 
       return pages
-    })
+    });
 
     const confirmRequest = async(content, action) =>{
       showModal.value = true
@@ -330,7 +329,7 @@ export default {
         newTodoDue.value = content.due
         todo.value = content
       }
-    }
+    };
 
     const sendTodoRequest = async() =>{
       if (todoAction.value==='finish'){
@@ -344,7 +343,7 @@ export default {
       todoId.value = null
       todoAction.value = null
       todo.value = null
-    }
+    };
 
     const sortTodos = async(type) =>{
       sortType.value = type
@@ -357,102 +356,32 @@ export default {
           return 0;
         });
       }
-    }
-
-    const renewTodos = async() =>{
-      // todo更新後、データを再取得し、更新する
-      try {
-        const todoUrl = process.env.VUE_APP_BACKEND_URL + 'todos/?status=False'
-        const todoRes = await axios.get(todoUrl,
-                                      {headers: {Authorization: authStore.getAuthHeader}})
-        todos.value = todoRes.data;
-      } catch (todo_err){
-        switch (todo_err.response.status){
-          case 404:
-          case 500:
-            todos.value = []
-            todoMsg.value = todo_err.response.data.detail;
-            break
-          default:
-            todoMsg.value = "todoの取得に失敗しました"
-        }
-      }
-    }
+    };
 
     onMounted( async() =>{
       // その日の活動実績を取得
-      try {
-        const act_url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month + '/' + date;
-        activityRes.value = await axios.get(act_url,
-                                            {headers: {Authorization: authStore.getAuthHeader}})
-        if (activityRes.value.status===200){
-          activityStatus.value = activityRes.value.data.status
-          const bonusInYen = parseInt(activityRes.value.data.bonus * 10000, 10)
-          const penaltyInYen = parseInt(activityRes.value.data.penalty * 10000, 10)
-          if (activityRes.value.data.status === "success"){
-            activityMsg.value = `目標達成!|\nボーナス:${activityRes.value.data.bonus}万円(${bonusInYen}円)`
-          } else if(activityRes.value.data.status === "failure"){
-            activityMsg.value = `目標失敗...\nペナルティ:${activityRes.value.data.penalty}万円(${penaltyInYen}円)`
-          } else {
-            if (activityRes.value.data.target_time <= activityRes.value.data.actual_time) {
-            activityMsg.value = `目標達成!活動を終了してください\n確定後のボーナス:${activityRes.value.data.bonus}万円(${bonusInYen}円)`
-            } else {
-            activityMsg.value = `このままだと、${activityRes.value.data.penalty}万円(${penaltyInYen}円)のペナルティが発生`}
-          }
-        }
-      } catch (act_err) {
-        activityStatus.value = ""
-        if (act_err.response){
-          switch (act_err.response.status){
-            case 401:
-              router.push(
-                {"path":"/login",
-                  "query":{message:"再度ログインしてください"}
-                })
-              break;
-            case 404:
-            case 500:
-              activityMsg.value = act_err.response.data.detail;
-              break;
-            default:
-              activityMsg.value = "情報の取得に失敗しました";}
-        } else if (act_err.request){
-          activityMsg.value =  "リクエストがサーバーに到達できませんでした"
+      await getTodayActivity()
+      if (activityRes.value?.status===200){
+        activityStatus.value = activityRes.value.data.status
+        const bonusInYen = parseInt(activityRes.value.data.bonus * 10000, 10)
+        const penaltyInYen = parseInt(activityRes.value.data.penalty * 10000, 10)
+        if (activityRes.value.data.status === "success"){
+          activityMsg.value = `目標達成!|\nボーナス:${activityRes.value.data.bonus}万円(${bonusInYen}円)`
+        } else if(activityRes.value.data.status === "failure"){
+          activityMsg.value = `目標失敗...\nペナルティ:${activityRes.value.data.penalty}万円(${penaltyInYen}円)`
         } else {
-          activityMsg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
+          if (activityRes.value.data.target_time <= activityRes.value.data.actual_time) {
+          activityMsg.value = `目標達成!活動を終了してください\n確定後のボーナス:${activityRes.value.data.bonus}万円(${bonusInYen}円)`
+          } else {
+          activityMsg.value = `このままだと、${activityRes.value.data.penalty}万円(${penaltyInYen}円)のペナルティが発生`}
         }
       }
 
       // その月の月収を取得
-      try{
-        const income_url = process.env.VUE_APP_BACKEND_URL + 'incomes/' + year + '/' + month;
-        incomeRes.value = await axios.get(income_url,
-                                        {headers: {Authorization: authStore.getAuthHeader}}
-        )
-      } catch (income_err) {
-        if (income_err.response){
-          switch (income_err.response.status){
-            case 401:
-              router.push(
-                {"path":"/login",
-                  "query":{message:"再度ログインしてください"}
-                })
-              break;
-            case 404:
-            case 500:
-              incomeMsg.value = income_err.response.data.detail;
-              break;
-            default:
-              incomeMsg.value = "情報の取得に失敗しました";}
-        } else if (income_err.request){
-          incomeMsg.value =  "リクエストがサーバーに到達できませんでした"
-        } else {
-          incomeMsg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
-        }
-      }
+      await getThisMonthIncome();
 
-        // そのユーザーの未完了のtodoを取得
-        await getTodos()
+      // そのユーザーの未完了のtodoを取得
+      await getTodos();
       }
     )
 
@@ -476,7 +405,6 @@ export default {
       sendTodoRequest,
       sortTodos,
       sortType,
-      renewTodos,
       deleteTodo,
       finishTodo,
       editTodo,

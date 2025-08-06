@@ -227,7 +227,7 @@ def test_finish_todo(client, get_headers):
     setup_create_todo(client, get_headers)
     response = client.put("/todos/finish/1", headers=get_headers)
     assert response.status_code == 200
-    assert response.json() == {"message": "以下のタスクのステータスを終了にしました",
+    assert response.json() == {"message": "選択したTodoを終了しました",
                                "title": test_title,
                                "status": True}
 
