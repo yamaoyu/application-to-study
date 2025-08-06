@@ -195,7 +195,7 @@ export function deleteTodoRequest(todoId, todoMsg, getTodos) {
     const deleteTodo = async() =>{
         try {
             const response = await sendDeleteTodoRequest(todoId.value);
-            if (response.status===200){
+            if (response.status===204){
                 todoMsg.value = response.data.message;
                 await getTodos();
             }
