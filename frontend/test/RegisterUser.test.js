@@ -12,11 +12,20 @@ describe('ユーザー作成', () => {
     })
 
     it('ユーザー作成に成功', async () => {
+        const username = "test";
+        const maskedPassword = "**********"
+        const email = "test@example.com"
+        const expectedMessage = `${username}の作成に成功しました`
+
+
         axios.post.mockResolvedValue({
-            status: 200,
+            status: 201,
             data: {
-                access_token: 'mock-token',
-                token_type: 'Bearer'
+                "username": username,
+                "password": maskedPassword,
+                "email": email,
+                "message": expectedMessage,
+                "role": "general"
             }
         });
 
@@ -36,8 +45,7 @@ describe('ユーザー作成', () => {
         expect(wrapper.find('[data-testid="email"]').element.value).toBe("test@example.com");
         // リクエストが正しく行われたことを確認
         await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
-        console.log(axios.post)
-        expect(axios.post).toHaveBeenCalledTimes(1)
+        expect(axios.post).toHaveBeenCalledTimes(1);
         expect(axios.post).toHaveBeenCalledWith(
             process.env.VUE_APP_BACKEND_URL + "users",  // 正しいURL
             {
@@ -45,7 +53,9 @@ describe('ユーザー作成', () => {
                 password: "Test1234!",
                 email: "test@example.com"
             }
-        )
+        );
+        // メッセージが正しいか確認
+        expect(wrapper.vm.message).toEqual(expectedMessage);
     })
 })
 
@@ -126,7 +136,7 @@ describe('パスワード検証', () => {
         await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
         // 数字を含むパスワードを求めるメッセージが表示されることを確認
         expect(wrapper.vm.isValidPassword.valid).toBe(false);
-        expect(wrapper.vm.isValidPassword.message).toBe("数字が含まれていません")
+        expect(wrapper.vm.isValidPassword.message).toBe("数字が含まれていません");
     })
 
     it('記号が含まれていない場合', async () => {
@@ -137,7 +147,7 @@ describe('パスワード検証', () => {
         await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
         // 記号を含むパスワードを求めるメッセージが表示されることを確認
         expect(wrapper.vm.isValidPassword.valid).toBe(false);
-        expect(wrapper.vm.isValidPassword.message).toBe("記号が含まれていません")
+        expect(wrapper.vm.isValidPassword.message).toBe("記号が含まれていません");
     })
 
     it('パスワードが8文字未満の場合', async () => {
@@ -148,7 +158,7 @@ describe('パスワード検証', () => {
         await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
         // 8文字以上のパスワードを求めるメッセージが表示されることを確認
         expect(wrapper.vm.isValidPassword.valid).toBe(false);
-        expect(wrapper.vm.isValidPassword.message).toBe("パスワードは8文字以上16文字以下にして下さい")
+        expect(wrapper.vm.isValidPassword.message).toBe("パスワードは8文字以上16文字以下にして下さい");
     })
 
     it('2つのパスワードが一致しない場合', async () => {
