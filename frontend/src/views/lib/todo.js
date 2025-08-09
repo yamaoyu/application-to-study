@@ -196,7 +196,7 @@ export function deleteTodoRequest(todoId, todoMsg, getTodos) {
         try {
             const response = await sendDeleteTodoRequest(todoId.value);
             if (response.status===204){
-                todoMsg.value = response.data.message;
+                todoMsg.value = "選択したtodoを削除しました";
                 await getTodos();
             }
         } catch (error) {
