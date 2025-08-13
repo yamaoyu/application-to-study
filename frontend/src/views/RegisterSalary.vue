@@ -51,13 +51,15 @@
           v-model="monthlyIncome"
           class="form-control"
           placeholder="月収(万円)"
+          max="2000"
+          min="5"
         />
         <span class="input-group-text">万円</span>
         <button 
           type="button" 
           class="btn btn-outline-secondary" 
           @click="updateSalary(-10)"
-          :disabled="isMinInome"
+          :disabled="isMinIncome"
         >
           -10万
         </button>
@@ -65,7 +67,7 @@
           type="button" 
           class="btn btn-outline-secondary" 
           @click="updateSalary(-5)"
-          :disabled="isMinInome"
+          :disabled="isMinIncome"
         >
           -5万
         </button>
@@ -112,8 +114,8 @@ export default {
     const isAtMaxMonth = computed(() => selectedMonth.value >= maxMonth);
     const isAtMinYear = computed(() => selectedMonth.value <= "2024-12");
     const isAtMaxYear = computed(() => selectedMonth.value >= maxMonth.split("-")[0]);
-    const isMinInome = computed(() => monthlyIncome.value <= 5);
-    const isMaxIncome = computed(() => monthlyIncome.value >= 999);
+    const isMinIncome = computed(() => monthlyIncome.value <= 5);
+    const isMaxIncome = computed(() => monthlyIncome.value >= 2000);
     const { increaseYear } = changeYear(selectedMonth);
     const { increaseMonth } = changeMonth(selectedMonth);
     const registerSalary = registerMonthlyIncome(selectedMonth, monthlyIncome, incomeMsg, statusCode);
@@ -121,7 +123,7 @@ export default {
     const updateSalary = async(step) =>{
       // 画面に表示される給料を更新する関数
       if (step > 0){
-        monthlyIncome.value = Math.min(monthlyIncome.value + step, 999)
+        monthlyIncome.value = Math.min(monthlyIncome.value + step, 2000)
       } else if (step < 0) {
         monthlyIncome.value = Math.max(monthlyIncome.value + step, 5)
       }
@@ -161,7 +163,7 @@ export default {
       isAtMaxMonth,
       isAtMinYear,
       isAtMaxYear,
-      isMinInome,
+      isMinIncome,
       isMaxIncome,
       increaseYear,
       increaseMonth
