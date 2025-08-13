@@ -51,13 +51,15 @@
           v-model="monthlyIncome"
           class="form-control"
           placeholder="月収(万円)"
+          max="2000"
+          min="5"
         />
         <span class="input-group-text">万円</span>
         <button 
           type="button" 
           class="btn btn-outline-secondary" 
           @click="updateSalary(-10)"
-          :disabled="isMinInome"
+          :disabled="isMinIncome"
         >
           -10万
         </button>
@@ -65,7 +67,7 @@
           type="button" 
           class="btn btn-outline-secondary" 
           @click="updateSalary(-5)"
-          :disabled="isMinInome"
+          :disabled="isMinIncome"
         >
           -5万
         </button>
@@ -91,86 +93,41 @@
     <button type="submit" class="btn btn-outline-secondary mt-3">登録</button>
   </form>
   <div class="container d-flex justify-content-center">
-    <p v-if="message" class="mt-3 p-3 col-8" :class="getResponseAlert(statusCode)">{{ message }}</p>
+    <p v-if="incomeMsg" class="mt-3 p-3 col-8" :class="getResponseAlert(statusCode)">{{ incomeMsg }}</p>
   </div>
 </template>
 
 <script>
 import { ref, computed, onMounted } from 'vue';
-import axios from 'axios';
-import { useRouter } from 'vue-router';
-import { getMaxMonth, changeMonth, changeYear, getResponseAlert, getThisMonth, verifyRefreshToken, errorWithStatusCode } from './lib/index';
-import { useAuthStore } from '@/store/authenticate';
-import { jwtDecode } from 'jwt-decode';
+import { getMaxMonth, changeMonth, changeYear, getResponseAlert, getThisMonth, getIncomeByMonth, registerMonthlyIncome } from './lib/index';
 
 export default {
   setup() {
-    const monthlyIncome = ref()
-    const statusCode = ref()
-    const message = ref('')
-    const router = useRouter()
-    const authStore = useAuthStore()
+    const monthlyIncome = ref();
+    const incomeRes = ref();
+    const statusCode = ref();
+    const incomeMsg = ref('');
     const minMonth = "2024-01";
     const maxMonth = getMaxMonth();
     const selectedMonth = ref(getThisMonth());
-    const isAtMinMonth = computed(() => selectedMonth.value <= minMonth)
-    const isAtMaxMonth = computed(() => selectedMonth.value >= maxMonth)
-    const isAtMinYear = computed(() => selectedMonth.value <= "2024-12")
-    const isAtMaxYear = computed(() => selectedMonth.value >= maxMonth.split("-")[0])
-    const isMinInome = computed(() => monthlyIncome.value <= 5)
-    const isMaxIncome = computed(() => monthlyIncome.value >= 999)
+    const isAtMinMonth = computed(() => selectedMonth.value <= minMonth);
+    const isAtMaxMonth = computed(() => selectedMonth.value >= maxMonth);
+    const isAtMinYear = computed(() => selectedMonth.value <= "2024-12");
+    const isAtMaxYear = computed(() => selectedMonth.value >= maxMonth.split("-")[0]);
+    const isMinIncome = computed(() => monthlyIncome.value <= 5);
+    const isMaxIncome = computed(() => monthlyIncome.value >= 2000);
     const { increaseYear } = changeYear(selectedMonth);
     const { increaseMonth } = changeMonth(selectedMonth);
-    const { handleError } = errorWithStatusCode(statusCode, message, router);
+    const registerSalary = registerMonthlyIncome(selectedMonth, monthlyIncome, incomeMsg, statusCode);
 
     const updateSalary = async(step) =>{
       // 画面に表示される給料を更新する関数
       if (step > 0){
-        monthlyIncome.value = Math.min(monthlyIncome.value + step, 999)
+        monthlyIncome.value = Math.min(monthlyIncome.value + step, 2000)
       } else if (step < 0) {
         monthlyIncome.value = Math.max(monthlyIncome.value + step, 5)
       }
-    }
-
-    const submitSalary = async() =>{
-      // 給料を登録する処理
-      const url = process.env.VUE_APP_BACKEND_URL + 'incomes/'+ selectedMonth.value.split("-")[0] + '/' + selectedMonth.value.split("-")[1];
-      const response = await axios.post(url, 
-                                        {salary: Number(monthlyIncome.value)},
-                                        {headers: {Authorization: authStore.getAuthHeader}})
-      statusCode.value = response.status
-      if (response.status===201){
-        message.value = response.data.message
-      }
-    }
-
-    const registerSalary = async() =>{
-      // 登録ボタンクリック時実行される関数
-      try {
-        await submitSalary();
-      } catch (error) {
-        if (error.response?.status === 401) {
-        try {
-          // リフレッシュトークンを検証して新しいアクセストークンを取得
-          const tokenResponse = await verifyRefreshToken();
-          // 新しいアクセストークンをストアに保存
-          await authStore.setAuthData(
-          tokenResponse.data.access_token,
-          tokenResponse.data.token_type,
-          jwtDecode(tokenResponse.data.access_token).exp)
-          // 再度リクエストを送信
-          await submitSalary();
-        } catch (refreshError) {
-          router.push({
-            path: "/login",
-            query: { message: "再度ログインしてください" }
-          });
-        }            
-      } else {
-        handleError(error)
-      }
-      }
-    }
+    };
 
     onMounted( async() =>{
       // 先月の年収を取得
@@ -181,26 +138,22 @@ export default {
       if (date.getMonth() == 0){
         year = date.getFullYear() - 1
         month = 12
-      } 
-      try {
-        const url = process.env.VUE_APP_BACKEND_URL + 'incomes/' + year + '/' + month;
-        const response = await axios.get(url, {headers: {Authorization: authStore.getAuthHeader}})
-        if (response.status===200){
-          monthlyIncome.value = response.data["month_info"].salary
-        } else {
-          monthlyIncome.value = 5
-        }
-      } catch (error) {
+      }
+      const getMonthlyIncome = getIncomeByMonth(incomeRes, incomeMsg, year, month);
+      await getMonthlyIncome();
+      if (incomeRes.value?.status===200){
+        monthlyIncome.value = incomeRes.value.data["month_info"].salary
+      } else {
         monthlyIncome.value = 5
       }
     }
-  )
+  );
 
     return {
       monthlyIncome,
       statusCode,
       getResponseAlert,
-      message,
+      incomeMsg,
       updateSalary,
       registerSalary,
       minMonth,
@@ -210,7 +163,7 @@ export default {
       isAtMaxMonth,
       isAtMinYear,
       isAtMaxYear,
-      isMinInome,
+      isMinIncome,
       isMaxIncome,
       increaseYear,
       increaseMonth

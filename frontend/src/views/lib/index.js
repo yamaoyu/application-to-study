@@ -12,7 +12,7 @@ import {
     finalizeActivity, finalizeMultiActivities,
     getActivityByDay, getActivityByMonth, getActivityByYear, getActivitiesAllPeriod, getActivitiesByStatus } from "./activity";
 import { getTodoRequest, editTodoRequest, finishTodoRequest, deleteTodoRequest } from "./todo";
-import { getIncomeByMonth } from "./income";
+import { getIncomeByMonth, registerMonthlyIncome } from "./income";
 
 export {
     MONTH_DICT,
@@ -57,5 +57,6 @@ export {
     editTodoRequest,
     finishTodoRequest,
     deleteTodoRequest,
-    getIncomeByMonth
+    getIncomeByMonth,
+    registerMonthlyIncome
 }
