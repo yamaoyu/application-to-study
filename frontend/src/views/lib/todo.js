@@ -88,7 +88,8 @@ export function editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue,
                                         {headers: {Authorization: authStore.getAuthHeader}})
         if (response.status===200){
             todoMsg.value = response.data.message;
-            await getTodos();
+            todoMsg.value = response.data.message;
+            await getTodos();;
         }
     }
 
@@ -145,6 +146,7 @@ export function finishTodoRequest(todoId, todoMsg, getTodos) {
         try {
             const response = await sendFinishTodoRequest(todoId.value)
             if (response.status===200){
+                todoMsg.value = response.data.message;
                 todoMsg.value = response.data.message;
                 await getTodos();
             }

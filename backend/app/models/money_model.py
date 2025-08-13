@@ -8,6 +8,6 @@ class RegisterIncome(BaseModel):
     def check_salary(cls, salary):
         if salary < 5:
             raise ValueError("給料は5以上を入力して下さい")
-        elif salary > 999:
-            raise ValueError("給料は999以下を入力して下さい")
+        elif salary > 2000:
+            raise ValueError("給料は2000以下を入力して下さい")
         return salary
