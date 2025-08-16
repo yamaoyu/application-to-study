@@ -13,8 +13,13 @@ describe('ユーザーホームの表示(データあり)', () => {
     );
 
     it('活動実績のデータがある(ステータスが未確定)', async() => {
+        const today = new Date();
+        const expectedYear = today.getFullYear();
+        const expectedMonth = today.getMonth() + 1;
+        const expectedDate = today.getDate();
+        
         const expectedData = {
-            date: "2025-1-1",
+            date: `${expectedYear}-${expectedMonth}-${expectedDate}`,
             target_time: 3,
             actual_time: 0,
             status: "pending",
@@ -31,14 +36,29 @@ describe('ユーザーホームの表示(データあり)', () => {
         // activityResに定義される
         await wrapper.vm.getTodayActivity();
         expect(wrapper.vm.activityRes.data).toEqual(expectedData);
+
+        expect(axios.get).toBeCalledWith(
+            process.env.VUE_APP_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
+            {
+                "headers": {
+                    "Authorization": "登録なし",
+                },
+            },
+        );
+
         // メッセージの確認
         wrapper.vm.setActivityMessage();
         expect(wrapper.vm.activityMsg).toEqual(expectedMessage);
     });
 
     it('活動実績のデータがある(ステータスが成功)', async() => {
+        const today = new Date();
+        const expectedYear = today.getFullYear();
+        const expectedMonth = today.getMonth() + 1;
+        const expectedDate = today.getDate();
+
         const expectedData = {
-            date: "2025-1-1",
+            date: `${expectedYear}-${expectedMonth}-${expectedDate}`,
             target_time: 3,
             actual_time: 3,
             status: "success",
@@ -51,23 +71,33 @@ describe('ユーザーホームの表示(データあり)', () => {
             status: 200,
             data: expectedData
         });
-
-        axios.get.mockResolvedValue({
-            status: 200,
-            data: expectedData
-        });
         
         // activityResに定義される
         await wrapper.vm.getTodayActivity();
         expect(wrapper.vm.activityRes.data).toEqual(expectedData);
+
+        expect(axios.get).toBeCalledWith(
+            process.env.VUE_APP_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
+            {
+                "headers": {
+                    "Authorization": "登録なし",
+                },
+            },
+        );
+
         // メッセージの確認
         wrapper.vm.setActivityMessage();
         expect(wrapper.vm.activityMsg).toEqual(expectedMessage);
     });
 
     it('活動実績のデータがある(ステータスが失敗)', async() => {
+        const today = new Date();
+        const expectedYear = today.getFullYear();
+        const expectedMonth = today.getMonth() + 1;
+        const expectedDate = today.getDate();
+
         const expectedData = {
-            date: "2025-1-1",
+            date: `${expectedYear}-${expectedMonth}-${expectedDate}`,
             target_time: 3,
             actual_time: 3,
             status: "failure",
@@ -81,20 +111,29 @@ describe('ユーザーホームの表示(データあり)', () => {
             data: expectedData
         });
 
-        axios.get.mockResolvedValue({
-            status: 200,
-            data: expectedData
-        });
-        
         // activityResに定義される
         await wrapper.vm.getTodayActivity();
         expect(wrapper.vm.activityRes.data).toEqual(expectedData);
+
+        expect(axios.get).toBeCalledWith(
+            process.env.VUE_APP_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
+            {
+                "headers": {
+                    "Authorization": "登録なし",
+                },
+            },
+        );
+
         // メッセージの確認
         wrapper.vm.setActivityMessage();
         expect(wrapper.vm.activityMsg).toEqual(expectedMessage);
     });
 
     it('給料のデータがある', async() =>{
+        const today = new Date();
+        const expectedYear = today.getFullYear();
+        const expectedMonth = today.getMonth() + 1;
+
         const expectedData = {
             month_info: {
                 salary: 25,
@@ -111,6 +150,16 @@ describe('ユーザーホームの表示(データあり)', () => {
         });
 
         await wrapper.vm.getThisMonthIncome();
+
+        expect(axios.get).toBeCalledWith(
+            process.env.VUE_APP_BACKEND_URL + `incomes/${expectedYear}/${expectedMonth}`,
+            {
+                "headers": {
+                    "Authorization": "登録なし",
+                },
+            },
+        );
+
         expect(wrapper.vm.incomeRes.data).toEqual(expectedData);
     });
 
@@ -136,6 +185,15 @@ describe('ユーザーホームの表示(データあり)', () => {
         });
 
         await wrapper.vm.getTodos();
+        
+        expect(axios.get).toBeCalledWith(
+            process.env.VUE_APP_BACKEND_URL + "todos?status=false",
+            {
+                "headers": {
+                    "Authorization": "登録なし",
+                },
+            },
+        );
         expect(wrapper.vm.todos).toEqual(expectedData);
     });
 });
