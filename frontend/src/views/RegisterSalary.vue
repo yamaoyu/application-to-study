@@ -15,6 +15,7 @@
           class="btn btn-outline-secondary" 
           @click="increaseYear(-1)"
           :disabled="isAtMinYear"
+          data-testid="previousYear"
         >
           前年
         </button>
@@ -23,6 +24,7 @@
           class="btn btn-outline-secondary" 
           @click="increaseMonth(-1)"
           :disabled="isAtMinMonth"
+          data-testid="previousMonth"
         >
           前月
         </button>
@@ -31,6 +33,7 @@
           class="btn btn-outline-secondary" 
           @click="increaseMonth(1)"
           :disabled="isAtMaxMonth"
+          data-testid="nextMonth"
         >
           翌月
         </button>
@@ -39,6 +42,7 @@
           class="btn btn-outline-secondary" 
           @click="increaseYear(1)"
           :disabled="isAtMaxYear"
+          data-testid="nextYear"
         >
           翌年
         </button>
@@ -90,7 +94,7 @@
       </div>
     </div>
 
-    <button type="submit" class="btn btn-outline-secondary mt-3">登録</button>
+    <button type="submit" class="btn btn-outline-secondary mt-3" data-testid="submit">登録</button>
   </form>
   <div class="container d-flex justify-content-center">
     <p v-if="incomeMsg" class="mt-3 p-3 col-8" :class="getResponseAlert(statusCode)">{{ incomeMsg }}</p>
@@ -119,6 +123,17 @@ export default {
     const { increaseYear } = changeYear(selectedMonth);
     const { increaseMonth } = changeMonth(selectedMonth);
     const registerSalary = registerMonthlyIncome(selectedMonth, monthlyIncome, incomeMsg, statusCode);
+    
+    // 先月の年収を取得
+    const date = new Date()
+    let year = date.getFullYear()
+    // 先月のデータを取得するため+1しない
+    let month = date.getMonth()
+    if (date.getMonth() == 0){
+      year = date.getFullYear() - 1
+      month = 12
+    }
+    const getMonthlyIncome = getIncomeByMonth(incomeRes, incomeMsg, year, month);
 
     const updateSalary = async(step) =>{
       // 画面に表示される給料を更新する関数
@@ -130,16 +145,6 @@ export default {
     };
 
     onMounted( async() =>{
-      // 先月の年収を取得
-      const date = new Date()
-      let year = date.getFullYear()
-      // 先月のデータを取得するため+1しない
-      let month = date.getMonth()
-      if (date.getMonth() == 0){
-        year = date.getFullYear() - 1
-        month = 12
-      }
-      const getMonthlyIncome = getIncomeByMonth(incomeRes, incomeMsg, year, month);
       await getMonthlyIncome();
       if (incomeRes.value?.status===200){
         monthlyIncome.value = incomeRes.value.data["month_info"].salary
@@ -153,9 +158,11 @@ export default {
       monthlyIncome,
       statusCode,
       getResponseAlert,
+      incomeRes,
       incomeMsg,
       updateSalary,
       registerSalary,
+      getMonthlyIncome,
       minMonth,
       maxMonth,
       selectedMonth,
