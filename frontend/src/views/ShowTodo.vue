@@ -34,11 +34,11 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">期限(以降)</label>
-                    <input type="date" class="form-control" v-model="startDue">
+                    <input type="date" class="form-control" v-model="beforeDue">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">期限(以前)</label>
-                    <input type="date" class="form-control" v-model="endDue">
+                    <input type="date" class="form-control" v-model="afterDue">
                 </div>
             </div>
             <div class="mt-3">
@@ -46,8 +46,8 @@
                 <input type="text" class="form-control" v-model="title">
             </div>
             <div class="d-flex justify-content-end mt-3">
-                <BButton variant="secondary" class="me-2" @click="resetFilter">リセット</BButton>
-                <BButton variant="primary" @click="applyFilter">フィルター適用</BButton>
+                <BButton variant="secondary" class="me-2" data-testid="reset" @click="resetFilter">リセット</BButton>
+                <BButton variant="primary" data-testid="apply" @click="getTodos">フィルター適用</BButton>
             </div>
         </div>
     </div>
@@ -191,8 +191,8 @@ export default{
 
     setup() {
         const statusFilter = ref("");
-        const startDue = ref();
-        const endDue = ref();
+        const beforeDue = ref();
+        const afterDue = ref();
         const title = ref();
         const todos = ref([]);
         const todoMsg = ref("");
@@ -206,7 +206,7 @@ export default{
         const newTodoDetail = ref("");
         const newTodoDue = ref();
         const isFormVisible = ref(false);
-        const getTodos = getTodoRequest(statusFilter, startDue, endDue, title, todos, todoMsg);
+        const getTodos = getTodoRequest(statusFilter, beforeDue, afterDue, title, todos, todoMsg);
         const editTodo = editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue, todoMsg, getTodos);
         const finishTodo = finishTodoRequest(todoId, todoMsg, getTodos);
         const deleteTodo = deleteTodoRequest(todoId, todoMsg, getTodos);
@@ -271,8 +271,8 @@ export default{
 
         const resetFilter = async() =>{
             statusFilter.value = ""
-            startDue.value = ""
-            endDue.value = ""
+            beforeDue.value = ""
+            afterDue.value = ""
             title.value = ""
         };
 
@@ -316,6 +316,7 @@ export default{
 
         return {
             todo,
+            todos,
             todoMsg,
             showModal,
             modalTitle,
@@ -326,11 +327,12 @@ export default{
             confirmRequest,
             sendTodoRequest,
             statusFilter,
-            startDue,
-            endDue,
+            beforeDue,
+            afterDue,
             title,
             sortType,
             sortTodos,
+            getTodos,
             finishTodo,
             deleteTodo,
             editTodo,
