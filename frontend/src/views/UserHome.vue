@@ -95,7 +95,7 @@
       <!-- 中央に配置するためのコンテナ -->
       <h2 class="text-center">未完了のTodo</h2>
       <!-- 右側に絶対配置でボタンを配置 -->
-      <div class="btn-group position-absolute top-50 end-0 translate-middle-y">
+      <div class="btn-group position-absolute top-50 end-0 translate-middle-y" v-if="todos.length">
         <BButton class="btn btn-outline-secondary bi-sort-down btn-sm" :variant="sortType === 'id' ? 'secondary text-white' : 'outline-secondary'" @click="sortTodos('id')">
           登録順
         </BButton>
@@ -104,30 +104,28 @@
         </BButton>
       </div>
     </div>
-    <template v-if="todos.length">
-      <table class="table table-striped table-responsive">
-        <thead class="table-dark">
-          <tr>
-            <th style="width: 5%;">No.</th>
-            <th>内容</th>
-            <th>期限</th>
-            <th style="width: 8%;"></th>
-            <th style="width: 8%;"></th>
-            <th style="width: 8%;"></th>
-          </tr>
-        </thead>
-        <tbody v-for="(todo, index) in paginatedTodos" :key="index">
-          <tr>
-            <td class="text-center align-middle">{{ index + 1 }}</td>
-            <td class="text-center align-middle todo-title" @click="confirmRequest(todo, 'show')">{{ todo.title }}</td>
-            <td class="text-center align-middle">{{ todo.due }}</td>
-            <td><input class="btn btn-outline-primary btn-sm" type="button" value="編集" @click="confirmRequest(todo, 'edit')"></td>
-            <td><input class="btn btn-outline-success btn-sm" type="button" value="終了" @click="confirmRequest(todo, 'finish')"></td>
-            <td><input class="btn btn-outline-danger btn-sm" type="button" value="削除" @click="confirmRequest(todo, 'delete')"></td>
-          </tr>
-        </tbody>
-      </table>
-    </template>
+    <table class="table table-striped table-responsive" v-if="todos.length">
+      <thead class="table-dark">
+        <tr>
+          <th style="width: 5%;">No.</th>
+          <th>内容</th>
+          <th>期限</th>
+          <th style="width: 8%;"></th>
+          <th style="width: 8%;"></th>
+          <th style="width: 8%;"></th>
+        </tr>
+      </thead>
+      <tbody v-for="(todo, index) in paginatedTodos" :key="index">
+        <tr>
+          <td class="text-center align-middle">{{ index + 1 }}</td>
+          <td class="text-center align-middle todo-title" @click="confirmRequest(todo, 'show')">{{ todo.title }}</td>
+          <td class="text-center align-middle">{{ todo.due }}</td>
+          <td><input class="btn btn-outline-primary btn-sm" type="button" value="編集" @click="confirmRequest(todo, 'edit')"></td>
+          <td><input class="btn btn-outline-success btn-sm" type="button" value="終了" @click="confirmRequest(todo, 'finish')"></td>
+          <td><input class="btn btn-outline-danger btn-sm" type="button" value="削除" @click="confirmRequest(todo, 'delete')"></td>
+        </tr>
+      </tbody>
+    </table>
   </div>
   <nav>
     <ul class="pagination justify-content-center">

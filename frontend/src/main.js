@@ -24,7 +24,6 @@ router.beforeEach(async (to) => {
   if (to.name===undefined){
     return { name: 'Home' }
   }
-  console.log(to)
   // 遷移先がログインページとユーザー登録ページ以外の場合
   if (ALLOWED_ROUTES.includes(to.name)) {
     return
