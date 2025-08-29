@@ -4,10 +4,11 @@
             <BButton 
                 v-for="type in types" 
                 :key="type.value"
-                @click="registertype = type.value"
-                :variant="registertype === type.value ? 'primary' : 'outline-secondary'"
+                @click="registerType = type.value"
+                :variant="registerType === type.value ? 'primary' : 'outline-secondary'"
                 class="me-2"
                 :title="`${type.label}登録フォームへ切り替え`"
+                :data-testid="type.value"
             >
                 {{ type.label }}
             </BButton>
@@ -20,6 +21,7 @@
                 :variant="activeTab === tab.value ? 'primary' : 'outline-secondary'"
                 class="me-2"
                 :title="`${tab.label}登録フォームへ切り替え`"
+                :data-testid="tab.value"
             >
                 {{ tab.label }}
             </BButton>
@@ -32,7 +34,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">目標時間</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold text-center">{{ activityRes.data.target_time }}</span>
+                            <span class="h3 fw-bold text-center" data-testid="show-target-time">{{ activityRes.data.target_time }}</span>
                             時間
                         </div>
                     </div>
@@ -41,7 +43,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">活動時間</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold text-center">{{ activityRes.data.actual_time }}</span>
+                            <span class="h3 fw-bold text-center" data-testid="show-actual-time">{{ activityRes.data.actual_time }}</span>
                             時間
                         </div>
                     </div>
@@ -50,13 +52,13 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">ステータス</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold text-center" :class="getStatusColors[activityRes.data.status]">{{ STATUS_DICT[activityRes.data.status] }}</span>
+                            <span class="h3 fw-bold text-center" :class="getStatusColors[activityRes.data.status]"  data-testid="show-status">{{ STATUS_DICT[activityRes.data.status] }}</span>
                         </div>
                     </div>
                 </div>
             </div>
             <div v-if="checkMsg" class="row d-flex justify-content-center mt-3">
-                <p class="alert alert-warning">{{ checkMsg }}</p>
+                <p class="alert alert-warning" data-testid="checkMsg">{{ checkMsg }}</p>
             </div>
         </div>
 
@@ -91,7 +93,7 @@
 
         <!-- タブによる画面切り替え -->
         <div class="container">
-            <div v-show="activeTab === 'target' && registertype === 'single'">
+            <div v-show="activeTab === 'target' && registerType === 'single'">
                 <form @submit.prevent="confirmRegister">
                     <div class="row d-flex justify-content-center mt-4">
                         <div class="input-group">
@@ -104,14 +106,15 @@
                                 max="12"
                                 step="0.5"
                                 @input="validateTime($event, targetTime)"
+                                data-testid="target-time"
                                 />
                             <span class="input-group-text small">時間(Hour)</span>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-outline-secondary mt-3">登録</button>
+                    <button type="submit" class="btn btn-outline-secondary mt-3" data-testid="submit-single-target">登録</button>
                 </form>
             </div>
-            <div v-show="activeTab === 'actual' && registertype === 'single'">
+            <div v-show="activeTab === 'actual' && registerType === 'single'">
                 <form @submit.prevent="confirmRegister">
                     <div class="row d-flex justify-content-center mt-4">
                         <div class="input-group">
@@ -124,21 +127,22 @@
                                 max="12"
                                 step="0.5"
                                 @input="validateTime($event, actualTime)"
+                                data-testid="actual-time"
                                 />
                             <span class="input-group-text small">時間(Hour)</span>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-outline-secondary mt-3">登録</button>
+                    <button type="submit" class="btn btn-outline-secondary mt-3" data-testid="submit-single-actual">登録</button>
                 </form>
             </div>
-            <div v-show="activeTab === 'finish' && registertype === 'single'">
+            <div v-show="activeTab === 'finish' && registerType === 'single'">
                 <form @submit.prevent="confirmRegister">
                     <div class="container">
-                        <button type="submit" class="btn btn-outline-secondary mt-3">終了</button>
+                        <button type="submit" class="btn btn-outline-secondary mt-3" data-testid="finish-single">終了</button>
                     </div>
                 </form>
             </div>
-            <div v-show="activeTab === 'target' && registertype === 'multi'">
+            <div v-show="activeTab === 'target' && registerType === 'multi'">
                 <BCard class="border-0 shadow-sm mt-3" bg-variant="light">
                     <div class="text-center">
                         <h5 class="card-title text-primary fw-bold mb-2">
@@ -167,6 +171,7 @@
                                         class="form-control" 
                                         min="2024-01-01"
                                         :max="getMaxDate()"
+                                        :data-testid="`target-date-row-${index}`"
                                     />
                                 </div>
                             </td>
@@ -180,6 +185,7 @@
                                         max="12"
                                         step="0.5"
                                         @input="validateTime($event, activity.target_time)"
+                                        :data-testid="`target-time-row-${index}`"
                                     />
                                     <span class="input-group-text small">時間</span>
                                 </div>
@@ -189,6 +195,7 @@
                                     type="button" 
                                     class="btn btn-outline-danger btn-sm"
                                     @click="removeTargetActivity(index)"
+                                    :data-testid="`decrease-target-row-${index}`"
                                 >
                                     削除
                                 </button>
@@ -200,6 +207,7 @@
                                     type="button" 
                                     class="btn btn-outline-primary"
                                     @click="addTargetActivity"
+                                    data-testid="increase-target-row"
                                 >
                                     + 行を追加
                                 </button>
@@ -212,11 +220,12 @@
                     class="btn btn-outline-secondary mt-3"
                     @click="confirmRegister"
                     :disabled="!isValidActivities"
+                    data-testid="submit-multi-target"
                 >
                     まとめて登録
                 </button>
             </div>
-            <div v-show="activeTab === 'actual' && registertype === 'multi'">
+            <div v-show="activeTab === 'actual' && registerType === 'multi'">
                 <div v-if="Object.keys(editActivities).length > 0" class="mt-3">
                     <BCard class="border-0 shadow-sm mt-3" bg-variant="light">
                         <div class="text-center">
@@ -242,7 +251,7 @@
                                 :key="index"
                                 :class="{ 'table-active': isSelected(activity) }"
                             >
-                                <td @click="toggleActivity(activity)">
+                                <td @click="toggleActivity(activity)" :data-testid="`is-selected-actual-${index}`">
                                     <input 
                                         class="form-check-input" 
                                         type="checkbox"
@@ -253,19 +262,20 @@
                                 <td @click="toggleActivity(activity)">{{ activity.date }}</td>
                                 <td @click="toggleActivity(activity)">{{ activity.target_time }}時間</td>
                                 <td>
-                                <div class="input-group">
-                                    <input
-                                        type="number"
-                                        v-model="activity.actual_time"
-                                        class="form-control text-center"
-                                        min="0.0"
-                                        max="12"
-                                        step="0.5"
-                                        @input="validateTime($event, activity.actual_time)"
-                                    />
-                                    <span class="input-group-text small">時間</span>
-                                </div>
-                            </td>
+                                    <div class="input-group">
+                                        <input
+                                            type="number"
+                                            v-model="activity.actual_time"
+                                            class="form-control text-center"
+                                            min="0.0"
+                                            max="12"
+                                            step="0.5"
+                                            @input="validateTime($event, activity.actual_time)"
+                                            :data-testid="`actual-time-row-${index}`"
+                                        />
+                                        <span class="input-group-text small">時間</span>
+                                    </div>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -274,13 +284,14 @@
                         class="btn btn-outline-secondary mt-3"
                         @click="confirmRegister"
                         :disabled="selectedActivities.length === 0"
+                        data-testid="submit-multi-actual"
                     >
                         まとめて登録
                     </button>
                 </div>
                 <div v-else class="mt-3 alert alert-warning">登録対象の活動がありません</div>
             </div>
-            <div v-show="activeTab === 'finish' && registertype === 'multi'">
+            <div v-show="activeTab === 'finish' && registerType === 'multi'">
                 <div v-if="Object.keys(pendingActivities).length > 0" class="mt-3">
                     <BCard class="border-0 shadow-sm mt-3" bg-variant="light">
                         <div class="text-center">
@@ -307,7 +318,7 @@
                                 @click="toggleActivity(activity.date)"
                                 :class="{ 'table-active': isSelected(activity.date) }"
                             >
-                                <td>
+                                <td :data-testid="`is-selected-finish-${index}`">
                                     <input 
                                         class="form-check-input" 
                                         type="checkbox"
@@ -326,14 +337,15 @@
                         class="btn btn-outline-secondary mt-3"
                         @click="confirmRegister"
                         :disabled="selectedActivities.length === 0"
+                        data-testid="finish-multi"
                     >
                         まとめて終了
                     </button>
                 </div>
                 <div v-else class="mt-3 alert alert-warning">確定可能な活動がありません</div>
             </div>
-            <div class="container d-flex justify-content-center" v-if="reqMsg">
-                <p v-if="activeTab==='finish'&&registertype==='single'" class="mt-3 col-12" :class="getActivityAlert(activityStatus)">{{ reqMsg }}</p>
+            <div class="container d-flex justify-content-center" v-if="reqMsg" data-testid="reqMsg">
+                <p v-if="activeTab==='finish'&&registerType==='single'" class="mt-3 col-12" :class="getActivityAlert(activityStatus)">{{ reqMsg }}</p>
                 <p v-else class="mt-3 col-12" :class="getResponseAlert(statusCode)">{{ reqMsg }}</p>
             </div>
         </div>
@@ -373,7 +385,7 @@
     </div>
 
     <!-- モーダルコンポーネントで登録前の確認 -->
-    <BModal v-model="showModal" :title="modalTitle" ok-title="はい" cancel-title="いいえ" @ok="sendRequest">
+    <BModal v-model="showModal" :title="modalTitle" ok-title="はい" cancel-title="いいえ" @ok="sendRequest" data-testid="modal-show">
         <p>{{ modalMessage }}</p>
         <p v-if="activeTab==='finish'" class="text-danger">確定後は取り消せません</p>
     </BModal>
@@ -399,7 +411,7 @@ export default {
 
     setup() {
         const activeTab = ref("target");
-        const registertype = ref("single");
+        const registerType = ref("single");
         const selectedActivities = ref([]);
         const targetActivities = ref([{ date: '', target_time: 0.5 }]);
         const date = ref(getToday());
@@ -510,7 +522,7 @@ export default {
 
         const modalMessage = computed(() =>{
             if (showModal.value) {
-                switch(registertype.value){
+                switch(registerType.value){
                     case 'single':
                         switch(activeTab.value) {
                             case 'target': return `${date.value}の目標時間を ${targetTime.value}時間に登録しますか？`;
@@ -531,39 +543,38 @@ export default {
         })
 
         const sendRequest = async() =>{
-            if (showModal.value) {
-                if (registertype.value === 'single') {
-                    switch(activeTab.value) {
-                        case 'target':
-                            await submitTarget();
-                            await getPendingActivities();
-                            break;
-                        case 'actual':
-                            await submitActual();
-                            await getPendingActivities();
-                            break;
-                        case 'finish':
-                            await finishActivity();
-                            await getPendingActivities();
-                            break;
-                    }
-                } else if (registertype.value === 'multi') {
-                    switch(activeTab.value) {
-                        case 'target':
-                            await submitMultiTarget();
-                            await getPendingActivities();
-                            break;
-                        case 'actual':
-                            await submitMultiActual();
-                            await getPendingActivities();
-                            break;
-                        case 'finish':
-                            await finishMultiActivities();
-                            await getPendingActivities();
-                            break;
-                    }
+            if (registerType.value === 'single') {
+                switch(activeTab.value) {
+                    case 'target':
+                        await submitTarget();
+                        await getPendingActivities();
+                        break;
+                    case 'actual':
+                        await submitActual();
+                        await getPendingActivities();
+                        break;
+                    case 'finish':
+                        await finishActivity();
+                        await getPendingActivities();
+                        break;
+                }
+            } else if (registerType.value === 'multi') {
+                switch(activeTab.value) {
+                    case 'target':
+                        await submitMultiTarget();
+                        await getPendingActivities();
+                        break;
+                    case 'actual':
+                        await submitMultiActual();
+                        await getPendingActivities();
+                        break;
+                    case 'finish':
+                        await finishMultiActivities();
+                        await getPendingActivities();
+                        break;
                 }
             }
+            showModal.value = false;
         }
 
         watch(date, () => {
@@ -576,7 +587,7 @@ export default {
             selectedActivities.value = [];
         })
 
-        watch(registertype, () => {
+        watch(registerType, () => {
             reqMsg.value = "";
         })
 
@@ -587,7 +598,6 @@ export default {
                 immediate: true,  // 初回実行
             }
         );
-        
 
         onMounted(() => {
             renewActivity();
@@ -596,7 +606,7 @@ export default {
 
     return {
             activeTab,
-            registertype,
+            registerType,
             tabs,
             types,
             selectedActivities,
@@ -614,6 +624,7 @@ export default {
             editActivities,
             pendingMsg,
             increaseDay,
+            renewActivity,
             STATUS_DICT,
             getMaxDate,
             getStatusColors,
@@ -631,7 +642,13 @@ export default {
             isFormVisible,
             modalTitle,
             modalMessage,
-            sendRequest
+            sendRequest,
+            submitTarget,
+            submitActual,
+            finishActivity,
+            submitMultiTarget,
+            submitMultiActual,
+            finishMultiActivities
         }
     }
 }
