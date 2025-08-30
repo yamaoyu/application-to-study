@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ShowTodo from '@/views/ShowTodo.vue';
 import { mountComponent } from './vitest.setup';
-import axios, { Axios } from 'axios';
+import axios from 'axios';
 
 describe('フィルターなし', () => {
     let wrapper;

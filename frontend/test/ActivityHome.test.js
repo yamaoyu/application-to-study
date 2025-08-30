@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ActivityHome from '@/views/ActivityHome.vue';
 import { mountComponent } from './vitest.setup';
 import axios from 'axios';
-import ActivityHome from '@/views/ActivityHome.vue';
 import { flushPromises } from '@vue/test-utils';
 
 describe('選択した日の活動登録状況確認', () => {
