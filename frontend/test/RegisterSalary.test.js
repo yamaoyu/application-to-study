@@ -52,6 +52,69 @@ describe('月の入力', () => {
     })
 });
 
+describe('月収の入力', ()=>{
+    let wrapper;
+
+    beforeEach(() => {
+        vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+        wrapper = mountComponent(RegisterSalary);
+        }
+    );
+
+    it('-10万', async() =>{
+        const incomeForm = wrapper.find("[data-testid='income-form']");
+        incomeForm.setValue(20);
+        expect(incomeForm.element.value).toEqual('20');
+        await wrapper.find("[data-testid='minus10']").trigger('click');
+        expect(incomeForm.element.value).toEqual('10');
+    });
+
+    it('-5万', async() =>{
+        const incomeForm = wrapper.find("[data-testid='income-form']");
+        incomeForm.setValue(20);
+        expect(incomeForm.element.value).toEqual('20');
+        await wrapper.find("[data-testid='minus5']").trigger('click');
+        expect(incomeForm.element.value).toEqual('15');
+    });
+
+    it('+5万', async() =>{
+        // 初期値取得
+        axios.get.mockRejectedValue({
+            response: {
+                status: 404,
+                data: {
+                    detail: "2025-1の月収は未登録です"
+                }
+            }
+        });
+        await wrapper.vm.getMonthlyIncome();
+        // データ入力
+        const incomeForm = wrapper.find("[data-testid='income-form']");
+        expect(incomeForm.element.value).toEqual('5');
+        await wrapper.find("[data-testid='plus5']").trigger('click');
+        expect(incomeForm.element.value).toEqual('10');
+    });
+
+    it('+5万', async() =>{
+        // 初期値取得
+        axios.get.mockRejectedValue({
+            response: {
+                status: 404,
+                data: {
+                    detail: "2025-1の月収は未登録です"
+                }
+            }
+        });
+        await wrapper.vm.getMonthlyIncome();
+        // データ入力
+        const incomeForm = wrapper.find("[data-testid='income-form']");
+        expect(incomeForm.element.value).toEqual('5');
+        await wrapper.find("[data-testid='plus10']").trigger('click');
+        expect(incomeForm.element.value).toEqual('15');
+    });
+
+});
+
 describe('デフォルト値の確認', () =>{
     let wrapper;
 
@@ -117,6 +180,8 @@ describe('デフォルト値の確認', () =>{
                 }
             }
         });
+
+        await wrapper.vm.getMonthlyIncome();
 
         expect(axios.get).toBeCalledWith(
             process.env.VUE_APP_BACKEND_URL + `incomes/${expectedYear}/${expectedMonth}`,

@@ -57,6 +57,7 @@
           placeholder="月収(万円)"
           max="2000"
           min="5"
+          data-testid="income-form"
         />
         <span class="input-group-text">万円</span>
         <button 
@@ -64,6 +65,7 @@
           class="btn btn-outline-secondary" 
           @click="updateSalary(-10)"
           :disabled="isMinIncome"
+          data-testid="minus10"
         >
           -10万
         </button>
@@ -72,6 +74,7 @@
           class="btn btn-outline-secondary" 
           @click="updateSalary(-5)"
           :disabled="isMinIncome"
+          data-testid="minus5"
         >
           -5万
         </button>
@@ -80,6 +83,7 @@
           class="btn btn-outline-secondary" 
           @click="updateSalary(5)"
           :disabled="isMaxIncome"
+          data-testid="plus5"
         >
           +5万
         </button>
@@ -88,6 +92,7 @@
           class="btn btn-outline-secondary" 
           @click="updateSalary(10)"
           :disabled="isMaxIncome"
+          data-testid="plus10"
         >
           +10万
         </button>
