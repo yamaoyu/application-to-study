@@ -543,38 +543,41 @@ export default {
         })
 
         const sendRequest = async() =>{
-            if (registerType.value === 'single') {
-                switch(activeTab.value) {
-                    case 'target':
-                        await submitTarget();
-                        await getPendingActivities();
-                        break;
-                    case 'actual':
-                        await submitActual();
-                        await getPendingActivities();
-                        break;
-                    case 'finish':
-                        await finishActivity();
-                        await getPendingActivities();
-                        break;
+            try {
+                if (registerType.value === 'single') {
+                    switch(activeTab.value) {
+                        case 'target':
+                            await submitTarget();
+                            await getPendingActivities();
+                            break;
+                        case 'actual':
+                            await submitActual();
+                            await getPendingActivities();
+                            break;
+                        case 'finish':
+                            await finishActivity();
+                            await getPendingActivities();
+                            break;
+                    }
+                } else if (registerType.value === 'multi') {
+                    switch(activeTab.value) {
+                        case 'target':
+                            await submitMultiTarget();
+                            await getPendingActivities();
+                            break;
+                        case 'actual':
+                            await submitMultiActual();
+                            await getPendingActivities();
+                            break;
+                        case 'finish':
+                            await finishMultiActivities();
+                            await getPendingActivities();
+                            break;
+                    }
                 }
-            } else if (registerType.value === 'multi') {
-                switch(activeTab.value) {
-                    case 'target':
-                        await submitMultiTarget();
-                        await getPendingActivities();
-                        break;
-                    case 'actual':
-                        await submitMultiActual();
-                        await getPendingActivities();
-                        break;
-                    case 'finish':
-                        await finishMultiActivities();
-                        await getPendingActivities();
-                        break;
-                }
+            } finally {
+                showModal.value = false;
             }
-            showModal.value = false;
         }
 
         watch(date, () => {

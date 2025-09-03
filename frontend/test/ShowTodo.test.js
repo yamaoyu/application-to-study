@@ -97,13 +97,13 @@ describe('フィルターの操作', ()=>{
     });
 
     it("期限(以前)を入力", async() =>{
-        wrapper.vm.beforeDue = "2025-1-1";
-        expect(wrapper.vm.beforeDue).toEqual("2025-1-1");
+        wrapper.vm.startDue = "2025-1-1";
+        expect(wrapper.vm.startDue).toEqual("2025-1-1");
     });
 
     it("期限(以降)を入力", async() =>{
-        wrapper.vm.afterDue = "2025-1-1";
-        expect(wrapper.vm.afterDue).toEqual("2025-1-1");
+        wrapper.vm.endDue = "2025-1-1";
+        expect(wrapper.vm.endDue).toEqual("2025-1-1");
     });
 
     it("タイトルを入力", async() =>{
@@ -113,14 +113,14 @@ describe('フィルターの操作', ()=>{
 
     it("フィルターをリセット", async() =>{
         wrapper.vm.statusFilter = "完了";
-        wrapper.vm.beforeDue = "2025-1-1";
-        wrapper.vm.afterDue = "2025-1-2";
+        wrapper.vm.startDue = "2025-1-1";
+        wrapper.vm.endDue = "2025-1-2";
         wrapper.vm.title = "title";
         // リセット
         await wrapper.find("[data-testid='reset']").trigger("click");
         expect(wrapper.vm.statusFilter).toEqual("");
-        expect(wrapper.vm.beforeDue).toEqual("");
-        expect(wrapper.vm.afterDue).toEqual("");
+        expect(wrapper.vm.startDue).toEqual("");
+        expect(wrapper.vm.endDue).toEqual("");
         expect(wrapper.vm.title).toEqual("");
     });
 });
@@ -257,7 +257,7 @@ describe('期限(以前)でフィルター', ()=>{
         wrapper.vm.todos = expectedTodos;
         expect(wrapper.vm.todos).toEqual(expectedTodos);
 
-        wrapper.vm.beforeDue = "2025-1-1";
+        wrapper.vm.startDue = "2025-1-1";
         await wrapper.find("[data-testid='apply']").trigger("click");
         expect(axios.get).toBeCalledWith(
             process.env.VUE_APP_BACKEND_URL + "todos?start_due=2025-1-1",
@@ -309,7 +309,7 @@ describe('期限(以降)でフィルター', ()=>{
         wrapper.vm.todos = expectedTodos;
         expect(wrapper.vm.todos).toEqual(expectedTodos);
 
-        wrapper.vm.afterDue = "2025-1-2";
+        wrapper.vm.endDue = "2025-1-2";
         await wrapper.find("[data-testid='apply']").trigger("click");
         expect(axios.get).toBeCalledWith(
             process.env.VUE_APP_BACKEND_URL + "todos?end_due=2025-1-2",

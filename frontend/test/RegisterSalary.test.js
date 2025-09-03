@@ -95,7 +95,7 @@ describe('月収の入力', ()=>{
         expect(incomeForm.element.value).toEqual('10');
     });
 
-    it('+5万', async() =>{
+    it('+10万', async() =>{
         // 初期値取得
         axios.get.mockRejectedValue({
             response: {

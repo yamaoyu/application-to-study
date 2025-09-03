@@ -34,11 +34,11 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">期限(以降)</label>
-                    <input type="date" class="form-control" v-model="beforeDue">
+                    <input type="date" class="form-control" v-model="startDue">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">期限(以前)</label>
-                    <input type="date" class="form-control" v-model="afterDue">
+                    <input type="date" class="form-control" v-model="endDue">
                 </div>
             </div>
             <div class="mt-3">
@@ -191,8 +191,8 @@ export default{
 
     setup() {
         const statusFilter = ref("");
-        const beforeDue = ref();
-        const afterDue = ref();
+        const startDue = ref();
+        const endDue = ref();
         const title = ref();
         const todos = ref([]);
         const todoMsg = ref("");
@@ -206,7 +206,7 @@ export default{
         const newTodoDetail = ref("");
         const newTodoDue = ref();
         const isFormVisible = ref(false);
-        const getTodos = getTodoRequest(statusFilter, beforeDue, afterDue, title, todos, todoMsg);
+        const getTodos = getTodoRequest(statusFilter, startDue, endDue, title, todos, todoMsg);
         const editTodo = editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue, todoMsg, getTodos);
         const finishTodo = finishTodoRequest(todoId, todoMsg, getTodos);
         const deleteTodo = deleteTodoRequest(todoId, todoMsg, getTodos);
@@ -271,8 +271,8 @@ export default{
 
         const resetFilter = async() =>{
             statusFilter.value = ""
-            beforeDue.value = ""
-            afterDue.value = ""
+            startDue.value = ""
+            endDue.value = ""
             title.value = ""
         };
 
@@ -327,8 +327,8 @@ export default{
             confirmRequest,
             sendTodoRequest,
             statusFilter,
-            beforeDue,
-            afterDue,
+            startDue,
+            endDue,
             title,
             sortType,
             sortTodos,

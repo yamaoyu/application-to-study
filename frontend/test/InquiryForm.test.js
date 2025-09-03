@@ -25,7 +25,7 @@ describe('問い合わせに成功する', async () =>{
             }
         })
         // カテゴリを選択し、カテゴリが要望になっていることを確認する
-        await wrapper.find('[data-testid="request"]').setValue(true);
+        await wrapper.find('[data-testid="request"]').setChecked(true);
         expect(wrapper.vm.category).toBe(category);
         // 詳細を入力し、詳細が入力されていることを確認する
         await wrapper.find('[data-testid="detail"]').setValue(detail);
@@ -102,14 +102,14 @@ describe('カテゴリ選択の動作確認', async() =>{
         // 初期はカテゴリが空であることを確認
         expect(wrapper.vm.category).toBe("");
         // 要望を選択し、カテゴリが要望になっていることを確認
-        await wrapper.find('[data-testid="request"]').setValue(true);
+        await wrapper.find('[data-testid="request"]').setChecked(true);
         expect(wrapper.vm.category).toBe("要望");
         // エラーを選択し、カテゴリがエラーになっており前の値(要望)ではなくなっていることを確認
-        await wrapper.find('[data-testid="error"]').setValue(true);
+        await wrapper.find('[data-testid="error"]').setChecked(true);
         expect(wrapper.vm.category).toBe("エラー報告");
         expect(wrapper.find('[data-testid="request"]').element.checked).toBe(false);
         // その他を選択し、カテゴリがその他になっており前の値(エラー)ではなくなっていることを確認
-        await wrapper.find('[data-testid="other"]').setValue(true);
+        await wrapper.find('[data-testid="other"]').setChecked(true);
         expect(wrapper.vm.category).toBe("その他");
         expect(wrapper.find('[data-testid="error"]').element.checked).toBe(false);
     })
