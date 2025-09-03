@@ -4,11 +4,10 @@ import { useAuthStore } from '@/store/authenticate';
 import { jwtDecode } from 'jwt-decode';
 import { commonError, verifyRefreshToken } from '../lib';
 
-const router = useRouter();
-
 export function getTodoRequest(statusFilter, startDue, endDue, title, todos, todoMsg){
+    const router = useRouter();
     const { handleError: todoError } = commonError(todoMsg, router);
-    const authStore = useAuthStore() 
+    const authStore = useAuthStore();
 
     const sendGetTodoRequest = async() =>{
         let todoUrl = process.env.VUE_APP_BACKEND_URL + 'todos'
@@ -76,9 +75,9 @@ export function getTodoRequest(statusFilter, startDue, endDue, title, todos, tod
 
 
 export function editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue, todoMsg, getTodos){
+    const router = useRouter();
     const { handleError: todoError } = commonError(todoMsg, router);
-    const authStore = useAuthStore() 
-
+    const authStore = useAuthStore();
 
     const sendEditTodoRequest = async() =>{
         // 更新後のTodoを送信する処理
@@ -125,8 +124,9 @@ export function editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue,
 
 
 export function finishTodoRequest(todoId, todoMsg, getTodos) {
+    const router = useRouter();
     const { handleError: todoError } = commonError(todoMsg, router);
-    const authStore = useAuthStore() 
+    const authStore = useAuthStore();
 
     const sendFinishTodoRequest = async() =>{
         const finish_url = process.env.VUE_APP_BACKEND_URL + 'todos/finish/' + todoId.value
@@ -177,8 +177,9 @@ export function finishTodoRequest(todoId, todoMsg, getTodos) {
 }
 
 export function deleteTodoRequest(todoId, todoMsg, getTodos) {
+    const router = useRouter();
     const { handleError: todoError } = commonError(todoMsg, router);
-    const authStore = useAuthStore() 
+    const authStore = useAuthStore();
 
     const sendDeleteTodoRequest = async() =>{
         const deleteUrl = process.env.VUE_APP_BACKEND_URL + 'todos/' + todoId.value

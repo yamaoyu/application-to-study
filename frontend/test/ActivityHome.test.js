@@ -196,7 +196,7 @@ describe('実績時間の登録(個別)', () =>{
         wrapper.find("[data-testid='actual']").trigger('click');
         expect(wrapper.vm.activeTab).toEqual('actual');
 
-        await wrapper.find("[data-testid='submit-single-target']").trigger('submit');
+        await wrapper.find("[data-testid='submit-single-actual']").trigger('submit');
         // モーダルが表示されることを確認
         const modal = document.body.querySelector("[data-testid='modal-show']");
         expect(modal).not.toBeNull();

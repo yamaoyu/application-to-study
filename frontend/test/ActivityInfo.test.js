@@ -72,7 +72,7 @@ describe('月ごとのアクティビティ情報の表示', () => {
     })
 });
 
-describe('年ごとのアクティビティ情報の表示', async() =>{
+describe('年ごとのアクティビティ情報の表示', () =>{
     let wrapper;
 
     const expectedTotalIncome = "30";
