@@ -11,7 +11,7 @@
     <div class="collapse" :class="{ 'show': isFormVisible }">
       <div class="text-start mt-3">
         <div class="form-check form-check-inline">
-          <input class="form-check-input" type="checkbox" id="changePassword" v-model="isPasswordChangeEnabled">
+          <input class="form-check-input" type="checkbox" v-model="isPasswordChangeEnabled" data-testid="isPasswordChangeEnabled">
           <label class="form-check-label" for="changePassword">パスワードを変更する</label>
         </div>
       </div>
@@ -19,7 +19,7 @@
       <BForm @submit.prevent="submitNewPassword">
         <div class="form-group mt-3">
           <div class="input-group">
-            <BFormInput :type="!showOldPassword ? 'password':'text'" placeholder="現在のパスワード(必須)" v-model="oldPassword" :disabled="!isPasswordChangeEnabled" required/>
+            <BFormInput :type="!showOldPassword ? 'password':'text'" placeholder="現在のパスワード(必須)" v-model="oldPassword" :disabled="!isPasswordChangeEnabled" required data-testid="oldPassword"/>
             <button class="btn btn-outline-secondary" type="button" 
                     @click="showOldPassword = !showOldPassword"
                     :disabled="!isPasswordChangeEnabled">
@@ -29,7 +29,7 @@
         </div>
         <div class="form-group mt-3">
           <div class="input-group">
-            <BFormInput :type="!showNewPassword ? 'password':'text'" placeholder="新しいパスワード(必須)" v-model="newPassword" :disabled="!isPasswordChangeEnabled" :state="isValidPassword.valid" required/>
+            <BFormInput :type="!showNewPassword ? 'password':'text'" placeholder="新しいパスワード(必須)" v-model="newPassword" :disabled="!isPasswordChangeEnabled" :state="isValidPassword.valid" required data-testid="newPassword"/>
             <button class="btn btn-outline-secondary" type="button"
                     @click="showNewPassword = !showNewPassword"
                     :disabled="!isPasswordChangeEnabled">
@@ -45,7 +45,7 @@
         </div>
         <div class="form-group mt-3">
           <div class="input-group">
-            <BFormInput :type="!showNewPasswordCheck ? 'password':'text'" placeholder="新しいパスワード確認(必須)" v-model="newPasswordCheck" :disabled="!isPasswordChangeEnabled" :state="isEqualPassword" required/>
+            <BFormInput :type="!showNewPasswordCheck ? 'password':'text'" placeholder="新しいパスワード確認(必須)" v-model="newPasswordCheck" :disabled="!isPasswordChangeEnabled" :state="isEqualPassword" required data-testid="newPasswordCheck"/>
             <button class="btn btn-outline-secondary" type="button"
                     @click="showNewPasswordCheck = !showNewPasswordCheck"
                     :disabled="!isPasswordChangeEnabled">
@@ -59,7 +59,7 @@
             <BFormValidFeedback :state="isEqualPassword"> OK </BFormValidFeedback>
           </div>
         </div>
-        <button type="submit" class="btn btn-outline-secondary my-3" :disabled="!isPasswordChangeEnabled" >変更</button>
+        <button type="submit" class="btn btn-outline-secondary my-3" :disabled="!isPasswordChangeEnabled" data-testid="password-change-button">変更</button>
       </BForm>
     </div>
   </div>
@@ -137,22 +137,22 @@
           await changePassword();
         } catch (error) {
           if (error.response?.status === 401) {
-          try {
-            // リフレッシュトークンを検証して新しいアクセストークンを取得
-            const tokenResponse = await verifyRefreshToken();
-            // 新しいアクセストークンをストアに保存
-            await authStore.setAuthData(
-            tokenResponse.data.access_token,
-            tokenResponse.data.token_type,
-            jwtDecode(tokenResponse.data.access_token).exp)
-            // 再度リクエストを送信
-            await changePassword();
-          } catch (refreshError) {
-            router.push({
-              path: "/login",
-              query: { message: "再度ログインしてください" }
-            });
-          }            
+            try {
+              // リフレッシュトークンを検証して新しいアクセストークンを取得
+              const tokenResponse = await verifyRefreshToken();
+              // 新しいアクセストークンをストアに保存
+              await authStore.setAuthData(
+              tokenResponse.data.access_token,
+              tokenResponse.data.token_type,
+              jwtDecode(tokenResponse.data.access_token).exp)
+              // 再度リクエストを送信
+              await changePassword();
+            } catch (refreshError) {
+              router.push({
+                path: "/login",
+                query: { message: "再度ログインしてください" }
+              });
+            }            
         } else {
           handleError(error)
         }

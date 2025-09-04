@@ -95,7 +95,8 @@ export function errorWithActivities(response, activities, message, router){
                 })
                 break;
             default:
-                message.value = error.response.data.detail;}
+                message.value = error.response.data.detail;
+            }
         } else if (error.request){
             message.value =  "リクエストがサーバーに到達できませんでした"
         } else {
@@ -123,10 +124,10 @@ export function commonError(message, router){
                 default:
                     message.value = error.response.data.detail;
                 }
-            } else if (error.request){
-                message.value =  "リクエストがサーバーに到達できませんでした"
-            } else {
-                message.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
+        } else if (error.request){
+            message.value =  "リクエストがサーバーに到達できませんでした"
+        } else {
+            message.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
         }
         return message.value
     }

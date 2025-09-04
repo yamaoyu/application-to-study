@@ -9,6 +9,8 @@
           class="form-control col-10"
           placeholder="Todoのタイトル"
           maxlength="32"
+          data-testid="todo-title"
+          required
           />
         <span class="input-group-text">{{ title.length }}/32</span>
       </div>
@@ -22,6 +24,8 @@
           placeholder="Todoの詳細"
           maxlength="200"
           rows="4"
+          data-testid="todo-detail"
+          required
           >
         </textarea>
         <span class="input-group-text">{{ detail.length }}/200</span>
@@ -35,6 +39,8 @@
           v-model="due"
           class="form-control col-2"
           min="2024-01-01"
+          data-testid="todo-due"
+          required
         />
         <button
           type="button"
@@ -52,10 +58,14 @@
         </button>
       </div>
     </div>
-    <button type="submit" class="btn btn-outline-secondary mt-3">登録</button>
+    <button 
+      type="submit" 
+      class="btn btn-outline-secondary mt-3" 
+      data-testid="submit-todo">登録
+    </button>
   </form>
   <div class="container d-flex justify-content-center">
-    <p v-if="message" class="mt-3 col-8" :class="getResponseAlert(statusCode)">{{ message }}</p>
+    <p v-if="message" class="mt-3 col-8" :class="getResponseAlert(statusCode)" data-testid="message">{{ message }}</p>
   </div>
 </template>
 
@@ -101,6 +111,19 @@ export default {
     }
 
     const registerTodo = async() =>{
+      // データの検証
+      if (!title.value) {
+        message.value = 'タイトルを入力してください'
+        return
+      }
+      if (!detail.value) {
+        message.value = '詳細を入力してください'
+        return
+      }
+      if (!due.value) {
+        message.value = '期限を入力してください'
+        return
+      }
       // 登録ボタンクリック時に実行される関数
       try {
         await submitTodo();

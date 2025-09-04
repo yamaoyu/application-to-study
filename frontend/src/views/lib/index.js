@@ -58,5 +58,5 @@ export {
     finishTodoRequest,
     deleteTodoRequest,
     getIncomeByMonth,
-    registerMonthlyIncome
+    registerMonthlyIncome,
 }

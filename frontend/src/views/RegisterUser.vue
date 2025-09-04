@@ -11,7 +11,7 @@
   <h2>ユーザー登録</h2>
   <BForm @submit.prevent="createUser" class="container d-flex flex-column align-items-center">
     <div class="form-group mt-3 col-8">
-      <BFormInput placeholder="ユーザー名(必須)" v-model="username" :state="isValidUsername" required/>
+      <BFormInput placeholder="ユーザー名(必須)" v-model="username" :state="isValidUsername" data-testid="username" required/>
       <BFormInvalidFeedback :state="isValidUsername">
         ユーザー名は3文字以上16文字以下にして下さい
       </BFormInvalidFeedback>
@@ -19,7 +19,7 @@
     </div>
     <div class="form-group mt-3 col-8">
       <div class="input-group">
-        <BFormInput :type="!showPassword ? 'password':'text'" placeholder="パスワード(必須)" v-model="password" :state="isValidPassword.valid" required/>
+        <BFormInput :type="!showPassword ? 'password':'text'" placeholder="パスワード(必須)" v-model="password" :state="isValidPassword.valid" data-testid="password" required/>
         <button class="btn btn-outline-secondary" type="button" @click="showPassword = !showPassword">
           <i :class="['bi', showPassword ? 'bi-eye-slash' : 'bi-eye']"></i>
         </button>
@@ -33,7 +33,7 @@
     </div>
     <div class="form-group mt-3 col-8">
       <div class="input-group">
-        <BFormInput :type="!showPasswordCheck ? 'password':'text'" placeholder="パスワード確認(必須)" v-model="passwordCheck" :state="isEqualPassword" required/>
+        <BFormInput :type="!showPasswordCheck ? 'password':'text'" placeholder="パスワード確認(必須)" v-model="passwordCheck" :state="isEqualPassword" data-testid="passwordCheck" required/>
         <button class="btn btn-outline-secondary" type="button" @click="showPasswordCheck = !showPasswordCheck">
           <i :class="['bi', showPasswordCheck ? 'bi-eye-slash' : 'bi-eye']"></i>
         </button>
@@ -46,13 +46,13 @@
       </div>
     </div>
     <div class="form-group mt-3 col-8">
-      <BFormInput placeholder="メールアドレス(任意)" type="email" v-model="email" :state="isValidEmail" />
+      <BFormInput placeholder="メールアドレス(任意)" type="email" v-model="email" :state="isValidEmail" data-testid="email"/>
       <BFormInvalidFeedback :state="isValidEmail">
         メールアドレスの形式で入力して下さい
       </BFormInvalidFeedback>
       <BFormValidFeedback :state="isValidEmail"> OK </BFormValidFeedback>
     </div>
-    <button type="submit" class="btn btn-outline-secondary mt-3">登録</button>
+    <button type="submit" class="btn btn-outline-secondary mt-3" data-testid="register-user-button">登録</button>
   </BForm>
   <div class="container d-flex flex-column align-items-center">
     <p v-if="message" :class="getResponseAlert(statusCode)" class="mt-3 col-8">{{ message }}</p>

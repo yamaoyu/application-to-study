@@ -272,7 +272,7 @@ export function finalizeMultiActivities(date, selectedActivities, reqMsg, status
         if (response.status===200){
             statusCode.value = response.status;
             let msg = '';
-            if (response.data.pay_adjustment) msg += `ボーナス+ペナルティ：${response.data.pay_adjustment}\n`;
+            if (response.data.pay_adjustment) msg += `ボーナス-ペナルティ：${response.data.pay_adjustment}\n`;
             if (response.data.total_bonus) msg += `ボーナス：${response.data.total_bonus}\n`;
             if (response.data.total_penalty) msg += `ペナルティ：${response.data.total_penalty}\n`;
             if (response.data.message) msg += response.data.message;
@@ -486,9 +486,9 @@ export function getActivitiesAllPeriod(response, reqMsg){
                     query: { message: "再度ログインしてください" }
                     });
                 }            
-                } else {
-                    handleError(error)
-                }
+            } else {
+                handleError(error)
+            }
         }
         
     }

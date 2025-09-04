@@ -82,7 +82,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">合計</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span :class="getAdjustmentColors(response)" class="h3 fw-bold text-center">{{ response.data.total_income }}</span>
+                            <span :class="getAdjustmentColors(response)" class="h3 fw-bold text-center" data-testid="total-income">{{ response.data.total_income }}</span>
                             万円
                         </div>
                     </div>
@@ -93,7 +93,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">月収(ベース)</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold">{{ response.data.salary }}</span>
+                            <span class="h3 fw-bold" data-testid="salary">{{ response.data.salary }}</span>
                             <span class="small">万円</span>
                         </div>
                     </div>
@@ -102,7 +102,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">ボーナス+ペナルティ</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span :class="getAdjustmentColors(response)" class="h3 fw-bold">{{ response.data.pay_adjustment }}</span>
+                            <span :class="getAdjustmentColors(response)" class="h3 fw-bold" data-testid="pay-adjustment">{{ response.data.pay_adjustment }}</span>
                             <span class="small">万円</span>
                         </div>
                     </div>
@@ -111,7 +111,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">ボーナス</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold text-success">{{ response.data.bonus }}</span>
+                            <span class="h3 fw-bold text-success" data-testid="bonus">{{ response.data.bonus }}</span>
                             <span class="small">万円</span>
                         </div>
                     </div>
@@ -120,7 +120,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">ペナルティ</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold text-danger">{{ response.data.penalty }}</span>
+                            <span class="h3 fw-bold text-danger" data-testid="penalty">{{ response.data.penalty }}</span>
                             <span class="small">万円</span>
                         </div>
                     </div>
@@ -129,7 +129,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">達成日数</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold text-success">{{ response.data.success_days }}</span>
+                            <span class="h3 fw-bold text-success" data-testid="success-days">{{ response.data.success_days }}</span>
                             <span class="small">日</span>
                         </div>
                     </div>
@@ -138,7 +138,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">未達成日数</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold text-danger">{{ response.data.fail_days }}</span>
+                            <span class="h3 fw-bold text-danger" data-testid="fail-days">{{ response.data.fail_days }}</span>
                             <span class="small">日</span>
                         </div>
                     </div>
@@ -160,14 +160,14 @@
                     <th>ステータス</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr v-for="(activity, index) in activities" :key="index">
-                    <td>{{ activity.date }}</td>
-                    <td>{{ activity.target_time }}時間</td>
-                    <td>{{ activity.actual_time }}時間</td>
-                    <td :class="getStatusColors[activity.status]">{{ STATUS_DICT[activity.status] }}</td>
-                    </tr>
-                </tbody>
+                    <tbody>
+                        <tr v-for="(activity, index) in activities" :key="index">
+                            <td>{{ activity.date }}</td>
+                            <td>{{ activity.target_time }}時間</td>
+                            <td>{{ activity.actual_time }}時間</td>
+                            <td :class="getStatusColors[activity.status]">{{ STATUS_DICT[activity.status] }}</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -184,27 +184,27 @@
                     <th>未達成</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr v-for="(activity, index) in activities" :key="index">
-                    <td class="fw-bold">{{ MONTH_DICT[index] }}</td>
-                    <td v-if="activity.salary" class="fw-bold">{{ activity.salary }}万円</td>
-                    <td v-else>ー</td>
-                    <td v-if="activity.bonus" class="fw-bold text-center text-success">{{ activity.bonus }}万円</td>
-                    <td v-else>ー</td>
-                    <td v-if="activity.penalty" class="fw-bold text-center text-danger">{{ activity.penalty }}万円</td>
-                    <td v-else>ー</td>
-                    <td v-if="activity.success_days" class="fw-bold text-center text-success">{{ activity.success_days }}日</td>
-                    <td v-else>ー</td>
-                    <td v-if="activity.fail_days" class="fw-bold text-center text-danger">{{ activity.fail_days }}日</td>
-                    <td v-else>ー</td>
-                    </tr>
-                </tbody>
+                    <tbody>
+                        <tr v-for="(activity, index) in activities" :key="index">
+                            <td class="fw-bold">{{ MONTH_DICT[index] }}</td>
+                            <td v-if="activity.salary" class="fw-bold">{{ activity.salary }}万円</td>
+                            <td v-else>ー</td>
+                            <td v-if="activity.bonus" class="fw-bold text-center text-success">{{ activity.bonus }}万円</td>
+                            <td v-else>ー</td>
+                            <td v-if="activity.penalty" class="fw-bold text-center text-danger">{{ activity.penalty }}万円</td>
+                            <td v-else>ー</td>
+                            <td v-if="activity.success_days" class="fw-bold text-center text-success">{{ activity.success_days }}日</td>
+                            <td v-else>ー</td>
+                            <td v-if="activity.fail_days" class="fw-bold text-center text-danger">{{ activity.fail_days }}日</td>
+                            <td v-else>ー</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>
         <!-- メッセージは全てのタブで共通 -->
         <div class="container d-flex justify-content-center">
-            <p v-if="message" class="col-8 alert alert-warning">{{ message }}</p>
+            <p v-if="message" class="col-8 alert alert-warning" data-testid="message">{{ message }}</p>
         </div>
     </div>
 

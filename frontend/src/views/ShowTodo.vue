@@ -46,8 +46,8 @@
                 <input type="text" class="form-control" v-model="title">
             </div>
             <div class="d-flex justify-content-end mt-3">
-                <BButton variant="secondary" class="me-2" @click="resetFilter">リセット</BButton>
-                <BButton variant="primary" @click="applyFilter">フィルター適用</BButton>
+                <BButton variant="secondary" class="me-2" data-testid="reset" @click="resetFilter">リセット</BButton>
+                <BButton variant="primary" data-testid="apply" @click="getTodos">フィルター適用</BButton>
             </div>
         </div>
     </div>
@@ -316,6 +316,7 @@ export default{
 
         return {
             todo,
+            todos,
             todoMsg,
             showModal,
             modalTitle,
@@ -331,6 +332,7 @@ export default{
             title,
             sortType,
             sortTodos,
+            getTodos,
             finishTodo,
             deleteTodo,
             editTodo,

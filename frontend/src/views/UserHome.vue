@@ -358,24 +358,29 @@ export default {
       }
     };
 
-    onMounted( async() =>{
-      // その日の活動実績を取得
-      await getTodayActivity()
-      if (activityRes.value?.status===200){
-        activityStatus.value = activityRes.value.data.status
-        const bonusInYen = parseInt(activityRes.value.data.bonus * 10000, 10)
-        const penaltyInYen = parseInt(activityRes.value.data.penalty * 10000, 10)
-        if (activityRes.value.data.status === "success"){
-          activityMsg.value = `目標達成!|\nボーナス:${activityRes.value.data.bonus}万円(${bonusInYen}円)`
-        } else if(activityRes.value.data.status === "failure"){
-          activityMsg.value = `目標失敗...\nペナルティ:${activityRes.value.data.penalty}万円(${penaltyInYen}円)`
+    const setActivityMessage = () => {
+      if (activityRes.value?.status === 200) {
+        activityStatus.value = activityRes.value.data.status;
+        const bonusInYen = parseInt(activityRes.value.data.bonus * 10000, 10);
+        const penaltyInYen = parseInt(activityRes.value.data.penalty * 10000, 10);
+        if (activityRes.value.data.status === "success") {
+          activityMsg.value = `目標達成!\nボーナス:${activityRes.value.data.bonus}万円(${bonusInYen}円)`;
+        } else if (activityRes.value.data.status === "failure") {
+          activityMsg.value = `目標失敗...\nペナルティ:${activityRes.value.data.penalty}万円(${penaltyInYen}円)`;
         } else {
           if (activityRes.value.data.target_time <= activityRes.value.data.actual_time) {
-          activityMsg.value = `目標達成!活動を終了してください\n確定後のボーナス:${activityRes.value.data.bonus}万円(${bonusInYen}円)`
+            activityMsg.value = `目標達成!活動を終了してください\n確定後のボーナス:${activityRes.value.data.bonus}万円(${bonusInYen}円)`;
           } else {
-          activityMsg.value = `このままだと、${activityRes.value.data.penalty}万円(${penaltyInYen}円)のペナルティが発生`}
+            activityMsg.value = `このままだと、${activityRes.value.data.penalty}万円(${penaltyInYen}円)のペナルティが発生`;
+          }
         }
       }
+    };
+
+    onMounted( async() =>{
+      // その日の活動実績を取得
+      await getTodayActivity();
+      setActivityMessage();
 
       // その月の月収を取得
       await getThisMonthIncome();
@@ -408,6 +413,10 @@ export default {
       deleteTodo,
       finishTodo,
       editTodo,
+      getTodayActivity,
+      getThisMonthIncome,
+      setActivityMessage,
+      getTodos,
       newTodoTitle,
       newTodoDetail,
       newTodoDue,
