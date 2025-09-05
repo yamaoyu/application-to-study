@@ -20,6 +20,10 @@ const ALLOWED_ROUTES = ['Login', 'RegisterUser']
 
 
 router.beforeEach(async (to) => {
+  // ルートに飛ぶとユーザーホームへ遷移するようにする
+  if (to.name===undefined){
+    return { name: 'Home' }
+  }
   // 遷移先がログインページとユーザー登録ページ以外の場合
   if (ALLOWED_ROUTES.includes(to.name)) {
     return
