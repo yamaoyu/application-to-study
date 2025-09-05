@@ -26,6 +26,12 @@ router.beforeEach(async (to) => {
   }
   // 遷移先がログインページとユーザー登録ページ以外の場合
   if (ALLOWED_ROUTES.includes(to.name)) {
+    // トークンがあればホームページへ
+    const response = await verifyRefreshToken()
+    if (response.status === 200) {
+      return { name: 'Home' }
+    }
+    // トークンがなければそのまま
     return
   }
   // トークンがない、もしくは期限切れの場合
