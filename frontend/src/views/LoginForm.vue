@@ -67,9 +67,12 @@
               response.data.access_token,
               response.data.token_type,
               jwtDecode(response.data.access_token).exp)
-
-            router.push({
-              "path":"/home"})
+            if (authStore.getRedirectPath){
+              // ログインページの前に遷移しようとしていたページがある場合
+              router.push({ path : authStore.getRedirectPath })
+            } else {
+              router.push({ "path" : "/home" })
+            }
           }
         } catch (error) {
           statusCode.value = null;

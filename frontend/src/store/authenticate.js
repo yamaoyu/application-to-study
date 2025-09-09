@@ -4,7 +4,8 @@ export const useAuthStore = defineStore('authStore', {
     state: () => ({
         accessToken: null,
         tokenType: null,
-        expire: null
+        expire: null,
+        redirectPath: null,
     }),
     getters: {
       isToken() {
@@ -15,6 +16,9 @@ export const useAuthStore = defineStore('authStore', {
             return '登録なし'
         }
         return `${this.tokenType} ${this.accessToken}`
+      },
+      getRedirectPath() {
+        return this.redirectPath
       }
     },
     actions: {
@@ -22,14 +26,14 @@ export const useAuthStore = defineStore('authStore', {
         if (!accessToken || !tokenType || !expire) {
             throw new Error('データに不備があります')
         }
-        this.accessToken = accessToken
-        this.tokenType = tokenType
-        this.expire = expire
+        this.accessToken = accessToken;
+        this.tokenType = tokenType;
+        this.expire = expire;
       },
       clearAuthData() {
-        this.accessToken = null
-        this.tokenType = null
-        this.expire = null
+        this.accessToken = null;
+        this.tokenType = null;
+        this.expire = null;
       },
       isExpired() {
         const currentTime = Date.now()
@@ -39,6 +43,9 @@ export const useAuthStore = defineStore('authStore', {
         } else {
             return true
         }
+      },
+      setRedirectPath(path) {
+        this.redirectPath = path;
       }
     },
   })

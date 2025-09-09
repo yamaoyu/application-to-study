@@ -27,12 +27,16 @@ router.beforeEach(async (to) => {
   // 遷移先がログインページとユーザー登録ページ以外の場合
   if (ALLOWED_ROUTES.includes(to.name)) {
     // トークンがあればホームページへ
-    const response = await verifyRefreshToken()
-    if (response.status === 200) {
-      return { name: 'Home' }
+    try {
+      const response = await verifyRefreshToken()
+      if (response.status === 200) {
+        return { name: 'Home' }
+      }
+      // トークンがなければそのまま
+      return
+    } catch(error) {
+      return
     }
-    // トークンがなければそのまま
-    return
   }
   // トークンがない、もしくは期限切れの場合
   if (!authStore.isToken || authStore.isExpired()) {
@@ -47,6 +51,7 @@ router.beforeEach(async (to) => {
           jwtDecode(response.data.access_token).exp)
       }
     } catch(error){
+      authStore.setRedirectPath(to.path)
       return { name: 'Login', message: '再度ログインしてください' }
     }
   }
