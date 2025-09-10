@@ -16,3 +16,4 @@ ansible/group_vars/
 ansible/host_vars/
 ansible/env_vars/
 /data/certs
+.history
