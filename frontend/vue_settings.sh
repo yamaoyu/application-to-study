@@ -10,5 +10,4 @@ for VAR in "${env_vars[@]}"; do
     fi
 done
 
-
-npm run serve
+npm run dev

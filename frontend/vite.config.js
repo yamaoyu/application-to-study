@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv  } from 'vite';
 import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
@@ -11,5 +11,10 @@ export default defineConfig({
     test:{
         environment: 'jsdom',
         setupFiles: ['./test/vitest.setup.js'],
+    },
+    server: {
+        port: import.meta.env.FRONTEND_PORT,
+        host: true,
+        allowedHosts: [import.meta.env.FRONTEND_DOMAIN]
     }
 });
