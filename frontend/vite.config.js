@@ -1,4 +1,4 @@
-import { defineConfig, loadEnv  } from 'vite';
+import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
@@ -13,8 +13,14 @@ export default defineConfig({
         setupFiles: ['./test/vitest.setup.js'],
     },
     server: {
-        port: import.meta.env.FRONTEND_PORT,
-        host: true,
-        allowedHosts: [import.meta.env.FRONTEND_DOMAIN]
+        port: process.env.VITE_FRONTEND_PORT,
+        host: "0.0.0.0",
+        allowedHosts: [process.env.VITE_FRONTEND_DOMAIN],
+        hmr: {
+            port: 24678,                             // HMR用WebSocket公開ポート
+            host: process.env.VITE_FRONTEND_DOMAIN,  // ブラウザから見えるホスト名
+            clientPort: 443,
+            protocol: 'wss',
+        }
     }
 });

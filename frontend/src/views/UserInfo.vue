@@ -116,7 +116,7 @@
       // パスワード変更オプションが変更されたときに入力をクリア
       const changePassword = async() =>{
         // パスワード変更リクエスト送信処理、submitChangePass関数で呼び出される
-        const url = process.env.VUE_APP_BACKEND_URL + 'password'
+        const url = import.meta.env.VITE_BACKEND_URL + 'password'
         const response = await axios.put(
           url, 
           {old_password: oldPassword.value, new_password: newPassword.value},

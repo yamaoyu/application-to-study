@@ -16,7 +16,7 @@ export function updateActivity(date, checkMsg, activityRes) {
         const year = dateParts[0];
         let month = dateParts[1];
         let day = dateParts[2];
-        const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month + '/' + day;
+        const url = import.meta.env.VITE_BACKEND_URL + 'activities/' + year + '/' + month + '/' + day;
         activityRes.value = await axios.get(url,
                                         {headers: {Authorization: authStore.getAuthHeader}})
         checkMsg.value = ""
@@ -66,7 +66,7 @@ function registerActivity(config) {
             const year = dateParts[0];
             const month = parseInt(dateParts[1], 10);
             const day = parseInt(dateParts[2], 10);
-            const url = `${process.env.VUE_APP_BACKEND_URL}activities/${year}/${month}/${day}/${config.endpoint}`;
+            const url = `${import.meta.env.VITE_BACKEND_URL}activities/${year}/${month}/${day}/${config.endpoint}`;
             
             const response = await axios[config.method](url, 
                 {[config.valueKey]: Number(time.value)},
@@ -133,7 +133,7 @@ function registerMultiActivities(config){
 
         const submitMultiActivities = async() => {
             // 複数の活動を登録する処理
-            const url = process.env.VUE_APP_BACKEND_URL + "activities/multi/" + config.endpoint;
+            const url = import.meta.env.VITE_BACKEND_URL + "activities/multi/" + config.endpoint;
             const response = await axios[config.method](url,
                                             {activities: activities.value},
                                             {headers: {Authorization: authStore.getAuthHeader}});
@@ -211,7 +211,7 @@ export function finalizeActivity(date, reqMsg, activityStatus, checkMsg, activit
         const year = dateParts[0];
         const month = parseInt(dateParts[1], 10);
         const day = parseInt(dateParts[2], 10);
-        const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month + '/' + day + '/finish';
+        const url = import.meta.env.VITE_BACKEND_URL + 'activities/' + year + '/' + month + '/' + day + '/finish';
         // axiosのputの第二引数はリクエストボディとなるため{}を用意する。(リクエストボディで渡すデータはないため空)
         const response = await axios.put(url,
                                         {},
@@ -264,7 +264,7 @@ export function finalizeMultiActivities(date, selectedActivities, reqMsg, status
 
     const sendFinishMultiRequest = async() => {
         // 選択された活動を終了するリクエストを送信する関数
-        const url = process.env.VUE_APP_BACKEND_URL + 'activities/multi/finish';
+        const url = import.meta.env.VITE_BACKEND_URL + 'activities/multi/finish';
         const response = await axios.put(url,
                                     {"dates": selectedActivities.value},
                                     {headers: {Authorization: authStore.getAuthHeader}}
@@ -319,7 +319,7 @@ export function getActivityByDay(year, month, date, activityRes, activityStatus,
     const { handleError } = errorWithActivityStatus(activityStatus, message, router);
 
     const sendRequestForDailyInfo = async() =>{
-        const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month + '/' + date;
+        const url = import.meta.env.VITE_BACKEND_URL + 'activities/' + year + '/' + month + '/' + date;
         activityRes.value = await axios.get(url,
                                         {headers: {Authorization: authStore.getAuthHeader}})
     }
@@ -361,7 +361,7 @@ export function getActivityByMonth(selectedMonth, response, activities, reqMsg) 
 
     const sendRequestForMonthlyInfo = async() =>{
         const [year, month] = selectedMonth.value.split('-').map(Number)
-        const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year + '/' + month;
+        const url = import.meta.env.VITE_BACKEND_URL + 'activities/' + year + '/' + month;
         response.value = await axios.get(url,
                                         {headers: {Authorization: authStore.getAuthHeader}})
         if (response.value.status===200){
@@ -409,7 +409,7 @@ export function getActivityByYear(year, response, activities, reqMsg){
     const { handleError } = commonError(reqMsg, router);
 
     const sendRequestForMonthlyInfo = async() =>{
-        const url = process.env.VUE_APP_BACKEND_URL + 'activities/' + year.value;
+        const url = import.meta.env.VITE_BACKEND_URL + 'activities/' + year.value;
         response.value = await axios.get(url,
                                         {headers: {Authorization: authStore.getAuthHeader}})
         if (response.value.status===200){
@@ -457,7 +457,7 @@ export function getActivitiesAllPeriod(response, reqMsg){
     const { handleError } = commonError(reqMsg, router);
 
     const sendRequestForAllPeriod = async() =>{
-        const url = process.env.VUE_APP_BACKEND_URL + 'activities/total';
+        const url = import.meta.env.VITE_BACKEND_URL + 'activities/total';
         response.value = await axios.get(url,
                                         {headers: {Authorization: authStore.getAuthHeader}})
         if (response.value.status==200){
@@ -505,7 +505,7 @@ export function getActivitiesByStatus(pendingActivities, pendingMsg){
     const { handleError } = commonError(pendingMsg, router);
 
     const sendPendingRequest = async() =>{
-        const url = process.env.VUE_APP_BACKEND_URL + 'activities?status=pending';
+        const url = import.meta.env.VITE_BACKEND_URL + 'activities?status=pending';
         const response = await axios.get(url,
                                         {headers: {Authorization: authStore.getAuthHeader}})
         if (response.status==200){

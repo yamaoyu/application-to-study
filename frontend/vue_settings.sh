@@ -1,5 +1,5 @@
 #!/bin/bash
-env_vars=("VUE_APP_BACKEND_URL" "FRONTEND_PORT")
+env_vars=("VITE_BACKEND_URL" "VITE_FRONTEND_PORT")
 
 for VAR in "${env_vars[@]}"; do
     if [ -z "${!VAR}" ]; then
