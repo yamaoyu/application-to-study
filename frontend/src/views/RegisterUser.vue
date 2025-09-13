@@ -111,7 +111,7 @@
         }
 
         try {
-          const url = process.env.VUE_APP_BACKEND_URL + 'users'
+          const url = import.meta.env.VITE_BACKEND_URL + 'users'
           const response = await axios.post(
             url, 
             {

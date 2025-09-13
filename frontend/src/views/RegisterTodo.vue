@@ -91,7 +91,7 @@ export default {
 
     const submitTodo = async() =>{
       // Todoを登録する処理
-      const url = process.env.VUE_APP_BACKEND_URL + 'todos'
+      const url = import.meta.env.VITE_BACKEND_URL + 'todos'
       const response = await axios.post(
         url, 
         { title: title.value, detail: detail.value, due: due.value},

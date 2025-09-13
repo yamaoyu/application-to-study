@@ -6,3 +6,4 @@ services:
   frontend:
     volumes:
       - ./frontend:/frontend
+      - /frontend/node_modules  # node_modulesを除外

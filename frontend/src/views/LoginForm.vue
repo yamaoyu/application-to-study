@@ -61,7 +61,7 @@
             return
           }
         try {
-          const url = process.env.VUE_APP_BACKEND_URL + "login"
+          const url = import.meta.env.VITE_BACKEND_URL + "login"
           const response = await axios.post(url, {
             username: username.value,
             password: password.value

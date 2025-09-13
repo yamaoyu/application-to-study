@@ -10,7 +10,7 @@ export function getTodoRequest(statusFilter, startDue, endDue, title, todos, tod
     const authStore = useAuthStore();
 
     const sendGetTodoRequest = async() =>{
-        let todoUrl = process.env.VUE_APP_BACKEND_URL + 'todos'
+        let todoUrl = import.meta.env.VITE_BACKEND_URL + 'todos'
         let queryParameter = ""
         if (statusFilter.value){
             queryParameter += "status=" + statusFilter.value
@@ -81,7 +81,7 @@ export function editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue,
 
     const sendEditTodoRequest = async() =>{
         // 更新後のTodoを送信する処理
-        const url = process.env.VUE_APP_BACKEND_URL + 'todos/' + todoId.value
+        const url = import.meta.env.VITE_BACKEND_URL + 'todos/' + todoId.value
         const response = await axios.put(url,
                                         {title: newTodoTitle.value, detail:newTodoDetail.value, due:newTodoDue.value},
                                         {headers: {Authorization: authStore.getAuthHeader}})
@@ -129,7 +129,7 @@ export function finishTodoRequest(todoId, todoMsg, getTodos) {
     const authStore = useAuthStore();
 
     const sendFinishTodoRequest = async() =>{
-        const finish_url = process.env.VUE_APP_BACKEND_URL + 'todos/finish/' + todoId.value
+        const finish_url = import.meta.env.VITE_BACKEND_URL + 'todos/finish/' + todoId.value
         const response = await axios.put(
             finish_url, 
             {},
@@ -182,7 +182,7 @@ export function deleteTodoRequest(todoId, todoMsg, getTodos) {
     const authStore = useAuthStore();
 
     const sendDeleteTodoRequest = async() =>{
-        const deleteUrl = process.env.VUE_APP_BACKEND_URL + 'todos/' + todoId.value
+        const deleteUrl = import.meta.env.VITE_BACKEND_URL + 'todos/' + todoId.value
         const response = await axios.delete(
             deleteUrl, 
             { 
