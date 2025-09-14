@@ -18,7 +18,7 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "${VITE_FRONTEND_PORT}:${VITE_FRONTEND_PORT}"
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
       - "24678:24678" # 例：ViteのHMR WebSocket用ポート
     env_file:
       - .env
@@ -52,7 +52,7 @@ services:
       - .env
     environment:
       DOMAINS:
-        "${VITE_FRONTEND_DOMAIN} -> http://frontend:${VITE_FRONTEND_PORT}, ${BACKEND_DOMAIN} -> http://backend:${BACKEND_PORT}"
+        "${FRONTEND_DOMAIN} -> http://frontend:${FRONTEND_PORT}, ${BACKEND_DOMAIN} -> http://backend:${BACKEND_PORT}"
       STAGE: ${HTTPS_STAGE}
     volumes:
       - ./data/certs:/var/lib/https-portal
