@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { pinia } from "@/main.js";
+import { createPinia } from 'pinia';
 import { mount } from '@vue/test-utils'
 
 
@@ -23,7 +23,7 @@ vi.mock("axios")
 export const mountComponent = (component) => {
     return mount(component, {
         global: {
-            plugins: [pinia],
+            plugins: [createPinia()],
         },
     })
 }

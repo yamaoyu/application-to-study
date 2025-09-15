@@ -342,8 +342,6 @@ describe('目標時間の登録(一括)', () => {
         wrapper.find("[data-testid='multi']").trigger('click');
         expect(wrapper.vm.registerType).toEqual('multi');
         expect(wrapper.vm.activeTab).toEqual('target');
-        console.log(wrapper.vm.targetActivities)
-        console.log(wrapper.html())
         // 初期値
         expect(wrapper.vm.targetActivities.length).toBe(1);
         // 追加
@@ -359,7 +357,6 @@ describe('目標時間の登録(一括)', () => {
         expect(dateField.element.value).toEqual("2025-01-01");
         const timeField = wrapper.find("[data-testid='target-time-row-0']");
         await timeField.setValue(3);
-        console.log(timeField.element)
         expect(timeField.element.value).toEqual("3");
     });
 
