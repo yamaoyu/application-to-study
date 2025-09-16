@@ -267,7 +267,7 @@ describe('パスワード変更リクエストを送信', async()=>{
 
         // 更新リクエストが正しく行われたことを確認
         expect(axios.put).toBeCalledWith(
-            process.env.VUE_APP_BACKEND_URL + "password",  // 正しいURL
+            process.env.VITE_BACKEND_URL + "password",  // 正しいURL
             {
                 old_password: oldPassword,    // 正しいパラメータ
                 new_password: newPassword

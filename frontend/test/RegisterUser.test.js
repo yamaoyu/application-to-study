@@ -47,7 +47,7 @@ describe('ユーザー作成', () => {
         await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
         expect(axios.post).toHaveBeenCalledTimes(1);
         expect(axios.post).toHaveBeenCalledWith(
-            process.env.VUE_APP_BACKEND_URL + "users",  // 正しいURL
+            process.env.VITE_BACKEND_URL + "users",  // 正しいURL
             {
                 username: "testuser",    // 正しいパラメータ
                 password: "Test1234!",

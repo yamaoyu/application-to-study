@@ -31,7 +31,7 @@ describe('Login', () => {
         // リクエストが正しく行われたことを確認
         expect(axios.post).toHaveBeenCalledTimes(1)
         expect(axios.post).toHaveBeenCalledWith(
-            process.env.VUE_APP_BACKEND_URL + "login",  // 正しいURL
+            process.env.VITE_BACKEND_URL + "login",  // 正しいURL
             {
                 username: "testuser",    // 正しいパラメータ
                 password: "Test1234!"

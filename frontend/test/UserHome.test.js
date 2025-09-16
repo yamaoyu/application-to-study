@@ -38,7 +38,7 @@ describe('ユーザーホームの表示(データあり)', () => {
         expect(wrapper.vm.activityRes.data).toEqual(expectedData);
 
         expect(axios.get).toBeCalledWith(
-            process.env.VUE_APP_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
+            process.env.VITE_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -77,7 +77,7 @@ describe('ユーザーホームの表示(データあり)', () => {
         expect(wrapper.vm.activityRes.data).toEqual(expectedData);
 
         expect(axios.get).toBeCalledWith(
-            process.env.VUE_APP_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
+            process.env.VITE_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -116,7 +116,7 @@ describe('ユーザーホームの表示(データあり)', () => {
         expect(wrapper.vm.activityRes.data).toEqual(expectedData);
 
         expect(axios.get).toBeCalledWith(
-            process.env.VUE_APP_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
+            process.env.VITE_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -152,7 +152,7 @@ describe('ユーザーホームの表示(データあり)', () => {
         await wrapper.vm.getThisMonthIncome();
 
         expect(axios.get).toBeCalledWith(
-            process.env.VUE_APP_BACKEND_URL + `incomes/${expectedYear}/${expectedMonth}`,
+            process.env.VITE_BACKEND_URL + `incomes/${expectedYear}/${expectedMonth}`,
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -187,7 +187,7 @@ describe('ユーザーホームの表示(データあり)', () => {
         await wrapper.vm.getTodos();
         
         expect(axios.get).toBeCalledWith(
-            process.env.VUE_APP_BACKEND_URL + "todos?status=false",
+            process.env.VITE_BACKEND_URL + "todos?status=false",
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -302,7 +302,7 @@ describe('Todoの操作', () =>{
         wrapper.vm.newTodoDue = due;
         await wrapper.vm.editTodo();
         expect(axios.put).toHaveBeenCalledWith(
-            process.env.VUE_APP_BACKEND_URL + "todos/1",
+            process.env.VITE_BACKEND_URL + "todos/1",
             {
                 "detail": detail,
                 "due": due,
@@ -350,7 +350,7 @@ describe('Todoの操作', () =>{
         await wrapper.vm.finishTodo();
 
         expect(axios.put).toHaveBeenCalledWith(
-            process.env.VUE_APP_BACKEND_URL + "todos/finish/1",
+            process.env.VITE_BACKEND_URL + "todos/finish/1",
             {
             },
             {
@@ -386,7 +386,7 @@ describe('Todoの操作', () =>{
 
         await wrapper.vm.deleteTodo();
         expect(axios.delete).toHaveBeenCalledWith(
-            process.env.VUE_APP_BACKEND_URL + "todos/1",
+            process.env.VITE_BACKEND_URL + "todos/1",
             {
                 "headers": {
                     "Authorization": "登録なし",

@@ -34,7 +34,7 @@ describe('問い合わせに成功する', async () =>{
         await wrapper.find('[data-testid="submit-button"]').trigger('submit');
         expect(axios.post).toHaveBeenCalledTimes(1);
         expect(axios.post).toHaveBeenCalledWith(
-            process.env.VUE_APP_BACKEND_URL + 'inquiries',
+            process.env.VITE_BACKEND_URL + 'inquiries',
             {
                 category: category,
                 detail: detail
@@ -74,7 +74,7 @@ describe('問い合わせに失敗する', async() =>{
         await wrapper.find('[data-testid="submit-button"]').trigger('submit');
         expect(axios.post).toHaveBeenCalledTimes(1);
         expect(axios.post).toHaveBeenCalledWith(
-            process.env.VUE_APP_BACKEND_URL + 'inquiries',
+            process.env.VITE_BACKEND_URL + 'inquiries',
             {
                 category: "",
                 detail: detail

@@ -38,7 +38,7 @@ describe('選択した日の活動登録状況確認', () => {
         expect(wrapper.vm.activityRes.data).toEqual(expectedData);
 
         expect(axios.get).toBeCalledWith(
-            process.env.VUE_APP_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
+            process.env.VITE_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -148,7 +148,7 @@ describe('目標時間の登録(個別)', () => {
         await wrapper.vm.submitTarget();
 
         expect(axios.post).toBeCalledWith(
-            `undefinedactivities/${expectedYear}/${expectedMonth}/${expectedDate}/target`,
+            process.env.VITE_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}/target`,
             {
                 target_time: target_time,
             },
@@ -232,7 +232,7 @@ describe('実績時間の登録(個別)', () =>{
         await wrapper.vm.submitActual();
 
         expect(axios.put).toBeCalledWith(
-            `undefinedactivities/${expectedYear}/${expectedMonth}/${expectedDate}/actual`,
+            process.env.VITE_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}/actual`,
             {
                 actual_time: actual_time,
             },
@@ -297,7 +297,7 @@ describe('活動の終了(個別)', () =>{
         await wrapper.vm.finishActivity();
 
         expect(axios.put).toBeCalledWith(
-            `undefinedactivities/${expectedYear}/${expectedMonth}/${expectedDate}/finish`,
+            process.env.VITE_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}/finish`,
             {},
             {
                 "headers": {
@@ -389,7 +389,7 @@ describe('目標時間の登録(一括)', () => {
         await wrapper.vm.submitMultiTarget();
 
         expect(axios.post).toBeCalledWith(
-            `undefinedactivities/multi/target`,
+            process.env.VITE_BACKEND_URL + `activities/multi/target`,
             {
                 activities: targetActivities
             },
@@ -472,7 +472,7 @@ describe('実績時間の登録(一括)', () => {
         await wrapper.vm.submitMultiActual();
 
         expect(axios.put).toBeCalledWith(
-            `undefinedactivities/multi/actual`,
+            process.env.VITE_BACKEND_URL + `activities/multi/actual`,
             {
                 activities: selectedActivities
             },
@@ -549,7 +549,7 @@ describe('活動の終了(一括)', () => {
         await wrapper.vm.finishMultiActivities();
 
         expect(axios.put).toBeCalledWith(
-            `undefinedactivities/multi/finish`,
+            process.env.VITE_BACKEND_URL + `activities/multi/finish`,
             {
                 dates: selectedDates
             },
