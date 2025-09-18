@@ -106,20 +106,21 @@ jobs:
         mkdir -p results/frontend
     
     - name: Test
-      # バックグラウンドでbackendテスト実行
-      echo "Starting backend tests..."
-      (docker compose exec -T backend python -m pytest -vv --junitxml=results/test-results.xml && echo "Backend tests completed") &
-      
-      # バックグラウンドでfrontendテスト実行
-      echo "Starting frontend tests..."
-      (docker compose exec -T frontend npx vitest run --reporter=junit --outputFile=results/test-results.xml && echo "Frontend tests completed") &
-      
-      # 完了を待つ
-      wait
+      run: |
+        # バックグラウンドでbackendテスト実行
+        echo "Starting backend tests..."
+        (docker compose exec -T backend python -m pytest -vv --junitxml=results/test-results.xml && echo "Backend tests completed") &
         
-      # 結果をコピー
-      docker compose cp backend:/backend/results/test-results.xml results/backend/ || echo "Failed to copy backend results"
-      docker compose cp frontend:/frontend/results/test-results.xml results/frontend/ || echo "Failed to copy frontend results"
+        # バックグラウンドでfrontendテスト実行
+        echo "Starting frontend tests..."
+        (docker compose exec -T frontend npx vitest run --reporter=junit --outputFile=results/test-results.xml && echo "Frontend tests completed") &
+        
+        # 完了を待つ
+        wait
+          
+        # 結果をコピー
+        docker compose cp backend:/backend/results/test-results.xml results/backend/ || echo "Failed to copy backend results"
+        docker compose cp frontend:/frontend/results/test-results.xml results/frontend/ || echo "Failed to copy frontend results"
 
     - name: Upload vitest test results
       if: always()
