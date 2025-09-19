@@ -45,7 +45,7 @@
 
       const submitInquiry = async() =>{
         // 問い合わせ送信リクエスト処理、sendInquiry関数で呼び出される
-        const url = process.env.VUE_APP_BACKEND_URL + 'inquiries'
+        const url = process.env.VITE_BACKEND_URL + 'inquiries'
         const response = await axios.post(
           url, 
           {category: category.value, detail: detail.value},

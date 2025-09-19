@@ -46,7 +46,7 @@ describe('Todoを送信に成功', () => {
         // APIが正しいパラメータで呼び出されたことを確認
         expect(axios.post).toHaveBeenCalledTimes(1);
         expect(axios.post).toHaveBeenCalledWith(
-            process.env.VUE_APP_BACKEND_URL + 'todos', 
+            process.env.VITE_BACKEND_URL + 'todos', 
             expectedTodo,
             {
                 headers: {

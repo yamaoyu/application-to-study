@@ -151,7 +151,7 @@ describe('デフォルト値の確認', () =>{
         await wrapper.vm.getMonthlyIncome();
 
         expect(axios.get).toBeCalledWith(
-            process.env.VUE_APP_BACKEND_URL + `incomes/${expectedYear}/${expectedMonth}`,
+            process.env.VITE_BACKEND_URL + `incomes/${expectedYear}/${expectedMonth}`,
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -184,7 +184,7 @@ describe('デフォルト値の確認', () =>{
         await wrapper.vm.getMonthlyIncome();
 
         expect(axios.get).toBeCalledWith(
-            process.env.VUE_APP_BACKEND_URL + `incomes/${expectedYear}/${expectedMonth}`,
+            process.env.VITE_BACKEND_URL + `incomes/${expectedYear}/${expectedMonth}`,
             {
                 "headers": {
                     "Authorization": "登録なし",

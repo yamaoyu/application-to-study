@@ -19,6 +19,7 @@ services:
     build: ./frontend
     ports:
       - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+      - "24678:24678" # 例：ViteのHMR WebSocket用ポート
     env_file:
       - .env
     depends_on:

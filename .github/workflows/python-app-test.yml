@@ -13,7 +13,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python 3.12
@@ -21,13 +21,19 @@ jobs:
       with:
         python-version: "3.12"
 
-    - name: Cache Docker
+    - name: Cache pip dependencies
       uses: actions/cache@v3
       with:
         path: ~/.cache/docker
         key: ${{ runner.os }}-docker-${{ hashFiles('backend/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-docker-
+
+    - name: Cache npm dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
 
     - name: create .env
       run: |
@@ -36,7 +42,7 @@ jobs:
         echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env
         echo "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}" >> .env
         echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" >> .env
-        echo "VUE_APP_BACKEND_URL=${{ secrets.VUE_APP_BACKEND_URL }}" >> .env
+        echo "VITE_BACKEND_URL=${{ secrets.VITE_BACKEND_URL }}" >> .env
         echo "FRONTEND_PORT=${{ secrets.FRONTEND_PORT }}" >> .env
         echo "DOCKER_PLATFORM=${{ secrets.DOCKER_PLATFORM }}" >> .env
         echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
@@ -83,21 +89,45 @@ jobs:
         done
         echo "Backend failed to start within 5 minutes."
         exit 1
+
+    - name: Check if frontend is up
+      run: |
+        for i in {1..15}; do
+          if curl http://localhost:8080; then
+            echo "Frontend is up!"
+            break
+          fi
+          sleep 5
+        done
     
     - name: Create results directory
-      run: mkdir -p results
-    
-    - name: Test with pytest
       run: |
-        docker compose exec -T backend python -m pytest -vv --junitxml=results/test-results.xml
-        docker compose cp backend:/backend/results/test-results.xml results
+        mkdir -p results/backend
+        mkdir -p results/frontend
+    
+    - name: Test
+      run: |
+        # バックグラウンドでbackendテスト実行
+        echo "Starting backend tests..."
+        (docker compose exec -T backend python -m pytest -vv --junitxml=results/test-results.xml && echo "Backend tests completed") &
         
-    - name: Upload test results
+        # バックグラウンドでfrontendテスト実行
+        echo "Starting frontend tests..."
+        (docker compose exec -T frontend npx vitest run --reporter=junit --outputFile=results/test-results.xml && echo "Frontend tests completed") &
+        
+        # 完了を待つ
+        wait
+          
+        # 結果をコピー
+        docker compose cp backend:/backend/results/test-results.xml results/backend/ || echo "Failed to copy backend results"
+        docker compose cp frontend:/frontend/results/test-results.xml results/frontend/ || echo "Failed to copy frontend results"
+
+    - name: Upload vitest test results
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: test-results
-        path: results/test-results.xml
+        name: frontend-test-results
+        path: results/frontend/test-results.xml
         
     - name: Docker logs
       if: failure()

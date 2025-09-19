@@ -38,7 +38,7 @@ describe('選択した日の活動登録状況確認', () => {
         expect(wrapper.vm.activityRes.data).toEqual(expectedData);
 
         expect(axios.get).toBeCalledWith(
-            process.env.VUE_APP_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
+            process.env.VITE_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -148,7 +148,7 @@ describe('目標時間の登録(個別)', () => {
         await wrapper.vm.submitTarget();
 
         expect(axios.post).toBeCalledWith(
-            `undefinedactivities/${expectedYear}/${expectedMonth}/${expectedDate}/target`,
+            process.env.VITE_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}/target`,
             {
                 target_time: target_time,
             },
@@ -232,7 +232,7 @@ describe('実績時間の登録(個別)', () =>{
         await wrapper.vm.submitActual();
 
         expect(axios.put).toBeCalledWith(
-            `undefinedactivities/${expectedYear}/${expectedMonth}/${expectedDate}/actual`,
+            process.env.VITE_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}/actual`,
             {
                 actual_time: actual_time,
             },
@@ -297,7 +297,7 @@ describe('活動の終了(個別)', () =>{
         await wrapper.vm.finishActivity();
 
         expect(axios.put).toBeCalledWith(
-            `undefinedactivities/${expectedYear}/${expectedMonth}/${expectedDate}/finish`,
+            process.env.VITE_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}/finish`,
             {},
             {
                 "headers": {
@@ -342,8 +342,6 @@ describe('目標時間の登録(一括)', () => {
         wrapper.find("[data-testid='multi']").trigger('click');
         expect(wrapper.vm.registerType).toEqual('multi');
         expect(wrapper.vm.activeTab).toEqual('target');
-        console.log(wrapper.vm.targetActivities)
-        console.log(wrapper.html())
         // 初期値
         expect(wrapper.vm.targetActivities.length).toBe(1);
         // 追加
@@ -359,7 +357,6 @@ describe('目標時間の登録(一括)', () => {
         expect(dateField.element.value).toEqual("2025-01-01");
         const timeField = wrapper.find("[data-testid='target-time-row-0']");
         await timeField.setValue(3);
-        console.log(timeField.element)
         expect(timeField.element.value).toEqual("3");
     });
 
@@ -392,7 +389,7 @@ describe('目標時間の登録(一括)', () => {
         await wrapper.vm.submitMultiTarget();
 
         expect(axios.post).toBeCalledWith(
-            `undefinedactivities/multi/target`,
+            process.env.VITE_BACKEND_URL + `activities/multi/target`,
             {
                 activities: targetActivities
             },
@@ -475,7 +472,7 @@ describe('実績時間の登録(一括)', () => {
         await wrapper.vm.submitMultiActual();
 
         expect(axios.put).toBeCalledWith(
-            `undefinedactivities/multi/actual`,
+            process.env.VITE_BACKEND_URL + `activities/multi/actual`,
             {
                 activities: selectedActivities
             },
@@ -552,7 +549,7 @@ describe('活動の終了(一括)', () => {
         await wrapper.vm.finishMultiActivities();
 
         expect(axios.put).toBeCalledWith(
-            `undefinedactivities/multi/finish`,
+            process.env.VITE_BACKEND_URL + `activities/multi/finish`,
             {
                 dates: selectedDates
             },
