@@ -236,6 +236,15 @@
                                 日付を選択し、活動時間を入力してください
                             </BCardText>
                         </div>
+                        <button 
+                            type="button" 
+                            class="btn btn-primary btn-sm position-absolute"
+                            style="top: 1rem; right: 1rem;"
+                            data-testid="toggle-all-activities"
+                            @click="toggleAllActivities"
+                        >
+                            {{ Object.keys(editActivities).length===Object.keys(selectedActivities).length ? '全て解除' : '全て選択' }}
+                        </button>
                     </BCard>
                     <table class="table table-striped table-responsive">
                         <thead class="table-dark">
@@ -480,6 +489,13 @@ export default {
             }
         };
 
+        const toggleAllActivities = () => {
+            if (editActivities.value.length===selectedActivities.value.length) {
+                selectedActivities.value.splice(0, selectedActivities.value.length);
+            } else {
+                selectedActivities.value.splice(0, selectedActivities.value.length, ...editActivities.value);
+            }
+        };
 
         const validateTime = (event, time) =>{
             if (activeTab.value == "target" && time < 0.5) {
@@ -639,6 +655,7 @@ export default {
             isValidActivities,
             isSelected,
             removeTargetActivity,
+            toggleAllActivities,
             validateTime,
             toggleActivity,
             toggleFormVisibility,

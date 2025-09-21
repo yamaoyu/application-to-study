@@ -440,6 +440,42 @@ describe('実績時間の登録(一括)', () => {
         const timeField = wrapper.find("[data-testid='actual-time-row-0']");
         await timeField.setValue(3);
         expect(timeField.element.value).toEqual("3");
+    });
+
+    it("全てを選択/解除", async() =>{
+        // 初期設定
+        const editActivities = [
+            {
+                date: "2025/1/1",
+                target_time: 3,
+                actual_time: 3,
+                status: "success"
+            },
+            {
+                date: "2025/1/2",
+                target_time: 3.5,
+                actual_time: 3.5,
+                status: "pending"
+            }
+        ];
+        wrapper.vm.pendingActivities = editActivities;
+        // タブの切り替え
+        wrapper.find("[data-testid='multi']").trigger('click');
+        wrapper.find("[data-testid='actual']").trigger('click');
+        expect(wrapper.vm.registerType).toEqual('multi');
+        expect(wrapper.vm.activeTab).toEqual('actual');
+        await flushPromises(); // html要素が変わるため変更を待つ
+        console.log(wrapper.vm.pendingActivities)
+        console.log(wrapper.vm.editActivities);
+        console.log(wrapper.vm.selectedActivities)
+        // 初期値確認
+        expect(wrapper.vm.selectedActivities).toEqual([]);
+        // 全て選択
+        wrapper.find("[data-testid='toggle-all-activities']").trigger("click");
+        expect(wrapper.vm.selectedActivities).toEqual(editActivities);
+        // 全て解除
+        wrapper.find("[data-testid='toggle-all-activities']").trigger("click");
+        expect(wrapper.vm.selectedActivities).toEqual([]);
     })
 
     it('成功', async() =>{
