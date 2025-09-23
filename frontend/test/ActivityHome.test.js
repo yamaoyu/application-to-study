@@ -465,9 +465,6 @@ describe('実績時間の登録(一括)', () => {
         expect(wrapper.vm.registerType).toEqual('multi');
         expect(wrapper.vm.activeTab).toEqual('actual');
         await flushPromises(); // html要素が変わるため変更を待つ
-        console.log(wrapper.vm.pendingActivities)
-        console.log(wrapper.vm.editActivities);
-        console.log(wrapper.vm.selectedActivities)
         // 初期値確認
         expect(wrapper.vm.selectedActivities).toEqual([]);
         // 全て選択
@@ -556,6 +553,43 @@ describe('活動の終了(一括)', () => {
         wrapper.find("[data-testid='is-selected-finish-0']").trigger("click");
         expect(wrapper.vm.selectedActivities.length).toBe(0);
     })
+
+    it("全てを選択/解除", async() =>{
+        // 初期設定
+        const pendingActivities = [
+            {
+                date: "2025/1/1",
+                target_time: 3,
+                actual_time: 3,
+                status: "success"
+            },
+            {
+                date: "2025/1/2",
+                target_time: 3.5,
+                actual_time: 3.5,
+                status: "pending"
+            }
+        ];
+        const selectedActivities = [
+            "2025/1/1","2025/1/2",
+        ];
+        wrapper.vm.pendingActivities = pendingActivities;
+        // タブの切り替え
+        wrapper.find("[data-testid='multi']").trigger('click');
+        wrapper.find("[data-testid='finish']").trigger('click');
+        expect(wrapper.vm.registerType).toEqual('multi');
+        expect(wrapper.vm.activeTab).toEqual('finish');
+        await flushPromises(); // html要素が変わるため変更を待つ
+        // 初期値確認
+        expect(wrapper.vm.selectedActivities).toEqual([]);
+        // 全て選択
+        wrapper.find("[data-testid='toggle-all-activities']").trigger("click");
+        expect(wrapper.vm.selectedActivities).toEqual(selectedActivities);
+        // 全て解除
+        wrapper.find("[data-testid='toggle-all-activities']").trigger("click");
+        expect(wrapper.vm.selectedActivities).toEqual([]);
+    })
+
 
     it('成功', async() =>{
         // タブの切り替え
