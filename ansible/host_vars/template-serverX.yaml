@@ -1,0 +1,11 @@
+ansible_host: 
+ansible_user: 
+app_root_dir: 
+env_vars_src: 
+env_vars_dest: 
+ansible_distribution_release: 
+architecture: 
+img_src:
+img_dest:
+branch:
+ntp_service_name:
