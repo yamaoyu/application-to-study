@@ -33,7 +33,8 @@
 - env_vars/.env.serverX<br>
   git clone後、env_vars/template-env.serverXを.env.serverXにリネームし、必要箇所を埋める
   
-  Xには既存のサーバーに使われている最大値+1に置き換える
+  Xには既存のサーバーに使われている最大値+1に置き換える<br>
+  ansibleでは.envと.env.backendの２つのファイルで管理している環境変数全てを.env.serverXで管理する
 
   study appで使用する環境変数を設定する
 
