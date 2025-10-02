@@ -130,3 +130,9 @@
       build: always
       env_files: .env
       files: docker-compose.yml
+
+  - name: alembicでDBスキーマを更新
+    community.docker.docker_compose_v2_exec:
+      project_src: "{{ app_root_dir }}"
+      service: backend
+      command: alembic upgrade head
