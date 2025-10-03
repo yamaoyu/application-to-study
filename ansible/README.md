@@ -29,21 +29,45 @@
 
 
 ## 実行準備
+### env_varsの設定
+- env_vars/.env.serverX<br>
+  git clone後、env_vars/template-env.serverXを.env.serverXにリネームし、必要箇所を埋める
+  
+  Xには既存のサーバーに使われている最大値+1に置き換える<br>
+  ansibleでは.envと.env.backendの２つのファイルで管理している環境変数全てを.env.serverXで管理する
+
+  study appで使用する環境変数を設定する
+
+  - 暗号時
+  ```
+  ansible-vault encrypt env_vars/.env.serverX --vault-password-file ansible_vault_pass.txt
+  ```
+  - 復号時
+   ```
+  ansible-vault decrypt env_vars/.env.serverX --vault-password-file ansible_vault_pass.txt
+  ```
+
 ### groups_varsの設定
-- groups_vars/all.yaml
+- group_vars/all.yaml<br>
+  git clone後、group_vars/template-all.yamlをall.yamlにリネームし、必要箇所を埋める
   
   以下を設定
   1. githubリポジトリの接続先
    
     記載したら以下を実行し、暗号化
 
+    - 暗号時
     ```
-    ansible-vault encrypt groups_vars/all.yaml --vault-password-file ansible_vault_pass.txt
+    ansible-vault encrypt group_vars/all.yaml --vault-password-file ansible_vault_pass.txt
     ```
-
+    - 復号時
+    ```
+    ansible-vault decrypt group_vars/all.yaml --vault-password-file ansible_vault_pass.txt
+    ```
 
 ### host_varsの設定
-- hosts_vars/serverX.yaml
+- host_vars/serverX.yaml<br>
+  git clone後、host_vars/template-serverX.yamlをserverX.yamlにリネームし、必要箇所を埋める
   
   Xには既存のサーバーに使われている最大値+1に置き換える(server1.yamlがあるなら追加する場合はserver2.yaml)
   
@@ -52,25 +76,18 @@
   2. 接続ユーザー名
   3. リポジトリ作成先
 
-    その後、以下を実行し、暗号化
-
-    ```
-    ansible-vault encrypt host_vars/server1.yaml --vault-password-file ansible_vault_pass.txt
-    ```
-
-### 環境変数の設定
-- env_vars/.env.serverX
-  
-  Xには既存のサーバーに使われている最大値+1に置き換える
-
-  study appで使用する環境変数を設定する
-
   その後、以下を実行し、暗号化
-      ```
-    ansible-vault encrypt env_vars/.env.serverX --vault-password-file ansible_vault_pass.txt
-    ```
 
-復号時はencrypt→decryptに変更して実行する
+  - 暗号時
+  ```
+  ansible-vault encrypt host_vars/serverX.yaml --vault-password-file ansible_vault_pass.txt
+  ```
+
+  - 復号時
+  ```
+  ansible-vault decrypt host_vars/serverX.yaml --vault-password-file ansible_vault_pass.txt
+  ```
+
 
 ## 実行手順
 ### ディレクトリ移動

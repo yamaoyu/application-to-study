@@ -60,7 +60,7 @@ class User(Base):
 class Token(Base):
     __tablename__ = "tokens"
     username = Column(VARCHAR(16), ForeignKey("users.username"), nullable=False)
-    device_id = Column(VARCHAR(36), nullable=False)
+    device_id = Column(CHAR(36), nullable=False)
     token = Column(VARCHAR(256))
     expires_at = Column(Date, nullable=False)
 
