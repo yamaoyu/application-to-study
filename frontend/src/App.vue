@@ -105,7 +105,7 @@ export default {
     const logout = async() =>{
       try{
         // デバイス情報を取得 HTTPSにするまでの一時的な対応としてplatform(非推奨)を使用
-        const logout_url = process.env.VUE_APP_BACKEND_URL + 'logout'
+        const logout_url = import.meta.env.VITE_BACKEND_URL + 'logout'
         const logout_res = await axios.post(logout_url, 
               {
               },

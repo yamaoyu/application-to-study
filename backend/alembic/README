@@ -18,7 +18,7 @@ alembic revision (--autogenerate) -m "メッセージ"
 #### dockerを使用する場合の例
 
 '''
-docker-compose exec web alembic revision (--autogenerate) -m "メッセージ"
+docker compose exec コンテナ名 alembic revision (--autogenerate) -m "メッセージ"
 '''
 
 「--autogenerate」は自動でコマンドを作成する場合に使用する。
@@ -34,7 +34,7 @@ alembic upgrade head
 
 #### dockerを使用する場合の例
 '''
-docker-compose exec web alembic upgrade head
+docker compose exec コンテナ名 alembic upgrade head
 '''
 
 ### その他
