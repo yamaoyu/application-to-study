@@ -1,7 +1,10 @@
 <template>
   <h3>Todoの登録</h3>
   <form @submit.prevent="registerTodo">
-    <label class="mt-3">題名</label>
+    <label class="mt-3">
+      題名
+      <span :style="{ color: title ? 'black' : 'red' }">*</span>
+    </label>
     <div class="container d-flex col-10 justify-content-center">
       <div class="input-group">
         <input
@@ -25,13 +28,15 @@
           maxlength="200"
           rows="4"
           data-testid="todo-detail"
-          required
           >
         </textarea>
         <span class="input-group-text">{{ detail.length }}/200</span>
       </div>
     </div>
-    <label class="mt-3">期限</label>
+    <label class="mt-3">
+      期限
+      <span :style="{ color: due ? 'black' : 'red' }">*</span>
+    </label>
     <div class="container col-8 d-flex justify-content-center mt-3">
       <div class="input-group">
         <input
@@ -114,10 +119,6 @@ export default {
       // データの検証
       if (!title.value) {
         message.value = 'タイトルを入力してください'
-        return
-      }
-      if (!detail.value) {
-        message.value = '詳細を入力してください'
         return
       }
       if (!due.value) {

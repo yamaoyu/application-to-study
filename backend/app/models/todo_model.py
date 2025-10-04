@@ -1,11 +1,12 @@
 from pydantic import BaseModel, field_validator
 from datetime import date
+from typing import Optional
 
 
 class Todo(BaseModel):
     title: str
     due: date
-    detail: str
+    detail: Optional[str] = None
 
     @field_validator("title")
     def check_title_length(cls, title):
