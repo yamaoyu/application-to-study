@@ -68,6 +68,20 @@ def test_create_todo_with_expired_token(client):
         assert response.json() == {"detail": "再度ログインしてください"}
 
 
+def test_create_multi_todos(client, get_headers):
+    data = {"todos":
+            [
+                {"title": test_title, "due": test_due, "detail": test_detail},
+                {"title": test_title + "2", "due": test_due, "detail": test_detail + "2"}
+            ]
+            }
+    response = client.post("/todos/multi", json=data, headers=get_headers)
+    assert response.status_code == 201
+    assert response.json() == {
+        "message": f"【Todo作成成功】{test_title}\n【Todo作成成功】{test_title}2"
+    }
+
+
 def test_get_all_todo(client, get_headers):
     setup_create_todo(client, get_headers)
     response = client.get("/todos", headers=get_headers)

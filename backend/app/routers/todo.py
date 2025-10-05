@@ -4,7 +4,7 @@ from db import db_model
 from db.database import get_db
 from lib.log_conf import logger
 from sqlalchemy.orm import Session
-from app.models.todo_model import Todo
+from app.models.todo_model import Todo, Todos
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from lib.security import get_current_user
 from typing import Optional
@@ -39,6 +39,41 @@ def create_todo(todo: Todo,
         db.rollback()
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
+
+
+@router.post("/todos/multi", status_code=201)
+def create_multi_todos(params: Todos,
+                       db: Session = Depends(get_db),
+                       current_user: dict = Depends(get_current_user)):
+    error_count = 0
+    response_messages = ""
+    for todo in params.todos:
+        Todo(title=todo["title"], detail=todo["detail"], due=todo["due"])
+        try:
+            title = todo["title"]
+            due = todo["due"]
+            detail = todo["detail"]
+            username = current_user['username']
+            data = db_model.Todo(title=title, username=username, due=due, detail=detail)
+            db.add(data)
+            db.commit()
+            response_messages += f"【Todo作成成功】{title}\n"
+        except IntegrityError as sqlalchemy_error:
+            error_count += 1
+            db.rollback()
+            if "Duplicate entry" in str(sqlalchemy_error.orig):
+                response_messages += f"【Todo作成失敗】{title} : 既に登録されている内容です\n"
+            else:
+                response_messages += f"【Todo作成失敗】{title} : 内容を確認してください\n"
+        except Exception:
+            error_count += 1
+            logger.error(f"todoの作成に失敗しました\n{traceback.format_exc()}")
+            db.rollback()
+            response_messages += f"【Todo作成失敗】{title} : サーバーでエラーが発生しました。管理者にお問い合わせください\n"
+
+    if error_count > 0:
+        raise HTTPException(status_code=400, detail=response_messages[:-1])
+    return {"message": response_messages[:-1]}  # 最後の改行を削除して返す
 
 
 @router.get("/todos", status_code=200)

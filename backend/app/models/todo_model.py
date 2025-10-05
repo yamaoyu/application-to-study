@@ -19,3 +19,7 @@ class Todo(BaseModel):
         if len(detail) > 200:
             raise ValueError("詳細は200字以下で入力してください")
         return detail
+
+
+class Todos(BaseModel):
+    todos: list
