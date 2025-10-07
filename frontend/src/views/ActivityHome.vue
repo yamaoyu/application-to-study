@@ -172,6 +172,7 @@
                                         min="2024-01-01"
                                         :max="getMaxDate()"
                                         :data-testid="`target-date-row-${index}`"
+                                        @change="checkDuplicateDate(activity.date, index)"
                                     />
                                 </div>
                             </td>
@@ -534,6 +535,15 @@ export default {
             }
         };
 
+        const checkDuplicateDate = (date, index) => {
+            const duplicateDate = targetActivities.value.map(a=>a.date).filter(d=>d && d===date);
+            reqMsg.value = "";
+            if (duplicateDate.length > 1) {
+                targetActivities.value[index].date = "";
+                reqMsg.value = date + "は既に選択されています"
+            }
+        };
+
         const isValidActivities = computed(() => {
             // 目標時間送信用の変数(targetActivities)で日付と目標時間が入力されているか確認
             if (targetActivities.value.some(activity => !activity.date || !activity.target_time)) {
@@ -675,6 +685,7 @@ export default {
             removeTargetActivity,
             toggleAllActivities,
             validateTime,
+            checkDuplicateDate,
             toggleActivity,
             toggleFormVisibility,
             isFormVisible,
