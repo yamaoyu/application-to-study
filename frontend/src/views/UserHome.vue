@@ -170,7 +170,7 @@
     :ok-title="todoAction==='show' ? 'OK' : '送信'" 
     :cancel-title="todoAction==='show' ? '閉じる' : 'いいえ'" 
     @ok="sendTodoRequest"
-    :ok-disabled="validateParams()"
+    :ok-disabled="!validateParams()"
   >
     <div v-if="todoAction==='finish' || todoAction==='delete'" class="text-danger">確定後は取り消せません</div>
     <div v-else-if="todoAction==='show'">
@@ -328,7 +328,12 @@ export default {
       return pages
     });
 
-    const validateParams = () => !newTodoTitle.value || !newTodoDue.value;
+    const validateParams = () => {
+      if (["show", "finish", "delete"].includes(todoAction.value)) {
+          return true;
+        }
+      return !!(newTodoTitle.value && newTodoDue.value);
+    };
 
     const confirmRequest = async(content, action) =>{
       showModal.value = true
