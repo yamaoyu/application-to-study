@@ -16,8 +16,12 @@
             <td class="text-center align-middle">{{ index + 1 }}</td>
             <td class="text-center align-middle todo-title" @click="openModal(todo, 'show')">{{ todo.title }}</td>
             <td class="text-center align-middle">{{ todo.due }}</td>
-            <td><input class="btn btn-outline-primary btn-sm" type="button" value="編集" @click="openModal(todo, 'edit')"></td>
-            <td><input class="btn btn-outline-danger btn-sm" type="button" value="削除" @click="openModal(todo, 'delete')"></td>
+            <td>
+              <input class="btn btn-outline-primary btn-sm" type="button" value="編集" @click="openModal(todo, 'edit')">
+            </td>
+            <td>
+              <input class="btn btn-outline-danger btn-sm" type="button" value="削除" :data-testid="`del-todo-${index}`" @click="openModal(todo, 'delete')">
+            </td>
         </tr>
         <tr class="table-secondary">
           <td colspan="5" class="text-center">
@@ -26,6 +30,7 @@
               class="btn btn-outline-primary"
               @click="openModal(todo, 'create')"
               :disabled="todos.length>=10"
+              data-testid="add-todo"
             >
               + Todoを追加
             </button>
@@ -35,7 +40,8 @@
     </table>
     <button 
       type="submit" 
-      class="btn btn-outline-secondary mt-3" 
+      class="btn btn-outline-secondary mt-3"
+      :disabled="todos.length === 0||todos.length>=10"
       data-testid="submit-todo">登録
     </button>
   </form>
@@ -50,6 +56,7 @@
     cancel-title="閉じる" 
     @ok="closeModal"
     :ok-disabled="!validateParams()"
+    data-testid="modal-show"
   >
     <div v-if="todoAction==='show'|todoAction==='delete'">
       <div class="todo-detail">
@@ -76,6 +83,7 @@
                 :placeholder=todo.title
                 maxlength="32"
                 @input="titleError = !todo.title"
+                data-testid="title"
                 />
                 <small class="form-text text-muted position-absolute" style="right: 8px; bottom: -20px;">
                 {{ (todo.title || '').length }}/32
@@ -94,6 +102,7 @@
               :placeholder=todo.detail
               maxlength="200"
               rows="3"
+              data-testid="detail"
               >
             </textarea>
             <small class="form-text text-muted position-absolute" style="right: 8px; bottom: -20px;">
@@ -115,6 +124,7 @@
               class="form-control col-2"
               min="2024-01-01"
               @input="dueError = !todo.due"
+              data-testid="due"
               />
           </div>
         </div>
