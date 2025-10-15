@@ -58,7 +58,7 @@
     :ok-disabled="!validateParams()"
     data-testid="modal-show"
   >
-    <div v-if="todoAction==='show'|todoAction==='delete'">
+    <div v-if="todoAction==='show'||todoAction==='delete'">
       <div class="todo-detail">
           <p><strong>期限:</strong> {{ todo.due }}</p>
           <p><strong>タイトル:</strong>{{ todo.title }}</p>
@@ -69,7 +69,7 @@
         このTodoをリストから削除します
       </div>
     </div>
-    <div v-else-if="todoAction==='edit'|todoAction==='create'">
+    <div v-else-if="todoAction==='edit'||todoAction==='create'">
       <div class="input-group">
           <label class="mt-3">
             タイトル
