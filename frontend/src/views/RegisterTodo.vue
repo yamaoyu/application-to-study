@@ -122,7 +122,7 @@
               type="date"
               v-model="todo.due"
               class="form-control col-2"
-              min="2024-01-01"
+              :min="today"
               @input="dueError = !todo.due"
               data-testid="due"
               />
@@ -139,7 +139,7 @@ import { ref, watch } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
-import { getResponseAlert, verifyRefreshToken, errorWithStatusCode } from './lib/index';
+import { getResponseAlert, verifyRefreshToken, errorWithStatusCode, getToday } from './lib/index';
 import { jwtDecode } from 'jwt-decode';
 import { BModal } from 'bootstrap-vue-next';
 
@@ -161,6 +161,7 @@ export default {
     const router = useRouter();
     const authStore = useAuthStore();
     const { handleError } = errorWithStatusCode(statusCode, message, router);
+    const today = getToday();
 
     const submitTodo = async() =>{
       // Todoを登録する処理
@@ -259,6 +260,7 @@ export default {
       modalTitle,
       titleError,
       dueError,
+      today,
       registerTodos,
       getResponseAlert,
       openModal,
