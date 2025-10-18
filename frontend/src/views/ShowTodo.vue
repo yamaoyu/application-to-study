@@ -329,6 +329,9 @@ export default{
                 await finishTodo();
             } else if (todoAction.value==='delete') {
                 await deleteTodo();
+                if (currentPage.value > totalPages.value) {
+                    currentPage.value = totalPages.value;
+                };
             } else if (todoAction.value==='edit'){
                 await editTodo();
             }
