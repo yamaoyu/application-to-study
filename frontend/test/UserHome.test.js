@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import UserHome from '@/views/UserHome.vue';
 import { mountComponent } from './vitest.setup';
 import axios from 'axios';
+import { flushPromises } from '@vue/test-utils';
+import { nextTick } from 'vue';
 
 describe('ユーザーホームの表示(データあり)', () => {
     let wrapper;
@@ -267,7 +269,7 @@ describe('Todoの操作', () =>{
 
     it('Todo編集', async() =>{
         const expectedMessage = "Todoを更新しました";
-        const title = "new title";
+         const title = "new title";
         const detail = "new detail";
         const due = "new due";
 
@@ -304,9 +306,9 @@ describe('Todoの操作', () =>{
         expect(axios.put).toHaveBeenCalledWith(
             process.env.VITE_BACKEND_URL + "todos/1",
             {
-                "detail": detail,
-                "due": due,
-                "title": title,
+                title: title,
+                detail: detail,
+                due: due
             },
             {
                 "headers": {
@@ -316,14 +318,19 @@ describe('Todoの操作', () =>{
         );
         expect(axios.put).toBeCalledTimes(1);
         expect(wrapper.vm.todoMsg).toEqual(expectedMessage);
-    })
+    });
 
     it('Todo終了', async() =>{
         const expectedMessage = "選択したTodoを終了しました";
         const title = "new title";
         const status = true;
+        const originalTodo = [{
+            title: 'Test Todo',
+            detail: 'This is a test todo detail',
+            due: '2025-01-01',
+            todo_id: 1
+        }];
 
-        wrapper.vm.todoId = 1;
         // finishTodo()のモック
         axios.put.mockResolvedValue({
             status: 200,
@@ -347,7 +354,21 @@ describe('Todoの操作', () =>{
                     },
             }
         });
-        await wrapper.vm.finishTodo();
+
+        wrapper.vm.todos = originalTodo;
+        wrapper.vm.paginatedTodos = originalTodo;
+        await nextTick();
+        // 編集ボタンをクリックし、モーダルを開く
+        wrapper.find("[data-testid='finish-0']").trigger("click");
+        expect(wrapper.vm.todoAction).toEqual("finish");
+        // モーダルが開かれていることを確認
+        const modal = document.body.querySelector("[data-testid='modal-show']");
+        expect(modal).not.toBeNull();
+        expect(wrapper.vm.modalTitle).toEqual("Todo終了確認");
+        // Okボタンをクリック
+        const bModal = wrapper.findComponent({ name: 'BModal' });
+        await bModal.vm.$emit('ok');
+        await flushPromises();
 
         expect(axios.put).toHaveBeenCalledWith(
             process.env.VITE_BACKEND_URL + "todos/finish/1",
@@ -365,7 +386,6 @@ describe('Todoの操作', () =>{
 
     it('Todo削除', async() =>{
         // deleteTodo()のモック
-        wrapper.vm.todoId = 1;
         axios.delete.mockResolvedValue({
             status: 204
         })
@@ -383,8 +403,28 @@ describe('Todoの操作', () =>{
                     },
             }
         });
+        const originalTodo = [{
+            title: 'Test Todo',
+            detail: 'This is a test todo detail',
+            due: '2025-01-01',
+            todo_id: 1
+        }];
 
-        await wrapper.vm.deleteTodo();
+        wrapper.vm.todos = originalTodo;
+        wrapper.vm.paginatedTodos = originalTodo;
+        await nextTick();
+        // 編集ボタンをクリックし、モーダルを開く
+        wrapper.find("[data-testid='delete-0']").trigger("click");
+        expect(wrapper.vm.todoAction).toEqual("delete");
+        // モーダルが開かれていることを確認
+        const modal = document.body.querySelector("[data-testid='modal-show']");
+        expect(modal).not.toBeNull();
+        expect(wrapper.vm.modalTitle).toEqual("Todo削除確認");
+        // Okボタンをクリック
+        const bModal = wrapper.findComponent({ name: 'BModal' });
+        await bModal.vm.$emit('ok');
+        await flushPromises();
+
         expect(axios.delete).toHaveBeenCalledWith(
             process.env.VITE_BACKEND_URL + "todos/1",
             {
@@ -561,7 +601,6 @@ describe('Todoリストページ', () =>{
 
         // 2ページ目へ移動
         currentPage += 1;
-        console.log()
         wrapper.vm.goToPage(currentPage);
         expect(wrapper.vm.currentPage).toBe(currentPage);
 

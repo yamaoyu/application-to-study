@@ -120,9 +120,9 @@
           <td class="text-center align-middle">{{ index + 1 }}</td>
           <td class="text-center align-middle todo-title" @click="confirmRequest(todo, 'show')">{{ todo.title }}</td>
           <td class="text-center align-middle">{{ todo.due }}</td>
-          <td><input class="btn btn-outline-primary btn-sm" type="button" value="編集" @click="confirmRequest(todo, 'edit')"></td>
-          <td><input class="btn btn-outline-success btn-sm" type="button" value="終了" @click="confirmRequest(todo, 'finish')"></td>
-          <td><input class="btn btn-outline-danger btn-sm" type="button" value="削除" @click="confirmRequest(todo, 'delete')"></td>
+          <td><input class="btn btn-outline-primary btn-sm" :data-testid="`edit-${index}`" type="button" value="編集" @click="confirmRequest(todo, 'edit')"></td>
+          <td><input class="btn btn-outline-success btn-sm" :data-testid="`finish-${index}`" type="button" value="終了" @click="confirmRequest(todo, 'finish')"></td>
+          <td><input class="btn btn-outline-danger btn-sm" :data-testid="`delete-${index}`" type="button" value="削除" @click="confirmRequest(todo, 'delete')"></td>
         </tr>
       </tbody>
     </table>
@@ -171,6 +171,7 @@
     :cancel-title="todoAction==='show' ? '閉じる' : 'いいえ'" 
     @ok="sendTodoRequest"
     :ok-disabled="!validateParams()"
+    data-testid="modal-show"
   >
     <div v-if="todoAction==='finish' || todoAction==='delete'" class="text-danger">確定後は取り消せません</div>
     <div v-else-if="todoAction==='show'">
@@ -195,6 +196,7 @@
               :placeholder=todo.title
               maxlength="32"
               @input="titleError = !newTodoTitle"
+              data-testid="new-title"
               />
             <small class="form-text text-muted position-absolute" style="right: 8px; bottom: -20px;">
               {{ (newTodoTitle || '').length }}/32
@@ -213,6 +215,7 @@
               :placeholder=todo.detail
               maxlength="200"
               rows="3"
+              data-testid="new-detail"
               >
             </textarea>
             <small class="form-text text-muted position-absolute" style="right: 8px; bottom: -20px;">
@@ -234,6 +237,7 @@
               class="form-control col-2"
               min="2024-01-01"
               @input="dueError = !newTodoDue"
+              data-testid="new-due"
             />
           </div>
         </div>
@@ -336,11 +340,10 @@ export default {
     };
 
     const confirmRequest = async(content, action) =>{
-      showModal.value = true
       titleError.value = null;
       dueError.value = null;
-      todoId.value = content.todo_id
-      todoAction.value = action
+      todoId.value = content.todo_id;
+      todoAction.value = action;
       if (todoAction.value==='finish'){
         modalTitle.value = "Todo終了確認"
       } else if (todoAction.value==='delete') {
@@ -355,6 +358,7 @@ export default {
         newTodoDue.value = content.due
         todo.value = content
       }
+      showModal.value = true;
     };
 
     const sendTodoRequest = async() =>{
