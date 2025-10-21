@@ -128,7 +128,7 @@ describe('必須項目を入力せずリストにtodoを追加できないパタ
     it('タイトルの入力がない場合は送信ボタンをクリックできない', async () => {
         // モーダルを開いてtodoを入力
         const addButton = wrapper.find('[data-testid="add-todo"]');
-        addButton.trigger("click");
+        await addButton.trigger("click");
         // モーダルが表示されることを確認
         const modal = document.body.querySelector("[data-testid='modal-show']");
         expect(modal).not.toBeNull();
