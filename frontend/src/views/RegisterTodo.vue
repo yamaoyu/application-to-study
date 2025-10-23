@@ -239,6 +239,8 @@ export default {
         modalTitle.value = "Todo閲覧";
       } else if (todoAction.value==='edit') {
         modalTitle.value = "Todo編集";
+      } else {
+        modalTitle.value = "エラーが発生しました";
       }
     };
 
