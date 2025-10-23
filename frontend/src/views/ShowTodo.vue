@@ -115,64 +115,81 @@
     </div>
     </div>
 
-    <BModal v-model="showModal" :title="modalTitle" :ok-title="todoAction==='show' ? 'OK' : '送信'" :cancel-title="todoAction==='show' ? '閉じる' : 'いいえ'" @ok="sendTodoRequest">
+    <BModal 
+        v-model="showModal" 
+        :title="modalTitle" 
+        :ok-title="todoAction==='show' ? 'OK' : '送信'" 
+        :cancel-title="todoAction==='show' ? '閉じる' : 'いいえ'" 
+        @ok="sendTodoRequest"
+        :ok-disabled="!validateParams()"
+    >
         <div v-if="todoAction==='finish' || todoAction==='delete'" class="text-danger">確定後は取り消せません</div>
-            <div v-else-if="todoAction==='show'">
-                <div class="todo-detail">
-                    <p><strong>期限:</strong> {{ todo.due }}</p>
-                    <p><strong>タイトル:</strong>{{ todo.title }}</p>
-                    <p v-if="todo.detail"><strong>詳細:</strong> {{ todo.detail }}</p>
-                    <p v-else class="text-muted">Todoの詳細はありません</p>
-                </div>
-            </div>
+        <div v-else-if="todoAction==='show'">
+        <div class="todo-detail">
+            <p><strong>期限:</strong> {{ todo.due }}</p>
+            <p><strong>タイトル:</strong>{{ todo.title }}</p>
+            <p v-if="todo.detail"><strong>詳細:</strong> {{ todo.detail }}</p>
+            <p v-else class="text-muted">Todoの詳細はありません</p>
+        </div>
+        </div>
         <div v-else-if="todoAction==='edit'">
+        <div class="input-group">
+            <label class="mt-3">
+            タイトル
+            <span :style="{ color: newTodoTitle ? 'black' : 'red' }">*</span>
+            </label>
+            <div class="container d-flex justify-content-center">
             <div class="input-group">
-                <span>題名</span>
-                <div class="container d-flex justify-content-center">
-                    <div class="input-group">
-                        <input
-                        v-model="newTodoTitle"
-                        class="form-control"
-                        :placeholder=todo.title
-                        maxlength="32"
-                        />
-                        <small class="form-text text-muted position-absolute" style="right: 8px; bottom: -20px;">
-                        {{ (newTodoTitle || '').length }}/32
-                        </small>
-                    </div>
-                </div>
+                <input
+                v-model="newTodoTitle"
+                class="form-control"
+                :placeholder=todo.title
+                maxlength="32"
+                @input="titleError = !newTodoTitle"
+                />
+                <small class="form-text text-muted position-absolute" style="right: 8px; bottom: -20px;">
+                {{ (newTodoTitle || '').length }}/32
+                </small>
             </div>
-            <div class="input-group mt-3">
-                <span>詳細</span>
-                <div class="container d-flex justify-content-center">
-                    <div class="input-group">
-                        <textarea
-                        v-model="newTodoDetail"
-                        class="form-control"
-                        :placeholder=todo.detail
-                        maxlength="200"
-                        rows="3"
-                        >
-                        </textarea>
-                        <small class="form-text text-muted position-absolute" style="right: 8px; bottom: -20px;">
-                        {{ (newTodoDetail || '').length }}/200
-                        </small>
-                    </div>
-                </div>
+            <div v-if="titleError" style="color: red;">タイトルを入力してください</div>
             </div>
-            <div class="input-group mt-3">
-                <span>期限</span>
-                <div class="container d-flex justify-content-center">
-                    <div class="input-group">
-                        <input
-                        type="date"
-                        v-model="newTodoDue"
-                        class="form-control col-2"
-                        min="2024-01-01"
-                        />
-                    </div>
-                </div>
+        </div>
+        <div class="input-group mt-3">
+            <span>詳細</span>
+            <div class="container d-flex justify-content-center">
+            <div class="input-group">
+                <textarea
+                v-model="newTodoDetail"
+                class="form-control"
+                :placeholder=todo.detail
+                maxlength="200"
+                rows="3"
+                >
+                </textarea>
+                <small class="form-text text-muted position-absolute" style="right: 8px; bottom: -20px;">
+                {{ (newTodoDetail || '').length }}/200
+                </small>
             </div>
+            </div>
+        </div>
+        <div class="input-group mt-3">
+            <label>
+            期限
+            <span :style="{ color: newTodoDue ? 'black' : 'red' }">*</span>
+            </label>
+            <div class="container d-flex justify-content-center">
+            <div class="input-group">
+                <input
+                type="date"
+                v-model="newTodoDue"
+                class="form-control col-2"
+                min="2024-01-01"
+                @input="dueError = !newTodoDue"
+                />
+            </div>
+            </div>
+            <div v-if="dueError" style="color: red;">期限を入力してください</div>
+        </div>
         </div>
     </BModal>
 </template>
@@ -202,6 +219,8 @@ export default{
         const todoAction = ref(); // todoに対して行う操作名(閲覧、編集、終了、削除)
         const sortType = ref("id"); // todoの一覧で表示されるソート順で初期値は登録順(id)
         const todo = ref(); // todoの情報を保持し、Todoの閲覧、編集時に使用する
+        const titleError = ref(""); // todo編集時、タイトルに入力がない場合のメッセージを表示
+        const dueError = ref(""); // todo編集時、期限に入力がない場合のメッセージを表示
         const newTodoTitle = ref("");
         const newTodoDetail = ref("");
         const newTodoDue = ref();
@@ -228,6 +247,13 @@ export default{
             if (page >= 1 && page <= totalPages.value) {
                 currentPage.value = page
             }
+        };
+
+        const validateParams = () => {
+            if (["show", "finish", "delete"].includes(todoAction.value)) {
+                return true;
+            }
+            return !!(newTodoTitle.value && newTodoDue.value);
         };
 
         // 表示するページ番号の範囲を計算
@@ -278,6 +304,8 @@ export default{
 
         const confirmRequest = async(content, action) =>{
             showModal.value = true
+            titleError.value = null;
+            dueError.value = null;
             todoId.value = content.todo_id
             todoAction.value = action
             if (todoAction.value==='finish'){
@@ -298,11 +326,14 @@ export default{
 
         const sendTodoRequest = async() =>{
             if (todoAction.value==='finish'){
-                await finishTodo()
+                await finishTodo();
             } else if (todoAction.value==='delete') {
-                await deleteTodo()
+                await deleteTodo();
+                if (currentPage.value > totalPages.value) {
+                    currentPage.value = totalPages.value;
+                };
             } else if (todoAction.value==='edit'){
-                await editTodo()
+                await editTodo();
             }
             // データを初期化
             todoId.value = null
@@ -321,6 +352,9 @@ export default{
             showModal,
             modalTitle,
             todoAction,
+            titleError,
+            dueError,
+            validateParams,
             toggleFormVisibility,
             applyFilter,
             resetFilter,

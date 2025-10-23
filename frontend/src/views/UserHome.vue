@@ -120,9 +120,9 @@
           <td class="text-center align-middle">{{ index + 1 }}</td>
           <td class="text-center align-middle todo-title" @click="confirmRequest(todo, 'show')">{{ todo.title }}</td>
           <td class="text-center align-middle">{{ todo.due }}</td>
-          <td><input class="btn btn-outline-primary btn-sm" type="button" value="編集" @click="confirmRequest(todo, 'edit')"></td>
-          <td><input class="btn btn-outline-success btn-sm" type="button" value="終了" @click="confirmRequest(todo, 'finish')"></td>
-          <td><input class="btn btn-outline-danger btn-sm" type="button" value="削除" @click="confirmRequest(todo, 'delete')"></td>
+          <td><input class="btn btn-outline-primary btn-sm" :data-testid="`edit-${index}`" type="button" value="編集" @click="confirmRequest(todo, 'edit')"></td>
+          <td><input class="btn btn-outline-success btn-sm" :data-testid="`finish-${index}`" type="button" value="終了" @click="confirmRequest(todo, 'finish')"></td>
+          <td><input class="btn btn-outline-danger btn-sm" :data-testid="`delete-${index}`" type="button" value="削除" @click="confirmRequest(todo, 'delete')"></td>
         </tr>
       </tbody>
     </table>
@@ -164,7 +164,15 @@
       </p>
     </div>
 
-  <BModal v-model="showModal" :title="modalTitle" :ok-title="todoAction==='show' ? 'OK' : '送信'" :cancel-title="todoAction==='show' ? '閉じる' : 'いいえ'" @ok="sendTodoRequest">
+  <BModal 
+    v-model="showModal" 
+    :title="modalTitle" 
+    :ok-title="todoAction==='show' ? 'OK' : '送信'" 
+    :cancel-title="todoAction==='show' ? '閉じる' : 'いいえ'" 
+    @ok="sendTodoRequest"
+    :ok-disabled="!validateParams()"
+    data-testid="modal-show"
+  >
     <div v-if="todoAction==='finish' || todoAction==='delete'" class="text-danger">確定後は取り消せません</div>
     <div v-else-if="todoAction==='show'">
       <div class="todo-detail">
@@ -176,7 +184,10 @@
     </div>
     <div v-else-if="todoAction==='edit'">
       <div class="input-group">
-        <span>題名</span>
+        <label class="mt-3">
+          タイトル
+          <span :style="{ color: newTodoTitle ? 'black' : 'red' }">*</span>
+        </label>
         <div class="container d-flex justify-content-center">
           <div class="input-group">
             <input
@@ -184,11 +195,14 @@
               class="form-control"
               :placeholder=todo.title
               maxlength="32"
+              @input="titleError = !newTodoTitle"
+              data-testid="new-title"
               />
             <small class="form-text text-muted position-absolute" style="right: 8px; bottom: -20px;">
               {{ (newTodoTitle || '').length }}/32
             </small>
           </div>
+          <div v-if="titleError" style="color: red;">タイトルを入力してください</div>
         </div>
       </div>
       <div class="input-group mt-3">
@@ -201,6 +215,7 @@
               :placeholder=todo.detail
               maxlength="200"
               rows="3"
+              data-testid="new-detail"
               >
             </textarea>
             <small class="form-text text-muted position-absolute" style="right: 8px; bottom: -20px;">
@@ -210,7 +225,10 @@
         </div>
       </div>
       <div class="input-group mt-3">
-        <span>期限</span>
+        <label>
+          期限
+          <span :style="{ color: newTodoDue ? 'black' : 'red' }">*</span>
+        </label>
         <div class="container d-flex justify-content-center">
           <div class="input-group">
             <input
@@ -218,9 +236,12 @@
               v-model="newTodoDue"
               class="form-control col-2"
               min="2024-01-01"
+              @input="dueError = !newTodoDue"
+              data-testid="new-due"
             />
           </div>
         </div>
+        <div v-if="dueError" style="color: red;">期限を入力してください</div>
       </div>
     </div>
   </BModal>
@@ -259,6 +280,8 @@ export default {
     const todoAction = ref(); // todoに対して行う操作名(閲覧、編集、終了、削除)
     const sortType = ref("id"); // todoの一覧で表示されるソート順で初期値は登録順(id)
     const todo = ref(); // todoの情報を保持し、Todoの閲覧、編集時に使用する
+    const titleError = ref(""); // todo編集時、タイトルに入力がない場合のメッセージを表示
+    const dueError = ref(""); // todo編集時、期限に入力がない場合のメッセージを表示
     const newTodoTitle = ref("");
     const newTodoDetail = ref("");
     const newTodoDue = ref();
@@ -309,10 +332,18 @@ export default {
       return pages
     });
 
+    const validateParams = () => {
+      if (["show", "finish", "delete"].includes(todoAction.value)) {
+          return true;
+        }
+      return !!(newTodoTitle.value && newTodoDue.value);
+    };
+
     const confirmRequest = async(content, action) =>{
-      showModal.value = true
-      todoId.value = content.todo_id
-      todoAction.value = action
+      titleError.value = null;
+      dueError.value = null;
+      todoId.value = content.todo_id;
+      todoAction.value = action;
       if (todoAction.value==='finish'){
         modalTitle.value = "Todo終了確認"
       } else if (todoAction.value==='delete') {
@@ -327,15 +358,19 @@ export default {
         newTodoDue.value = content.due
         todo.value = content
       }
+      showModal.value = true;
     };
 
     const sendTodoRequest = async() =>{
       if (todoAction.value==='finish'){
-        await finishTodo()
+        await finishTodo();
       } else if (todoAction.value==='delete') {
-        await deleteTodo()
+        await deleteTodo();
+        if (currentPage.value > totalPages.value) {
+            currentPage.value = totalPages.value;
+        };
       } else if (todoAction.value==='edit'){
-        await editTodo()
+        await editTodo();
       }
       // データを初期化
       todoId.value = null
@@ -404,6 +439,9 @@ export default {
       month,
       date,
       todo,
+      titleError,
+      dueError,
+      validateParams,
       confirmRequest,
       sendTodoRequest,
       sortTodos,
