@@ -64,6 +64,8 @@ def test_login(client):
     refresh_token = response.json()["refresh_token"]
     assert response.status_code == 200
     assert response.json()["token_type"] == "Bearer"
+    assert len(response.json()) == 4
+    assert response.json()["role"] == "general"
     # 作成されるトークンは最低100文字
     assert len(access_token) >= 100
     assert len(refresh_token) >= 100

@@ -118,7 +118,8 @@ def login(user_info: LoginUserInfo,
         logger.info(f"{username}がログイン")
         return {"access_token": access_token,
                 "token_type": "Bearer",
-                "refresh_token": refresh_token}
+                "refresh_token": refresh_token,
+                "role": user.role}
     except NoResultFound:
         raise HTTPException(status_code=404,
                             detail=wrong_info_msg)
