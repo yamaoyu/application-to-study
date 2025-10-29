@@ -32,8 +32,11 @@
           <li class="nav-item">
             <router-link class="nav-link" to="/user/info">ユーザー情報</router-link>
           </li>
-          <li class="nav-item">
+          <li class="nav-item" v-if="!isAdmin">
             <router-link class="nav-link" to="/register/inquiry">問い合わせ</router-link>
+          </li>
+          <li class="nav-item" v-if="isAdmin">
+            <router-link class="nav-link" to="/register/inquiry">問い合わせ確認</router-link>
           </li>
           <li class="nav-item">
             <a class="nav-link" type="button" @click="logout()">ログアウト</a>
@@ -68,8 +71,11 @@
         <li class="nav-item" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/user/info">ユーザー情報</router-link>
         </li>
-        <li class="nav-item" data-bs-dismiss="offcanvas">
+        <li class="nav-item" v-if="!isAdmin" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/register/inquiry">問い合わせ</router-link>
+        </li>
+        <li class="nav-item" v-if="isAdmin" data-bs-dismiss="offcanvas">
+          <router-link class="nav-link" to="/register/inquiry">問い合わせ確認</router-link>
         </li>
         <li class="nav-item">
           <a class="nav-link" type="button" @click="logout()">ログアウト</a>
@@ -85,7 +91,7 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
@@ -101,6 +107,9 @@ export default {
     const authStore = useAuthStore()
     const logoutMsg = ref("")
     const MENU_SHOW_ROUTES = ["Login", "RegisterUser"]
+    const isAdmin = computed(() => {
+      return authStore.getRole === "admin"
+    });
 
     const logout = async() =>{
       try{
@@ -147,7 +156,8 @@ export default {
     return {
       logoutMsg,
       logout,
-      MENU_SHOW_ROUTES
+      MENU_SHOW_ROUTES,
+      isAdmin
     }
   }
 }

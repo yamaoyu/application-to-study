@@ -6,6 +6,7 @@ export const useAuthStore = defineStore('authStore', {
         tokenType: null,
         expire: null,
         redirectPath: null,
+        role: null
     }),
     getters: {
       isToken() {
@@ -19,6 +20,9 @@ export const useAuthStore = defineStore('authStore', {
       },
       getRedirectPath() {
         return this.redirectPath
+      },
+      getRole() {
+        return this.role
       }
     },
     actions: {
@@ -46,6 +50,9 @@ export const useAuthStore = defineStore('authStore', {
       },
       setRedirectPath(path) {
         this.redirectPath = path;
+      },
+      setRole(role) {
+        this.role = role;
       }
     },
   })

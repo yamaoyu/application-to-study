@@ -70,10 +70,12 @@
           })
           // ここでログイン後の処理を行う（例：トークンの保存、ページ遷移など）
           if (response.status===200){
-              authStore.setAuthData(
+            authStore.setAuthData(
               response.data.access_token,
               response.data.token_type,
-              jwtDecode(response.data.access_token).exp)
+              jwtDecode(response.data.access_token).exp);
+            authStore.setRole(response.data.role);
+            console.log("User role:", response.data.role, authStore.getRole);
             if (authStore.getRedirectPath){
               // ログインページの前に遷移しようとしていたページがある場合
               router.push({ path : authStore.getRedirectPath })
