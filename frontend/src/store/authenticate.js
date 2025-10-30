@@ -53,6 +53,9 @@ export const useAuthStore = defineStore('authStore', {
       },
       setRole(role) {
         this.role = role;
+      },
+      clearRole(){
+        this.role = null;
       }
     },
   })

@@ -124,7 +124,8 @@ export default {
               }
         )
         if (logout_res.status===200){
-          authStore.clearAuthData()
+          authStore.clearAuthData();
+          authStore.clearRole();
           router.push(
                   {"path":"/login",
                     "query":{message:"ログアウトしました"}
