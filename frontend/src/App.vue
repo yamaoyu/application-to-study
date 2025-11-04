@@ -36,7 +36,7 @@
             <router-link class="nav-link" to="/register/inquiry">問い合わせ</router-link>
           </li>
           <li class="nav-item" v-if="isAdmin">
-            <router-link class="nav-link" to="/register/inquiry">問い合わせ確認</router-link>
+            <router-link class="nav-link" to="/show/inquiry">問い合わせ確認</router-link>
           </li>
           <li class="nav-item">
             <a class="nav-link" type="button" @click="logout()">ログアウト</a>
@@ -75,7 +75,7 @@
           <router-link class="nav-link" to="/register/inquiry">問い合わせ</router-link>
         </li>
         <li class="nav-item" v-if="isAdmin" data-bs-dismiss="offcanvas">
-          <router-link class="nav-link" to="/register/inquiry">問い合わせ確認</router-link>
+          <router-link class="nav-link" to="/show/inquiry">問い合わせ確認</router-link>
         </li>
         <li class="nav-item">
           <a class="nav-link" type="button" @click="logout()">ログアウト</a>

@@ -9,6 +9,7 @@ import UserInfo from '../views/UserInfo.vue'
 import ActivityHome from '../views/ActivityHome.vue'
 import ActivityInfo from '../views/ActivityInfo.vue'
 import ShowTodo from '../views/ShowTodo.vue'
+import ShowInquiry from '../views/ShowInquiry.vue'
 
 const routes = [
   {
@@ -60,6 +61,11 @@ const routes = [
     path:"/view/todo",
     name:"ShowTodo",
     component:ShowTodo
+  },
+  {
+    path:"/show/inquiry",
+    name:"ShowInquiry",
+    component:ShowInquiry
   }
 ]
 
