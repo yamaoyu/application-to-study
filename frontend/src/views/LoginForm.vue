@@ -27,27 +27,27 @@
   import { ref, onMounted } from 'vue'
   import axios from 'axios'
   import { useRoute, useRouter } from 'vue-router';
-  import { useAuthStore } from '@/store/authenticate';
+  import { useAuthStore, useRoleStore } from '@/store/authenticate';
   import { jwtDecode } from 'jwt-decode';
   import { getResponseAlert } from './lib';
 
   export default {
     setup() {
-      const username = ref('')
-      const password = ref('')
-      const message = ref('')
-      const statusCode = ref()
-      const router =  useRouter()
-      const route = useRoute()
-      const showPassword = ref(false)
-      const authStore = useAuthStore()
-
+      const username = ref('');
+      const password = ref('');
+      const message = ref('');
+      const statusCode = ref();
+      const router =  useRouter();
+      const route = useRoute();
+      const showPassword = ref(false);
+      const authStore = useAuthStore();
+      const roleStore = useRoleStore();
 
       onMounted(() => {
       if (route.query.message) {
-      message.value = route.query.message;
-      // オプション: メッセージを表示後、URLからパラメータを削除
-      router.replace({ query: {} })
+        message.value = route.query.message;
+        // オプション: メッセージを表示後、URLからパラメータを削除
+        router.replace({ query: {} })
         }
       })
   
@@ -74,8 +74,7 @@
               response.data.access_token,
               response.data.token_type,
               jwtDecode(response.data.access_token).exp);
-            authStore.setRole(response.data.role);
-            console.log("User role:", response.data.role, authStore.getRole);
+            roleStore.setRole(response.data.role);
             if (authStore.getRedirectPath){
               // ログインページの前に遷移しようとしていたページがある場合
               router.push({ path : authStore.getRedirectPath })

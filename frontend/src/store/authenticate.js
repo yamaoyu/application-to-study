@@ -20,9 +20,6 @@ export const useAuthStore = defineStore('authStore', {
       },
       getRedirectPath() {
         return this.redirectPath
-      },
-      getRole() {
-        return this.role
       }
     },
     actions: {
@@ -50,12 +47,26 @@ export const useAuthStore = defineStore('authStore', {
       },
       setRedirectPath(path) {
         this.redirectPath = path;
-      },
-      setRole(role) {
-        this.role = role;
-      },
-      clearRole(){
-        this.role = null;
       }
     },
   })
+
+export const useRoleStore = defineStore('roleStore', {
+  state: () => ({
+    role: null
+  }),
+  getters: {
+    getRole() {
+      return this.role
+    }
+  },
+  actions: {
+    setRole(role) {
+      this.role = role;
+    },
+    clearRole(){
+      this.role = null;
+    }
+  },
+  persist: true
+})

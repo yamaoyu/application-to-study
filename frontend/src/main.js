@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import { createPinia } from 'pinia';
+import { createPersistedState } from 'pinia-plugin-persistedstate';
 import { useAuthStore } from '@/store/authenticate';
 import { jwtDecode } from 'jwt-decode';
 import { createBootstrap } from 'bootstrap-vue-next';
@@ -11,7 +12,7 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 import { verifyRefreshToken } from './views/lib';
 
 const pinia = createPinia();
-
+pinia.use(createPersistedState());
 createApp(App).use(router).use(pinia).use(createBootstrap()).mount('#app')
 
 // トークンが無効、もしくはない場合はログインページとユーザー登録ページ以外は開けないようにする

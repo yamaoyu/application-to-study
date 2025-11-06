@@ -94,7 +94,7 @@
 import { ref, computed } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/store/authenticate';
+import { useAuthStore, useRoleStore } from '@/store/authenticate';
 import { BContainer } from 'bootstrap-vue-next';
 
 export default {
@@ -103,12 +103,13 @@ export default {
   },
 
   setup() {
-    const router = useRouter()
-    const authStore = useAuthStore()
-    const logoutMsg = ref("")
-    const MENU_SHOW_ROUTES = ["Login", "RegisterUser"]
+    const router = useRouter();
+    const authStore = useAuthStore();
+    const roleStore = useRoleStore();
+    const logoutMsg = ref("");
+    const MENU_SHOW_ROUTES = ["Login", "RegisterUser"];
     const isAdmin = computed(() => {
-      return authStore.getRole === "admin"
+      return roleStore.getRole === "admin"
     });
 
     const logout = async() =>{
@@ -125,7 +126,7 @@ export default {
         )
         if (logout_res.status===200){
           authStore.clearAuthData();
-          authStore.clearRole();
+          roleStore.clearRole();
           router.push(
                   {"path":"/login",
                     "query":{message:"ログアウトしました"}

@@ -25,7 +25,7 @@
         </template>
 
         <div v-if="!inquiries.length" class="alert alert-warning">
-            問い合わせはありません
+            {{ message }}
         </div>
     </div>
 </template>
@@ -59,7 +59,9 @@ export default{
                 try{
                     await sendRequest();
                 } catch (error){
-                    if (error.response?.status === 401) {
+                    if (error.response?.status === 403) {
+                        message.value = error.response.data.detail;
+                    } else if (error.response?.status === 401) {
                         try {
                             // リフレッシュトークンを検証して新しいアクセストークンを取得
                             const tokenResponse = await verifyRefreshToken();
@@ -88,6 +90,7 @@ export default{
 
         return {
             inquiries,
+            message,
             BOOL_TO_STATUS,
             message
         }
