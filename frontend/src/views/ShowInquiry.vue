@@ -14,17 +14,17 @@
                 </thead>
                 <tbody v-for="(inquiry, index) in inquiries" :key="index">
                     <tr>
-                        <td class="text-center align-middle">{{ index + 1 }}</td>
-                        <td class="text-center align-middle inquiry-title" @click="confirmRequest(inquiry, 'show')">{{ inquiry.category }}</td>
-                        <td class="text-center align-middle">{{ inquiry.detail }}</td>
-                        <td class="text-center align-middle">{{ inquiry.date }}</td>
-                        <td class="text-center align-middle fw-bold" :class="inquiry.is_checked===true ? 'text-success' : 'text-danger' ">{{ BOOL_TO_STATUS[inquiry.is_checked] }}</td>
+                        <td class="text-center align-middle" :data-testid="`index-${index}`">{{ index + 1 }}</td>
+                        <td class="text-center align-middle inquiry-title" @click="confirmRequest(inquiry, 'show')" :data-testid="`category-${index}`">{{ inquiry.category }}</td>
+                        <td class="text-center align-middle" :data-testid="`detail-${index}`">{{ inquiry.detail }}</td>
+                        <td class="text-center align-middle" :data-testid="`date-${index}`">{{ inquiry.date }}</td>
+                        <td class="text-center align-middle fw-bold" :class="inquiry.is_checked===true ? 'text-success' : 'text-danger' " :data-testid="`is_checked-${index}`">{{ BOOL_TO_STATUS[inquiry.is_checked] }}</td>
                     </tr>
                 </tbody>
             </table>
         </template>
 
-        <div v-if="!inquiries.length" class="alert alert-warning">
+        <div v-if="!inquiries.length" class="alert alert-warning" data-testid="message">
             {{ message }}
         </div>
     </div>
@@ -47,44 +47,44 @@ export default{
         const { handleError } = commonError(message, router);
         const BOOL_TO_STATUS = { "true":"確認済", "false":"未確認" };
 
-        onMounted( async()=>{
-            const sendRequest = async() =>{
-                    const url = import.meta.env.VITE_BACKEND_URL + 'inquiries';
-                    const response = await axios.get(url,
-                                                    {headers: {Authorization: authStore.getAuthHeader}})
-                    inquiries.value = response.data;
-                }
+        const sendRequest = async() =>{
+            const url = import.meta.env.VITE_BACKEND_URL + 'inquiries';
+            const response = await axios.get(url,
+                                            {headers: {Authorization: authStore.getAuthHeader}})
+            inquiries.value = response.data;
+        };
 
-            const getInquiries = async() =>{
-                try{
-                    await sendRequest();
-                } catch (error){
-                    if (error.response?.status === 403) {
-                        message.value = error.response.data.detail;
-                    } else if (error.response?.status === 401) {
-                        try {
-                            // リフレッシュトークンを検証して新しいアクセストークンを取得
-                            const tokenResponse = await verifyRefreshToken();
-                                // 新しいアクセストークンをストアに保存
-                                await authStore.setAuthData(
-                                tokenResponse.data.access_token,
-                                tokenResponse.data.token_type,
-                                jwtDecode(tokenResponse.data.access_token).exp
-                            );
-                            // 再度リクエストを送信
-                            await sendRequestForInquiries();
-                        } catch (refreshError) {
-                            router.push({
-                            path: "/login",
-                            query: { message: "再度ログインしてください" }
-                            });
-                        }            
-                    } else {
-                        handleError(error)
-                    }
+        const getInquiries = async() =>{
+            try{
+                await sendRequest();
+            } catch (error){
+                if (error.response?.status === 403) {
+                    message.value = error.response.data.detail;
+                } else if (error.response?.status === 401) {
+                    try {
+                        // リフレッシュトークンを検証して新しいアクセストークンを取得
+                        const tokenResponse = await verifyRefreshToken();
+                            // 新しいアクセストークンをストアに保存
+                            await authStore.setAuthData(
+                            tokenResponse.data.access_token,
+                            tokenResponse.data.token_type,
+                            jwtDecode(tokenResponse.data.access_token).exp
+                        );
+                        // 再度リクエストを送信
+                        await sendRequestForInquiries();
+                    } catch (refreshError) {
+                        router.push({
+                        path: "/login",
+                        query: { message: "再度ログインしてください" }
+                        });
+                    }            
+                } else {
+                    handleError(error)
                 }
             }
+        };
 
+        onMounted( async()=>{
             await getInquiries();
         });
 
@@ -92,7 +92,8 @@ export default{
             inquiries,
             message,
             BOOL_TO_STATUS,
-            message
+            message,
+            getInquiries
         }
     }
 }
