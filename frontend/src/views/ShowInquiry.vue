@@ -15,7 +15,7 @@
                 <tbody v-for="(inquiry, index) in inquiries" :key="index">
                     <tr>
                         <td class="text-center align-middle" :data-testid="`index-${index}`">{{ index + 1 }}</td>
-                        <td class="text-center align-middle inquiry-title" @click="confirmRequest(inquiry, 'show')" :data-testid="`category-${index}`">{{ inquiry.category }}</td>
+                        <td class="text-center align-middle inquiry-title" :data-testid="`category-${index}`">{{ inquiry.category }}</td>
                         <td class="text-center align-middle" :data-testid="`detail-${index}`">{{ inquiry.detail }}</td>
                         <td class="text-center align-middle" :data-testid="`date-${index}`">{{ inquiry.date }}</td>
                         <td class="text-center align-middle fw-bold" :class="inquiry.is_checked===true ? 'text-success' : 'text-danger' " :data-testid="`is_checked-${index}`">{{ BOOL_TO_STATUS[inquiry.is_checked] }}</td>
