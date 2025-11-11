@@ -85,10 +85,10 @@ def get_inquiries(year: Optional[str] = None,
             sqlstatement = sqlstatement.filter(db_model.Inquiry.priority == priority)
         if is_checked is not None:
             sqlstatement = sqlstatement.filter(db_model.Inquiry.is_checked == is_checked)
-        inquiry = sqlstatement.all()
-        if not inquiry:
+        inquiries = sqlstatement.all()
+        if not inquiries:
             raise NoResultFound
-        return inquiry
+        return inquiries
     except NoResultFound:
         message = ""
         if year and month:

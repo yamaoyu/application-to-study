@@ -45,7 +45,7 @@
         <BFormValidFeedback :state="isEqualPassword"> OK </BFormValidFeedback>
       </div>
     </div>
-    <div class="form-group mt-3 col-8">
+    <div class="form-group mt-3 col-8" v-if="showMailForm">
       <BFormInput placeholder="メールアドレス(任意)" type="email" v-model="email" :state="isValidEmail" data-testid="email"/>
       <BFormInvalidFeedback :state="isValidEmail">
         メールアドレスの形式で入力して下さい
@@ -77,30 +77,31 @@
     },
 
     setup() {
-      const username = ref('')
-      const password = ref('')
-      const passwordCheck = ref('')
-      const email = ref('')
-      const message = ref('')
-      const statusCode = ref()
-      const showPassword = ref(false)
-      const showPasswordCheck = ref(false)
+      const username = ref('');
+      const password = ref('');
+      const passwordCheck = ref('');
+      const email = ref('');
+      const message = ref('');
+      const statusCode = ref();
+      const showPassword = ref(false);
+      const showPasswordCheck = ref(false);
+      const showMailForm = import.meta.env.VITE_MAIL_FORM === 'true';
 
       const isValidUsername = computed(() => {
         return validateUsername(username).validate()
-      })
+      });
 
       const isValidPassword = computed(() => {
         return validatePassword(password).validate()
-      })
+      });
 
       const isEqualPassword = computed(() => {
         return checkPassword(password, passwordCheck).validate()
-      })
+      });
 
       const isValidEmail = computed(() => {
         return validateEmail(email).validate()
-      })
+      });
 
       const createUser = async() => {
         // パスワード不一致の場合はリクエストを送信しない
@@ -158,7 +159,8 @@
         isEqualPassword,
         isValidEmail,
         showPassword,
-        showPasswordCheck
+        showPasswordCheck,
+        showMailForm
       }
     }
   }

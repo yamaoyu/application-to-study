@@ -6,6 +6,7 @@ export const useAuthStore = defineStore('authStore', {
         tokenType: null,
         expire: null,
         redirectPath: null,
+        role: null
     }),
     getters: {
       isToken() {
@@ -49,3 +50,23 @@ export const useAuthStore = defineStore('authStore', {
       }
     },
   })
+
+export const useRoleStore = defineStore('roleStore', {
+  state: () => ({
+    role: null
+  }),
+  getters: {
+    getRole() {
+      return this.role
+    }
+  },
+  actions: {
+    setRole(role) {
+      this.role = role;
+    },
+    clearRole(){
+      this.role = null;
+    }
+  },
+  persist: true
+})

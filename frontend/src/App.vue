@@ -32,8 +32,11 @@
           <li class="nav-item">
             <router-link class="nav-link" to="/user/info">ユーザー情報</router-link>
           </li>
-          <li class="nav-item">
+          <li class="nav-item" v-if="!isAdmin">
             <router-link class="nav-link" to="/register/inquiry">問い合わせ</router-link>
+          </li>
+          <li class="nav-item" v-if="isAdmin">
+            <router-link class="nav-link" to="/show/inquiry">問い合わせ確認</router-link>
           </li>
           <li class="nav-item">
             <a class="nav-link" type="button" @click="logout()">ログアウト</a>
@@ -68,8 +71,11 @@
         <li class="nav-item" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/user/info">ユーザー情報</router-link>
         </li>
-        <li class="nav-item" data-bs-dismiss="offcanvas">
+        <li class="nav-item" v-if="!isAdmin" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/register/inquiry">問い合わせ</router-link>
+        </li>
+        <li class="nav-item" v-if="isAdmin" data-bs-dismiss="offcanvas">
+          <router-link class="nav-link" to="/show/inquiry">問い合わせ確認</router-link>
         </li>
         <li class="nav-item">
           <a class="nav-link" type="button" @click="logout()">ログアウト</a>
@@ -85,10 +91,10 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/store/authenticate';
+import { useAuthStore, useRoleStore } from '@/store/authenticate';
 import { BContainer } from 'bootstrap-vue-next';
 
 export default {
@@ -97,10 +103,14 @@ export default {
   },
 
   setup() {
-    const router = useRouter()
-    const authStore = useAuthStore()
-    const logoutMsg = ref("")
-    const MENU_SHOW_ROUTES = ["Login", "RegisterUser"]
+    const router = useRouter();
+    const authStore = useAuthStore();
+    const roleStore = useRoleStore();
+    const logoutMsg = ref("");
+    const MENU_SHOW_ROUTES = ["Login", "RegisterUser"];
+    const isAdmin = computed(() => {
+      return roleStore.getRole === "admin"
+    });
 
     const logout = async() =>{
       try{
@@ -115,7 +125,8 @@ export default {
               }
         )
         if (logout_res.status===200){
-          authStore.clearAuthData()
+          authStore.clearAuthData();
+          roleStore.clearRole();
           router.push(
                   {"path":"/login",
                     "query":{message:"ログアウトしました"}
@@ -147,7 +158,8 @@ export default {
     return {
       logoutMsg,
       logout,
-      MENU_SHOW_ROUTES
+      MENU_SHOW_ROUTES,
+      isAdmin
     }
   }
 }
