@@ -4,7 +4,7 @@ from db import db_model
 from db.database import get_db
 from lib.log_conf import logger
 from sqlalchemy.orm import Session
-from app.models.todo_model import Todo, Todos
+from app.models.todo_model import Todo, Todos, IDList
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from lib.security import get_current_user
 from typing import Optional
@@ -141,6 +141,44 @@ def delete_todo(todo_id: int,
             raise HTTPException(status_code=404, detail="選択されたタスクは存在しません")
         db.commit()
         logger.info(f"{current_user['username']}がTodoを削除 ID:{todo_id}")
+    except HTTPException as http_exception:
+        raise http_exception
+    except Exception:
+        logger.error(f"todoの削除に失敗しました\n{traceback.format_exc()}")
+        db.rollback()
+        raise HTTPException(status_code=500,
+                            detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
+
+
+@router.delete("/todos", status_code=204)
+def delete_todos(params: IDList,
+                 db: Session = Depends(get_db),
+                 current_user: dict = Depends(get_current_user)):
+    try:
+        ids = params.ids
+        # 削除するTodoが存在するか確認
+        todos = db.query(db_model.Todo).with_entities(
+            db_model.Todo.todo_id, db_model.Todo.title).filter(
+            db_model.Todo.todo_id.in_(ids), db_model.Todo.username == current_user['username'])
+        if todos.count() == 0:
+            raise HTTPException(status_code=404, detail="削除リクエストされたTodoは全て存在しません")
+        elif todos.count() < len(ids):
+            ids_can_delete = set(ids) & set(todo.todo_id for todo in todos)
+            title_can_delete = [todo.title for todo in todos]
+            result = db.query(db_model.Todo).filter(
+                db_model.Todo.todo_id.in_(ids_can_delete),
+                db_model.Todo.username == current_user['username']).delete()
+            msg = "登録のないTodoが含まれているため、一部のTodo削除をスキップしました\n" \
+                + f"削除したTodo:{result}件\n" \
+                + "".join([f"タイトル:{title}\n" for title in title_can_delete])
+            # 削除できるものは削除してコミット
+            db.commit()
+            raise HTTPException(status_code=400, detail=msg)
+        else:
+            result = db.query(db_model.Todo).filter(
+                db_model.Todo.todo_id.in_(ids),
+                db_model.Todo.username == current_user['username']).delete()
+        db.commit()
     except HTTPException as http_exception:
         raise http_exception
     except Exception:

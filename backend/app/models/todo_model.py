@@ -23,3 +23,7 @@ class Todo(BaseModel):
 
 class Todos(BaseModel):
     todos: list
+
+
+class IDList(BaseModel):
+    ids: list[int]
