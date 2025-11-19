@@ -207,6 +207,15 @@ def test_delete_todo_not_exist(client, get_headers):
     assert response.json() == {"detail": "選択されたタスクは存在しません"}
 
 
+def test_delete_multi_todos(client, get_headers):
+    """ 複数タスクの一括削除"""
+    for _ in range(2):
+        setup_create_todo(client, get_headers)
+    data = {"ids": [1, 2]}
+    response = client.put("/todos/multi/delete", json=data, headers=get_headers)
+    assert response.status_code == 204
+
+
 def test_edit_todo(client, get_headers):
     setup_create_todo(client, get_headers)
     data = {"title": "new title", "due": "2024-11-11", "detail": "new detail"}
@@ -260,3 +269,16 @@ def test_finish_todo_already_finished(client, get_headers):
     response = client.put("/todos/finish/1", headers=get_headers)
     assert response.status_code == 400
     assert response.json() == {"detail": "既に終了したタスクです"}
+
+
+def test_finish_multi_todos(client, get_headers):
+    """ 複数タスクの一括終了 """
+    for _ in range(2):
+        setup_create_todo(client, get_headers)
+    data = {"ids": [1, 2]}
+    response = client.put("todos/multi/finish", json=data, headers=get_headers)
+    assert response.status_code == 200
+    assert response.json() == {
+        "message": "2件のTodoを終了しました",
+        "titles": f"{test_title}\n{test_title}"
+    }

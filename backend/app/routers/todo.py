@@ -150,7 +150,7 @@ def delete_todo(todo_id: int,
                             detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
-@router.delete("/todos", status_code=204)
+@router.put("/todos/multi/delete", status_code=204)
 def delete_todos(params: IDList,
                  db: Session = Depends(get_db),
                  current_user: dict = Depends(get_current_user)):
