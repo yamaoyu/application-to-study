@@ -226,3 +226,55 @@ export function deleteTodoRequest(todoId, todoMsg, getTodos) {
     }
     return deleteTodo
 }
+
+export function deleteTodosRequest(todoIDs, todoMsg, getTodos) {
+    const router = useRouter();
+    const { handleError: todoError } = commonError(todoMsg, router);
+    const authStore = useAuthStore();
+
+    const sendDeleteTodosRequest = async() =>{
+        const url = import.meta.env.VITE_BACKEND_URL + 'todos/multi/delete'
+        const response = await axios.put(
+            url, 
+            {ids:todoIDs.value},
+            { 
+            headers: {
+            Authorization: authStore.getAuthHeader}
+            }
+        )
+        return response
+    }
+
+    const deleteTodos = async() =>{
+        try {
+            const response = await sendDeleteTodosRequest();
+            if (response.status===204){
+                todoMsg.value = "選択したtodoを削除しました";
+                await getTodos();
+            }
+        } catch (error) {
+            if (error.response?.status === 401) {
+            try {
+                // リフレッシュトークンを検証して新しいアクセストークンを取得
+                const tokenResponse = await verifyRefreshToken();
+                // 新しいアクセストークンをストアに保存
+                await authStore.setAuthData(
+                tokenResponse.data.access_token,
+                tokenResponse.data.token_type,
+                jwtDecode(tokenResponse.data.access_token).exp)
+                // 再度リクエストを送信
+                await sendDeleteTodosRequest(todoId);
+                await getTodos();
+            } catch (refreshError) {
+                router.push({
+                path: "/login",
+                query: { message: "再度ログインしてください" }
+                });
+            }            
+            } else {
+                todoMsg.value = await todoError(error)
+            }
+        }
+    }
+    return deleteTodos
+}
