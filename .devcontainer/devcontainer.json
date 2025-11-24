@@ -1,0 +1,88 @@
+{
+    "name": "Study App DevContainer",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.autopep8",
+                "ms-python.flake8",
+                "ms-python.isort",
+                "charliermarsh.ruff",
+                "vue.volar",
+                "esbenp.prettier-vscode",
+                "dbaeumer.vscode-eslint",
+                "redhat.vscode-yaml",
+                "vscode-icons-team.vscode-icons",
+                "yzhang.markdown-all-in-one",
+                "DavidAnson.vscode-markdownlint",
+                "github.copilot-chat",
+                "github.copilot",
+                "oderwat.indent-rainbow",
+                "xyz.local-history"
+            ]
+        },
+        "settings": {
+            "workbench.iconTheme": "vscode-icons",
+            "diffEditor.hideUnchangedRegions.enabled": true,
+            "[python]": {
+                "editor.defaultFormatter": "ms-python.autopep8",
+                "editor.formatOnSave": true
+            },
+            "autopep8.args": [
+                "--max-line-length=100",
+                "--ignore=E731"
+            ],
+            "flake8.args": [
+                "--ignore=E501"
+            ],
+            "javascript.updateImportsOnFileMove.enabled": "never",
+            "editor.inlineSuggest.suppressSuggestions": true,
+            "json.schemaDownload.enable": true,
+            "git.suggestSmartCommit": false,
+            "python.analysis.typeCheckingMode": "basic",
+            "python.linting.enabled": true,
+            "python.linting.flake8Enabled": true,
+            "python.testing.unittestEnabled": true,
+            "python.testing.pytestEnabled": true,
+            "python.testing.autoTestDiscoverOnSaveEnabled": true,
+            "eslint.enable": true,
+            "editor.codeActionsOnSave": {
+                "source.fixAll.eslint": true
+            },
+            "[markdown]": {
+                "editor.defaultFormatter": "yzhang.markdown-all-in-one",
+                "editor.formatOnSave": true
+            },
+            "[yaml]": {
+                "editor.defaultFormatter": "redhat.vscode-yaml",
+                "editor.formatOnSave": true
+            },
+            "editor.tabSize": 4,
+            "files.trimTrailingWhitespace": true,
+            "files.insertFinalNewline": true,
+            "files.exclude": {
+                "**/__pycache__": true,
+                "**/node_modules": true
+            },
+            "editor.bracketPairColorization.enabled": true,
+            "editor.guides.bracketPairs": true
+        }
+    },
+    "postCreateCommand": "pip install -r backend/requirements.txt && npm install --prefix frontend",
+    "remoteUser": "vscode",
+    "features": {
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "20"
+        },
+        "ghcr.io/devcontainers/features/python:1": {
+            "version": "3.12"
+        }
+    },
+    "mounts": [
+        "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+    ]
+}
