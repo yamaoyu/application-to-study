@@ -2,26 +2,26 @@
   "version": "0.2.0",
   "configurations": [
     {
-        "name": "Python: FastAPI",
-        "type": "debugpy",
-        "request": "attach",
-        "connect": {
-            "host": "backend",
-            "port": 5678
-        },
-        "pathMappings": [
-            {
-            "localRoot": "${workspaceFolder}/backend",  // ローカルのコードパス
-            "remoteRoot": "/backend"                   // コンテナ内のコードパス
-            }
-        ]
+      "name": "Python: FastAPI",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+          "host": "backend",
+          "port": 5678
+      },
+      "pathMappings": [
+          {
+          "localRoot": "${workspaceFolder}/backend",  // ローカルのコードパス
+          "remoteRoot": "/backend"                   // コンテナ内のコードパス
+          }
+      ]
     },
-    {
-        "name": "Chrome: Vue",
-        "type": "chrome",
-        "request": "launch",
-        "url": "http://localhost:5173",
-        "webRoot": "${workspaceFolder}/frontend/src"
+     {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Vue.js: Chrome (Frontend)",
+      "url": "https://local.example.com",
+      "webRoot": "${workspaceFolder}/frontend/src"
     }
   ]
 }
