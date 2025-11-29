@@ -6,21 +6,21 @@
       "type": "debugpy",
       "request": "attach",
       "connect": {
-          "host": "backend",
-          "port": 5678
+        "host": "backend",
+        "port": 5678
       },
       "pathMappings": [
-          {
-          "localRoot": "${workspaceFolder}/backend",  // ローカルのコードパス
-          "remoteRoot": "/backend"                   // コンテナ内のコードパス
-          }
+        {
+          "localRoot": "${workspaceFolder}/backend", // ローカルのコードパス
+          "remoteRoot": "/backend" // コンテナ内のコードパス
+        }
       ]
     },
-     {
+    {
       "type": "chrome",
       "request": "launch",
       "name": "Vue.js: Chrome (Frontend)",
-      "url": "https://local.example.com",
+      "url": "https://${env:FRONTEND_DOMAIN}",
       "webRoot": "${workspaceFolder}/frontend/src"
     }
   ]
