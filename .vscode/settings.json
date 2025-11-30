@@ -1,0 +1,40 @@
+{
+  "workbench.iconTheme": "vscode-icons",
+  "diffEditor.hideUnchangedRegions.enabled": true,
+  "editor.formatOnSave": true,
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.autopep8",
+  },
+  "autopep8.args": [
+    "--max-line-length=100",
+    "--ignore=E731"
+  ],
+  "flake8.args": [
+    "--ignore=E501"
+  ],
+  "[json][jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false
+  },
+  "[vue][javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false
+  },
+  "[yaml][yml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false
+  },
+  "workbench.editorAssociations": {
+    "{git,gitlens,git-graph}:/**/*.{md,csv,svg}": "default"
+  },
+  "javascript.updateImportsOnFileMove.enabled": "prompt",
+  "editor.inlineSuggest.suppressSuggestions": true,
+  "json.schemaDownload.enable": true,
+  "git.suggestSmartCommit": false,
+}
