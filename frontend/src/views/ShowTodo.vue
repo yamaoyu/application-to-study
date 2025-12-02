@@ -60,6 +60,13 @@
         </button>
         <button 
             type="button"
+            @click="confirmRequest({}, 'finish-multi')"
+            :disabled="!isSelectMode || !selectedTodos.length"
+        >
+            一括終了
+        </button>
+        <button 
+            type="button"
             @click="isSelectMode = !isSelectMode"
         >
             {{ isSelectMode ? '一括操作操作' : '一括操作' }}
@@ -228,12 +235,24 @@
                 </ul>
             </div>
         </div>
+        <div v-else-if="todoAction==='finish-multi'">
+            <div class="text-danger">選択したTodoを一括で終了します。確定後は取り消せません。</div>
+            <div>
+                <span style="font-weight: bold">選択したTodoのタイトル</span>
+                <ul>
+                    <li v-for="id in selectedTodos" :key="id" 
+                        style="display: list-item; list-style-type: disc;">
+                        {{ todos.find(todo => todo.todo_id === id)?.title }}
+                    </li>
+                </ul>
+            </div>
+        </div>
     </BModal>
 </template>
 
 <script>
 import { ref, onMounted, computed } from 'vue';
-import { getTodoRequest, editTodoRequest, finishTodoRequest, deleteTodoRequest, deleteTodosRequest } from './lib';
+import { getTodoRequest, editTodoRequest, finishTodoRequest, finishTodosRequest, deleteTodoRequest, deleteTodosRequest } from './lib';
 import { BButton,BModal } from 'bootstrap-vue-next';
 
 
@@ -267,8 +286,9 @@ export default{
         const getTodos = getTodoRequest(statusFilter, startDue, endDue, title, todos, todoMsg);
         const editTodo = editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue, todoMsg, getTodos);
         const finishTodo = finishTodoRequest(todoId, todoMsg, getTodos);
+        const finishTodos = finishTodosRequest(selectedTodos, todoMsg, getTodos)
         const deleteTodo = deleteTodoRequest(todoId, todoMsg, getTodos);
-        const deleteTodos = deleteTodosRequest(selectedTodos, todoMsg, getTodos)
+        const deleteTodos = deleteTodosRequest(selectedTodos, todoMsg, getTodos);
         const BOOL_TO_STATUS = { "true":"完了", "false":"未完了" };
 
         // ページネーション用の変数
@@ -292,7 +312,7 @@ export default{
         const validateParams = () => {
             if (["show", "finish", "delete"].includes(todoAction.value)) {
                 return true;
-            } else if (todoAction.value === "delete-multi"){
+            } else if (todoAction.value === "delete-multi"|| todoAction.value === "finish-multi"){
                 return !!(selectedTodos.value.length);
             }
             return !!(newTodoTitle.value && newTodoDue.value);
@@ -348,23 +368,25 @@ export default{
             showModal.value = true
             titleError.value = null;
             dueError.value = null;
-            todoId.value = content.todo_id
-            todoAction.value = action
+            todoId.value = content.todo_id;
+            todoAction.value = action;
             if (todoAction.value==='finish'){
-                modalTitle.value = "Todo終了確認"
+                modalTitle.value = "Todo終了確認";
             } else if (todoAction.value==='delete') {
-                modalTitle.value = "Todo削除確認"
+                modalTitle.value = "Todo削除確認";
             } else if (todoAction.value==='show') {
-                modalTitle.value = "Todo閲覧"
-                todo.value = content
+                modalTitle.value = "Todo閲覧";
+                todo.value = content;
             } else if (todoAction.value==='edit') {
-                modalTitle.value = "Todo編集"
-                newTodoTitle.value = content.title
-                newTodoDetail.value = content.detail
-                newTodoDue.value = content.due
-                todo.value = content
+                modalTitle.value = "Todo編集";
+                newTodoTitle.value = content.title;
+                newTodoDetail.value = content.detail;
+                newTodoDue.value = content.due;
+                todo.value = content;
             } else if (todoAction.value==='delete-multi'){
                 modalTitle.value = "選択したTodo一括削除確認"
+            } else if (todoAction.value==="finish-multi"){;
+                modalTitle.value = "選択したTodo一括終了確認";
             }
         };
 
@@ -380,6 +402,8 @@ export default{
                 await editTodo();
             } else if (todoAction.value==='delete-multi'){
                 await deleteTodos();
+            } else if (todoAction.value==='finish-multi'){
+                await finishTodos();
             }
             // データを初期化
             todoId.value = null;

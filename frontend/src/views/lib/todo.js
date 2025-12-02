@@ -41,28 +41,28 @@ export function getTodoRequest(statusFilter, startDue, endDue, title, todos, tod
 
     const getTodos = async() =>{
         try{
-            const todoRes = await sendGetTodoRequest()
+            const todoRes = await sendGetTodoRequest();
             if (todoRes.status==200){
                 todos.value = todoRes.data;
             }
-            } catch (todoErr) {
+        } catch (todoErr) {
             if (todoErr.response?.status === 401) {
-            try {
-                // リフレッシュトークンを検証して新しいアクセストークンを取得
-                const tokenResponse = await verifyRefreshToken();
-                // 新しいアクセストークンをストアに保存
-                await authStore.setAuthData(
-                    tokenResponse.data.access_token,
-                    tokenResponse.data.token_type,
-                    jwtDecode(tokenResponse.data.access_token).exp);
-                // 再度リクエストを送信
-                await sendGetTodoRequest();
-            } catch (refreshError) {
-                router.push({
-                path: "/login",
-                query: { message: "再度ログインしてください" }
-                });
-            }            
+                try {
+                    // リフレッシュトークンを検証して新しいアクセストークンを取得
+                    const tokenResponse = await verifyRefreshToken();
+                    // 新しいアクセストークンをストアに保存
+                    await authStore.setAuthData(
+                        tokenResponse.data.access_token,
+                        tokenResponse.data.token_type,
+                        jwtDecode(tokenResponse.data.access_token).exp);
+                    // 再度リクエストを送信
+                    await sendGetTodoRequest();
+                } catch (refreshError) {
+                    router.push({
+                    path: "/login",
+                    query: { message: "再度ログインしてください" }
+                    });
+                }            
             } else {
                 todos.value = [];
                 todoMsg.value = await todoError(todoErr);
@@ -174,6 +174,61 @@ export function finishTodoRequest(todoId, todoMsg, getTodos) {
     }
 
     return finishTodo
+}
+
+
+export function finishTodosRequest(todoIDs, todoMsg, getTodos) {
+    const router = useRouter();
+    const { handleError: todoError } = commonError(todoMsg, router);
+    const authStore = useAuthStore();
+
+    const sendFinishTodosRequest = async() =>{
+        const url = import.meta.env.VITE_BACKEND_URL + 'todos/multi/finish'
+        const response = await axios.put(
+            url, 
+            {ids:todoIDs.value},
+            { 
+            headers: {
+            Authorization: authStore.getAuthHeader}
+            }
+        )
+        return response
+    }
+
+    const finishTodos = async() =>{
+        try {
+            const response = await sendFinishTodosRequest();
+            console.log(response)
+            if (response.status===200){
+                todoMsg.value = `${response.data.message}\n${response.data.titles}`;
+                await getTodos();
+            }
+        } catch (error) {
+            if (error.response?.status === 401) {
+            try {
+                // リフレッシュトークンを検証して新しいアクセストークンを取得
+                const tokenResponse = await verifyRefreshToken();
+                // 新しいアクセストークンをストアに保存
+                await authStore.setAuthData(
+                    tokenResponse.data.access_token,
+                    tokenResponse.data.token_type,
+                    jwtDecode(tokenResponse.data.access_token).exp
+                );
+                // 再度リクエストを送信
+                await sendFinishTodosRequest(todoId);
+                await getTodos();
+            } catch (refreshError) {
+                router.push({
+                path: "/login",
+                query: { message: "再度ログインしてください" }
+                });
+            }            
+            } else {
+                todoMsg.value = await todoError(error);
+            }
+        }
+    }
+    return finishTodos
 }
 
 export function deleteTodoRequest(todoId, todoMsg, getTodos) {
