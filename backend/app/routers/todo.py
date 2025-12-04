@@ -263,7 +263,7 @@ def finish_todos(params: IDList,
     try:
         ids = params.ids
         msg = ""
-        del_cnt = 0
+        fin_cnt = 0
         del_titles = []
         # 終了するTodoが存在するか確認
         todos = db.query(db_model.Todo).filter(
@@ -275,17 +275,17 @@ def finish_todos(params: IDList,
         elif todos.count() < len(ids):
             msg = "登録のない/削除済みTodoが含まれているため、一部のTodo終了処理をスキップしました\n"
         for todo in todos:
-            del_cnt += 1
+            fin_cnt += 1
             del_titles.append(todo.title)
             todo.status = True
         logger.info(f"{current_user['username']}が複数のTodoを完了 IDs:{ids}")
         db.commit()
-        return {"message": f"{msg}{del_cnt}件のTodoを終了しました",
+        return {"message": f"{msg}{fin_cnt}件のTodoを終了しました",
                 "titles": "\n".join(del_titles)}
     except HTTPException as http_exception:
         raise http_exception
     except Exception:
-        logger.error(f"todoの削除に失敗しました\n{traceback.format_exc()}")
+        logger.error(f"todoの終了に失敗しました\n{traceback.format_exc()}")
         db.rollback()
         raise HTTPException(status_code=500,
                             detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
