@@ -285,9 +285,7 @@ export default{
         const isSelectMode = ref(false);
         const getTodos = getTodoRequest(statusFilter, startDue, endDue, title, todos, todoMsg);
         const editTodo = editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue, todoMsg, getTodos);
-        const finishTodo = finishTodoRequest(todoId, todoMsg, getTodos);
-        const finishTodos = finishTodosRequest(selectedTodos, todoMsg, getTodos)
-        const deleteTodo = deleteTodoRequest(todoId, todoMsg, getTodos);
+        const finishTodos = finishTodosRequest(selectedTodos, todoMsg, getTodos);
         const deleteTodos = deleteTodosRequest(selectedTodos, todoMsg, getTodos);
         const BOOL_TO_STATUS = { "true":"完了", "false":"未完了" };
 
@@ -371,8 +369,10 @@ export default{
             todoId.value = content.todo_id;
             todoAction.value = action;
             if (todoAction.value==='finish'){
+                selectedTodos.value = [content.todo_id];
                 modalTitle.value = "Todo終了確認";
             } else if (todoAction.value==='delete') {
+                selectedTodos.value = [content.todo_id];
                 modalTitle.value = "Todo削除確認";
             } else if (todoAction.value==='show') {
                 modalTitle.value = "Todo閲覧";
@@ -392,9 +392,9 @@ export default{
 
         const sendTodoRequest = async() =>{
             if (todoAction.value==='finish'){
-                await finishTodo();
+                await finishTodos();
             } else if (todoAction.value==='delete') {
-                await deleteTodo();
+                await deleteTodos();
                 if (currentPage.value > totalPages.value) {
                     currentPage.value = totalPages.value;
                 };
