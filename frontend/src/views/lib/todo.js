@@ -123,60 +123,6 @@ export function editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue,
 }
 
 
-export function finishTodoRequest(todoId, todoMsg, getTodos) {
-    const router = useRouter();
-    const { handleError: todoError } = commonError(todoMsg, router);
-    const authStore = useAuthStore();
-
-    const sendFinishTodoRequest = async() =>{
-        const finish_url = import.meta.env.VITE_BACKEND_URL + 'todos/finish/' + todoId.value
-        const response = await axios.put(
-            finish_url, 
-            {},
-            { 
-            headers: {
-            Authorization: authStore.getAuthHeader}
-            }
-        )
-        return response
-    }
-
-    const finishTodo = async() =>{
-        try {
-            const response = await sendFinishTodoRequest(todoId.value)
-            if (response.status===200){
-                todoMsg.value = response.data.message;
-                await getTodos();
-            }
-        } catch (error) {
-            if (error.response?.status === 401) {
-                try {
-                    // リフレッシュトークンを検証して新しいアクセストークンを取得
-                    const tokenResponse = await verifyRefreshToken();
-                    // 新しいアクセストークンをストアに保存
-                    await authStore.setAuthData(
-                    tokenResponse.data.access_token,
-                    tokenResponse.data.token_type,
-                    jwtDecode(tokenResponse.data.access_token).exp)
-                    // 再度リクエストを送信
-                    await sendFinishTodoRequest(todoId.value);
-                    await getTodos();
-                } catch (refreshError) {
-                    router.push({
-                    path: "/login",
-                    query: { message: "再度ログインしてください" }
-                    });
-                }            
-            } else {
-                todoMsg.value = await todoError(error)
-            }
-        }
-    }
-
-    return finishTodo
-}
-
-
 export function finishTodosRequest(todoIDs, todoMsg, getTodos) {
     const router = useRouter();
     const { handleError: todoError } = commonError(todoMsg, router);
@@ -198,7 +144,6 @@ export function finishTodosRequest(todoIDs, todoMsg, getTodos) {
     const finishTodos = async() =>{
         try {
             const response = await sendFinishTodosRequest();
-            console.log(response)
             if (response.status===200){
                 todoMsg.value = `${response.data.message}\n${response.data.titles}`;
                 await getTodos();
@@ -231,56 +176,6 @@ export function finishTodosRequest(todoIDs, todoMsg, getTodos) {
     return finishTodos
 }
 
-export function deleteTodoRequest(todoId, todoMsg, getTodos) {
-    const router = useRouter();
-    const { handleError: todoError } = commonError(todoMsg, router);
-    const authStore = useAuthStore();
-
-    const sendDeleteTodoRequest = async() =>{
-        const deleteUrl = import.meta.env.VITE_BACKEND_URL + 'todos/' + todoId.value
-        const response = await axios.delete(
-            deleteUrl, 
-            { 
-            headers: {
-            Authorization: authStore.getAuthHeader}
-            }
-        )
-        return response
-    }
-
-    const deleteTodo = async() =>{
-        try {
-            const response = await sendDeleteTodoRequest(todoId.value);
-            if (response.status===204){
-                todoMsg.value = "選択したtodoを削除しました";
-                await getTodos();
-            }
-        } catch (error) {
-            if (error.response?.status === 401) {
-            try {
-                // リフレッシュトークンを検証して新しいアクセストークンを取得
-                const tokenResponse = await verifyRefreshToken();
-                // 新しいアクセストークンをストアに保存
-                await authStore.setAuthData(
-                tokenResponse.data.access_token,
-                tokenResponse.data.token_type,
-                jwtDecode(tokenResponse.data.access_token).exp)
-                // 再度リクエストを送信
-                await sendDeleteTodoRequest(todoId);
-                await getTodos();
-            } catch (refreshError) {
-                router.push({
-                path: "/login",
-                query: { message: "再度ログインしてください" }
-                });
-            }            
-            } else {
-                todoMsg.value = await todoError(error)
-            }
-        }
-    }
-    return deleteTodo
-}
 
 export function deleteTodosRequest(todoIDs, todoMsg, getTodos) {
     const router = useRouter();

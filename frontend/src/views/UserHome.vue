@@ -253,7 +253,7 @@
 import { onMounted, ref, computed } from 'vue';
 import { STATUS_DICT, getAdjustmentColors, getStatusColors, 
         getActivityAlert, getTodoRequest, editTodoRequest, getActivityByDay,
-        finishTodoRequest, deleteTodoRequest, getIncomeByMonth } from './lib';
+        finishTodosRequest, deleteTodosRequest, getIncomeByMonth } from './lib';
 import { BButton, BModal } from 'bootstrap-vue-next';
 
 export default {
@@ -289,10 +289,11 @@ export default {
     const startDue = ref();
     const endDue = ref();
     const title = ref();
+    const selectedTodos = ref([]);
     const getTodos = getTodoRequest(statusFilter, startDue, endDue, title, todos, todoMsg);
     const editTodo = editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue, todoMsg, getTodos);
-    const finishTodo = finishTodoRequest(todoId, todoMsg, getTodos);
-    const deleteTodo = deleteTodoRequest(todoId, todoMsg, getTodos);
+    const finishTodos = finishTodosRequest(selectedTodos, todoMsg, getTodos);
+    const deleteTodos = deleteTodosRequest(selectedTodos, todoMsg, getTodos);
     const getTodayActivity = getActivityByDay(year, month, date, activityRes, activityStatus, activityMsg);
     const getThisMonthIncome = getIncomeByMonth(incomeRes, incomeMsg, year, month);
 
@@ -342,7 +343,7 @@ export default {
     const confirmRequest = async(content, action) =>{
       titleError.value = null;
       dueError.value = null;
-      todoId.value = content.todo_id;
+      selectedTodos.value = [content.todo_id];
       todoAction.value = action;
       if (todoAction.value==='finish'){
         modalTitle.value = "Todo終了確認"
@@ -363,9 +364,9 @@ export default {
 
     const sendTodoRequest = async() =>{
       if (todoAction.value==='finish'){
-        await finishTodo();
+        await finishTodos();
       } else if (todoAction.value==='delete') {
-        await deleteTodo();
+        await deleteTodos();
         if (currentPage.value > totalPages.value) {
             currentPage.value = totalPages.value;
         };
@@ -373,9 +374,10 @@ export default {
         await editTodo();
       }
       // データを初期化
-      todoId.value = null
-      todoAction.value = null
-      todo.value = null
+      todoId.value = null;
+      todoAction.value = null;
+      todo.value = null;
+      selectedTodos.value = [];
     };
 
     const sortTodos = async(type) =>{
@@ -446,8 +448,8 @@ export default {
       sendTodoRequest,
       sortTodos,
       sortType,
-      deleteTodo,
-      finishTodo,
+      deleteTodos,
+      finishTodos,
       editTodo,
       getTodayActivity,
       getThisMonthIncome,

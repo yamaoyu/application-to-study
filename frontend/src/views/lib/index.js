@@ -11,7 +11,7 @@ import {
     updateActivity, registerTarget, registerActual, registerMultiTarget, registerMultiActual, 
     finalizeActivity, finalizeMultiActivities,
     getActivityByDay, getActivityByMonth, getActivityByYear, getActivitiesAllPeriod, getActivitiesByStatus } from "./activity";
-import { getTodoRequest, editTodoRequest, finishTodoRequest, finishTodosRequest, deleteTodoRequest, deleteTodosRequest } from "./todo";
+import { getTodoRequest, editTodoRequest, finishTodosRequest, deleteTodosRequest } from "./todo";
 import { getIncomeByMonth, registerMonthlyIncome } from "./income";
 
 export {
@@ -55,9 +55,7 @@ export {
     getActivitiesByStatus,
     getTodoRequest,
     editTodoRequest,
-    finishTodoRequest,
     finishTodosRequest,
-    deleteTodoRequest,
     deleteTodosRequest,
     getIncomeByMonth,
     registerMonthlyIncome,
