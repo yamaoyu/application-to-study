@@ -4,7 +4,7 @@ from db import db_model
 from db.database import get_db
 from lib.log_conf import logger
 from sqlalchemy.orm import Session
-from app.models.todo_model import Todo, Todos
+from app.models.todo_model import Todo, Todos, IDList
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from lib.security import get_current_user
 from typing import Optional
@@ -150,6 +150,44 @@ def delete_todo(todo_id: int,
                             detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
 
 
+@router.put("/todos/multi/delete", status_code=204)
+def delete_todos(params: IDList,
+                 db: Session = Depends(get_db),
+                 current_user: dict = Depends(get_current_user)):
+    try:
+        ids = params.ids
+        # 削除するTodoが存在するか確認
+        todos = db.query(db_model.Todo).with_entities(
+            db_model.Todo.todo_id, db_model.Todo.title).filter(
+            db_model.Todo.todo_id.in_(ids), db_model.Todo.username == current_user['username'])
+        if todos.count() == 0:
+            raise HTTPException(status_code=404, detail="削除リクエストされたTodoは全て存在しません")
+        elif todos.count() < len(ids):
+            ids_can_delete = set(ids) & set(todo.todo_id for todo in todos)
+            title_can_delete = [todo.title for todo in todos]
+            result = db.query(db_model.Todo).filter(
+                db_model.Todo.todo_id.in_(ids_can_delete),
+                db_model.Todo.username == current_user['username']).delete()
+            msg = "登録のないTodoが含まれているため、一部のTodo削除処理をスキップしました\n" \
+                + f"削除したTodo:{result}件\n" \
+                + "".join([f"タイトル:{title}\n" for title in title_can_delete])
+            # 削除できるものは削除してコミット
+            db.commit()
+            raise HTTPException(status_code=400, detail=msg)
+        else:
+            result = db.query(db_model.Todo).filter(
+                db_model.Todo.todo_id.in_(ids),
+                db_model.Todo.username == current_user['username']).delete()
+        db.commit()
+    except HTTPException as http_exception:
+        raise http_exception
+    except Exception:
+        logger.error(f"todoの削除に失敗しました\n{traceback.format_exc()}")
+        db.rollback()
+        raise HTTPException(status_code=500,
+                            detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
+
+
 @router.put("/todos/{todo_id}", status_code=200)
 def edit_todo(todo_id: int,
               new_todo: Todo,
@@ -216,3 +254,38 @@ def finish_todo(todo_id: int,
         db.rollback()
         raise HTTPException(
             status_code=500, detail="サーバーでエラーが発生しました。管理者にお問い合わせください")
+
+
+@router.put("/todos/multi/finish", status_code=200)
+def finish_todos(params: IDList,
+                 db: Session = Depends(get_db),
+                 current_user: dict = Depends(get_current_user)):
+    try:
+        ids = params.ids
+        msg = ""
+        fin_cnt = 0
+        del_titles = []
+        # 終了するTodoが存在するか確認
+        todos = db.query(db_model.Todo).filter(
+            db_model.Todo.todo_id.in_(ids),
+            db_model.Todo.status.is_(False),
+            db_model.Todo.username == current_user['username'])
+        if todos.count() == 0:
+            raise HTTPException(status_code=404, detail="終了リクエストされたTodoは全て存在しないか、既に終了しています")
+        elif todos.count() < len(ids):
+            msg = "登録のない/削除済みTodoが含まれているため、一部のTodo終了処理をスキップしました\n"
+        for todo in todos:
+            fin_cnt += 1
+            del_titles.append(todo.title)
+            todo.status = True
+        logger.info(f"{current_user['username']}が複数のTodoを完了 IDs:{ids}")
+        db.commit()
+        return {"message": f"{msg}{fin_cnt}件のTodoを終了しました",
+                "titles": "\n".join(del_titles)}
+    except HTTPException as http_exception:
+        raise http_exception
+    except Exception:
+        logger.error(f"todoの終了に失敗しました\n{traceback.format_exc()}")
+        db.rollback()
+        raise HTTPException(status_code=500,
+                            detail="サーバーでエラーが発生しました。管理者にお問い合わせください")

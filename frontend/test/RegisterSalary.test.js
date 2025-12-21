@@ -36,19 +36,19 @@ describe('月の入力', () => {
     })
 
     it('翌年にする', async() =>{
-        const today = new Date();
-        const expectedYear = `${today.getFullYear()+1}`;
-        const expectedMonth = `${today.getMonth()+1}`.padStart(2, '0');
+        const [year, month] = wrapper.vm.selectedMonth.split('-').map(Number)
+        let newDate = new Date(year + 1, month)
+        const selectedMonth = newDate.toISOString().slice(0, 7)
         await wrapper.find('[data-testid="nextYear"]').trigger('click');
-        expect(wrapper.vm.selectedMonth).toEqual(`${expectedYear}-${expectedMonth}`);
+        expect(wrapper.vm.selectedMonth).toEqual(`${selectedMonth}`);
     })
 
     it('翌月にする', async() =>{
-        const today = new Date();
-        const expectedYear = `${today.getFullYear()}`;
-        const expectedMonth = `${today.getMonth()+2}`.padStart(2, '0');
+        const [year, month] = wrapper.vm.selectedMonth.split('-').map(Number)
+        let newDate = new Date(year, month + 1)
+        const selectedMonth = newDate.toISOString().slice(0, 7)
         await wrapper.find('[data-testid="nextMonth"]').trigger('click');
-        expect(wrapper.vm.selectedMonth).toEqual(`${expectedYear}-${expectedMonth}`);
+        expect(wrapper.vm.selectedMonth).toEqual(`${selectedMonth}`);
     })
 });
 

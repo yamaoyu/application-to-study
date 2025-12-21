@@ -321,22 +321,22 @@ describe('Todoの操作', () =>{
     });
 
     it('Todo終了', async() =>{
-        const expectedMessage = "選択したTodoを終了しました";
-        const title = "new title";
+        const title = "Test Todo";
         const status = true;
         const originalTodo = [{
-            title: 'Test Todo',
+            title: title,
             detail: 'This is a test todo detail',
             due: '2025-01-01',
             todo_id: 1
         }];
+        const expectedMessage = `1件のTodoを終了しました`;
 
         // finishTodo()のモック
         axios.put.mockResolvedValue({
             status: 200,
             data: {
                 message: expectedMessage,
-                title: title,
+                titles: title,
                 status: status
             }
         })
@@ -371,8 +371,9 @@ describe('Todoの操作', () =>{
         await flushPromises();
 
         expect(axios.put).toHaveBeenCalledWith(
-            process.env.VITE_BACKEND_URL + "todos/finish/1",
+            process.env.VITE_BACKEND_URL + "todos/multi/finish",
             {
+                ids: [1]
             },
             {
                 "headers": {
@@ -380,13 +381,12 @@ describe('Todoの操作', () =>{
                 },
             },
         );
-        expect(axios.put).toBeCalledTimes(1);        
-        expect(wrapper.vm.todoMsg).toEqual(expectedMessage);
+        expect(wrapper.vm.todoMsg).toEqual(`${expectedMessage}\n${title}`);
     })
 
     it('Todo削除', async() =>{
         // deleteTodo()のモック
-        axios.delete.mockResolvedValue({
+        axios.put.mockResolvedValue({
             status: 204
         })
         // deleteTodo()後のtodo際取得処理のモック
@@ -425,15 +425,17 @@ describe('Todoの操作', () =>{
         await bModal.vm.$emit('ok');
         await flushPromises();
 
-        expect(axios.delete).toHaveBeenCalledWith(
-            process.env.VITE_BACKEND_URL + "todos/1",
+        expect(axios.put).toHaveBeenCalledWith(
+            process.env.VITE_BACKEND_URL + "todos/multi/delete",
+            {
+                ids: [1]
+            },
             {
                 "headers": {
                     "Authorization": "登録なし",
                 },
             },
         );
-        expect(axios.delete).toBeCalledTimes(1);  
         expect(wrapper.vm.todoMsg).toEqual("選択したtodoを削除しました");
     })
 })

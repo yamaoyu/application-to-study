@@ -41,28 +41,28 @@ export function getTodoRequest(statusFilter, startDue, endDue, title, todos, tod
 
     const getTodos = async() =>{
         try{
-            const todoRes = await sendGetTodoRequest()
+            const todoRes = await sendGetTodoRequest();
             if (todoRes.status==200){
                 todos.value = todoRes.data;
             }
-            } catch (todoErr) {
+        } catch (todoErr) {
             if (todoErr.response?.status === 401) {
-            try {
-                // リフレッシュトークンを検証して新しいアクセストークンを取得
-                const tokenResponse = await verifyRefreshToken();
-                // 新しいアクセストークンをストアに保存
-                await authStore.setAuthData(
-                    tokenResponse.data.access_token,
-                    tokenResponse.data.token_type,
-                    jwtDecode(tokenResponse.data.access_token).exp);
-                // 再度リクエストを送信
-                await sendGetTodoRequest();
-            } catch (refreshError) {
-                router.push({
-                path: "/login",
-                query: { message: "再度ログインしてください" }
-                });
-            }            
+                try {
+                    // リフレッシュトークンを検証して新しいアクセストークンを取得
+                    const tokenResponse = await verifyRefreshToken();
+                    // 新しいアクセストークンをストアに保存
+                    await authStore.setAuthData(
+                        tokenResponse.data.access_token,
+                        tokenResponse.data.token_type,
+                        jwtDecode(tokenResponse.data.access_token).exp);
+                    // 再度リクエストを送信
+                    await sendGetTodoRequest();
+                } catch (refreshError) {
+                    router.push({
+                    path: "/login",
+                    query: { message: "再度ログインしてください" }
+                    });
+                }            
             } else {
                 todos.value = [];
                 todoMsg.value = await todoError(todoErr);
@@ -123,16 +123,16 @@ export function editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue,
 }
 
 
-export function finishTodoRequest(todoId, todoMsg, getTodos) {
+export function finishTodosRequest(todoIDs, todoMsg, getTodos) {
     const router = useRouter();
     const { handleError: todoError } = commonError(todoMsg, router);
     const authStore = useAuthStore();
 
-    const sendFinishTodoRequest = async() =>{
-        const finish_url = import.meta.env.VITE_BACKEND_URL + 'todos/finish/' + todoId.value
+    const sendFinishTodosRequest = async() =>{
+        const url = import.meta.env.VITE_BACKEND_URL + 'todos/multi/finish'
         const response = await axios.put(
-            finish_url, 
-            {},
+            url, 
+            {ids:todoIDs.value},
             { 
             headers: {
             Authorization: authStore.getAuthHeader}
@@ -141,50 +141,52 @@ export function finishTodoRequest(todoId, todoMsg, getTodos) {
         return response
     }
 
-    const finishTodo = async() =>{
+    const finishTodos = async() =>{
         try {
-            const response = await sendFinishTodoRequest(todoId.value)
+            const response = await sendFinishTodosRequest();
             if (response.status===200){
-                todoMsg.value = response.data.message;
+                todoMsg.value = `${response.data.message}\n${response.data.titles}`;
                 await getTodos();
             }
         } catch (error) {
             if (error.response?.status === 401) {
-                try {
-                    // リフレッシュトークンを検証して新しいアクセストークンを取得
-                    const tokenResponse = await verifyRefreshToken();
-                    // 新しいアクセストークンをストアに保存
-                    await authStore.setAuthData(
+            try {
+                // リフレッシュトークンを検証して新しいアクセストークンを取得
+                const tokenResponse = await verifyRefreshToken();
+                // 新しいアクセストークンをストアに保存
+                await authStore.setAuthData(
                     tokenResponse.data.access_token,
                     tokenResponse.data.token_type,
-                    jwtDecode(tokenResponse.data.access_token).exp)
-                    // 再度リクエストを送信
-                    await sendFinishTodoRequest(todoId.value);
-                    await getTodos();
-                } catch (refreshError) {
-                    router.push({
-                    path: "/login",
-                    query: { message: "再度ログインしてください" }
-                    });
-                }            
+                    jwtDecode(tokenResponse.data.access_token).exp
+                );
+                // 再度リクエストを送信
+                await sendFinishTodosRequest(todoId);
+                await getTodos();
+            } catch (refreshError) {
+                router.push({
+                path: "/login",
+                query: { message: "再度ログインしてください" }
+                });
+            }            
             } else {
-                todoMsg.value = await todoError(error)
+                todoMsg.value = await todoError(error);
             }
         }
     }
-
-    return finishTodo
+    return finishTodos
 }
 
-export function deleteTodoRequest(todoId, todoMsg, getTodos) {
+
+export function deleteTodosRequest(todoIDs, todoMsg, getTodos) {
     const router = useRouter();
     const { handleError: todoError } = commonError(todoMsg, router);
     const authStore = useAuthStore();
 
-    const sendDeleteTodoRequest = async() =>{
-        const deleteUrl = import.meta.env.VITE_BACKEND_URL + 'todos/' + todoId.value
-        const response = await axios.delete(
-            deleteUrl, 
+    const sendDeleteTodosRequest = async() =>{
+        const url = import.meta.env.VITE_BACKEND_URL + 'todos/multi/delete'
+        const response = await axios.put(
+            url, 
+            {ids:todoIDs.value},
             { 
             headers: {
             Authorization: authStore.getAuthHeader}
@@ -193,9 +195,9 @@ export function deleteTodoRequest(todoId, todoMsg, getTodos) {
         return response
     }
 
-    const deleteTodo = async() =>{
+    const deleteTodos = async() =>{
         try {
-            const response = await sendDeleteTodoRequest(todoId.value);
+            const response = await sendDeleteTodosRequest();
             if (response.status===204){
                 todoMsg.value = "選択したtodoを削除しました";
                 await getTodos();
@@ -211,7 +213,7 @@ export function deleteTodoRequest(todoId, todoMsg, getTodos) {
                 tokenResponse.data.token_type,
                 jwtDecode(tokenResponse.data.access_token).exp)
                 // 再度リクエストを送信
-                await sendDeleteTodoRequest(todoId);
+                await sendDeleteTodosRequest(todoId);
                 await getTodos();
             } catch (refreshError) {
                 router.push({
@@ -224,5 +226,5 @@ export function deleteTodoRequest(todoId, todoMsg, getTodos) {
             }
         }
     }
-    return deleteTodo
+    return deleteTodos
 }
