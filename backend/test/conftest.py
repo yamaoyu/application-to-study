@@ -59,7 +59,7 @@ def client(db_session):
 
 test_username = "testuser"
 test_plain_password = "P@ssword1"
-test_email = "test@test.com"
+test_email = "test@example.com"
 
 another_test_user = "testuser2"
 password_for_another_user = "P@ssword2"

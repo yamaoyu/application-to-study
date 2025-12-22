@@ -1,7 +1,10 @@
+import os
 from pydantic import BaseModel, ConfigDict, field_validator
 from typing import Optional
 from email_validator import validate_email
 from lib.security import is_password_complex, special_characters
+
+ENV = os.getenv("ENV", "DEV")
 
 
 class RegisterUserInfo(BaseModel):
@@ -29,7 +32,7 @@ class RegisterUserInfo(BaseModel):
         if not email:
             return None
         try:
-            validate_email(email)
+            validate_email(email, check_deliverability=ENV == "PROD")
             return email
         except Exception:
             raise ValueError("正しい形式のメールアドレスを入力してください")
