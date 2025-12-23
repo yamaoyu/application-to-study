@@ -44,6 +44,10 @@ def client(db_session):
     def override_get_db():
         try:
             yield db_session
+            db_session.commit()
+        except Exception:
+            db_session.rollback()
+            raise
         finally:
             db_session.close()
 

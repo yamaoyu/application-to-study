@@ -72,7 +72,7 @@ def test_register_income_already_registered(client, get_headers):
             "year": test_year,
             "month": test_month}
     response = client.post(f"/incomes/{test_year}/{test_month}", json=data, headers=get_headers)
-    assert response.status_code == 400
+    assert response.status_code == 409
     assert response.json() == {"detail": "その月の月収は既に登録されています"}
 
 

@@ -1,5 +1,6 @@
 import os
-from fastapi import FastAPI, APIRouter
+import traceback
+from fastapi import FastAPI, APIRouter, Request
 from app.routers.time import router as today_router
 from app.routers.money import router as money_router
 from app.routers.todo import router as todo_router
@@ -8,7 +9,9 @@ from app.routers.inquiry import router as inquiry_router
 from app.routers.health_check import router as health_router
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
+from lib.log_conf import logger
 from fastapi.responses import JSONResponse
+from app.exceptions import NotFound, BadRequest, Conflict
 
 app = FastAPI()
 router = APIRouter()
@@ -29,6 +32,15 @@ app.include_router(todo_router)
 app.include_router(user_router)
 app.include_router(inquiry_router)
 app.include_router(health_router)
+
+
+@app.exception_handler(Exception)
+def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.error(f"予期せぬエラーが発生しました {request.url.path}: \n{traceback.format_exc()}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "サーバーでエラーが発生しました。管理者にお問い合わせください"},
+    )
 
 
 @app.exception_handler(RequestValidationError)
@@ -58,3 +70,18 @@ def validation_exception_handler(request, exc):
                                     content={"detail": "入力データが正しくありません。入力データを確認してください"})
     else:
         return JSONResponse(status_code=422, content={"detail": "入力データが正しくありません。入力データを確認してください"})
+
+
+@app.exception_handler(NotFound)
+def not_found_execption_handler(request, exc):
+    return JSONResponse(status_code=404, content={"detail": exc.detail})
+
+
+@app.exception_handler(BadRequest)
+def bad_request_exception_handler(request, exc):
+    return JSONResponse(status_code=400, content={"detail": exc.detail})
+
+
+@app.exception_handler(Conflict)
+def conflict_exception_handler(request, exc):
+    return JSONResponse(status_code=409, content={"detail": exc.detail})
