@@ -1,5 +1,4 @@
 import os
-import traceback
 from fastapi import FastAPI, APIRouter, Request
 from app.routers.time import router as today_router
 from app.routers.money import router as money_router
@@ -36,7 +35,8 @@ app.include_router(health_router)
 
 @app.exception_handler(Exception)
 def unhandled_exception_handler(request: Request, exc: Exception):
-    logger.error(f"予期せぬエラーが発生しました {request.url.path}: \n{traceback.format_exc()}")
+    logger.error(f"予期せぬエラーが発生しました {request.url.path} \n{exc}",
+                 exc_info=True)
     return JSONResponse(
         status_code=500,
         content={"detail": "サーバーでエラーが発生しました。管理者にお問い合わせください"},
