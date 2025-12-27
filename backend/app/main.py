@@ -11,6 +11,7 @@ from fastapi.exceptions import RequestValidationError
 from lib.log_conf import logger
 from fastapi.responses import JSONResponse
 from app.exceptions import NotFound, BadRequest, Conflict
+from pydantic import ValidationError
 
 app = FastAPI()
 router = APIRouter()
@@ -35,7 +36,7 @@ app.include_router(health_router)
 
 @app.exception_handler(Exception)
 def unhandled_exception_handler(request: Request, exc: Exception):
-    logger.error(f"予期せぬエラーが発生しました {request.url.path} \n{exc}",
+    logger.error(f"予期せぬエラーが発生しました {request.url.path} \n{exc}\nEXC_CLASS={exc.__class__.__module__}.{exc.__class__.__name__}",
                  exc_info=True)
     return JSONResponse(
         status_code=500,
@@ -63,13 +64,24 @@ def validation_exception_handler(request, exc):
                 return JSONResponse(status_code=422,
                                     content={"detail": "入力データが不足しています"})
             case "value_error":
+                if "ctx" in exc.errors()[0] and "error" in exc.errors()[0]["ctx"]:
+                    message = str(exc.errors()[0]["ctx"]["error"])
+                elif "msg" in exc.errors()[0]:
+                    message = exc.errors()[0]["msg"]
+                else:
+                    message = "入力データが正しくありません。入力データを確認してください"
                 return JSONResponse(status_code=422,
-                                    content={"detail": str(exc.errors()[0]["ctx"]["error"])})
+                                    content={"detail": message})
             case _:
                 return JSONResponse(status_code=422,
                                     content={"detail": "入力データが正しくありません。入力データを確認してください"})
     else:
         return JSONResponse(status_code=422, content={"detail": "入力データが正しくありません。入力データを確認してください"})
+
+
+@app.exception_handler(ValidationError)
+def pydantic_validation_exception_handler(request, exc):
+    return JSONResponse(status_code=422, content={"detail": str(exc.errors()[0]["ctx"]["error"])})
 
 
 @app.exception_handler(NotFound)

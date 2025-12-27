@@ -49,6 +49,20 @@ def test_register_income_with_string(client, get_headers):
     assert response.json() == {"detail": "数値を入力してください"}
 
 
+def test_register_income_with_invalid_year(client, get_headers):
+    data = {"salary": 23.0}
+    response = client.post(f"/incomes/9999/{test_month}", json=data, headers=get_headers)
+    assert response.status_code == 422
+    assert response.json() == {"detail": "年は2024~2099の範囲で入力してください"}
+
+
+def test_register_income_with_invalid_month(client, get_headers):
+    data = {"salary": 23.0}
+    response = client.post(f"/incomes/{test_year}/9999", json=data, headers=get_headers)
+    assert response.status_code == 422
+    assert response.json() == {"detail": "月は1~12の範囲で入力してください"}
+
+
 def test_register_income_with_expired_token(client):
     """ 期限の切れたトークンで月収を登録しようとした場合 """
     def mock_create_expired_access_token(data, expires_delta=timedelta(minutes=-30)):

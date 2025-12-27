@@ -1,8 +1,6 @@
-from app.models.common_model import CheckDate
 from lib.log_conf import logger
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from pydantic import ValidationError
 from app.repositories.money_repository import MoneyRepository
 from app.exceptions import NotFound, BadRequest, Conflict
 
@@ -12,10 +10,6 @@ class MoneyService():
         self.repo = MoneyRepository(db)
 
     def register_monthly_salary(self, year: int, month: int, salary: float, username: str) -> dict:
-        try:
-            CheckDate(year=year, month=month)
-        except ValidationError as validate_e:
-            raise BadRequest(detail=str(validate_e.errors()[0]["ctx"]["error"]))
         try:
             salary = salary
             year_month = f"{year}-{month}"
@@ -29,10 +23,6 @@ class MoneyService():
             raise BadRequest(detail="データの整合性エラーが発生しました。入力データを確認してください")
 
     def get_monthly_income(self, year: int, month: int, username: str) -> dict:
-        try:
-            CheckDate(year=year, month=month)
-        except ValidationError as validate_e:
-            raise BadRequest(detail=str(validate_e.errors()[0]["ctx"]["error"]))
         year_month = f"{year}-{month}"
         result = self.repo.get_monthly_salary(year_month, username)
         if not result:
