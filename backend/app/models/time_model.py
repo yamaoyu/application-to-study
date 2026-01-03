@@ -1,6 +1,7 @@
 import re
 from enum import Enum
 from pydantic import BaseModel, field_validator
+from app.models.common_model import CheckDate
 
 
 class Status(str, Enum):
@@ -31,12 +32,17 @@ class TargetTimeIn(BaseModel):
         return target_time
 
 
-class TargetTimeWithDate(TargetTimeIn):
-    date: str
-
-
 class MultiTargetTimeIn(BaseModel):
     activities: list
+
+    @field_validator("activities")
+    def validate_activities(cls, activities):
+        for activity in activities:
+            year, month, day = map(int, activity["date"].split("-"))
+            CheckDate(year=year, month=month, day=day)
+            TargetTimeIn(target_time=activity["target_time"])
+
+        return activities
 
 
 class ActualTimeIn(BaseModel):
@@ -53,12 +59,17 @@ class ActualTimeIn(BaseModel):
         return actual_time
 
 
-class ActualTimeWithDate(ActualTimeIn):
-    date: str
-
-
 class MultiActualTimeIn(BaseModel):
     activities: list
+
+    @field_validator("activities")
+    def validate_activities(cls, activities):
+        for activity in activities:
+            year, month, day = map(int, activity["date"].split("-"))
+            CheckDate(year=year, month=month, day=day)
+            ActualTimeIn(actual_time=activity["actual_time"])
+
+        return activities
 
 
 class ValidateStatus(BaseModel):

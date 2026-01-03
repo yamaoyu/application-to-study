@@ -7,7 +7,6 @@ class CheckYear(BaseModel):
 
     @field_validator("year")
     def check_year(cls, year):
-        print(year)
         if not (2024 <= year <= 2099):
             raise ValueError("年は2024~2099の範囲で入力してください")
         return year
@@ -18,7 +17,6 @@ class CheckYearMonth(CheckYear):
 
     @field_validator("month")
     def check_month(cls, month):
-        print(month)
         if not (1 <= month <= 12):
             raise ValueError("月は1~12の範囲で入力してください")
         return month
