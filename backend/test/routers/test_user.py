@@ -50,7 +50,7 @@ def test_register_with_duplicate_user_name(client):
     user_info = {"username": test_username,
                  "password": password_for_another_user}
     response = client.post("/users", json=user_info)
-    assert response.status_code == 400
+    assert response.status_code == 409
     assert response.json() == {
         "detail": "入力された情報は既に使用されています。\n別のユーザー名またはメールアドレスをお試しください"
     }

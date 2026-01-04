@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from lib.log_conf import logger
 from fastapi.responses import JSONResponse
-from app.exceptions import NotFound, BadRequest, Conflict
+from app.exceptions import NotFound, BadRequest, Conflict, NotAuthorized
 from pydantic import ValidationError
 
 app = FastAPI()
@@ -97,3 +97,8 @@ def bad_request_exception_handler(request, exc):
 @app.exception_handler(Conflict)
 def conflict_exception_handler(request, exc):
     return JSONResponse(status_code=409, content={"detail": exc.detail})
+
+
+@app.exception_handler(NotAuthorized)
+def not_authorized_exception_handler(request, exc):
+    return JSONResponse(status_code=401, content={"detail": exc.detail})

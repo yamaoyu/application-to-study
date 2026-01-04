@@ -11,7 +11,6 @@ class RegisterUserInfo(BaseModel):
     username: str
     password: str
     email: Optional[str] = None
-    role: Optional[str] = None
 
     @field_validator("username")
     def validate_username(cls, username):
