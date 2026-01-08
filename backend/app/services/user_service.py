@@ -72,5 +72,6 @@ class UserService():
             raise NotFound(detail="ユーザーが見つかりません")
         if not verify_password(old_password, user.password):
             raise NotAuthorized(detail="パスワードが正しくありません")
-        user.password = get_password_hash(new_password)
+        self.repo.update_password(user, get_password_hash(new_password))
+        self.repo.flush()
         return {"message": "パスワードの変更に成功しました"}

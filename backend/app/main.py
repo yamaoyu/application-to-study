@@ -81,11 +81,16 @@ def validation_exception_handler(request, exc):
 
 @app.exception_handler(ValidationError)
 def pydantic_validation_exception_handler(request, exc):
-    return JSONResponse(status_code=422, content={"detail": str(exc.errors()[0]["ctx"]["error"])})
+    errors = exc.errors()
+    if errors and errors[0].get("ctx", {}).get("error"):
+        message = str(errors[0]["ctx"]["error"])
+    else:
+        message = "入力データが正しくありません。入力データを確認してください"
+    return JSONResponse(status_code=422, content={"detail": message})
 
 
 @app.exception_handler(NotFound)
-def not_found_execption_handler(request, exc):
+def not_found_exception_handler(request, exc):
     return JSONResponse(status_code=404, content={"detail": exc.detail})
 
 

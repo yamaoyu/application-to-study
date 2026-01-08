@@ -199,11 +199,11 @@ class TimeService():
             username = username
             target_time = activity["target_time"]
             date = activity["date"]
-            # 目標時間の形式をチェック
-            TargetTimeIn(target_time=target_time)
-            # 日付の形式をチェック
-            year, month, day = map(int, date.split("-"))
             try:
+                # 目標時間の形式をチェック
+                TargetTimeIn(target_time=target_time)
+                # 日付の形式をチェック
+                year, month, day = map(int, date.split("-"))
                 CheckDate(year=year, month=month, day=day)
             except ValidationError as validate_e:
                 error_count += 1
@@ -298,9 +298,9 @@ class TimeService():
             status = "failure"
             bonus = 0
             diff = round((target_time - actual_time), 1)
-            penalty = round(((income.salary / 200) * diff), 2) + penalty
+            penalty = round(((income.salary / 200) * diff), 2)
             total_bonus = income.total_bonus
-            total_penalty = sum([act.penalty for act in monthly_activities])
+            total_penalty = sum([act.penalty for act in monthly_activities]) + penalty
             message = f"{diff}時間足りませんでした。{penalty}万円({int(penalty * 10000)}円)ペナルティ追加"
         self.time_repo.update_activity_status_and_bonus(activity, status, bonus, penalty)
         self.money_repo.update_bonus_and_penalty(income, total_bonus, total_penalty)
@@ -365,7 +365,7 @@ class TimeService():
             logger.info(f"{username}が{date}の活動を終了")
         if error_count > 0:
             raise BadRequest(detail=message[:-1])
-        pay_adjustment = round((total_bonus - total_penalty), 2)
+        pay_adjustment = pay_adjustment = round((bonus_sum - penalty_sum), 2)
         return {
             "message": message[:-1],
             "pay_adjustment": f"{pay_adjustment}万円({int(pay_adjustment * 10000)}円)",

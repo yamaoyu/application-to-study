@@ -68,7 +68,6 @@ def update_actual_time(actual: ActualTimeIn,
                        db: Session = Depends(get_db),
                        current_user: dict = Depends(get_current_user)):
     """ 目標時間が登録済みの場合、活動時間を入力 """
-    print(actual, actual.actual_time)
     service = get_time_service(db)
     return service.register_actual_time(actual.actual_time, date.year, date.month, date.day, current_user["username"])
 

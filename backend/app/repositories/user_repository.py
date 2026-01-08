@@ -27,3 +27,6 @@ class UserRepository():
         self.db.query(db_model.Token).filter(
             db_model.Token.username == username,
             db_model.Token.device_id == device_id).delete()
+
+    def update_password(self, user: db_model.User, password: str) -> None:
+        user.password = password
