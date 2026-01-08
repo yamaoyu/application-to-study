@@ -44,6 +44,10 @@ def client(db_session):
     def override_get_db():
         try:
             yield db_session
+            db_session.commit()
+        except Exception:
+            db_session.rollback()
+            raise
         finally:
             db_session.close()
 
@@ -59,7 +63,7 @@ def client(db_session):
 
 test_username = "testuser"
 test_plain_password = "P@ssword1"
-test_email = "test@test.com"
+test_email = "test@example.com"
 
 another_test_user = "testuser2"
 password_for_another_user = "P@ssword2"

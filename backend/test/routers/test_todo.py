@@ -15,7 +15,8 @@ def setup_create_todo(client, get_headers):
 
 
 def setup_finish_todo(client, get_headers):
-    client.put("/todos/finish/1", headers=get_headers)
+    response = client.put("/todos/finish/1", headers=get_headers)
+    print(response.json())
 
 
 def setup_create_another_user(client):
@@ -55,7 +56,7 @@ def test_create_todo_without_login(client):
 
 
 def test_create_todo_with_expired_token(client):
-    """ 期限の切れたトークンでタスクを作成しようとした場合 """
+    """ 期限の切れたトークンでTodoを作成しようとした場合 """
     def mock_create_expired_access_token(data, expires_delta=timedelta(minutes=-30)):
         return create_access_token(data, expires_delta)
 
@@ -68,7 +69,7 @@ def test_create_todo_with_expired_token(client):
         assert response.json() == {"detail": "再度ログインしてください"}
 
 
-def test_create_multi_todos(client, get_headers):
+def test_create_todos(client, get_headers):
     data = {"todos":
             [
                 {"title": test_title, "due": test_due, "detail": test_detail},
@@ -82,7 +83,7 @@ def test_create_multi_todos(client, get_headers):
     }
 
 
-def test_get_all_todo(client, get_headers):
+def test_get_all_todos(client, get_headers):
     setup_create_todo(client, get_headers)
     response = client.get("/todos", headers=get_headers)
     assert response.status_code == 200
@@ -138,7 +139,7 @@ def test_create_todo_with_invalid_date(client, get_headers):
 
 
 def test_get_todo_with_expired_token(client, get_headers):
-    """ 期限の切れたトークンでタスクを取得しようとした場合 """
+    """ 期限の切れたトークンでTodoを取得しようとした場合 """
     def mock_create_expired_access_token(data, minutes):
         expires_delta = timedelta(minutes=minutes)
         return create_access_token(data, expires_delta)
@@ -154,7 +155,7 @@ def test_get_todo_with_expired_token(client, get_headers):
 
 
 def test_get_all_todo_without_register(client, get_headers):
-    """ 作成したタスクが1つもない状態でget """
+    """ 作成したTodoが1つもない状態でget """
     response = client.get("/todos", headers=get_headers)
     assert response.status_code == 404
     assert response.json() == {"detail": "登録された情報はありません"}
@@ -173,7 +174,7 @@ def test_get_specific_todo(client, get_headers):
 
 
 def test_get_todo_by_another_user(client, get_headers):
-    """ 他のユーザーが作成したタスクの取得はできない """
+    """ 他のユーザーが作成したTodoの取得はできない """
     setup_create_todo(client, get_headers)
     setup_create_another_user(client)
     access_token = setup_login(client)
@@ -190,30 +191,40 @@ def test_delete_todo(client, get_headers):
 
 
 def test_delete_todo_by_another_user(client, get_headers):
-    """ 他のユーザーが作成したタスクを削除しようとする """
+    """ 他のユーザーが作成したTodoを削除しようとする """
     setup_create_todo(client, get_headers)
     setup_create_another_user(client)
     access_token = setup_login(client)
     headers = {"Authorization": f"Bearer {access_token}"}
     response = client.delete("/todos/1", headers=headers)
     assert response.status_code == 404
-    assert response.json() == {"detail": "選択されたタスクは存在しません"}
+    assert response.json() == {"detail": "選択されたTodoは存在しません"}
 
 
 def test_delete_todo_not_exist(client, get_headers):
-    """ 存在しないタスクを削除しようとした場合 """
+    """ 存在しないTodoを削除しようとした場合 """
     response = client.delete("/todos/1", headers=get_headers)
     assert response.status_code == 404
-    assert response.json() == {"detail": "選択されたタスクは存在しません"}
+    assert response.json() == {"detail": "選択されたTodoは存在しません"}
 
 
-def test_delete_multi_todos(client, get_headers):
-    """ 複数タスクの一括削除"""
+def test_delete_todos(client, get_headers):
+    """ 複数Todoの一括削除"""
     for _ in range(2):
         setup_create_todo(client, get_headers)
     data = {"ids": [1, 2]}
     response = client.put("/todos/multi/delete", json=data, headers=get_headers)
     assert response.status_code == 204
+
+
+def test_delete_todos_not_exist(client, get_headers):
+    """ 存在しないTodoを複数削除しようとした場合 """
+    data = {"ids": [1, 2]}
+    response = client.put("/todos/multi/delete", json=data, headers=get_headers)
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "削除リクエストされたTodoは全て存在しません"
+    }
 
 
 def test_edit_todo(client, get_headers):
@@ -226,7 +237,7 @@ def test_edit_todo(client, get_headers):
 
 
 def test_edit_todo_by_another_user(client, get_headers):
-    """ 他のユーザーが作成したタスクを更新した場合 """
+    """ 他のユーザーが作成したTodoを更新した場合 """
     setup_create_todo(client, get_headers)
     setup_create_another_user(client)
     access_token = setup_login(client)
@@ -256,23 +267,22 @@ def test_finish_todo(client, get_headers):
 
 
 def test_finish_todo_before_create_todo(client, get_headers):
-    """ 登録されていないタスクを終了しようとした場合 """
+    """ 登録されていないTodoを終了しようとした場合 """
     response = client.put("/todos/finish/1", headers=get_headers)
     assert response.status_code == 404
-    assert response.json() == {"detail": "1の内容は登録されていません"}
+    assert response.json() == {"detail": "選択されたTodoは存在しません"}
 
 
 def test_finish_todo_already_finished(client, get_headers):
-    """ 既に終了したタスクを終了しようとした場合 """
+    """ 既に終了したTodoを終了しようとした場合 """
     setup_create_todo(client, get_headers)
     setup_finish_todo(client, get_headers)
     response = client.put("/todos/finish/1", headers=get_headers)
-    assert response.status_code == 400
-    assert response.json() == {"detail": "既に終了したタスクです"}
+    assert response.status_code == 409
+    assert response.json() == {"detail": "既に終了したTodoです"}
 
 
-def test_finish_multi_todos(client, get_headers):
-    """ 複数タスクの一括終了 """
+def test_finish_todos(client, get_headers):
     for _ in range(2):
         setup_create_todo(client, get_headers)
     data = {"ids": [1, 2]}
@@ -281,4 +291,30 @@ def test_finish_multi_todos(client, get_headers):
     assert response.json() == {
         "message": "2件のTodoを終了しました",
         "titles": f"{test_title}\n{test_title}"
+    }
+
+
+def test_finish_todos_with_finished_todo(client, get_headers):
+    """ 既に終了したTodoを含む状態で複数Todoの一括終了 """
+    for _ in range(2):
+        setup_create_todo(client, get_headers)
+    setup_finish_todo(client, get_headers)
+    response = client.get("/todos", headers=get_headers)
+    print(response.json())
+    data = {"ids": [1, 2]}
+    response = client.put("todos/multi/finish", json=data, headers=get_headers)
+    assert response.status_code == 200
+    assert response.json() == {
+        "message": "登録のない/削除済みTodoが含まれているため、一部のTodo終了処理をスキップしました\n1件のTodoを終了しました",
+        "titles": f"{test_title}"
+    }
+
+
+def test_finish_todos_not_exist(client, get_headers):
+    """ 存在しないTodoを複数終了しようとした場合 """
+    data = {"ids": [1, 2]}
+    response = client.put("todos/multi/finish", json=data, headers=get_headers)
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "終了リクエストされたTodoは全て存在しないか、既に終了しています"
     }
