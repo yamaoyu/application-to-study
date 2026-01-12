@@ -7,7 +7,9 @@ services:
       - .:/workspace
     environment:
       - PYTHONUNBUFFERED=1
-      - FRONTEND_DOMAIN=${FRONTEND_DOMAIN}
+    env_file:
+      - .env
+      - .env.backend
     stdin_open: true  # 標準入力を開いたままにする
 
   backend:
