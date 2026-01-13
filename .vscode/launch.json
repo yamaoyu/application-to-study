@@ -11,8 +11,8 @@
       },
       "pathMappings": [
         {
-          "localRoot": "${workspaceFolder}/backend", // ローカルのコードパス
-          "remoteRoot": "/backend" // コンテナ内のコードパス
+          "localRoot": "${workspaceFolder}", // ローカルのコードパス
+          "remoteRoot": "/workspace" // コンテナ内のコードパス
         }
       ]
     },
