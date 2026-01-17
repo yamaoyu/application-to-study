@@ -531,7 +531,7 @@ def test_get_day_activities_registered_target(client, get_headers):
                                "actual_time": 0.0,
                                "status": "pending",
                                "bonus": 0.0,
-                               "penalty": 0.0}
+                               "penalty": test_penalty}
 
 
 def test_get_day_activities_registered_actual(client, get_headers):
@@ -547,7 +547,7 @@ def test_get_day_activities_registered_actual(client, get_headers):
                                "target_time": 5.0,
                                "actual_time": 5.0,
                                "status": "pending",
-                               "bonus": 0.0,
+                               "bonus": test_bonus,
                                "penalty": 0.0}
 
 

@@ -83,13 +83,24 @@ class TimeService():
         date = f"{year}-{month}-{day}"
         username = username
         activity = fetch_one_activity(date, username, self.time_repo)
+        income = self.money_repo.get_monthly_salary(f"{year}-{month}", username)
+        if activity.status != "pending":
+            bonus = activity.bonus
+            penalty = activity.penalty
+        elif activity.target_time <= activity.actual_time:
+            bonus = round(((income.salary / 200) * activity.actual_time), 2)
+            penalty = 0
+        else:
+            bonus = 0
+            diff = round((activity.target_time - activity.actual_time), 1)
+            penalty = round(((income.salary / 200) * diff), 2)
         logger.info(f"{username}が{date}の活動実績を取得")
         return {"date": date,
                 "target_time": activity.target_time,
                 "actual_time": activity.actual_time,
                 "status": activity.status,
-                "bonus": activity.bonus,
-                "penalty": activity.penalty}
+                "bonus": bonus,
+                "penalty": penalty}
 
     def get_month_activities(self, year: int, month: int, username: str) -> dict:
         year_month = f"{year}-{month}"
