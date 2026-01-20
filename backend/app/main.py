@@ -16,11 +16,11 @@ from pydantic import ValidationError
 app = FastAPI()
 router = APIRouter()
 
-FRONTEND_DOMAIN = os.getenv("FRONTEND_DOMAIN")
+FRONTEND_URL = os.getenv("FRONTEND_URL")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[f"https://{FRONTEND_DOMAIN}"],  # フロントエンドのドメインを指定
+    allow_origins=[FRONTEND_URL],  # フロントエンドのドメインを指定
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
