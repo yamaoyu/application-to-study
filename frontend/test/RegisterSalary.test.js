@@ -29,8 +29,12 @@ describe('月の入力', () => {
 
     it('前月にする', async() =>{
         const today = new Date();
-        const expectedYear = `${today.getFullYear()}`;
-        const expectedMonth = `${today.getMonth()}`.padStart(2, '0');
+        let expectedYear = `${today.getFullYear()}`;
+        let expectedMonth = `${today.getMonth()}`.padStart(2, '0');
+        if (expectedMonth === "00") {
+          expectedYear = `${today.getFullYear() - 1}`;
+          expectedMonth = "12";
+        }
         await wrapper.find('[data-testid="previousMonth"]').trigger('click');
         expect(wrapper.vm.selectedMonth).toEqual(`${expectedYear}-${expectedMonth}`);
     })
