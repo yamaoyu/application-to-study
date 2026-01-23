@@ -16,3 +16,4 @@ ansible/host_vars/server*
 ansible/env_vars/.env*
 /data/certs
 .history
+frontend/test-results
