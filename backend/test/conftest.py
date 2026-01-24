@@ -6,6 +6,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from db.database import Base, get_db
 from app.main import app
+from testdata import (RESOURCE_OWNER_USERNAME, RESOURCE_OWNER_PLAIN_PASSWORD,
+                      RESOURCE_OWNER_EMAIL, NON_RESOURCE_OWNER_USERNAME, NON_RESOURCE_OWNER_PLAIN_PASSWORD)
 
 
 MYSQL_ROOT_PASSWORD = os.getenv("MYSQL_ROOT_PASSWORD")
@@ -61,33 +63,48 @@ def client(db_session):
     del app.dependency_overrides[get_db]
 
 
-test_username = "testuser"
-test_plain_password = "P@ssword1"
-test_email = "test@example.com"
-
-another_test_user = "testuser2"
-password_for_another_user = "P@ssword2"
-
-
-@pytest.fixture(scope="function", autouse=True)
-def create_user(client):
+@pytest.fixture()
+def create_resource_owner(client):
     """ 基本的にはここで作成するユーザーを使用 """
-    data = {"username": test_username,
-            "password": test_plain_password,
-            "email": test_email}
+    data = {"username": RESOURCE_OWNER_USERNAME,
+            "password": RESOURCE_OWNER_PLAIN_PASSWORD,
+            "email": RESOURCE_OWNER_EMAIL}
     user = client.post("/users", json=data)
     return user
 
 
-@pytest.fixture(scope="function", autouse=True)
-def login_and_get_token(client):
-    data = {"username": test_username, "password": test_plain_password}
+@pytest.fixture()
+def login_resource_owner(client, create_resource_owner):
+    data = {"username": RESOURCE_OWNER_USERNAME, "password": RESOURCE_OWNER_PLAIN_PASSWORD}
     token = client.post("/login", json=data)
     return token
 
 
-@pytest.fixture(scope="function", autouse=True)
-def get_headers(login_and_get_token):
-    access_token = login_and_get_token.json()['access_token']
+@pytest.fixture()
+def get_resource_owner_headers(login_resource_owner):
+    access_token = login_resource_owner.json()['access_token']
+    headers = {"Authorization": f"Bearer {access_token}"}
+    return headers
+
+
+@pytest.fixture()
+def create_non_resource_owner(client):
+    """ 他のユーザーが作成したデータにアクセスできないか確認するために使用 """
+    data = {"username": NON_RESOURCE_OWNER_USERNAME,
+            "password": NON_RESOURCE_OWNER_PLAIN_PASSWORD}
+    user = client.post("/users", json=data)
+    return user
+
+
+@pytest.fixture()
+def login_non_resource_owner(client, create_non_resource_owner):
+    data = {"username": NON_RESOURCE_OWNER_USERNAME, "password": NON_RESOURCE_OWNER_PLAIN_PASSWORD}
+    token = client.post("/login", json=data)
+    return token
+
+
+@pytest.fixture()
+def get_non_resource_owner_headers(login_non_resource_owner):
+    access_token = login_non_resource_owner.json()['access_token']
     headers = {"Authorization": f"Bearer {access_token}"}
     return headers
