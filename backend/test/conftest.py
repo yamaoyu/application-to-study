@@ -34,24 +34,22 @@ def db_session():
     session = TestSession()
     try:
         yield session
+    except Exception:
+        session.rollback()
     finally:
         session.close()
 
 
 @pytest.fixture(scope="function")
 def client(db_session):
-    """テストクライアントを作成して提供するfixture"""
+    """テストクライアントを作成する"""
 
     # データベースセッションの依存関係をオーバーライド
     def override_get_db():
         try:
             yield db_session
-            db_session.commit()
         except Exception:
-            db_session.rollback()
             raise
-        finally:
-            db_session.close()
 
     # FastAPIの依存関係をオーバーライド(本番用のDBに接続しないようにするため)
     app.dependency_overrides[get_db] = override_get_db
