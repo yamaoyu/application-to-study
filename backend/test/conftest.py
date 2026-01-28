@@ -5,9 +5,12 @@ from sqlalchemy.pool import NullPool
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from db.database import Base, get_db
+from db import db_model
+from lib.security import get_password_hash
 from app.main import app
 from testdata import (RESOURCE_OWNER_USERNAME, RESOURCE_OWNER_PLAIN_PASSWORD,
-                      RESOURCE_OWNER_EMAIL, NON_RESOURCE_OWNER_USERNAME, NON_RESOURCE_OWNER_PLAIN_PASSWORD)
+                      RESOURCE_OWNER_EMAIL, NON_RESOURCE_OWNER_USERNAME, NON_RESOURCE_OWNER_PLAIN_PASSWORD,
+                      ADMIN_USERNAME, ADMIN_PASSWORD)
 
 
 MYSQL_ROOT_PASSWORD = os.getenv("MYSQL_ROOT_PASSWORD")
@@ -104,5 +107,30 @@ def login_non_resource_owner(client, create_non_resource_owner):
 @pytest.fixture()
 def get_non_resource_owner_headers(login_non_resource_owner):
     access_token = login_non_resource_owner.json()['access_token']
+    headers = {"Authorization": f"Bearer {access_token}"}
+    return headers
+
+
+@pytest.fixture()
+def create_admin(db_session):
+    user = db_model.User(
+        username=ADMIN_USERNAME,
+        password=get_password_hash(ADMIN_PASSWORD),
+        role="admin"
+    )
+    db_session.add(user)
+    db_session.commit()
+
+
+@pytest.fixture()
+def login_admin(client, create_admin):
+    data = {"username": ADMIN_USERNAME, "password": ADMIN_PASSWORD}
+    token = client.post("/login", json=data)
+    return token
+
+
+@pytest.fixture()
+def get_admin_headers(login_admin):
+    access_token = login_admin.json()['access_token']
     headers = {"Authorization": f"Bearer {access_token}"}
     return headers
