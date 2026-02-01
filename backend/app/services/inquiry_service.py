@@ -5,6 +5,7 @@ from app.repositories.inquiry_repository import InquiryRepository
 from app.exceptions import NotFound, BadRequest
 from app.models.common_model import CheckYearMonth
 from typing import Optional
+from app.models.inquiry_model import Category, Priority
 
 
 class InquiryService():
@@ -27,7 +28,7 @@ class InquiryService():
             "message": "こちらの内容で受け付けました"
         }
 
-    def get_inquiries(self, year: int, month: int, category: str, priority: str, is_checked: bool) -> dict:
+    def get_inquiries(self, year: int, month: int, category: Optional[Category], priority: Optional[Priority], is_checked: bool) -> dict:
         if not year and month:
             raise BadRequest(detail="月を指定する場合は年も指定してください")
         if year and month:
@@ -38,9 +39,9 @@ class InquiryService():
             if year and month:
                 message += f"期間が「{year}-{month}」、"
             if category:
-                message += f"カテゴリが「{category}」、"
+                message += f"カテゴリが「{category.value}」、"
             if priority:
-                message += f"優先度が「{priority}」、"
+                message += f"優先度が「{priority.value}」、"
             if is_checked is not None:
                 message += f"確認済みが「{is_checked}」、"
             if message:
