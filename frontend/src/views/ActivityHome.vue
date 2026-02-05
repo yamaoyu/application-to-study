@@ -195,36 +195,37 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(activity, index) in editActivities" 
-                                :key="index"
-                                :class="{ 'table-active': isSelected(activity) }"
-                            >
-                                <td @click="toggleActivity(activity)" :data-testid="`is-selected-actual-${index}`">
-                                    <input 
-                                        class="form-check-input" 
-                                        type="checkbox"
-                                        :value="activity"
-                                        v-model="selectedActivities"
-                                    >
-                                </td>
-                                <td @click="toggleActivity(activity)">{{ activity.date }}</td>
-                                <td @click="toggleActivity(activity)">{{ activity.target_time }}時間</td>
-                                <td>
-                                    <div class="input-group">
-                                        <input
-                                            type="number"
-                                            v-model="activity.actual_time"
-                                            class="form-control text-center"
-                                            min="0.0"
-                                            max="12"
-                                            step="0.5"
-                                            @input="validateTime($event, activity.actual_time)"
-                                            :data-testid="`actual-time-row-${index}`"
-                                        />
-                                        <span class="input-group-text small">時間</span>
-                                    </div>
-                                </td>
-                            </tr>
+                          <tr v-for="(activity, index) in editActivities" 
+                              :key="index"
+                              :class="{ 'table-active': isSelected(activity), 'table-warning': isEditedActual(activity) }"
+                          >
+                            <td @click="toggleActivity(activity)" :data-testid="`is-selected-actual-${index}`">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox"
+                                    :value="activity"
+                                    v-model="selectedActivities"
+                                >
+                            </td>
+                            <td @click="toggleActivity(activity)">{{ activity.date }}</td>
+                            <td @click="toggleActivity(activity)">{{ activity.target_time }}時間</td>
+                            <td>
+                              <div class="input-group">
+                                <input
+                                  type="number"
+                                  v-model="activity.actual_time"
+                                  class="form-control text-center"
+                                  min="0.0"
+                                  max="12"
+                                  step="0.5"
+                                  @input="validateTime($event, activity.actual_time)"
+                                  :data-testid="`actual-time-row-${index}`"
+                                  
+                                />
+                                <span class="input-group-text small">時間</span>
+                              </div>
+                            </td>
+                          </tr>
                         </tbody>
                     </table>
                     <button 
@@ -529,6 +530,18 @@ export default {
             }
         }
 
+        const pendingById = computed(() => {
+          return new Map(pendingActivities.value.map(a => [a.activity_id, a]));
+        });
+
+        const isEditedActual = (activity) => {
+          const originalActivity = pendingById.value.get(activity.activity_id);
+          if (originalActivity) {
+            return activity.actual_time !== originalActivity.actual_time;
+          };
+          return false;
+        };
+
         watch(date, () => {
             renewActivity();
             reqMsg.value = "";
@@ -588,6 +601,7 @@ export default {
             toggleActivity,
             toggleFormVisibility,
             isFormVisible,
+            isEditedActual,
             modalTitle,
             modalMessage,
             sendRequest,
