@@ -175,24 +175,35 @@
                                 日付を選択し、活動時間を入力してください
                             </BCardText>
                         </div>
-                        <div class="d-flex gap-2 position-absolute" style="top: 1rem; right: 1rem;">
-                            <select
-                                class="form-select form-select-sm w-auto"
-                                v-model="selectMode"
-                                data-testid="select-mode"
+                        <div class="d-flex flex-column align-items-end gap-1 position-absolute" style="top: 1rem; right: 1rem;">
+                            <div class="d-flex gap-2 align-items-center">
+                                <select
+                                    class="form-select form-select-sm w-auto"
+                                    v-model="selectMode"
+                                    data-testid="select-mode"
+                                >
+                                    <option value="edited">変更分のみ</option>
+                                    <option value="all">全て</option>
+                                </select>
+                                <button 
+                                    type="button" 
+                                    class="btn btn-primary btn-sm"
+                                    data-testid="apply-selection"
+                                    @click="applySelection"
+                                    :disabled="selectMode === 'edited' && editedActivities.length === 0"
+                                >
+                                    選択
+                                </button>
+                            </div>
+                            <button
+                                type="button"
+                                class="btn btn-danger btn-sm"
+                                style="font-size: 0.75rem; padding: 0.15rem 0.4rem;"
+                                data-testid="reset-edited-activities"
+                                @click="resetEditedActivities"
+                                :disabled="editedActivities.length === 0"
                             >
-                                <option value="edited">変更分のみ</option>
-                                <option value="all">全て</option>
-                                <option value="reset">選択解除</option>
-                            </select>
-                            <button 
-                                type="button" 
-                                class="btn btn-primary btn-sm"
-                                data-testid="apply-selection"
-                                @click="applySelection"
-                                :disabled="selectMode === 'edited' && editedActivities.length === 0"
-                            >
-                                選択
+                                変更をリセット
                             </button>
                         </div>
                     </BCard>
@@ -469,14 +480,16 @@ export default {
 
         const applySelection = () => {
           // 活動時間の登録でのみ使用
-          if (selectMode.value === "reset") {
-            selectedActivities.value = [];
-            return;
-          } else if (selectMode.value === "all") {
+          if (selectMode.value === "all") {
             selectedActivities.value = [...editActivities.value];
             return;
           }
           selectedActivities.value = [...editedActivities.value];
+        };
+
+        const resetEditedActivities = () => {
+          editActivities.value = pendingActivities.value.map(activity => ({ ...activity }));
+          selectedActivities.value = [];
         };
 
         const validateTime = (event, time) =>{
@@ -629,6 +642,7 @@ export default {
             editedActivities,
             toggleAllActivities,
             applySelection,
+            resetEditedActivities,
             validateTime,
             checkDuplicateDate,
             toggleActivity,
