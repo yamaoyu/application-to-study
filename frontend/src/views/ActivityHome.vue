@@ -182,6 +182,7 @@
                                     v-model="selectMode"
                                     data-testid="select-mode"
                                 >
+                                    <option value="default" disabled>--一括操作--</option>
                                     <option value="edited">変更分のみ</option>
                                     <option value="all">全て</option>
                                 </select>
@@ -190,7 +191,7 @@
                                     class="btn btn-primary btn-sm"
                                     data-testid="apply-selection"
                                     @click="applySelection"
-                                    :disabled="selectMode === 'edited' && editedActivities.length === 0"
+                                    :disabled="selectMode === 'edited' && editedActivities.length === 0 || selectMode === 'default'"
                                 >
                                     選択
                                 </button>
@@ -392,7 +393,7 @@ export default {
     setup() {
         const activeTab = ref("target");
         const selectedActivities = ref([]);
-        const selectMode = ref("edited");
+        const selectMode = ref("default");
         const targetActivities = ref([{ date: '', target_time: 0.5 }]);
         const date = ref(getToday());
         const statusCode = ref();
@@ -592,7 +593,7 @@ export default {
         watch(activeTab, () => {
             reqMsg.value = "";
             selectedActivities.value = [];
-            selectMode.value = "edited";
+            selectMode.value = "default";
         })
 
         watch(pendingActivities, () => {
