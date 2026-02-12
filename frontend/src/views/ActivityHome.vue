@@ -189,7 +189,7 @@
                                 <button 
                                     type="button" 
                                     class="btn btn-primary btn-sm"
-                                    data-testid="apply-selection"
+                                    data-testid="apply-actual-selection"
                                     @click="applySelection"
                                     :disabled="selectMode === 'edited' && editedActivities.length === 0 || selectMode === 'default'"
                                 >
@@ -200,7 +200,7 @@
                                 type="button"
                                 class="btn btn-danger btn-sm"
                                 style="font-size: 0.75rem; padding: 0.15rem 0.4rem;"
-                                data-testid="reset-edited-activities"
+                                data-testid="reset-selected-activities"
                                 @click="resetEditedActivities"
                                 :disabled="editedActivities.length === 0"
                             >
