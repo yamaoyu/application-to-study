@@ -353,8 +353,10 @@
 <script>
 import { ref, watch, onMounted, computed } from 'vue';
 import { BButton, BModal, BCard, BCardText } from 'bootstrap-vue-next';
+import { useRouter } from 'vue-router';
 import { 
     changeDate, STATUS_DICT, getStatusColors, getToday, getMaxDate,
+    getThisMonth, getIncomeByMonth,
     getResponseAlert, updateActivity, registerTarget, registerActual, 
     finalizeActivity,finalizeMultiActivities, getActivitiesByStatus, 
     registerMultiTarget, registerMultiActual, getActivityAlert} from './lib/index';
@@ -368,202 +370,215 @@ export default {
     },
 
     setup() {
-        const activeTab = ref("target");
-        const selectedActivities = ref([]);
-        const targetActivities = ref([{ date: '', target_time: 0.5 }]);
-        const date = ref(getToday());
-        const statusCode = ref();
-        const activityStatus = ref();
-        const targetTime = ref(0.5);
-        const actualTime = ref(0);
-        const reqMsg = ref(""); // リクエスト結果を表示するためのメッセージ
-        const checkMsg = ref(""); // 活動の詳細を確認するためのメッセージ
-        const activityRes = ref("");
-        const isFormVisible = ref(false)
-        const pendingActivities = ref([]); // 未完了のアクティビティを表示する用
-        const editActivities = ref([]); //未完了のアクティビティを編集するときに使用(pendingActivitiesに影響を及ぼさないため)
-        const pendingMsg = ref("")
-        const tabs = [
-                    { value: 'target', label: '目標時間' },
-                    { value: 'actual', label: '活動時間' },
-                    { value: 'finish', label: '活動終了' }
-                    ];
-        const MultiActivities = ref();
-        const { increaseDay } = changeDate(date, reqMsg);
-        const { renewActivity } = updateActivity(date, checkMsg, activityRes);
-        const { register: submitTarget } = registerTarget(date, statusCode, targetTime, reqMsg, checkMsg, activityRes);
-        const { register: submitActual } = registerActual(date, statusCode, actualTime, reqMsg, checkMsg, activityRes);
-        const { register: submitMultiTarget } = registerMultiTarget(date, statusCode, reqMsg, targetActivities, checkMsg, activityRes);
-        const { register: submitMultiActual } = registerMultiActual(date, statusCode, reqMsg, selectedActivities, checkMsg, activityRes);
-        const { finishActivity } = finalizeActivity(date, reqMsg, activityStatus, checkMsg, activityRes);
-        const { finishMultiActivities } = finalizeMultiActivities(date, selectedActivities, reqMsg, statusCode, checkMsg, activityRes);
-        const { getPendingActivities } = getActivitiesByStatus(pendingActivities, pendingMsg);
-        const showModal = ref(false);
+      const router = useRouter();
+      const activeTab = ref("target");
+      const selectedActivities = ref([]);
+      const targetActivities = ref([{ date: '', target_time: 0.5 }]);
+      const date = ref(getToday());
+      const statusCode = ref();
+      const activityStatus = ref();
+      const targetTime = ref(0.5);
+      const actualTime = ref(0);
+      const reqMsg = ref(""); // リクエスト結果を表示するためのメッセージ
+      const checkMsg = ref(""); // 活動の詳細を確認するためのメッセージ
+      const activityRes = ref("");
+      const isFormVisible = ref(false)
+      const pendingActivities = ref([]); // 未完了のアクティビティを表示する用
+      const editActivities = ref([]); //未完了のアクティビティを編集するときに使用(pendingActivitiesに影響を及ぼさないため)
+      const pendingMsg = ref("")
+      const tabs = [
+                  { value: 'target', label: '目標時間' },
+                  { value: 'actual', label: '活動時間' },
+                  { value: 'finish', label: '活動終了' }
+                  ];
+      const MultiActivities = ref();
+      const { increaseDay } = changeDate(date, reqMsg);
+      const { renewActivity } = updateActivity(date, checkMsg, activityRes);
+      const { register: submitTarget } = registerTarget(date, statusCode, targetTime, reqMsg, checkMsg, activityRes);
+      const { register: submitActual } = registerActual(date, statusCode, actualTime, reqMsg, checkMsg, activityRes);
+      const { register: submitMultiTarget } = registerMultiTarget(date, statusCode, reqMsg, targetActivities, checkMsg, activityRes);
+      const { register: submitMultiActual } = registerMultiActual(date, statusCode, reqMsg, selectedActivities, checkMsg, activityRes);
+      const { finishActivity } = finalizeActivity(date, reqMsg, activityStatus, checkMsg, activityRes);
+      const { finishMultiActivities } = finalizeMultiActivities(date, selectedActivities, reqMsg, statusCode, checkMsg, activityRes);
+      const { getPendingActivities } = getActivitiesByStatus(pendingActivities, pendingMsg);
+      const thisMonth = getThisMonth();
+      const dateParts = thisMonth.split("-");
+      const incomeRes = ref();
+      const incomeMsg = ref("");
+      const getMonthlyIncome = getIncomeByMonth(incomeRes, incomeMsg, dateParts[0], dateParts[1]);
+      const showModal = ref(false);
 
-        const toggleFormVisibility = () => {
-            isFormVisible.value = !isFormVisible.value;
-        }
+      const toggleFormVisibility = () => {
+          isFormVisible.value = !isFormVisible.value;
+      }
 
-        const toggleActivity = (activity) => {
-            if (isSelected(activity)) {
-                selectedActivities.value.splice(selectedActivities.value.indexOf(activity), 1);
-            } else {
-                selectedActivities.value.push(activity);
+      const toggleActivity = (activity) => {
+          if (isSelected(activity)) {
+              selectedActivities.value.splice(selectedActivities.value.indexOf(activity), 1);
+          } else {
+              selectedActivities.value.push(activity);
+          }
+      }
+
+      const isSelected = (activity) => {
+          return selectedActivities.value.includes(activity);
+      };
+
+      const confirmRegister = async() =>{
+          showModal.value = true;
+      }
+
+      const addTargetActivity = () => {
+          targetActivities.value.push({ date: '', target_time: 0.5 });
+      };
+
+      const removeTargetActivity = (index) => {
+          if (targetActivities.value.length > 1) {
+              targetActivities.value.splice(index, 1);
+          } else {
+              targetActivities.value[0].target_time = 0.5;
+              targetActivities.value[0].date = "";
+          }
+      };
+
+      const toggleAllActivities = () => {
+          if (activeTab.value === "actual") {
+              if (editActivities.value.length===selectedActivities.value.length) {
+                  selectedActivities.value.splice(0, selectedActivities.value.length);
+              } else {
+                  selectedActivities.value.splice(0, selectedActivities.value.length, ...editActivities.value);
+              }
+          } else {
+              if (pendingActivities.value.length===selectedActivities.value.length) {
+                  selectedActivities.value.splice(0, selectedActivities.value.length);
+              } else {
+                  selectedActivities.value.splice(0, selectedActivities.value.length, 
+                          ...pendingActivities.value.map(activity => activity.date));
+              }
+          }
+      };
+
+      const validateTime = (event, time) =>{
+          if (activeTab.value == "target" && time < 0.5) {
+              // 時間が0.5時間未満の場合のエラーメッセージ
+              event.target.setCustomValidity("時間は0.5時間以上入力してください");
+              event.target.reportValidity();
+
+          } else if (typeof(time) != 'number') {
+              // 時間が入力されていない場合のエラーメッセージ
+              event.target.setCustomValidity("時間を入力してください");
+              event.target.reportValidity();
+          } else if (time * 2 % 1 != 0){
+              // 時間が0.5時間単位でない場合のエラーメッセージ
+              event.target.setCustomValidity("時間は0.5時間単位で入力してください");
+              event.target.reportValidity();
+          } else {
+              event.target.setCustomValidity("");
+          }
+      };
+
+      const checkDuplicateDate = (date, index) => {
+          const duplicateDate = targetActivities.value.map(a=>a.date).filter(d=>d && d===date);
+          reqMsg.value = "";
+          if (duplicateDate.length > 1) {
+              targetActivities.value[index].date = "";
+              reqMsg.value = date + "は既に選択されています"
+          }
+      };
+
+      const isValidActivities = computed(() => {
+          // 目標時間送信用の変数(targetActivities)で日付と目標時間が入力されているか確認
+          if (targetActivities.value.some(activity => !activity.date || !activity.target_time)) {
+              return false
+          } else {
+              return true
+          }
+      });
+
+      const modalTitle = computed(() =>{
+          if (showModal.value) {
+            switch(activeTab.value) {
+              case 'target': return '目標時間の登録';
+              case 'actual': return '活動時間の登録';
+              case 'finish': return '活動時間の確定';
             }
-        }
+          }
+          return ''
+      });
 
-        const isSelected = (activity) => {
-            return selectedActivities.value.includes(activity);
-        };
+      const modalMessage = computed(() =>{
+          if (showModal.value) {
+              switch(activeTab.value) {
+                case 'target': return `入力した日の目標時間を登録しますか？`;
+                case 'actual': return `選択した日の活動時間を登録しますか？`;
+                case 'finish': return `選択した日の活動を終了しますか？`
+              }
+          }
+          return ''
+      })
 
-        const confirmRegister = async() =>{
-            showModal.value = true;
-        }
-
-        const addTargetActivity = () => {
-            targetActivities.value.push({ date: '', target_time: 0.5 });
-        };
-
-        const removeTargetActivity = (index) => {
-            if (targetActivities.value.length > 1) {
-                targetActivities.value.splice(index, 1);
-            } else {
-                targetActivities.value[0].target_time = 0.5;
-                targetActivities.value[0].date = "";
-            }
-        };
-
-        const toggleAllActivities = () => {
-            if (activeTab.value === "actual") {
-                if (editActivities.value.length===selectedActivities.value.length) {
-                    selectedActivities.value.splice(0, selectedActivities.value.length);
-                } else {
-                    selectedActivities.value.splice(0, selectedActivities.value.length, ...editActivities.value);
+      const sendRequest = async() =>{
+          try {
+              switch(activeTab.value) {
+                case 'target':
+                    await submitMultiTarget();
+                    await getPendingActivities();
+                    break;
+                case 'actual':
+                    await submitMultiActual();
+                    await getPendingActivities();
+                    break;
+                case 'finish':
+                    await finishMultiActivities();
+                    await getPendingActivities();
+                    break;
                 }
-            } else {
-                if (pendingActivities.value.length===selectedActivities.value.length) {
-                    selectedActivities.value.splice(0, selectedActivities.value.length);
-                } else {
-                    selectedActivities.value.splice(0, selectedActivities.value.length, 
-                            ...pendingActivities.value.map(activity => activity.date));
-                }
-            }
+          } finally {
+              showModal.value = false;
+          }
+      }
+
+      const pendingById = computed(() => {
+        return new Map(pendingActivities.value.map(a => [a.activity_id, a]));
+      });
+
+      const isEditedActual = (activity) => {
+        const originalActivity = pendingById.value.get(activity.activity_id);
+        if (originalActivity) {
+          return activity.actual_time !== originalActivity.actual_time;
         };
+        return false;
+      };
 
-        const validateTime = (event, time) =>{
-            if (activeTab.value == "target" && time < 0.5) {
-                // 時間が0.5時間未満の場合のエラーメッセージ
-                event.target.setCustomValidity("時間は0.5時間以上入力してください");
-                event.target.reportValidity();
+      watch(date, () => {
+          renewActivity();
+          reqMsg.value = "";
+      });
 
-            } else if (typeof(time) != 'number') {
-                // 時間が入力されていない場合のエラーメッセージ
-                event.target.setCustomValidity("時間を入力してください");
-                event.target.reportValidity();
-            } else if (time * 2 % 1 != 0){
-                // 時間が0.5時間単位でない場合のエラーメッセージ
-                event.target.setCustomValidity("時間は0.5時間単位で入力してください");
-                event.target.reportValidity();
-            } else {
-                event.target.setCustomValidity("");
-            }
+      watch(activeTab, () => {
+          reqMsg.value = "";
+          selectedActivities.value = [];
+      })
+
+      watch(pendingActivities, () => {
+          editActivities.value = pendingActivities.value.map(activity =>({
+              ...activity})
+          )}, { 
+              immediate: true,  // 初回実行
+          }
+      );
+
+      onMounted( async() => {
+        await renewActivity();
+        await getPendingActivities();
+        await getMonthlyIncome();
+        if (!incomeRes.value){
+          router.push(
+            {"path":"/register/salary",
+              "query":{incomeMsg:`${thisMonth}の月収は未登録です。先に月収を登録してください`}
+            })
         };
-
-        const checkDuplicateDate = (date, index) => {
-            const duplicateDate = targetActivities.value.map(a=>a.date).filter(d=>d && d===date);
-            reqMsg.value = "";
-            if (duplicateDate.length > 1) {
-                targetActivities.value[index].date = "";
-                reqMsg.value = date + "は既に選択されています"
-            }
-        };
-
-        const isValidActivities = computed(() => {
-            // 目標時間送信用の変数(targetActivities)で日付と目標時間が入力されているか確認
-            if (targetActivities.value.some(activity => !activity.date || !activity.target_time)) {
-                return false
-            } else {
-                return true
-            }
-        });
-
-        const modalTitle = computed(() =>{
-            if (showModal.value) {
-                switch(activeTab.value) {
-                    case 'target': return '目標時間の登録';
-                    case 'actual': return '活動時間の登録';
-                    case 'finish': return '活動時間の確定';
-                }
-            }
-            return ''
-        });
-
-        const modalMessage = computed(() =>{
-            if (showModal.value) {
-                switch(activeTab.value) {
-                    case 'target': return `入力した日の目標時間を登録しますか？`;
-                    case 'actual': return `選択した日の活動時間を登録しますか？`;
-                    case 'finish': return `選択した日の活動を終了しますか？`
-                }
-            }
-            return ''
-        })
-
-        const sendRequest = async() =>{
-            try {
-                switch(activeTab.value) {
-                        case 'target':
-                            await submitMultiTarget();
-                            await getPendingActivities();
-                            break;
-                        case 'actual':
-                            await submitMultiActual();
-                            await getPendingActivities();
-                            break;
-                        case 'finish':
-                            await finishMultiActivities();
-                            await getPendingActivities();
-                            break;
-                    }
-            } finally {
-                showModal.value = false;
-            }
-        }
-
-        const pendingById = computed(() => {
-          return new Map(pendingActivities.value.map(a => [a.activity_id, a]));
-        });
-
-        const isEditedActual = (activity) => {
-          const originalActivity = pendingById.value.get(activity.activity_id);
-          if (originalActivity) {
-            return activity.actual_time !== originalActivity.actual_time;
-          };
-          return false;
-        };
-
-        watch(date, () => {
-            renewActivity();
-            reqMsg.value = "";
-        });
-
-        watch(activeTab, () => {
-            reqMsg.value = "";
-            selectedActivities.value = [];
-        })
-
-        watch(pendingActivities, () => {
-            editActivities.value = pendingActivities.value.map(activity =>({
-                ...activity})
-            )}, { 
-                immediate: true,  // 初回実行
-            }
-        );
-
-        onMounted(() => {
-            renewActivity();
-            getPendingActivities();
-        });
+      });
 
     return {
             activeTab,
