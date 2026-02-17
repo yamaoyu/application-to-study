@@ -175,8 +175,9 @@ describe('実績時間の登録(一括)', () => {
     it('フォームの操作', async() =>{
         // タブの切り替え
         wrapper.find("[data-testid='actual']").trigger('click');
+        await flushPromises(); // html要素が変わるため変更を待つ
         expect(wrapper.vm.activeTab).toEqual('actual');
-        wrapper.vm.editActivities = [
+        wrapper.vm.editActivities  = [
             {
                 date: "2025/1/1",
                 target_time: 3,
@@ -184,7 +185,7 @@ describe('実績時間の登録(一括)', () => {
                 status: "success"
             }
         ];
-        await flushPromises(); // html要素が変わるため変更を待つ 
+        await flushPromises(); // html要素が変わるため変更を待つ
         // 初期値
         expect(wrapper.vm.selectedActivities.length).toBe(0);
         // 選択
@@ -200,6 +201,9 @@ describe('実績時間の登録(一括)', () => {
     });
 
     it("全てを選択/解除", async() =>{
+      // タブの切り替え
+        wrapper.find("[data-testid='actual']").trigger('click');
+        await flushPromises(); // html要素が変わるため変更を待つ
         // 初期設定
         const editActivities = [
             {
@@ -285,6 +289,7 @@ describe('活動の終了(一括)', () => {
     it('フォームの操作', async() =>{
         // タブの切り替え
         wrapper.find("[data-testid='finish']").trigger('click');
+        await flushPromises(); // html要素が変わるため変更を待つ
         expect(wrapper.vm.activeTab).toEqual('finish');
         wrapper.vm.pendingActivities = [
             {
@@ -306,6 +311,9 @@ describe('活動の終了(一括)', () => {
     })
 
     it("全てを選択/解除", async() =>{
+        // タブの切り替え
+        wrapper.find("[data-testid='finish']").trigger('click');
+        await flushPromises(); // html要素が変わるため変更を待つ
         // 初期設定
         const pendingActivities = [
             {
