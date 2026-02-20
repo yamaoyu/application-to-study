@@ -175,15 +175,38 @@
                                 日付を選択し、活動時間を入力してください
                             </BCardText>
                         </div>
-                        <button 
-                            type="button" 
-                            class="btn btn-primary btn-sm position-absolute"
-                            style="top: 1rem; right: 1rem;"
-                            data-testid="toggle-all-activities"
-                            @click="toggleAllActivities"
-                        >
-                            {{ Object.keys(editActivities).length===Object.keys(selectedActivities).length ? '全て解除' : '全て選択' }}
-                        </button>
+                        <div class="d-flex flex-column align-items-end gap-1 position-absolute" style="top: 1rem; right: 1rem;">
+                            <div class="d-flex gap-2 align-items-center">
+                                <select
+                                    class="form-select form-select-sm w-auto"
+                                    v-model="selectMode"
+                                    data-testid="select-mode"
+                                >
+                                    <option value="default" disabled>--一括操作--</option>
+                                    <option value="edited">変更分のみ</option>
+                                    <option value="all">全て</option>
+                                </select>
+                                <button 
+                                    type="button" 
+                                    class="btn btn-primary btn-sm"
+                                    data-testid="apply-actual-selection"
+                                    @click="applySelection"
+                                    :disabled="selectMode === 'edited' && editedActivities.length === 0 || selectMode === 'default'"
+                                >
+                                    選択
+                                </button>
+                            </div>
+                            <button
+                                type="button"
+                                class="btn btn-danger btn-sm"
+                                style="font-size: 0.75rem; padding: 0.15rem 0.4rem;"
+                                data-testid="reset-selected-activities"
+                                @click="resetEditedActivities"
+                                :disabled="editedActivities.length === 0"
+                            >
+                                変更をリセット
+                            </button>
+                        </div>
                     </BCard>
                     <table class="table table-striped table-responsive">
                         <thead class="table-dark">
@@ -373,6 +396,7 @@ export default {
       const router = useRouter();
       const activeTab = ref("target");
       const selectedActivities = ref([]);
+      const selectMode = ref("default");
       const targetActivities = ref([{ date: '', target_time: 0.5 }]);
       const date = ref(getToday());
       const statusCode = ref();
@@ -441,21 +465,41 @@ export default {
           }
       };
 
+
+      const editedActivities = computed(() => {
+        return editActivities.value.filter(activity => isEditedActual(activity));
+      });
+
       const toggleAllActivities = () => {
-          if (activeTab.value === "actual") {
-              if (editActivities.value.length===selectedActivities.value.length) {
-                  selectedActivities.value.splice(0, selectedActivities.value.length);
-              } else {
-                  selectedActivities.value.splice(0, selectedActivities.value.length, ...editActivities.value);
-              }
-          } else {
-              if (pendingActivities.value.length===selectedActivities.value.length) {
-                  selectedActivities.value.splice(0, selectedActivities.value.length);
-              } else {
-                  selectedActivities.value.splice(0, selectedActivities.value.length, 
-                          ...pendingActivities.value.map(activity => activity.date));
-              }
-          }
+        // 活動時間の登録、活動の終了で使用
+        if (activeTab.value === "actual") {
+            if (editActivities.value.length===selectedActivities.value.length) {
+                selectedActivities.value.splice(0, selectedActivities.value.length);
+            } else {
+                selectedActivities.value.splice(0, selectedActivities.value.length, ...editActivities.value);
+            }
+        } else {
+            if (pendingActivities.value.length===selectedActivities.value.length) {
+                selectedActivities.value.splice(0, selectedActivities.value.length);
+            } else {
+                selectedActivities.value.splice(0, selectedActivities.value.length, 
+                        ...pendingActivities.value.map(activity => activity.date));
+            }
+        }
+       };
+
+      const applySelection = () => {
+        // 活動時間の登録でのみ使用
+        if (selectMode.value === "all") {
+          selectedActivities.value = [...editActivities.value];
+          return;
+        }
+        selectedActivities.value = [...editedActivities.value];
+      };
+
+      const resetEditedActivities = () => {
+        editActivities.value = pendingActivities.value.map(activity => ({ ...activity }));
+        selectedActivities.value = [];
       };
 
       const validateTime = (event, time) =>{
@@ -558,6 +602,7 @@ export default {
       watch(activeTab, () => {
           reqMsg.value = "";
           selectedActivities.value = [];
+          selectMode.value = "default";
       })
 
       watch(pendingActivities, () => {
@@ -584,6 +629,7 @@ export default {
             activeTab,
             tabs,
             selectedActivities,
+            selectMode,
             targetActivities,
             MultiActivities,
             date,
@@ -610,7 +656,10 @@ export default {
             isValidActivities,
             isSelected,
             removeTargetActivity,
+            editedActivities,
             toggleAllActivities,
+            applySelection,
+            resetEditedActivities,
             validateTime,
             checkDuplicateDate,
             toggleActivity,

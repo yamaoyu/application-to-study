@@ -225,12 +225,56 @@ describe('実績時間の登録(一括)', () => {
         expect(wrapper.vm.activeTab).toEqual('actual');
         await flushPromises(); // html要素が変わるため変更を待つ
         // 初期値確認
+        expect(wrapper.vm.selectMode).toEqual("default");
+        // ドロップダウンから「全て」を選択
+        const selectForm = wrapper.find("[data-testid='select-mode']")
+        await selectForm.setValue("all");
+        expect(wrapper.vm.selectMode).toEqual("all");
         expect(wrapper.vm.selectedActivities).toEqual([]);
-        // 全て選択
-        wrapper.find("[data-testid='toggle-all-activities']").trigger("click");
+        // 選択ボタンをクリック
+        wrapper.find("[data-testid='apply-actual-selection']").trigger("click");
         expect(wrapper.vm.selectedActivities).toEqual(editActivities);
-        // 全て解除
-        wrapper.find("[data-testid='toggle-all-activities']").trigger("click");
+        // 選択を解除
+        wrapper.find("[data-testid='reset-selected-activities']").trigger("click");
+        expect(wrapper.vm.selectedActivities).toEqual([]);
+    });
+
+    it("変更分全てを選択/解除", async() =>{
+        // 初期設定
+        let editActivities = [
+            {
+                date: "2025/1/1",
+                target_time: 3,
+                actual_time: 3,
+                status: "success"
+            },
+            {
+                date: "2025/1/2",
+                target_time: 3.5,
+                actual_time: 3.5,
+                status: "pending"
+            }
+        ];
+        wrapper.vm.pendingActivities = editActivities;
+        // タブの切り替え
+        wrapper.find("[data-testid='actual']").trigger('click');
+        expect(wrapper.vm.activeTab).toEqual('actual');
+        await flushPromises(); // html要素が変わるため変更を待つ
+        // ドロップダウンから「変更分のみ」を選択
+        const selectForm = wrapper.find("[data-testid='select-mode']")
+        await selectForm.setValue("edited");
+        expect(wrapper.vm.selectMode).toEqual("edited");
+        expect(wrapper.vm.selectedActivities).toEqual([]);
+        // 選択ボタンをクリックできないことを確認(変更がないため選択対象なし)
+        const submitButton = wrapper.find("[data-testid='apply-actual-selection']");
+        expect(submitButton.attributes("disabled"));
+        // 変更してから再度選択
+        editActivities[0]["actual_time"] = 5;
+        wrapper.vm.editActivities = editActivities;
+        await submitButton.trigger("click");
+        expect(wrapper.vm.selectedActivities).toEqual([editActivities[0]]); // 変更のある1つ目のみ選択される
+        // 選択を解除
+        wrapper.find("[data-testid='reset-selected-activities']").trigger("click");
         expect(wrapper.vm.selectedActivities).toEqual([]);
     })
 
