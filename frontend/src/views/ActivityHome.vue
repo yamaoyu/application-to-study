@@ -614,15 +614,20 @@ export default {
       );
 
       onMounted( async() => {
-        await renewActivity();
-        await getPendingActivities();
-        await getMonthlyIncome();
-        if (!incomeRes.value){
-          router.push(
-            {"path":"/register/salary",
-              "query":{incomeMsg:`${thisMonth}の月収は未登録です。先に月収を登録してください`}
-            })
-        };
+        try {
+          await renewActivity();
+          await getPendingActivities();
+          await getMonthlyIncome();
+          if (!incomeRes.value){
+            router.push(
+              {"path":"/register/salary",
+                "query":{incomeMsg:`${thisMonth}の月収は未登録です。先に月収を登録してください`}
+              })
+          };
+        }
+        catch (error){
+          reqMsg.value = "ページ情報の取得に失敗しました";
+        }
       });
 
     return {
