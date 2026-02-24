@@ -108,10 +108,12 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { getMaxMonth, changeMonth, changeYear, getResponseAlert, getThisMonth, getIncomeByMonth, registerMonthlyIncome } from './lib/index';
 
 export default {
   setup() {
+    const route = useRoute();
     const monthlyIncome = ref();
     const incomeRes = ref();
     const statusCode = ref();
@@ -155,6 +157,11 @@ export default {
         monthlyIncome.value = incomeRes.value.data["month_info"].salary
       } else {
         monthlyIncome.value = 5
+      }
+      // クエリパラメータにメッセージがある場合はそちらで上書きする
+      const queryMsg = route.query.incomeMsg;
+      if (typeof queryMsg === 'string') {
+        incomeMsg.value = queryMsg;
       }
     }
   );
