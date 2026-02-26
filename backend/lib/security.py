@@ -2,7 +2,7 @@ import os
 import uuid
 import traceback
 import re
-from passlib.context import CryptContext
+import bcrypt
 from typing import Union
 from functools import wraps
 from datetime import datetime, timedelta, timezone, date
@@ -22,7 +22,6 @@ PEPPER = os.getenv("PEPPER")
 # .envに定義したものは文字列として読み込まれるようなのでint型へ変換する
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 REFRESH_TOKEN_EXPIRE_WEEKS = int(os.getenv("REFRESH_TOKEN_EXPIRE_WEEKS"))
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 special_characters = r"[!@#$%&*()+\-=[\]{};:<>,./?_~|]"
 
@@ -54,11 +53,14 @@ def get_token(user: db_model, token_type: str, response: Response = None, db=Non
 
 
 def verify_password(plain_password, hashed_password) -> bool:
-    return pwd_context.verify((plain_password + PEPPER), hashed_password)
+    pw = (plain_password + PEPPER).encode("utf-8")
+    return bcrypt.checkpw(pw, hashed_password.encode("utf-8"))
 
 
 def get_password_hash(password) -> str:
-    return pwd_context.hash(password + PEPPER)
+    pw = (password + PEPPER).encode("utf-8")
+    hashed = bcrypt.hashpw(pw, bcrypt.gensalt(rounds=12))
+    return hashed.decode("utf-8")
 
 
 def is_password_complex(password: str) -> bool:
