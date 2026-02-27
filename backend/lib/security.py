@@ -22,6 +22,7 @@ PEPPER = os.getenv("PEPPER")
 # .envに定義したものは文字列として読み込まれるようなのでint型へ変換する
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 REFRESH_TOKEN_EXPIRE_WEEKS = int(os.getenv("REFRESH_TOKEN_EXPIRE_WEEKS"))
+ROUNDS = int(os.getenv("BCRYPT_ROUNDS", 12))
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 special_characters = r"[!@#$%&*()+\-=[\]{};:<>,./?_~|]"
 
@@ -54,12 +55,16 @@ def get_token(user: db_model, token_type: str, response: Response = None, db=Non
 
 def verify_password(plain_password, hashed_password) -> bool:
     pw = (plain_password + PEPPER).encode("utf-8")
-    return bcrypt.checkpw(pw, hashed_password.encode("utf-8"))
+    try:
+        return bcrypt.checkpw(pw, hashed_password.encode("utf-8"))
+    except (ValueError, TypeError) as e:
+        logger.error(f"パスワードの検証に失敗しました{str(e)}")
+        return False
 
 
 def get_password_hash(password) -> str:
     pw = (password + PEPPER).encode("utf-8")
-    hashed = bcrypt.hashpw(pw, bcrypt.gensalt(rounds=12))
+    hashed = bcrypt.hashpw(pw, bcrypt.gensalt(rounds=ROUNDS))
     return hashed.decode("utf-8")
 
 
