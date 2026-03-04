@@ -124,7 +124,7 @@
                             <td class="text-center align-middle">{{ todo.due }}</td>
                             <td class="text-center align-middle fw-bold" :class="todo.status===true ? 'text-success' : 'text-danger' ">{{ BOOL_TO_STATUS[todo.status] }}</td>
                             <td><input class="btn btn-outline-primary btn-sm" type="button" value="編集" @click="confirmRequest(todo, 'edit')"></td>
-                            <td><input class="btn btn-outline-success btn-sm" type="button" value="終了" @click="confirmRequest(todo, 'finish')"></td>
+                            <td><input class="btn btn-outline-success btn-sm" type="button" value="終了" :disabled="todo.status===true" @click="confirmRequest(todo, 'finish')"></td>
                             <td><input class="btn btn-outline-danger btn-sm" type="button" value="削除" @click="confirmRequest(todo, 'delete')"></td>
                         </tr>
                     </tbody>
