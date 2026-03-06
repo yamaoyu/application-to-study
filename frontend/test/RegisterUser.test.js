@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import RegisterUser from '@/views/RegisterUser.vue'
 import { mountComponent } from './vitest.setup';
 import axios from 'axios';
-import { flushPromises } from '@vue/test-utils';
 
 describe('ユーザー作成', () => {
     let wrapper;
@@ -34,7 +33,7 @@ describe('ユーザー作成', () => {
         vi.stubEnv('VITE_MAIL_FORM', 'true');
         // env が反映された状態で再 import
         const { default: RegisterUser } = await import('@/views/RegisterUser.vue');
-        const wrapper = mountComponent(RegisterUser);
+        wrapper = mountComponent(RegisterUser);
         // ユーザー名が正しく入力されていることを確認
         await wrapper.find('[data-testid="username"]').setValue("testuser");
         expect(wrapper.find('[data-testid="username"]').element.value).toBe("testuser");
@@ -192,7 +191,7 @@ describe('メールアドレスの検証', () => {
       vi.stubEnv('VITE_MAIL_FORM', 'true');
       // env が反映された状態で再 import
       const { default: RegisterUser } = await import('@/views/RegisterUser.vue');
-      const wrapper = mountComponent(RegisterUser);
+      wrapper = mountComponent(RegisterUser);
       // フォームを入力し、メールアドレスの入力が@を含まないことを確認
       const emailInput = wrapper.find('[data-testid="email"]');
       await emailInput.setValue("testuser.com");
