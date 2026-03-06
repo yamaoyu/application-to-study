@@ -255,11 +255,13 @@ describe('実績時間の登録(一括)', () => {
                 status: "pending"
             }
         ];
-        wrapper.vm.pendingActivities = editActivities;
         // タブの切り替え
         wrapper.find("[data-testid='actual']").trigger('click');
         expect(wrapper.vm.activeTab).toEqual('actual');
         await flushPromises(); // html要素が変わるため変更を待つ
+        // タブ切り替え後にテスト用のtodo設定
+        wrapper.vm.pendingActivities = editActivities;
+        await flushPromises();
         // ドロップダウンから「変更分のみ」を選択
         const selectForm = wrapper.find("[data-testid='select-mode']")
         await selectForm.setValue("edited");

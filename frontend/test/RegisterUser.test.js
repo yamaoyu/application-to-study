@@ -29,6 +29,11 @@ describe('ユーザー作成', () => {
             }
         });
 
+        // メールアドレス表示の有無は環境変数で設定しておりimport.meta.envのVITE_MAIL_FORMをstubで指定する
+        vi.stubEnv('VITE_MAIL_FORM', 'true');
+        // env が反映された状態で再 import
+        const { default: RegisterUser } = await import('@/views/RegisterUser.vue');
+        wrapper = mountComponent(RegisterUser);
         // ユーザー名が正しく入力されていることを確認
         await wrapper.find('[data-testid="username"]').setValue("testuser");
         expect(wrapper.find('[data-testid="username"]').element.value).toBe("testuser");
@@ -178,17 +183,22 @@ describe('メールアドレスの検証', () => {
     let wrapper;
 
     beforeEach(async () => {
-        wrapper = mountComponent(RegisterUser);
+      wrapper = mountComponent(RegisterUser);
     })
 
     it('メールアドレスに@が含まれていない場合', async () => {
-        const emailInput = wrapper.find('[data-testid="email"]');
-        await emailInput.setValue("testuser.com");
-        // メールアドレスの入力が@を含まないことを確認
-        expect(emailInput.element.value).toBe("testuser.com");
-        await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
-        // @を含むメールアドレスを求めるメッセージが表示されることを確認
-        expect(emailInput.element.validity.valid).toBe(false);
-        expect(emailInput.element.validity.typeMismatch).toBe(true);
+      // メールアドレス表示の有無は環境変数で設定しておりimport.meta.envのVITE_MAIL_FORMをstubで指定する
+      vi.stubEnv('VITE_MAIL_FORM', 'true');
+      // env が反映された状態で再 import
+      const { default: RegisterUser } = await import('@/views/RegisterUser.vue');
+      wrapper = mountComponent(RegisterUser);
+      // フォームを入力し、メールアドレスの入力が@を含まないことを確認
+      const emailInput = wrapper.find('[data-testid="email"]');
+      await emailInput.setValue("testuser.com");
+      expect(emailInput.element.value).toBe("testuser.com");
+      await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
+      // @を含むメールアドレスを求めるメッセージが表示されることを確認
+      expect(emailInput.element.validity.valid).toBe(false);
+      expect(emailInput.element.validity.typeMismatch).toBe(true);
     })
 })
