@@ -96,6 +96,7 @@ import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore, useRoleStore } from '@/store/authenticate';
 import { BContainer } from 'bootstrap-vue-next';
+import { backendUrl } from './views/lib';
 
 export default {
   components: {
@@ -114,8 +115,7 @@ export default {
 
     const logout = async() =>{
       try{
-        // デバイス情報を取得 HTTPSにするまでの一時的な対応としてplatform(非推奨)を使用
-        const logout_url = import.meta.env.VITE_BACKEND_URL + 'logout'
+        const logout_url = backendUrl + 'logout'
         const logout_res = await axios.post(logout_url, 
               {
               },

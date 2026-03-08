@@ -28,7 +28,7 @@
   <script>
   import { ref } from 'vue'
   import axios from 'axios'
-  import { getResponseAlert, verifyRefreshToken, errorWithStatusCode } from './lib';
+  import { getResponseAlert, verifyRefreshToken, errorWithStatusCode, backendUrl } from './lib';
   import { useRouter } from 'vue-router';
   import { useAuthStore } from '@/store/authenticate';
   import { jwtDecode } from 'jwt-decode';
@@ -45,7 +45,7 @@
 
       const submitInquiry = async() =>{
         // 問い合わせ送信リクエスト処理、sendInquiry関数で呼び出される
-        const url = process.env.VITE_BACKEND_URL + 'inquiries'
+        const url = backendUrl + 'inquiries'
         const response = await axios.post(
           url, 
           {category: category.value, detail: detail.value},

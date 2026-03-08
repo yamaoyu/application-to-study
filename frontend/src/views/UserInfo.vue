@@ -71,7 +71,7 @@
   <script>
   import { ref, computed, watch } from 'vue'
   import axios from 'axios'
-  import { getResponseAlert, verifyRefreshToken, errorWithStatusCode, validatePassword, checkPassword } from './lib';
+  import { getResponseAlert, verifyRefreshToken, errorWithStatusCode, validatePassword, checkPassword, backendUrl } from './lib';
   import { useRouter } from 'vue-router';
   import { useAuthStore } from '@/store/authenticate';
   import { jwtDecode } from 'jwt-decode';
@@ -116,7 +116,7 @@
       // パスワード変更オプションが変更されたときに入力をクリア
       const changePassword = async() =>{
         // パスワード変更リクエスト送信処理、submitChangePass関数で呼び出される
-        const url = import.meta.env.VITE_BACKEND_URL + 'password'
+        const url = backendUrl + 'password'
         const response = await axios.put(
           url, 
           {old_password: oldPassword.value, new_password: newPassword.value},

@@ -16,7 +16,9 @@ from pydantic import ValidationError
 app = FastAPI()
 router = APIRouter()
 
-FRONTEND_URL = os.getenv("FRONTEND_URL")
+APP_SCHEME = os.getenv("APP_SCHEME")
+FRONTEND_HOST = os.getenv("FRONTEND_HOST")
+FRONTEND_URL = APP_SCHEME + "://" + FRONTEND_HOST
 
 app.add_middleware(
     CORSMiddleware,

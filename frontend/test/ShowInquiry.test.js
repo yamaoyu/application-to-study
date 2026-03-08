@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import showInquiry from '@/views/showInquiry.vue';
 import { mountComponent } from './vitest.setup';
 import axios from 'axios';
+import { backendUrl } from '@/views/lib';
 
 describe('データあり', () => {
     let wrapper;
@@ -29,7 +30,7 @@ describe('データあり', () => {
 
         await wrapper.vm.getInquiries();
         expect(axios.get).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + "inquiries",
+            backendUrl + "inquiries",
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -67,7 +68,7 @@ describe('データなし', () => {
 
         await wrapper.vm.getInquiries();
         expect(axios.get).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + "inquiries",
+            backendUrl + "inquiries",
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -101,7 +102,7 @@ describe('権限なし', () => {
 
         await wrapper.vm.getInquiries();
         expect(axios.get).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + "inquiries",
+            backendUrl + "inquiries",
             {
                 "headers": {
                     "Authorization": "登録なし",

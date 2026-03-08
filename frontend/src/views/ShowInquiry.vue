@@ -36,7 +36,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import { commonError, verifyRefreshToken } from './lib'
+import { backendUrl, commonError, verifyRefreshToken } from './lib'
 
 export default{
     setup() {
@@ -48,7 +48,7 @@ export default{
         const BOOL_TO_STATUS = { "true":"確認済", "false":"未確認" };
 
         const sendRequest = async() =>{
-            const url = import.meta.env.VITE_BACKEND_URL + 'inquiries';
+            const url = backendUrl + 'inquiries';
             const response = await axios.get(url,
                                             {headers: {Authorization: authStore.getAuthHeader}})
             inquiries.value = response.data;

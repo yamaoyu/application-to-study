@@ -45,6 +45,8 @@ services:
 
   https-portal:
     image: steveltn/https-portal:1
+    profiles:
+      - https
     ports:
       - "80:80"
       - "443:443"
@@ -52,7 +54,7 @@ services:
       - .env
     environment:
       DOMAINS:
-        "${FRONTEND_DOMAIN} -> http://frontend:${FRONTEND_PORT}, ${BACKEND_DOMAIN} -> http://backend:${BACKEND_PORT}"
+        "${FRONTEND_HOST} -> http://frontend:${FRONTEND_PORT}, ${VITE_BACKEND_HOST} -> http://backend:${BACKEND_PORT}"
       STAGE: ${HTTPS_STAGE}
     volumes:
       - ./data/certs:/var/lib/https-portal

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import Login from '@/views/LoginForm.vue'
 import { mountComponent } from './vitest.setup';
 import axios from 'axios';
+import { backendUrl } from '@/views/lib';
 
 describe('Login', () => {
     let wrapper;
@@ -31,7 +32,7 @@ describe('Login', () => {
         // リクエストが正しく行われたことを確認
         expect(axios.post).toHaveBeenCalledTimes(1)
         expect(axios.post).toHaveBeenCalledWith(
-            process.env.VITE_BACKEND_URL + "login",  // 正しいURL
+            backendUrl + "login",  // 正しいURL
             {
                 username: "testuser",    // 正しいパラメータ
                 password: "Test1234!"
