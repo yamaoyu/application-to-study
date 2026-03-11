@@ -9,7 +9,6 @@ services:
       - PYTHONUNBUFFERED=1
     env_file:
       - .env
-      - .env.backend
     stdin_open: true  # 標準入力を開いたままにする
 
   backend:
