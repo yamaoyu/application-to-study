@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import RegisterSalary from '@/views/RegisterSalary.vue';
 import { mountComponent } from './vitest.setup';
 import axios from 'axios';
+import { backendUrl } from '@/views/lib';
 
 describe('月の入力', () => {
     let wrapper;
@@ -155,7 +156,7 @@ describe('デフォルト値の確認', () =>{
         await wrapper.vm.getMonthlyIncome();
 
         expect(axios.get).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + `incomes/${expectedYear}/${expectedMonth}`,
+            backendUrl + `incomes/${expectedYear}/${expectedMonth}`,
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -188,7 +189,7 @@ describe('デフォルト値の確認', () =>{
         await wrapper.vm.getMonthlyIncome();
 
         expect(axios.get).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + `incomes/${expectedYear}/${expectedMonth}`,
+            backendUrl + `incomes/${expectedYear}/${expectedMonth}`,
             {
                 "headers": {
                     "Authorization": "登録なし",

@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
 import { jwtDecode } from 'jwt-decode';
 import { commonError, verifyRefreshToken } from '../lib';
+import { backendUrl } from './index';
 
 export function getTodoRequest(statusFilter, startDue, endDue, title, todos, todoMsg){
     const router = useRouter();
@@ -10,7 +11,7 @@ export function getTodoRequest(statusFilter, startDue, endDue, title, todos, tod
     const authStore = useAuthStore();
 
     const sendGetTodoRequest = async() =>{
-        let todoUrl = import.meta.env.VITE_BACKEND_URL + 'todos'
+        let todoUrl = backendUrl + 'todos'
         let queryParameter = ""
         if (statusFilter.value){
             queryParameter += "status=" + statusFilter.value
@@ -81,7 +82,7 @@ export function editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue,
 
     const sendEditTodoRequest = async() =>{
         // 更新後のTodoを送信する処理
-        const url = import.meta.env.VITE_BACKEND_URL + 'todos/' + todoId.value
+        const url = backendUrl + 'todos/' + todoId.value
         const response = await axios.put(url,
                                         {title: newTodoTitle.value, detail:newTodoDetail.value, due:newTodoDue.value},
                                         {headers: {Authorization: authStore.getAuthHeader}})
@@ -129,7 +130,7 @@ export function finishTodosRequest(todoIDs, todoMsg, getTodos) {
     const authStore = useAuthStore();
 
     const sendFinishTodosRequest = async() =>{
-        const url = import.meta.env.VITE_BACKEND_URL + 'todos/multi/finish'
+        const url = backendUrl + 'todos/multi/finish'
         const response = await axios.put(
             url, 
             {ids:todoIDs.value},
@@ -183,7 +184,7 @@ export function deleteTodosRequest(todoIDs, todoMsg, getTodos) {
     const authStore = useAuthStore();
 
     const sendDeleteTodosRequest = async() =>{
-        const url = import.meta.env.VITE_BACKEND_URL + 'todos/multi/delete'
+        const url = backendUrl + 'todos/multi/delete'
         const response = await axios.put(
             url, 
             {ids:todoIDs.value},

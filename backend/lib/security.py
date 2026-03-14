@@ -23,6 +23,8 @@ PEPPER = os.getenv("PEPPER")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 REFRESH_TOKEN_EXPIRE_WEEKS = int(os.getenv("REFRESH_TOKEN_EXPIRE_WEEKS"))
 ROUNDS = int(os.getenv("BCRYPT_ROUNDS", 12))
+APP_SCHEME = os.getenv("APP_SCHEME")
+COOKIE_SAMESITE = os.getenv("COOKIE_SAMESITE")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 special_characters = r"[!@#$%&*()+\-=[\]{};:<>,./?_~|]"
 
@@ -142,13 +144,15 @@ def create_refresh_token(data: dict,
         response.set_cookie(
             key="refresh_token",
             value=refresh_token,
-            secure=os.getenv("ENV") != "test",
+            secure=APP_SCHEME.lower() == "https",
+            samesite=COOKIE_SAMESITE,
             httponly=True,
             expires=expire)
         response.set_cookie(
             key="device_id",
             value=device_id,
-            secure=os.getenv("ENV") != "test",
+            secure=APP_SCHEME.lower() == "https",
+            samesite=COOKIE_SAMESITE,
             httponly=True)
         return refresh_token
     except HTTPException as http_e:

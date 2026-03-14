@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import UserInfo from '@/views/UserInfo.vue'
 import { mountComponent } from './vitest.setup';
 import axios from 'axios';
+import { backendUrl } from '@/views/lib';
 
 describe('パスワード変更フォームの動作確認', () => {
     let wrapper;
@@ -267,7 +268,7 @@ describe('パスワード変更リクエストを送信', async()=>{
 
         // 更新リクエストが正しく行われたことを確認
         expect(axios.put).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + "password",  // 正しいURL
+            backendUrl + "password",  // 正しいURL
             {
                 old_password: oldPassword,    // 正しいパラメータ
                 new_password: newPassword

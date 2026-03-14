@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ShowTodo from '@/views/ShowTodo.vue';
 import { mountComponent } from './vitest.setup';
 import axios from 'axios';
+import { backendUrl } from '@/views/lib';
 
 describe('フィルターなし', () => {
     let wrapper;
@@ -39,7 +40,7 @@ describe('フィルターなし', () => {
 
         await wrapper.vm.getTodos();
         expect(axios.get).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + "todos",
+            backendUrl + "todos",
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -63,7 +64,7 @@ describe('フィルターなし', () => {
 
         await wrapper.vm.getTodos();
         expect(axios.get).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + "todos",
+            backendUrl + "todos",
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -166,7 +167,7 @@ describe('ステータスでフィルター', ()=>{
         wrapper.vm.statusFilter = "true";
         await wrapper.find("[data-testid='apply']").trigger("click");
         expect(axios.get).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + "todos?status=true",
+            backendUrl + "todos?status=true",
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -208,7 +209,7 @@ describe('ステータスでフィルター', ()=>{
         wrapper.vm.statusFilter = "false";
         await wrapper.find("[data-testid='apply']").trigger("click");
         expect(axios.get).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + "todos?status=false",
+            backendUrl + "todos?status=false",
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -260,7 +261,7 @@ describe('期限(以前)でフィルター', ()=>{
         wrapper.vm.startDue = "2025-1-1";
         await wrapper.find("[data-testid='apply']").trigger("click");
         expect(axios.get).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + "todos?start_due=2025-1-1",
+            backendUrl + "todos?start_due=2025-1-1",
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -312,7 +313,7 @@ describe('期限(以降)でフィルター', ()=>{
         wrapper.vm.endDue = "2025-1-2";
         await wrapper.find("[data-testid='apply']").trigger("click");
         expect(axios.get).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + "todos?end_due=2025-1-2",
+            backendUrl + "todos?end_due=2025-1-2",
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -364,7 +365,7 @@ describe('タイトル名でフィルター', ()=>{
         wrapper.vm.title = "title1";
         await wrapper.find("[data-testid='apply']").trigger("click");
         expect(axios.get).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + "todos?title=title1",
+            backendUrl + "todos?title=title1",
             {
                 "headers": {
                     "Authorization": "登録なし",

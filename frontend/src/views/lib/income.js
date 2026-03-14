@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
-import { verifyRefreshToken, commonError, errorWithStatusCode } from './index';
+import { verifyRefreshToken, commonError, errorWithStatusCode, backendUrl } from './index';
 import { jwtDecode } from 'jwt-decode';
 
 export function getIncomeByMonth(incomeRes, incomeMsg, year, month) {
@@ -10,7 +10,7 @@ export function getIncomeByMonth(incomeRes, incomeMsg, year, month) {
     const { handleError } = commonError(incomeMsg, router);
 
     const sendGetIncomeRequest = async() =>{
-        const income_url = import.meta.env.VITE_BACKEND_URL + 'incomes/' + year + '/' + month;
+        const income_url = backendUrl + 'incomes/' + year + '/' + month;
         incomeRes.value = await axios.get(income_url,
                                         {headers: {Authorization: authStore.getAuthHeader}}
         );
@@ -58,7 +58,7 @@ export function registerMonthlyIncome(selectedMonth, monthlyIncome, incomeMsg, s
         // 給料を登録する処理
         const year = selectedMonth.value.split("-")[0]
         const month = selectedMonth.value.split("-")[1]
-        const url = import.meta.env.VITE_BACKEND_URL + 'incomes/'+ year + '/' + month;
+        const url = backendUrl + 'incomes/'+ year + '/' + month;
         const response = await axios.post(url, 
                                             {salary: Number(monthlyIncome.value)},
                                             {headers: {Authorization: authStore.getAuthHeader}})

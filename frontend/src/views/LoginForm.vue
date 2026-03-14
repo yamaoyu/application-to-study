@@ -29,7 +29,7 @@
   import { useRoute, useRouter } from 'vue-router';
   import { useAuthStore, useRoleStore } from '@/store/authenticate';
   import { jwtDecode } from 'jwt-decode';
-  import { getResponseAlert } from './lib';
+  import { getResponseAlert, backendUrl } from './lib';
 
   export default {
     setup() {
@@ -61,7 +61,7 @@
             return
           }
         try {
-          const url = import.meta.env.VITE_BACKEND_URL + "login"
+          const url = backendUrl + "login"
           const response = await axios.post(url, {
             username: username.value,
             password: password.value

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import InquiryForm from '@/views/InquiryForm.vue'
 import { mountComponent } from './vitest.setup';
 import axios from 'axios';
+import { backendUrl } from '@/views/lib';
 
 describe('問い合わせに成功する', async () =>{
     let wrapper;
@@ -34,7 +35,7 @@ describe('問い合わせに成功する', async () =>{
         await wrapper.find('[data-testid="submit-button"]').trigger('submit');
         expect(axios.post).toHaveBeenCalledTimes(1);
         expect(axios.post).toHaveBeenCalledWith(
-            process.env.VITE_BACKEND_URL + 'inquiries',
+            backendUrl + 'inquiries',
             {
                 category: category,
                 detail: detail
@@ -74,7 +75,7 @@ describe('問い合わせに失敗する', async() =>{
         await wrapper.find('[data-testid="submit-button"]').trigger('submit');
         expect(axios.post).toHaveBeenCalledTimes(1);
         expect(axios.post).toHaveBeenCalledWith(
-            process.env.VITE_BACKEND_URL + 'inquiries',
+            backendUrl + 'inquiries',
             {
                 category: "",
                 detail: detail

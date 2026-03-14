@@ -65,7 +65,7 @@
   <script>
   import { ref, computed } from 'vue'
   import axios from 'axios'
-  import { getResponseAlert, validateUsername, validatePassword, checkPassword, validateEmail } from './lib';
+  import { getResponseAlert, validateUsername, validatePassword, checkPassword, validateEmail, backendUrl } from './lib';
   import { BForm, BFormInput, BFormInvalidFeedback, BFormValidFeedback } from 'bootstrap-vue-next';
   
   export default {
@@ -112,7 +112,7 @@
         }
 
         try {
-          const url = import.meta.env.VITE_BACKEND_URL + 'users'
+          const url = backendUrl + 'users'
           const response = await axios.post(
             url, 
             {

@@ -4,6 +4,7 @@ import { mountComponent } from './vitest.setup';
 import axios from 'axios';
 import { flushPromises } from '@vue/test-utils';
 import { nextTick } from 'vue';
+import { backendUrl } from '@/views/lib';
 
 describe('ユーザーホームの表示(データあり)', () => {
     let wrapper;
@@ -40,7 +41,7 @@ describe('ユーザーホームの表示(データあり)', () => {
         expect(wrapper.vm.activityRes.data).toEqual(expectedData);
 
         expect(axios.get).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
+            backendUrl + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -79,7 +80,7 @@ describe('ユーザーホームの表示(データあり)', () => {
         expect(wrapper.vm.activityRes.data).toEqual(expectedData);
 
         expect(axios.get).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
+            backendUrl + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -118,7 +119,7 @@ describe('ユーザーホームの表示(データあり)', () => {
         expect(wrapper.vm.activityRes.data).toEqual(expectedData);
 
         expect(axios.get).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
+            backendUrl + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -154,7 +155,7 @@ describe('ユーザーホームの表示(データあり)', () => {
         await wrapper.vm.getThisMonthIncome();
 
         expect(axios.get).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + `incomes/${expectedYear}/${expectedMonth}`,
+            backendUrl + `incomes/${expectedYear}/${expectedMonth}`,
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -189,7 +190,7 @@ describe('ユーザーホームの表示(データあり)', () => {
         await wrapper.vm.getTodos();
         
         expect(axios.get).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + "todos?status=false",
+            backendUrl + "todos?status=false",
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -304,7 +305,7 @@ describe('Todoの操作', () =>{
         wrapper.vm.newTodoDue = due;
         await wrapper.vm.editTodo();
         expect(axios.put).toHaveBeenCalledWith(
-            process.env.VITE_BACKEND_URL + "todos/1",
+            backendUrl + "todos/1",
             {
                 title: title,
                 detail: detail,
@@ -371,7 +372,7 @@ describe('Todoの操作', () =>{
         await flushPromises();
 
         expect(axios.put).toHaveBeenCalledWith(
-            process.env.VITE_BACKEND_URL + "todos/multi/finish",
+            backendUrl + "todos/multi/finish",
             {
                 ids: [1]
             },
@@ -426,7 +427,7 @@ describe('Todoの操作', () =>{
         await flushPromises();
 
         expect(axios.put).toHaveBeenCalledWith(
-            process.env.VITE_BACKEND_URL + "todos/multi/delete",
+            backendUrl + "todos/multi/delete",
             {
                 ids: [1]
             },

@@ -4,6 +4,7 @@ import { mountComponent } from './vitest.setup';
 import axios from 'axios';
 import { nextTick } from 'vue';
 import { flushPromises } from '@vue/test-utils';
+import { backendUrl } from '@/views/lib';
 
 
 describe('Todoを送信に成功', () => {
@@ -67,7 +68,7 @@ describe('Todoを送信に成功', () => {
         // APIが正しいパラメータで呼び出されたことを確認
         expect(axios.post).toHaveBeenCalledTimes(1);
         expect(axios.post).toHaveBeenCalledWith(
-            process.env.VITE_BACKEND_URL + 'todos/multi', 
+            backendUrl + 'todos/multi', 
             { todos : [expectedTodo] },
             {
                 headers: {

@@ -139,7 +139,7 @@ import { ref, watch } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/authenticate';
-import { getResponseAlert, verifyRefreshToken, errorWithStatusCode, getToday } from './lib/index';
+import { getResponseAlert, verifyRefreshToken, errorWithStatusCode, getToday, backendUrl } from './lib/index';
 import { jwtDecode } from 'jwt-decode';
 import { BModal } from 'bootstrap-vue-next';
 
@@ -165,7 +165,7 @@ export default {
 
     const submitTodo = async() =>{
       // Todoを登録する処理
-      const url = import.meta.env.VITE_BACKEND_URL + 'todos/multi';
+      const url = backendUrl + 'todos/multi';
       const response = await axios.post(
         url, 
         { todos: todos.value },

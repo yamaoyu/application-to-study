@@ -1,7 +1,8 @@
 import axios from "axios"
+import { backendUrl } from "./index"
 
 export function verifyRefreshToken(){
-    const response = axios.post(import.meta.env.VITE_BACKEND_URL + "token",
+    const response = axios.post(backendUrl + "token",
         {},
         { withCredentials: true })
     return response

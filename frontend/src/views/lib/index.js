@@ -13,6 +13,7 @@ import {
     getActivityByDay, getActivityByMonth, getActivityByYear, getActivitiesAllPeriod, getActivitiesByStatus } from "./activity";
 import { getTodoRequest, editTodoRequest, finishTodosRequest, deleteTodosRequest } from "./todo";
 import { getIncomeByMonth, registerMonthlyIncome } from "./income";
+import { backendUrl } from "./baseUrl";
 
 export {
     MONTH_DICT,
@@ -59,4 +60,5 @@ export {
     deleteTodosRequest,
     getIncomeByMonth,
     registerMonthlyIncome,
+    backendUrl
 }

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import RegisterUser from '@/views/RegisterUser.vue'
 import { mountComponent } from './vitest.setup';
 import axios from 'axios';
+import { backendUrl } from '@/views/lib';
 
 describe('ユーザー作成', () => {
     let wrapper;
@@ -52,7 +53,7 @@ describe('ユーザー作成', () => {
         await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
         expect(axios.post).toHaveBeenCalledTimes(1);
         expect(axios.post).toHaveBeenCalledWith(
-            process.env.VITE_BACKEND_URL + "users",  // 正しいURL
+            backendUrl + "users",  // 正しいURL
             {
                 username: "testuser",    // 正しいパラメータ
                 password: "Test1234!",

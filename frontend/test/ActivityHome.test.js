@@ -3,6 +3,7 @@ import ActivityHome from '@/views/ActivityHome.vue';
 import { mountComponent } from './vitest.setup';
 import axios from 'axios';
 import { flushPromises } from '@vue/test-utils';
+import { backendUrl } from '@/views/lib';
 
 describe('選択した日の活動登録状況確認', () => {
     let wrapper;
@@ -38,7 +39,7 @@ describe('選択した日の活動登録状況確認', () => {
         expect(wrapper.vm.activityRes.data).toEqual(expectedData);
 
         expect(axios.get).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
+            backendUrl + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
             {
                 "headers": {
                     "Authorization": "登録なし",
@@ -148,7 +149,7 @@ describe('目標時間の登録(一括)', () => {
         await wrapper.vm.submitMultiTarget();
 
         expect(axios.post).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + `activities/multi/target`,
+            backendUrl + `activities/multi/target`,
             {
                 activities: targetActivities
             },
@@ -308,7 +309,7 @@ describe('実績時間の登録(一括)', () => {
         await wrapper.vm.submitMultiActual();
 
         expect(axios.put).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + `activities/multi/actual`,
+            backendUrl + `activities/multi/actual`,
             {
                 activities: selectedActivities
             },
@@ -420,7 +421,7 @@ describe('活動の終了(一括)', () => {
         await wrapper.vm.finishMultiActivities();
 
         expect(axios.put).toBeCalledWith(
-            process.env.VITE_BACKEND_URL + `activities/multi/finish`,
+            backendUrl + `activities/multi/finish`,
             {
                 dates: selectedDates
             },
