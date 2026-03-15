@@ -35,36 +35,10 @@ jobs:
         path: ~/.npm
         key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
 
-    - name: create .env
-      run: |
-        echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> .env
-        echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env
-        echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env
-        echo "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}" >> .env
-        echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" >> .env
-        echo "VITE_BACKEND_URL=${{ secrets.VITE_BACKEND_URL }}" >> .env
-        echo "FRONTEND_PORT=${{ secrets.FRONTEND_PORT }}" >> .env
-        echo "DOCKER_PLATFORM=${{ secrets.DOCKER_PLATFORM }}" >> .env
-        echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
-        echo "BACKEND_PORT=${{ secrets.BACKEND_PORT }}" >> .env
-        echo "FRONTEND_HOST=${{ secrets.FRONTEND_HOST }}" >> .env
-        echo "VITE_BACKEND_HOST=${{ secrets.VITE_BACKEND_HOST }}" >> .env
-        echo "HTTPS_STAGE=${{ secrets.HTTPS_STAGE }}" >> .env
-        echo "APP_ADMIN_USER=${{ secrets.APP_ADMIN_USER }}" >> .env
-        echo "APP_ADMIN_PASSWORD=${{ secrets.APP_ADMIN_PASSWORD }}" >> .env
-        echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
-        echo "ALGORITHM=${{ secrets.ALGORITHM }}" >> .env
-        echo "PEPPER=${{ secrets.PEPPER }}" >> .env
-        echo "ACCESS_TOKEN_EXPIRE_MINUTES=${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}" >> .env
-        echo "REFRESH_TOKEN_EXPIRE_WEEKS=${{ secrets.REFRESH_TOKEN_EXPIRE_WEEKS }}" >> .env
-        echo "ENV=${{ secrets.ENV }}" >> .env
-        echo "LOGFILE_PATH=${{ secrets.LOGFILE_PATH }}" >> .env
-        echo "DEV_LOGFILE_PATH=${{ secrets.DEV_LOGFILE_PATH }}" >> .env
-        echo "TEST_MYSQL_DATABASE=${{ secrets.TEST_MYSQL_DATABASE }}" >> .env
-        echo "TEST_DATABASE_URL=${{ secrets.TEST_DATABASE_URL }}" >> .env
-        echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env
-        echo "APP_SCHEME"=${{ secrets.APP_SCHEME }} >> .env
-        echo "VITE_APP_SCHEME"=${{ secrets.VITE_APP_SCHEME }} >> .env
+    - uses: actions/checkout@v4
+
+    - name: create env
+      run: cp .env.test .env
 
     - name: Delete Docker Compose before start
       run: docker compose down -v
