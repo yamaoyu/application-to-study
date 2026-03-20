@@ -39,16 +39,13 @@ jobs:
 
     - name: create env
       run: cp .env.test .env
-
-    - name: Delete Docker Compose before start
-      run: docker compose down -v
         
     - name: Start Docker
       run: |
         set -a
         source .env
         set +a
-        docker compose up -d --build
+        sh docker_exec.sh -d
 
     - name: Check if backend is up
       run: |
