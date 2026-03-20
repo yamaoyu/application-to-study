@@ -9,7 +9,7 @@
 2. コンテナ起動
     ```
     # httpで起動
-    sh docker_exec.sh -d
+    bash docker_exec.sh -d
     # httpsで起動
     docker_exec.sh --profile https -d
     ```
