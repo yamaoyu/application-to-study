@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-mysql --protocol=socket -uroot -p"${MYSQL_ROOT_PASSWORD}" <<SQL
+mysql --socket=/var/run/mysqld/mysqld.sock -uroot -p"${MYSQL_ROOT_PASSWORD}" <<SQL
 CREATE DATABASE IF NOT EXISTS \`${TEST_MYSQL_DATABASE}\`;
 GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
 GRANT ALL PRIVILEGES ON \`${TEST_MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
