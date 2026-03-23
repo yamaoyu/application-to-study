@@ -1,9 +1,0 @@
-#!/bin/sh
-set -eu
-
-mysql --socket=/var/run/mysqld/mysqld.sock -uroot -p"${MYSQL_ROOT_PASSWORD}" <<SQL
-CREATE DATABASE IF NOT EXISTS \`${TEST_MYSQL_DATABASE}\`;
-GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
-GRANT ALL PRIVILEGES ON \`${TEST_MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
-FLUSH PRIVILEGES;
-SQL
