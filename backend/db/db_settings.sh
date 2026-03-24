@@ -1,16 +1,10 @@
-#!/bin/bash
-env_vars=(
-    "MYSQL_ROOT_PASSWORD" "MYSQL_USER" "MYSQL_PASSWORD" 
-    "MYSQL_DATABASE" "MYSQL_HOST" "DB_PORT"
-    )
+#!/bin/sh
+set -eu
 
-for VAR in "${env_vars[@]}"; do
-    if [ -z "${!VAR}" ]; then
-        echo "環境変数未設定---------------"
-        echo $VAR
-        echo "---------------------------"
-        exit 1  # 環境変数が設定されていない→終了
-    fi
-done
+sed \
+  -e "s/__MYSQL_DATABASE__/${MYSQL_DATABASE}/g" \
+  -e "s/__TEST_MYSQL_DATABASE__/${TEST_MYSQL_DATABASE}/g" \
+  -e "s/__MYSQL_USER__/${MYSQL_USER}/g" \
+  /init.sql.template > /docker-entrypoint-initdb.d/init.sql
 
 exec docker-entrypoint.sh mysqld

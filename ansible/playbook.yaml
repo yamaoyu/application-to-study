@@ -61,15 +61,6 @@
       dest: "{{ env_vars_dest }}"
       src: "{{ env_vars_src }}"
 
-  - name: .env.backendを作成
-    file:
-      path: "{{ backend_env_vars_path }}"
-      state: touch
-      owner: "{{ ansible_user }}"
-      group: "{{ ansible_user }}"
-      mode: '0644'
-    become: true
-
   - name: dockerインストールに必要なパッケージをインストール
     become: true
     ansible.builtin.apt:
@@ -112,24 +103,13 @@
       append: true
       groups: docker
 
-  - name: dockerコンテナの存在確認
-    command: "docker compose -f {{ app_root_dir }}/docker-compose.yml ps -a"
-    register: compose_status
-    changed_when: false
-
-  - name: 既存のdockerコンテナ削除
-    community.docker.docker_compose_v2:
-      project_src: "{{ app_root_dir }}"
-      state: absent
-    when: compose_status.stdout != "NAME      IMAGE     COMMAND   SERVICE   CREATED   STATUS    PORTS"
-
   - name: docker起動
-    community.docker.docker_compose_v2:
-      project_src: "{{ app_root_dir }}"
-      state: present
-      build: always
-      env_files: .env
-      files: docker-compose.yml
+    ansible.builtin.command:
+      argv:
+        - bash
+        - docker_exec.sh
+        - -d
+      chdir: "{{ app_root_dir }}"
 
   - name: alembicでDBスキーマを更新
     community.docker.docker_compose_v2_exec:

@@ -1,3 +1,4 @@
 FROM mysql:8.0
-COPY db_settings.sh .
-CMD [ "bash", "db_settings.sh" ]
+COPY db_settings.sh /usr/local/bin/db_settings.sh
+COPY init.sql.template /init.sql.template
+CMD [ "sh", "/usr/local/bin/db_settings.sh" ]
