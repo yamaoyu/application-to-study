@@ -1,9 +1,15 @@
 import os
 from logging import config, Filter, INFO, WARNING, DEBUG, getLogger, Formatter
 from datetime import datetime, timezone, timedelta
+from pathlib import Path
 
 ENV = os.getenv("ENV")
-logfile_path = os.getenv("LOGFILE_PATH")
+logfile = os.getenv("LOGFILE_PATH")
+logfile_path = Path(logfile) if logfile else None
+
+if ENV != "test" and logfile:
+    logfile_path.parent.mkdir(parents=True, exist_ok=True)
+    logfile_path.touch(exist_ok=True)
 
 
 class ConsoleFilter(Filter):
@@ -64,8 +70,8 @@ log_conf = {
     }
 }
 
-# github actionsではログファイルを出力しない
-if ENV != "github":
+# test環境ではログファイルを出力しない
+if ENV != "test":
     log_conf["formatters"]["file_format"] = {
         "()": JSTFormatter,
         "format": "%(asctime)s %(levelname)s %(name)s %(message)s"
@@ -75,7 +81,7 @@ if ENV != "github":
         "class": "logging.handlers.TimedRotatingFileHandler",
         "backupCount": 3,
         "formatter": "file_format",
-        "filename": logfile_path,
+        "filename": logfile,
         "when": "W6",
         "level": "WARNING",
         "filters": ["file_filter"]
