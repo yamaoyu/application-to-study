@@ -6,7 +6,7 @@
     </div>
     <div class="mt-3 col-6">
       <div class="input-group">
-        <input :type="!showPassword ? 'password':'text'" placeholder="password" class="form-control" v-model="password" data-testid="password" required>
+        <input :type="inputType" placeholder="password" class="form-control" v-model="password" data-testid="password" required>
         <button class="btn btn-outline-secondary" type="button"
                     @click="showPassword = !showPassword">
           <i :class="['bi', showPassword ? 'bi-eye-slash' : 'bi-eye']"></i>
@@ -24,24 +24,25 @@
 </template>
   
   <script>
-  import { ref, onMounted } from 'vue'
-  import axios from 'axios'
+  import { ref, onMounted, computed } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { useAuthStore, useRoleStore } from '@/store/authenticate';
-  import { jwtDecode } from 'jwt-decode';
-  import { getResponseAlert, backendUrl } from './lib';
+  import { getResponseAlert } from './lib';
+  import { useLogin } from './composables/useLogin';
 
   export default {
     setup() {
-      const username = ref('');
-      const password = ref('');
-      const message = ref('');
-      const statusCode = ref();
       const router =  useRouter();
       const route = useRoute();
       const showPassword = ref(false);
       const authStore = useAuthStore();
       const roleStore = useRoleStore();
+      const { username, password, message, statusCode, userLogin } =
+          useLogin(router, authStore, roleStore);
+
+      const inputType = computed(() =>
+        showPassword.value ? 'text' : 'password'
+      );
 
       onMounted(() => {
       if (route.query.message) {
@@ -50,57 +51,7 @@
         router.replace({ query: {} })
         }
       })
-  
-      const userLogin = async() => {
-          if (!username.value) {
-            message.value = 'ユーザー名を入力してください'
-            return
-          }
-          if (!password.value) {
-            message.value = 'パスワードを入力してください'
-            return
-          }
-        try {
-          const url = backendUrl + "login"
-          const response = await axios.post(url, {
-            username: username.value,
-            password: password.value
-          }, {
-            withCredentials: true
-          })
-          // ここでログイン後の処理を行う（例：トークンの保存、ページ遷移など）
-          if (response.status===200){
-            authStore.setAuthData(
-              response.data.access_token,
-              response.data.token_type,
-              jwtDecode(response.data.access_token).exp);
-            roleStore.setRole(response.data.role);
-            if (authStore.getRedirectPath){
-              // ログインページの前に遷移しようとしていたページがある場合
-              router.push({ path : authStore.getRedirectPath })
-            } else {
-              router.push({ "path" : "/home" })
-            }
-          }
-        } catch (error) {
-          statusCode.value = null;
-        if (error.response){
-          switch (error.response.status){
-            case 422:
-              message.value = error.response.data.detail;
-              break;
-            case 500:
-              message.value =  "ログインに失敗しました"
-              break;
-            default:
-              message.value = error.response.data.detail;}
-          } else if (error.request){
-            message.value =  "リクエストがサーバーに到達できませんでした"
-          } else {
-            message.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
-          }
-        }
-      }  
+
       return {
         username,
         password,
@@ -108,7 +59,8 @@
         statusCode,
         getResponseAlert,
         userLogin,
-        showPassword
+        showPassword,
+        inputType
       }
     }
   }
