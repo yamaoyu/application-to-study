@@ -6,7 +6,6 @@ import { STATUS_DICT } from "./status";
 import { getStatusColors, getAdjustmentColors, getActivityAlert, getResponseAlert } from "./bootstrapClass";
 import { verifyRefreshToken } from "./token";
 import { errorWithStatusCode, errorWithActivityStatus, errorWithActivity, errorWithActivities, commonError } from "./error";
-import { validateUsername, validatePassword, checkPassword, validateEmail } from "./userinfo";
 import { 
     updateActivity, registerTarget, registerActual, registerMultiTarget, registerMultiActual, 
     finalizeActivity, finalizeMultiActivities,
@@ -38,10 +37,6 @@ export {
     errorWithActivity,
     errorWithActivities,
     commonError,
-    validateUsername,
-    validatePassword,
-    checkPassword,
-    validateEmail,
     updateActivity,
     registerTarget,
     registerActual,

@@ -71,7 +71,8 @@
   <script>
   import { ref, computed, watch } from 'vue'
   import axios from 'axios'
-  import { getResponseAlert, verifyRefreshToken, errorWithStatusCode, validatePassword, checkPassword, backendUrl } from './lib';
+  import { getResponseAlert, verifyRefreshToken, errorWithStatusCode, backendUrl } from './lib';
+  import { validatePassword, checkPassword } from './utils/userValidation';
   import { useRouter } from 'vue-router';
   import { useAuthStore } from '@/store/authenticate';
   import { jwtDecode } from 'jwt-decode';
