@@ -1,14 +1,14 @@
 import { ref } from 'vue'
 import { createUser } from '../api/user'
-import { parseRegisterUserError } from '../utils/error'
+import { parseError } from '../utils/error'
 
 export const useRegisterUser = () => {
-  const username = ref('')
-  const password = ref('')
-  const passwordCheck = ref('')
-  const email = ref('')
-  const message = ref('')
-  const statusCode = ref(null)
+  const username = ref('');
+  const password = ref('');
+  const passwordCheck = ref('');
+  const email = ref('');
+  const message = ref('');
+  const statusCode = ref(null);
 
   const submit = async () => {
     try {
@@ -23,9 +23,9 @@ export const useRegisterUser = () => {
         statusCode.value = res.status
       }
 
-    } catch (e) {
-      message.value = parseRegisterUserError(e)
-      statusCode.value = e.response?.status ?? null
+    } catch (error) {
+      message.value = parseError(error, "ユーザー作成に失敗しました")
+      statusCode.value = error.response?.status ?? null
     }
   }
 

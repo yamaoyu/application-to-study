@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import { login } from '../api/login';
-import { parseLoginError } from '../utils/error';
+import { parseError } from '../utils/error';
 import { jwtDecode } from 'jwt-decode';
 
 export const useLogin = (router, authStore, roleStore) => {
@@ -44,7 +44,7 @@ export const useLogin = (router, authStore, roleStore) => {
         handleLoginSuccess(response)
       }
     } catch (error) {
-      message.value = parseLoginError(error)
+      message.value = parseError(error, "ログインに失敗しました")
       statusCode.value = error.response?.status ?? null
     }
   };
