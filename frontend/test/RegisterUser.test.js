@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import RegisterUser from '@/views/RegisterUser.vue'
 import { mountComponent } from './vitest.setup';
-import axios from 'axios';
-import { backendUrl } from '@/views/lib';
+import { apiClient } from '@/views/api/client';
 
 describe('ユーザー作成', () => {
     let wrapper;
@@ -19,7 +18,7 @@ describe('ユーザー作成', () => {
         const expectedMessage = `${username}の作成に成功しました`
 
 
-        axios.post.mockResolvedValue({
+        apiClient.post.mockResolvedValue({
             status: 201,
             data: {
                 "username": username,
@@ -51,9 +50,9 @@ describe('ユーザー作成', () => {
         expect(wrapper.find('[data-testid="email"]').element.value).toBe("test@example.com");
         // リクエストが正しく行われたことを確認
         await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
-        expect(axios.post).toHaveBeenCalledTimes(1);
-        expect(axios.post).toHaveBeenCalledWith(
-            backendUrl + "users",  // 正しいURL
+        expect(apiClient.post).toHaveBeenCalledTimes(1);
+        expect(apiClient.post).toHaveBeenCalledWith(
+            "users",  // 正しいURL
             {
                 username: "testuser",    // 正しいパラメータ
                 password: "Test1234!",

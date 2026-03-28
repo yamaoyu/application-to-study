@@ -1,9 +1,8 @@
-import axios from 'axios';
-import { backendUrl } from '../config/env';
+import { apiClient } from "./client";
 
 export const login = (username, password) => {
-  return axios.post(
-    backendUrl + "login",
+  return apiClient.post(
+    "login",
     { username, password },
     { withCredentials: true }
   )
