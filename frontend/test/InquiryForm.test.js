@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import InquiryForm from '@/views/InquiryForm.vue'
 import { mountComponent } from './vitest.setup';
-import axios from 'axios';
-import { backendUrl } from '@/views/lib';
+import { apiClient } from '@/views/api/client';
 
 describe('問い合わせに成功する', async () =>{
     let wrapper;
@@ -17,7 +16,7 @@ describe('問い合わせに成功する', async () =>{
         const detail = "テスト";
         const message = "問い合わせを受け付けました"
 
-        axios.post.mockResolvedValue({
+        apiClient.post.mockResolvedValue({
             status: 200,
             data: {
                 category: category,
@@ -33,17 +32,12 @@ describe('問い合わせに成功する', async () =>{
         expect(wrapper.find('[data-testid="detail"]').element.value).toBe(detail);
         // 送信ボタンをクリックし、正しくリクエストが送信されることを確認する
         await wrapper.find('[data-testid="submit-button"]').trigger('submit');
-        expect(axios.post).toHaveBeenCalledTimes(1);
-        expect(axios.post).toHaveBeenCalledWith(
-            backendUrl + 'inquiries',
+        expect(apiClient.post).toHaveBeenCalledTimes(1);
+        expect(apiClient.post).toHaveBeenCalledWith(
+            'inquiries',
             {
                 category: category,
                 detail: detail
-            },
-            {
-                headers: {
-                    "Authorization": "登録なし"
-                }
             }
         )
     })
@@ -61,7 +55,7 @@ describe('問い合わせに失敗する', async() =>{
         const detail = "テスト";
         const message = "カテゴリは要望・エラー報告・その他から選択してください";
 
-        axios.post.mockRejectedValue({
+        apiClient.post.mockRejectedValue({
             response :{
                 status: 422,
                 data: { detail : message }
@@ -73,17 +67,12 @@ describe('問い合わせに失敗する', async() =>{
         expect(wrapper.find('[data-testid="detail"]').element.value).toBe(detail);
         // 送信ボタンをクリックし、正しくリクエストが送信されることを確認する
         await wrapper.find('[data-testid="submit-button"]').trigger('submit');
-        expect(axios.post).toHaveBeenCalledTimes(1);
-        expect(axios.post).toHaveBeenCalledWith(
-            backendUrl + 'inquiries',
+        expect(apiClient.post).toHaveBeenCalledTimes(1);
+        expect(apiClient.post).toHaveBeenCalledWith(
+            'inquiries',
             {
                 category: "",
                 detail: detail
-            },
-            {
-                headers: {
-                    "Authorization": "登録なし"
-                }
             }
         )
         // エラーメッセージが表示されることを確認する
