@@ -1,6 +1,6 @@
 <template>
   <h3>月収の登録</h3>
-  <form @submit.prevent="registerSalary" class="form-inline">
+  <form @submit.prevent="registerSalary(monthlyIncome)" class="form-inline">
     <div class="container col-8 d-flex justify-content-center">
       <div class="input-group">
         <input
@@ -109,18 +109,19 @@
 <script>
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { getMaxMonth, changeMonth, changeYear, getResponseAlert, getThisMonth, getIncomeByMonth, registerMonthlyIncome } from './lib/index';
+import { getMaxMonth, changeMonth, changeYear } from '@/views/utils/date';
+import { getResponseAlert } from './utils/ui';
+import { useMonthlyFetchSalary, useRegisterSalary } from './composables/useSalary';
 
 export default {
   setup() {
     const route = useRoute();
-    const monthlyIncome = ref();
-    const incomeRes = ref();
-    const statusCode = ref();
-    const incomeMsg = ref('');
+    const queryMsg = ref("");
     const minMonth = "2024-01";
     const maxMonth = getMaxMonth();
-    const selectedMonth = ref(getThisMonth());
+    const monthlyIncome = ref(null);
+    const { fetchMsg, fetchRes, fetchMonthlySalary } = useMonthlyFetchSalary();
+    const { registerMsg, selectedMonth, registerStatusCode, registerSalary } = useRegisterSalary();
     const isAtMinMonth = computed(() => selectedMonth.value <= minMonth);
     const isAtMaxMonth = computed(() => selectedMonth.value >= maxMonth);
     const isAtMinYear = computed(() => selectedMonth.value <= "2024-12");
@@ -129,18 +130,9 @@ export default {
     const isMaxIncome = computed(() => monthlyIncome.value >= 2000);
     const { increaseYear } = changeYear(selectedMonth);
     const { increaseMonth } = changeMonth(selectedMonth);
-    const registerSalary = registerMonthlyIncome(selectedMonth, monthlyIncome, incomeMsg, statusCode);
-    
-    // 先月の年収を取得
-    const date = new Date()
-    let year = date.getFullYear()
-    // 先月のデータを取得するため+1しない
-    let month = date.getMonth()
-    if (date.getMonth() == 0){
-      year = date.getFullYear() - 1
-      month = 12
-    }
-    const getMonthlyIncome = getIncomeByMonth(incomeRes, incomeMsg, year, month);
+
+    const incomeMsg = computed(() => registerMsg.value || fetchMsg.value || queryMsg.value);
+    const statusCode = computed(() => registerStatusCode.value ?? fetchRes.value?.status ?? null );
 
     const updateSalary = async(step) =>{
       // 画面に表示される給料を更新する関数
@@ -152,16 +144,24 @@ export default {
     };
 
     onMounted( async() =>{
-      await getMonthlyIncome();
-      if (incomeRes.value?.status===200){
-        monthlyIncome.value = incomeRes.value.data["month_info"].salary
+      // 先月の年収を取得
+      const date = new Date()
+      let year = date.getFullYear()
+      // 先月のデータを取得するため+1しない
+      let month = date.getMonth()
+      if (date.getMonth() == 0){
+        year = date.getFullYear() - 1
+        month = 12
+      }
+      await fetchMonthlySalary(year, month);
+      if (fetchRes.value?.status === 200) {
+        monthlyIncome.value = fetchRes.value.data["month_info"].salary;
       } else {
-        monthlyIncome.value = 5
+        monthlyIncome.value = 5;
       }
       // クエリパラメータにメッセージがある場合はそちらで上書きする
-      const queryMsg = route.query.incomeMsg;
-      if (typeof queryMsg === 'string') {
-        incomeMsg.value = queryMsg;
+      if (typeof route.query.incomeMsg === 'string') {
+        queryMsg.value = route.query.incomeMsg;
       }
     }
   );
@@ -170,11 +170,9 @@ export default {
       monthlyIncome,
       statusCode,
       getResponseAlert,
-      incomeRes,
       incomeMsg,
       updateSalary,
       registerSalary,
-      getMonthlyIncome,
       minMonth,
       maxMonth,
       selectedMonth,
