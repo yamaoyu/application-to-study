@@ -1,6 +1,6 @@
 <template>
   <h3>Todoの登録</h3>
-  <form @submit.prevent="registerTodos">
+  <form @submit.prevent="regitserTodos">
     <table class="table table-striped table-responsive">
       <thead class="table-dark">
         <tr>
@@ -54,8 +54,8 @@
     :title="modalTitle" 
     ok-title="OK" 
     cancel-title="閉じる" 
-    @ok="closeModal"
-    :ok-disabled="!validateParams()"
+    @ok="closeModal(todos)"
+    :ok-disabled="!validateTodo(todoAction, todo)"
     data-testid="modal-show"
   >
     <div v-if="todoAction==='show'||todoAction==='delete'">
@@ -136,12 +136,12 @@
 
 <script>
 import { ref, watch } from 'vue';
-import axios from 'axios';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/store/authenticate';
-import { getResponseAlert, verifyRefreshToken, errorWithStatusCode, getToday, backendUrl } from './lib/index';
-import { jwtDecode } from 'jwt-decode';
+import { getToday } from './utils/date';
+import { getResponseAlert } from './utils/ui';
+import { useRegisterTodos } from './composables/useTodo';
+import { validateTodo } from './utils/todoValidation';
 import { BModal } from 'bootstrap-vue-next';
+import { useTodoModal } from './composables/useTodoModal';
 
 export default {
   components:{
@@ -149,100 +149,11 @@ export default {
   },
 
   setup() {
-    const message = ref("");
     const titleError = ref(""); // todo編集時、タイトルに入力がない場合のメッセージを表示
     const dueError = ref(""); // todo編集時、期限に入力がない場合のメッセージを表示
-    const todo = ref({title:"",detail:"",due:""}); // todoの情報を保持し、Todoの閲覧、編集時に使用する
-    const todos = ref([]);
-    const showModal = ref(false);
-    const modalTitle = ref("");
-    const todoAction = ref("show");
-    const statusCode = ref();
-    const router = useRouter();
-    const authStore = useAuthStore();
-    const { handleError } = errorWithStatusCode(statusCode, message, router);
     const today = getToday();
-
-    const submitTodo = async() =>{
-      // Todoを登録する処理
-      const url = backendUrl + 'todos/multi';
-      const response = await axios.post(
-        url, 
-        { todos: todos.value },
-        { headers: { Authorization: authStore.getAuthHeader}}
-      );
-      statusCode.value = response.status;
-      if (response.status===201){
-        message.value = response.data.message;
-        todos.value = [];
-      };
-    };
-
-    const registerTodos = async() =>{
-      // 登録ボタンクリック時に実行される関数
-      try {
-        await submitTodo();
-      } catch (error) {
-        if (error.response?.status === 401) {
-          try {
-            // リフレッシュトークンを検証して新しいアクセストークンを取得
-            const tokenResponse = await verifyRefreshToken();
-            // 新しいアクセストークンをストアに保存
-            await authStore.setAuthData(
-              tokenResponse.data.access_token,
-              tokenResponse.data.token_type,
-              jwtDecode(tokenResponse.data.access_token).exp)
-            // 再度リクエストを送信
-            await submitTodo();
-          } catch (refreshError) {
-            router.push({
-              path: "/login",
-              query: { message: "再度ログインしてください" }
-            });
-          }            
-        } else {
-          handleError(error);
-        }
-      }
-    };
-
-    const validateParams = () => {
-      if (["show", "finish", "delete"].includes(todoAction.value)) {
-          return true;
-        }
-      return !!(todo.value.title && todo.value.due);
-    };
-
-    const closeModal = () => {
-      showModal.value = false;
-      if (todoAction.value==="create") {
-        todos.value.push(todo.value);
-      } else if (todo.value==="edit") {
-        todo.value = content;
-      } else if (todoAction.value==="delete") {
-        todos.value.splice(todos.value.indexOf(todo.value), 1);
-      }
-      todo.value = {title:"", detail:"", due:""};
-    };
-
-    const openModal = async(content, action) =>{
-      todoAction.value = action;
-      showModal.value = true;
-      titleError.value = null;
-      dueError.value = null;
-      todo.value = content;
-      if (todoAction.value==="create") {
-        modalTitle.value = "Todo作成";
-      } else if (todoAction.value==='delete') {
-        modalTitle.value = "Todo削除確認";
-      } else if (todoAction.value==='show') {
-        modalTitle.value = "Todo閲覧";
-      } else if (todoAction.value==='edit') {
-        modalTitle.value = "Todo編集";
-      } else {
-        modalTitle.value = "エラーが発生しました";
-      }
-    };
+    const { showModal, modalTitle, todoAction, todo, openModal, closeModal } = useTodoModal();
+    const { todos, message, statusCode, regitserTodos } = useRegisterTodos();
 
     watch(() => todos.value.length, () => {
       if (todos.value.length>=10){
@@ -263,10 +174,10 @@ export default {
       titleError,
       dueError,
       today,
-      registerTodos,
+      regitserTodos,
       getResponseAlert,
       openModal,
-      validateParams,
+      validateTodo,
       closeModal
     }
   }
