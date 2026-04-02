@@ -106,39 +106,6 @@
       const emailValidateResult = computed(() => {
         return validateEmail(email.value);
       });
-
-      const createUser = async() => {
-        // パスワード不一致の場合はリクエストを送信しない
-        if (!passwordEqualResult.value) {
-          statusCode.value = null;
-          message.value = "パスワードが一致しません\nパスワードを確認してください";
-          return;
-        }
-
-        try {
-          if (response.status===201){
-            statusCode.value = response.status;
-            message.value = response.data.message;
-          }
-        } catch (error) {
-          statusCode.value = null;
-          if (error.response){
-            switch (error.response.status){
-              case 422:
-                message.value = error.response.data.detail;
-                break;
-              case 500:
-                message.value =  "ユーザー作成に失敗しました"
-                break;
-              default:
-                message.value = error.response.data.detail;}
-          } else if (error.request){
-            message.value =  "リクエストがサーバーに到達できませんでした"
-          } else {
-            message.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
-          }
-        }
-      }
   
       return {
         username,
@@ -147,7 +114,6 @@
         email,
         message,
         statusCode,
-        createUser,
         getResponseAlert,
         usernameValidateResult,
         passwordValidateResult,

@@ -212,7 +212,7 @@ describe('登録処理', async() =>{
         wrapper = mountComponent(RegisterSalary);
 
         await wrapper.find('[data-testid="submit"]').trigger('submit');
-        expect(wrapper.vm.incomeMsg).toEqual(expectedMessage);
+        expect(wrapper.vm.registerMsg).toEqual(expectedMessage);
     });
 
     it('既に登録済み', async() =>{
@@ -229,6 +229,6 @@ describe('登録処理', async() =>{
         wrapper = mountComponent(RegisterSalary);
 
         await wrapper.find('[data-testid="submit"]').trigger('submit');
-        expect(wrapper.vm.incomeMsg).toEqual(expectedMessage);
+        expect(wrapper.vm.registerMsg).toEqual(expectedMessage);
     });
 });

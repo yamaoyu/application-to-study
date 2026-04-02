@@ -3,7 +3,7 @@ import { getMonthlySalary, postSalary } from "../api/salary";
 import { getThisMonth } from "../utils/date";
 import { parseError } from "../utils/error";
 
-export const useMonthlyFetchSalary = () => {
+export const useFetchMonthlySalary = () => {
   const fetchMsg = ref('');
   const fetchRes = ref(null);
 

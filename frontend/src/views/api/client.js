@@ -3,6 +3,7 @@ import { backendUrl } from '../config/env';
 import { useAuthStore } from '@/store/authenticate';
 import { verifyRefreshToken } from './auth';
 import { jwtDecode } from 'jwt-decode';
+import { config } from '@vue/test-utils';
 
 export const apiClient = axios.create({
   baseURL: backendUrl
@@ -10,9 +11,14 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use((config) => {
   const authStore = useAuthStore();
+  const url = config.url;
 
-  if (config.url.includes('/token')) {
-    return config
+  if (
+    url.includes('token') ||
+    url.includes('users') ||
+    url.includes('login')
+  ) {
+    return config;
   };
 
   if (authStore.accessToken) {
@@ -26,6 +32,15 @@ apiClient.interceptors.response.use(
   res => res,
   async (error) => {
     const originalRequest = error.config;
+    const url = originalRequest?.url ?? '';
+
+    if (
+      url.includes('token') ||
+      url.includes('users') ||
+      url.includes('login')
+    ) {
+      return Promise.reject(error);
+    };
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {

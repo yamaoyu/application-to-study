@@ -102,7 +102,8 @@
     <button type="submit" class="btn btn-outline-secondary mt-3" data-testid="submit">登録</button>
   </form>
   <div class="container d-flex justify-content-center">
-    <p v-if="incomeMsg" class="mt-3 p-3 col-8" :class="getResponseAlert(statusCode)">{{ incomeMsg }}</p>
+    <p v-if="registerMsg" class="mt-3 p-3 col-8" :class="getResponseAlert(registerStatusCode)">{{ registerMsg }}</p>
+    <p v-else-if="queryMsg" class="mt-3 p-3 col-8" :class="getResponseAlert(404)">{{ queryMsg }}</p>
   </div>
 </template>
 
@@ -111,7 +112,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { getMaxMonth, changeMonth, changeYear } from '@/views/utils/date';
 import { getResponseAlert } from './utils/ui';
-import { useMonthlyFetchSalary, useRegisterSalary } from './composables/useSalary';
+import { useFetchMonthlySalary, useRegisterSalary } from './composables/useSalary';
 
 export default {
   setup() {
@@ -120,7 +121,7 @@ export default {
     const minMonth = "2024-01";
     const maxMonth = getMaxMonth();
     const monthlyIncome = ref(null);
-    const { fetchMsg, fetchRes, fetchMonthlySalary } = useMonthlyFetchSalary();
+    const { fetchRes, fetchMonthlySalary } = useFetchMonthlySalary();
     const { registerMsg, selectedMonth, registerStatusCode, registerSalary } = useRegisterSalary();
     const isAtMinMonth = computed(() => selectedMonth.value <= minMonth);
     const isAtMaxMonth = computed(() => selectedMonth.value >= maxMonth);
@@ -130,9 +131,6 @@ export default {
     const isMaxIncome = computed(() => monthlyIncome.value >= 2000);
     const { increaseYear } = changeYear(selectedMonth);
     const { increaseMonth } = changeMonth(selectedMonth);
-
-    const incomeMsg = computed(() => registerMsg.value || fetchMsg.value || queryMsg.value);
-    const statusCode = computed(() => registerStatusCode.value ?? fetchRes.value?.status ?? null );
 
     const updateSalary = async(step) =>{
       // 画面に表示される給料を更新する関数
@@ -158,19 +156,20 @@ export default {
         monthlyIncome.value = fetchRes.value.data["month_info"].salary;
       } else {
         monthlyIncome.value = 5;
-      }
+      };
       // クエリパラメータにメッセージがある場合はそちらで上書きする
       if (typeof route.query.incomeMsg === 'string') {
         queryMsg.value = route.query.incomeMsg;
-      }
+      };
     }
   );
 
     return {
       monthlyIncome,
-      statusCode,
+      registerMsg,
+      registerStatusCode,
+      queryMsg,
       getResponseAlert,
-      incomeMsg,
       updateSalary,
       registerSalary,
       minMonth,
