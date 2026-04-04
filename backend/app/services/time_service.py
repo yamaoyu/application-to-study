@@ -376,7 +376,7 @@ class TimeService():
             logger.info(f"{username}が{date}の活動を終了")
         if error_count > 0:
             raise BadRequest(detail=message[:-1])
-        pay_adjustment = pay_adjustment = round((bonus_sum - penalty_sum), 2)
+        pay_adjustment = round((bonus_sum - penalty_sum), 2)
         return {
             "message": message[:-1],
             "pay_adjustment": f"{pay_adjustment}万円({int(pay_adjustment * 10000)}円)",

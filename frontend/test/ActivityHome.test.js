@@ -1,436 +1,83 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ActivityHome from '@/views/ActivityHome.vue';
 import { mountComponent } from './vitest.setup';
-import axios from 'axios';
-import { flushPromises } from '@vue/test-utils';
-import { backendUrl } from '@/views/lib';
+import { apiClient } from '@/views/api/client';
 
 describe('選択した日の活動登録状況確認', () => {
-    let wrapper;
+  let wrapper;
 
-    beforeEach(() => {
-        vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-        wrapper = mountComponent(ActivityHome);
-        }
+  beforeEach(() => {
+    vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+    wrapper = mountComponent(ActivityHome);
+    }
+  );
+
+  it('データがある', async() => {
+    const today = new Date();
+    const expectedYear = today.getFullYear();
+    const expectedMonth = `${today.getMonth()+1}`.padStart(2, '0');
+    const expectedDate = `${today.getDate()}`.padStart(2, '0');
+    
+    const expectedData = {
+        date: `${expectedYear}-${expectedMonth}-${expectedDate}`,
+        target_time: 3,
+        actual_time: 0,
+        status: "pending",
+        bonus: 0,
+        penalty: 0.38
+    };
+
+    apiClient.get.mockResolvedValue({
+        status: 200,
+        data: expectedData
+    });
+
+    // activityResに定義される
+    await wrapper.vm.renewActivities();
+    expect(wrapper.vm.activityRes.data).toEqual(expectedData);
+    expect(apiClient.get).toBeCalledWith(
+        `activities/${expectedYear}/${expectedMonth}/${expectedDate}`
     );
+    expect(wrapper.find("[data-testid='show-target-time']").text()).toEqual(String(expectedData.target_time));
+    expect(wrapper.find("[data-testid='show-actual-time']").text()).toEqual(String(expectedData.actual_time));
+    expect(wrapper.find("[data-testid='show-status']").text()).toEqual("未確定");
+  });
 
-    it('データがある', async() => {
-        const today = new Date();
-        const expectedYear = today.getFullYear();
-        const expectedMonth = `${today.getMonth()+1}`.padStart(2, '0');
-        const expectedDate = `${today.getDate()}`.padStart(2, '0');
-        
-        const expectedData = {
-            date: `${expectedYear}-${expectedMonth}-${expectedDate}`,
-            target_time: 3,
-            actual_time: 0,
-            status: "pending",
-            bonus: 0,
-            penalty: 0.38
-        };
-
-        axios.get.mockResolvedValue({
-            status: 200,
-            data: expectedData
-        });
-
-        // activityResに定義される
-        await wrapper.vm.renewActivity();
-        expect(wrapper.vm.activityRes.data).toEqual(expectedData);
-
-        expect(axios.get).toBeCalledWith(
-            backendUrl + `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
-            {
-                "headers": {
-                    "Authorization": "登録なし",
-                },
-            },
-        );
-
-        expect(wrapper.find("[data-testid='show-target-time']").text()).toEqual(String(expectedData.target_time));
-        expect(wrapper.find("[data-testid='show-actual-time']").text()).toEqual(String(expectedData.actual_time));
-        expect(wrapper.find("[data-testid='show-status']").text()).toEqual("未確定");
+  it('データがない', async() => {
+    const expectedMessage = "2025-1-1の活動記録は未登録です";
+    apiClient.get.mockRejectedValue({
+      response: {
+        status: 404,
+        data: {
+          detail: expectedMessage
+        }
+      }
     });
-
-    it('活動実績のデータがない', async() => {
-        const expectedMessage = "2025-1-1の活動記録は未登録です";
-
-        axios.get.mockRejectedValue({
-            response: {
-                status: 404,
-                data: {
-                    detail: expectedMessage
-                }
-            }
-        });
-
-        await wrapper.vm.renewActivity();
-        expect(wrapper.find("[data-testid='checkMsg']").text()).toEqual(expectedMessage);
-    });
+    await wrapper.vm.renewActivities();
+    expect(wrapper.find("[data-testid='pendingMsg']").text()).toEqual(expectedMessage);
+  });
 });
 
 
 describe('タブの切り替え', ()=>{
-    let wrapper;
+  let wrapper;
 
-    beforeEach(() =>{
-        vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-        wrapper = mountComponent(ActivityHome);
-        }
-    );
+  beforeEach(() =>{
+    vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+    wrapper = mountComponent(ActivityHome);
+    }
+  );
 
-    it('操作タイプ(目標、実績、終了)の切り替え', async() =>{
-        // 目標→実績
-        expect(wrapper.vm.activeTab).toEqual('target');
-        wrapper.find("[data-testid='actual']").trigger('click');
-        expect(wrapper.vm.activeTab).toEqual('actual');
-        // 実績→終了
-        wrapper.find("[data-testid='finish']").trigger('click');
-        expect(wrapper.vm.activeTab).toEqual('finish');
-        // 終了→目標
-        wrapper.find("[data-testid='target']").trigger('click');
-        expect(wrapper.vm.activeTab).toEqual('target');
-    });
-})
-
-describe('目標時間の登録(一括)', () => {
-    let wrapper;
-
-    beforeEach(() => {
-        vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-        wrapper = mountComponent(ActivityHome);
-        }
-    );
-
-    it('フォームの操作', async() =>{
-        // 初期値
-        expect(wrapper.vm.activeTab).toEqual('target');
-        expect(wrapper.vm.targetActivities.length).toBe(1);
-        // 追加
-        wrapper.find("[data-testid='increase-target-row']").trigger("click");
-        expect(wrapper.vm.targetActivities.length).toBe(2);
-        await flushPromises(); // html要素が変わるため変更を待つ
-        // 減らす
-        wrapper.find("[data-testid='decrease-target-row-1']").trigger("click");
-        expect(wrapper.vm.targetActivities.length).toBe(1);
-        // 値の入力
-        const dateField = wrapper.find("[data-testid='target-date-row-0']");
-        await dateField.setValue("2025-01-01");
-        expect(dateField.element.value).toEqual("2025-01-01");
-        const timeField = wrapper.find("[data-testid='target-time-row-0']");
-        await timeField.setValue(3);
-        expect(timeField.element.value).toEqual("3");
-    });
-
-    it('成功', async() =>{
-        // タブの切り替え
-        expect(wrapper.vm.activeTab).toEqual('target');
-        await flushPromises(); // html要素が変わるため変更を待つ 
-        
-        const expectedMessage = "2025/1/1の目標時間を3時間に登録しました\n2025/1/2の目標時間を3.5時間に登録しました";
-
-        const targetActivities = [
-            {
-                date: "2025/1/1",
-                target_time: 3
-            },
-            {
-                date: "2025/1/2",
-                target_time: 3.5
-            }
-        ];
-        wrapper.vm.targetActivities = targetActivities;
-
-        axios.post.mockResolvedValue({
-            status: 201,
-            data: { message: expectedMessage }
-        });
-
-        await wrapper.vm.submitMultiTarget();
-
-        expect(axios.post).toBeCalledWith(
-            backendUrl + `activities/multi/target`,
-            {
-                activities: targetActivities
-            },
-            {
-                "headers": {
-                "Authorization": "登録なし",
-                },
-            }
-        );
-        expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);
-    })
-});
-
-
-describe('実績時間の登録(一括)', () => {
-    let wrapper;
-
-    beforeEach(() => {
-        vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-        wrapper = mountComponent(ActivityHome);
-        }
-    );
-
-    it('フォームの操作', async() =>{
-        // タブの切り替え
-        wrapper.find("[data-testid='actual']").trigger('click');
-        await flushPromises(); // html要素が変わるため変更を待つ
-        expect(wrapper.vm.activeTab).toEqual('actual');
-        wrapper.vm.editActivities  = [
-            {
-                date: "2025/1/1",
-                target_time: 3,
-                actual_time: 0,
-                status: "success"
-            }
-        ];
-        await flushPromises(); // html要素が変わるため変更を待つ
-        // 初期値
-        expect(wrapper.vm.selectedActivities.length).toBe(0);
-        // 選択
-        wrapper.find("[data-testid='is-selected-actual-0']").trigger("click");
-        expect(wrapper.vm.selectedActivities.length).toBe(1);
-        // 解除
-        wrapper.find("[data-testid='is-selected-actual-0']").trigger("click");
-        expect(wrapper.vm.selectedActivities.length).toBe(0);
-        // 実績入力
-        const timeField = wrapper.find("[data-testid='actual-time-row-0']");
-        await timeField.setValue(3);
-        expect(timeField.element.value).toEqual("3");
-    });
-
-    it("全てを選択/解除", async() =>{
-      // タブの切り替え
-        wrapper.find("[data-testid='actual']").trigger('click');
-        await flushPromises(); // html要素が変わるため変更を待つ
-        // 初期設定
-        const editActivities = [
-            {
-                date: "2025/1/1",
-                target_time: 3,
-                actual_time: 3,
-                status: "success"
-            },
-            {
-                date: "2025/1/2",
-                target_time: 3.5,
-                actual_time: 3.5,
-                status: "pending"
-            }
-        ];
-        wrapper.vm.pendingActivities = editActivities;
-        // タブの切り替え
-        wrapper.find("[data-testid='actual']").trigger('click');
-        expect(wrapper.vm.activeTab).toEqual('actual');
-        await flushPromises(); // html要素が変わるため変更を待つ
-        // 初期値確認
-        expect(wrapper.vm.selectMode).toEqual("default");
-        // ドロップダウンから「全て」を選択
-        const selectForm = wrapper.find("[data-testid='select-mode']")
-        await selectForm.setValue("all");
-        expect(wrapper.vm.selectMode).toEqual("all");
-        expect(wrapper.vm.selectedActivities).toEqual([]);
-        // 選択ボタンをクリック
-        wrapper.find("[data-testid='apply-actual-selection']").trigger("click");
-        expect(wrapper.vm.selectedActivities).toEqual(editActivities);
-        // 選択を解除
-        wrapper.find("[data-testid='reset-selected-activities']").trigger("click");
-        expect(wrapper.vm.selectedActivities).toEqual([]);
-    });
-
-    it("変更分全てを選択/解除", async() =>{
-        // 初期設定
-        let editActivities = [
-            {
-                date: "2025/1/1",
-                target_time: 3,
-                actual_time: 3,
-                status: "success"
-            },
-            {
-                date: "2025/1/2",
-                target_time: 3.5,
-                actual_time: 3.5,
-                status: "pending"
-            }
-        ];
-        // タブの切り替え
-        wrapper.find("[data-testid='actual']").trigger('click');
-        expect(wrapper.vm.activeTab).toEqual('actual');
-        await flushPromises(); // html要素が変わるため変更を待つ
-        // タブ切り替え後にテスト用のtodo設定
-        wrapper.vm.pendingActivities = editActivities;
-        await flushPromises();
-        // ドロップダウンから「変更分のみ」を選択
-        const selectForm = wrapper.find("[data-testid='select-mode']")
-        await selectForm.setValue("edited");
-        expect(wrapper.vm.selectMode).toEqual("edited");
-        expect(wrapper.vm.selectedActivities).toEqual([]);
-        // 選択ボタンをクリックできないことを確認(変更がないため選択対象なし)
-        const submitButton = wrapper.find("[data-testid='apply-actual-selection']");
-        expect(submitButton.attributes("disabled"));
-        // 変更してから再度選択
-        editActivities[0]["actual_time"] = 5;
-        wrapper.vm.editActivities = editActivities;
-        await submitButton.trigger("click");
-        expect(wrapper.vm.selectedActivities).toEqual([editActivities[0]]); // 変更のある1つ目のみ選択される
-        // 選択を解除
-        wrapper.find("[data-testid='reset-selected-activities']").trigger("click");
-        expect(wrapper.vm.selectedActivities).toEqual([]);
-    })
-
-    it('成功', async() =>{
-        // タブの切り替え
-        wrapper.find("[data-testid='actual']").trigger('click');
-        expect(wrapper.vm.activeTab).toEqual('actual');
-        await flushPromises(); // html要素が変わるため変更を待つ 
-        
-        const expectedMessage = "2025/1/1の活動時間を3時間に登録しました\n2025/1/2の活動時間を3.5時間に登録しました";
-
-        const selectedActivities = [
-            {
-                date: "2025/1/1",
-                actual_time: 3
-            },
-            {
-                date: "2025/1/2",
-                actual_time: 3.5
-            }
-        ];
-        wrapper.vm.selectedActivities = selectedActivities;
-
-        axios.put.mockResolvedValue({
-            status: 200,
-            data: { message: expectedMessage }
-        });
-
-        await wrapper.vm.submitMultiActual();
-
-        expect(axios.put).toBeCalledWith(
-            backendUrl + `activities/multi/actual`,
-            {
-                activities: selectedActivities
-            },
-            {
-                "headers": {
-                "Authorization": "登録なし",
-                },
-            }
-        );
-        expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);
-    })
-});
-
-
-describe('活動の終了(一括)', () => {
-    let wrapper;
-
-    beforeEach(() => {
-        vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-        wrapper = mountComponent(ActivityHome);
-        }
-    );
-
-    it('フォームの操作', async() =>{
-        // タブの切り替え
-        wrapper.find("[data-testid='finish']").trigger('click');
-        await flushPromises(); // html要素が変わるため変更を待つ
-        expect(wrapper.vm.activeTab).toEqual('finish');
-        wrapper.vm.pendingActivities = [
-            {
-                date: "2025/1/1",
-                target_time: 3,
-                actual_time: 3,
-                status: "success"
-            }
-        ]
-        await flushPromises(); // html要素が変わるため変更を待つ 
-        // 初期値
-        expect(wrapper.vm.selectedActivities.length).toBe(0);
-        // 選択
-        wrapper.find("[data-testid='is-selected-finish-0']").trigger("click");
-        expect(wrapper.vm.selectedActivities.length).toBe(1);
-        // 解除
-        wrapper.find("[data-testid='is-selected-finish-0']").trigger("click");
-        expect(wrapper.vm.selectedActivities.length).toBe(0);
-    })
-
-    it("全てを選択/解除", async() =>{
-        // タブの切り替え
-        wrapper.find("[data-testid='finish']").trigger('click');
-        await flushPromises(); // html要素が変わるため変更を待つ
-        // 初期設定
-        const pendingActivities = [
-            {
-                date: "2025/1/1",
-                target_time: 3,
-                actual_time: 3,
-                status: "success"
-            },
-            {
-                date: "2025/1/2",
-                target_time: 3.5,
-                actual_time: 3.5,
-                status: "pending"
-            }
-        ];
-        const selectedActivities = [
-            "2025/1/1","2025/1/2",
-        ];
-        wrapper.vm.pendingActivities = pendingActivities;
-        // タブの切り替え
-        wrapper.find("[data-testid='finish']").trigger('click');
-        expect(wrapper.vm.activeTab).toEqual('finish');
-        await flushPromises(); // html要素が変わるため変更を待つ
-        // 初期値確認
-        expect(wrapper.vm.selectedActivities).toEqual([]);
-        // 全て選択
-        wrapper.find("[data-testid='toggle-all-activities']").trigger("click");
-        expect(wrapper.vm.selectedActivities).toEqual(selectedActivities);
-        // 全て解除
-        wrapper.find("[data-testid='toggle-all-activities']").trigger("click");
-        expect(wrapper.vm.selectedActivities).toEqual([]);
-    })
-
-
-    it('成功', async() =>{
-        // タブの切り替え
-        wrapper.find("[data-testid='finish']").trigger('click');
-        expect(wrapper.vm.activeTab).toEqual('finish');
-        await flushPromises(); // html要素が変わるため変更を待つ 
-        
-        const expectedMessage = "ボーナス-ペナルティ：0.3万円(3000円)\nボーナス：0.5万円(5000円)\nペナルティ：0.2万円(2000円)\n2025/1/1の活動を終了:ボーナス0.5万円(5000円)\n2025/1/2の活動を終了ペナルティ0.2万円(2000円)";
-
-        const selectedDates = [
-            {
-                date: "2025/1/1"
-            },
-            {
-                date: "2025/1/2"
-            }
-        ];
-        wrapper.vm.selectedActivities = selectedDates;
-
-        axios.put.mockResolvedValue({
-            status: 200,
-            data: { message: expectedMessage }
-        });
-
-        await wrapper.vm.finishMultiActivities();
-
-        expect(axios.put).toBeCalledWith(
-            backendUrl + `activities/multi/finish`,
-            {
-                dates: selectedDates
-            },
-            {
-                "headers": {
-                "Authorization": "登録なし",
-                },
-            }
-        );
-        expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);
-    })
+  it('操作タイプ(目標、実績、終了)の切り替え', async() =>{
+    // 目標→実績
+    expect(wrapper.vm.activeTab).toEqual('target');
+    wrapper.find("[data-testid='actual']").trigger('click');
+    expect(wrapper.vm.activeTab).toEqual('actual');
+    // 実績→終了
+    wrapper.find("[data-testid='finish']").trigger('click');
+    expect(wrapper.vm.activeTab).toEqual('finish');
+    // 終了→目標
+    wrapper.find("[data-testid='target']").trigger('click');
+    expect(wrapper.vm.activeTab).toEqual('target');
+  });
 });

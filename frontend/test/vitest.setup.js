@@ -27,10 +27,11 @@ vi.mock('@/views/api/client', () => ({
   }
 }))
 
-export const mountComponent = (component) => {
+export const mountComponent = (component, options = {}) => {
     return mount(component, {
         global: {
             plugins: [createPinia()],
         },
+        ...options
     })
 }
