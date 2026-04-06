@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import { registerInquiry } from '../api/inquiry';
+import { registerInquiry, getInquiries } from '../api/inquiry';
 import { parseError } from '../utils/error';
 
 export const useSendInquiry = () => {
@@ -32,5 +32,26 @@ export const useSendInquiry = () => {
     statusCode,
     message,
     sendRequest
+  }
+};
+
+export const useGetInquiries = () => {
+  const inquiries = ref([]);
+  const message = ref("");
+  
+  const fetchInquries = async() => {
+    try {
+      const res = await getInquiries();
+      inquiries.value = res.data;
+      message.value = "";
+    } catch (error) {
+      message.value = parseError(error, "問い合わせの取得に失敗しました");
+    }
+  }
+
+  return {
+    inquiries,
+    message,
+    fetchInquries
   }
 };

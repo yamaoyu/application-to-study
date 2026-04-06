@@ -6,3 +6,9 @@ export const registerInquiry = (category, detail) => {
     { category: category, detail: detail }
   )
 };
+
+export const getInquiries = () => {
+  return apiClient.get(
+    "inquiries"
+  )
+};

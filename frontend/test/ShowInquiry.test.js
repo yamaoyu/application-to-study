@@ -1,15 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import showInquiry from '@/views/showInquiry.vue';
+import ShowInquiry from '@/views/ShowInquiry.vue';
 import { mountComponent } from './vitest.setup';
-import axios from 'axios';
-import { backendUrl } from '@/views/lib';
+import { apiClient } from '@/views/api/client';
+import { flushPromises } from '@vue/test-utils';
 
 describe('データあり', () => {
     let wrapper;
 
     beforeEach(() => {
         vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-        wrapper = mountComponent(showInquiry);
         }
     );
 
@@ -23,19 +22,15 @@ describe('データあり', () => {
             }
         ]
 
-        axios.get.mockResolvedValue({
+        apiClient.get.mockResolvedValue({
             status: 200,
             data: inquiries
         });
+        wrapper = mountComponent(ShowInquiry);
 
-        await wrapper.vm.getInquiries();
-        expect(axios.get).toBeCalledWith(
-            backendUrl + "inquiries",
-            {
-                "headers": {
-                    "Authorization": "登録なし",
-                },
-            },
+        await flushPromises();
+        expect(apiClient.get).toBeCalledWith(
+            "inquiries"
         );
 
         expect(wrapper.find("[data-testid='index-0']").text()).toBe("1");
@@ -51,13 +46,12 @@ describe('データなし', () => {
 
     beforeEach(() => {
         vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-        wrapper = mountComponent(showInquiry);
         }
     );
 
     it('データがないためメッセージが表示される', async () =>{
         const expectedMessage = "問い合わせはありません";
-        axios.get.mockRejectedValue({
+        apiClient.get.mockRejectedValue({
             response: {
                 status: 404,
                 data: {
@@ -65,15 +59,11 @@ describe('データなし', () => {
                 }
             }
         });
+        wrapper = mountComponent(ShowInquiry);
+        await flushPromises();
 
-        await wrapper.vm.getInquiries();
-        expect(axios.get).toBeCalledWith(
-            backendUrl + "inquiries",
-            {
-                "headers": {
-                    "Authorization": "登録なし",
-                },
-            },
+        expect(apiClient.get).toBeCalledWith(
+            "inquiries"
         );
 
         expect(wrapper.find("[data-testid='message']").text()).toEqual(expectedMessage);
@@ -85,13 +75,13 @@ describe('権限なし', () => {
 
     beforeEach(() => {
         vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-        wrapper = mountComponent(showInquiry);
+        wrapper = mountComponent(ShowInquiry);
         }
     );
 
     it('権限がないためメッセージが表示される', async () =>{
         const expectedMessage = "管理者権限を持つユーザー以外はアクセスできません";
-        axios.get.mockRejectedValue({
+        apiClient.get.mockRejectedValue({
             response: {
                 status: 403,
                 data: {
@@ -100,14 +90,11 @@ describe('権限なし', () => {
             }
         });
 
-        await wrapper.vm.getInquiries();
-        expect(axios.get).toBeCalledWith(
-            backendUrl + "inquiries",
-            {
-                "headers": {
-                    "Authorization": "登録なし",
-                },
-            },
+        wrapper = mountComponent(ShowInquiry);
+        await flushPromises();
+
+        expect(apiClient.get).toBeCalledWith(
+            "inquiries"
         );
 
         expect(wrapper.find("[data-testid='message']").text()).toEqual(expectedMessage);
