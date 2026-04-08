@@ -29,6 +29,11 @@ export const getStatusColors = {
   failure: 'text-danger fw-bold'
 };
 
+export const getSalaryColors = (amount) => {
+  // プラスなら緑、マイナスなら赤、ゼロなら黒の文字の色のクラスを返す
+  return amount > 0 ? 'text-success fw-bold' : amount < 0 ? 'text-danger' : 'text-dark';
+};
+
 export const STATUS_DICT = {
   // アクティビティのステータスの辞書(key: ステータス, value: 表示文字)
   'success': '達成',

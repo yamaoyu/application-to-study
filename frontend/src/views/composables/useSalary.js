@@ -16,7 +16,7 @@ export const useFetchMonthlySalary = () => {
       fetchRes.value = res;
     } catch (error) {
       fetchMsg.value = parseError(error, "月収の取得に失敗しました");
-      fetchRes.value = error.response ?? null;
+      fetchRes.value = null;
     }
   };
 

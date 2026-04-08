@@ -1,7 +1,7 @@
 <template>
   <div class="container">
-    <h2 class="mt-2 mb-4">{{ year }}年{{ month }}月{{ date }}日の活動実績</h2>
-    <div class="row" v-if="activityRes">
+    <h2 class="mt-2 mb-4">{{ date }}の活動実績</h2>
+    <div class="row" v-if="activityRes?.status === 200">
       <div class="col-4">
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">目標時間</h3>
@@ -37,12 +37,12 @@
   </div>
   <div class="container">
     <h2>今月の給料</h2>
-    <div class="row justify-content-center mb-4" v-if="incomeRes">
+    <div class="row justify-content-center mb-4" v-if="incomeRes?.status === 200">
       <div class="col-8 mb-4">
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">合計</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span :class="getAdjustmentColors(incomeRes)" class="h3 fw-bold text-center">{{ incomeRes.data.total_income }}</span>
+            <span :class="getSalaryColors(incomeRes.data.total_income-incomeRes.data.month_info.salary)" class="h3 fw-bold text-center">{{ incomeRes.data.total_income }}</span>
             万円
           </div>
         </div>
@@ -60,7 +60,7 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">ボーナス-ペナルティ</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span :class="getAdjustmentColors(incomeRes)" class="h3 fw-bold text-center">{{ incomeRes.data.pay_adjustment }}</span>
+            <span :class="getSalaryColors(incomeRes.data.pay_adjustment)" class="h3 fw-bold text-center">{{ incomeRes.data.pay_adjustment }}</span>
             万円
           </div>
         </div>
@@ -96,10 +96,10 @@
       <h2 class="text-center">未完了のTodo</h2>
       <!-- 右側に絶対配置でボタンを配置 -->
       <div class="btn-group position-absolute top-50 end-0 translate-middle-y" v-if="todos.length">
-        <BButton class="btn btn-outline-secondary bi-sort-down btn-sm" :variant="sortType === 'id' ? 'secondary text-white' : 'outline-secondary'" @click="sortTodos('id')">
+        <BButton class="btn btn-outline-secondary bi-sort-down btn-sm" :variant="sortType === 'id' ? 'secondary text-white' : 'outline-secondary'" @click="sortTodos('id')" data-testid="sort-todos-id">
           登録順
         </BButton>
-        <BButton class="btn btn-outline-secondary bi-sort-down btn-sm" :variant="sortType === 'due' ? 'secondary text-white' : 'outline-secondary'" @click="sortTodos('due')">
+        <BButton class="btn btn-outline-secondary bi-sort-down btn-sm" :variant="sortType === 'due' ? 'secondary text-white' : 'outline-secondary'" @click="sortTodos('due')" data-testid="sort-todos-due">
           期限順
         </BButton>
       </div>
@@ -126,38 +126,38 @@
         </tr>
       </tbody>
     </table>
-  </div>
-  <nav>
-    <ul class="pagination justify-content-center">
-        <li class="page-item" :class="{ disabled: currentPage === 1 }">
-            <button class="page-link" @click="goToPage(1)" :disabled="currentPage === 1">
-                最初
-            </button>
-        </li>
-        <li class="page-item" :class="{ disabled: currentPage === 1 }">
-            <button class="page-link" @click="goToPage(currentPage - 1)" :disabled="currentPage === 1">
-                前へ
-            </button>
-        </li>
-        
-        <li v-for="page in visiblePages" :key="page" class="page-item" :class="{ active: page === currentPage }">
-            <button class="page-link" @click="goToPage(page)">
-                {{ page }}
-            </button>
-        </li>
-        
-        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-            <button class="page-link" @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages">
-                次へ
-            </button>
-        </li>
-        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-            <button class="page-link" @click="goToPage(totalPages)" :disabled="currentPage === totalPages">
-                最後
-            </button>
-        </li>
-      </ul>
-    </nav>
+    <nav v-if="Object.keys(paginatedTodos).length > 0">
+      <ul class="pagination justify-content-center">
+          <li class="page-item" :class="{ disabled: currentPage === 1 }">
+              <button class="page-link" @click="goToPage(1)" :disabled="currentPage === 1">
+                  最初
+              </button>
+          </li>
+          <li class="page-item" :class="{ disabled: currentPage === 1 }">
+              <button class="page-link" @click="goToPage(currentPage - 1)" :disabled="currentPage === 1">
+                  前へ
+              </button>
+          </li>
+          
+          <li v-for="page in visiblePages" :key="page" class="page-item" :class="{ active: page === currentPage }">
+              <button class="page-link" @click="goToPage(page)">
+                  {{ page }}
+              </button>
+          </li>
+          
+          <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+              <button class="page-link" @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages">
+                  次へ
+              </button>
+          </li>
+          <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+              <button class="page-link" @click="goToPage(totalPages)" :disabled="currentPage === totalPages">
+                  最後
+              </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
     <div class="row d-flex align-items-center justify-content-center my-3">
       <p v-if="todoMsg" class="col-8 alert alert-success p-3">
         {{ todoMsg }}
@@ -250,11 +250,14 @@
 
 
 <script>
-import { onMounted, ref, computed } from 'vue';
-import { STATUS_DICT, getAdjustmentColors, getStatusColors, 
-        getActivityAlert, getTodoRequest, editTodoRequest, getActivityByDay,
-        finishTodosRequest, deleteTodosRequest, getIncomeByMonth } from './lib';
+import { onMounted, ref } from 'vue';
 import { BButton, BModal } from 'bootstrap-vue-next';
+import { usePage } from './composables/usePage';
+import { useFetchActivtyByDay } from './composables/useActivitesFetch';
+import { useGetTodos, useTodoOperations, useSortTodos } from './composables/useTodo';
+import { useFetchMonthlySalary } from './composables/useSalary';
+import { STATUS_DICT, getAdjustmentColors, getStatusColors, getActivityAlert, getSalaryColors } from './utils/ui';
+import { getThisMonth } from './utils/date';
 
 export default {
   components:{
@@ -263,75 +266,21 @@ export default {
   },
 
   setup() {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth() + 1;
-    const date = today.getDate();
-    const activityMsg = ref("");
-    const activityRes = ref();
     const activityStatus = ref("");
-    const incomeMsg = ref("");
-    const incomeRes = ref();
-    const todos = ref([]); // 取得した全てのtodo
     const todoMsg = ref("");
     const showModal = ref(false);
     const modalTitle = ref("");
-    const todoId = ref(); // todo操作の対象となるtodoのIDを保持
     const todoAction = ref(); // todoに対して行う操作名(閲覧、編集、終了、削除)
-    const sortType = ref("id"); // todoの一覧で表示されるソート順で初期値は登録順(id)
     const todo = ref(); // todoの情報を保持し、Todoの閲覧、編集時に使用する
     const titleError = ref(""); // todo編集時、タイトルに入力がない場合のメッセージを表示
     const dueError = ref(""); // todo編集時、期限に入力がない場合のメッセージを表示
-    const newTodoTitle = ref("");
-    const newTodoDetail = ref("");
-    const newTodoDue = ref();
-    const statusFilter = ref("false");
-    const startDue = ref();
-    const endDue = ref();
-    const title = ref();
-    const selectedTodos = ref([]);
-    const getTodos = getTodoRequest(statusFilter, startDue, endDue, title, todos, todoMsg);
-    const editTodo = editTodoRequest(todoId, newTodoTitle, newTodoDetail, newTodoDue, todoMsg, getTodos);
-    const finishTodos = finishTodosRequest(selectedTodos, todoMsg, getTodos);
-    const deleteTodos = deleteTodosRequest(selectedTodos, todoMsg, getTodos);
-    const getTodayActivity = getActivityByDay(year, month, date, activityRes, activityStatus, activityMsg);
-    const getThisMonthIncome = getIncomeByMonth(incomeRes, incomeMsg, year, month);
+    const { fetchMsg: incomeMsg, fetchRes: incomeRes, fetchMonthlySalary } = useFetchMonthlySalary(todoMsg);
+    const { todos, statusFilter, fetchTodos } = useGetTodos(todoMsg);
+    const { selectedTodoIDs, newTodoTitle, newTodoDetail, newTodoDue, updateTodo, completeTodos, removeTodos } = useTodoOperations(todoMsg);
+    const { totalItems, totalPages, currentPage, visiblePages, paginatedTodos, goToPage } = usePage(todos, 5);
+    const { sortType, sortTodos } = useSortTodos(todos);
+    const { date, checkMsg: activityMsg, activityRes, fetchActivityByDay } = useFetchActivtyByDay();
 
-    const currentPage = ref(1);
-    const itemsPerPage = ref(5);
-    const totalItems = computed(() => todos.value.length);
-    const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value));
-    const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value);
-    const endIndex = computed(() => Math.min(startIndex.value + itemsPerPage.value, totalItems.value));
-
-    const paginatedTodos = computed(() =>{
-      return todos.value.slice(startIndex.value, endIndex.value)
-      }
-    );
-
-    const goToPage = (page) =>{
-      if (page >= 1 && page <= totalPages.value) {
-        currentPage.value = page
-      }
-    };
-
-    const visiblePages = computed(() =>{
-      const pages = []
-      const maxVisiblePages = 5
-      let start = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2))
-      let end = Math.min(totalPages.value, start + maxVisiblePages - 1)
-
-      // 最後のページが表示範囲に入るように調整
-      if (end - start + 1 < maxVisiblePages) {
-          start = Math.max(1, end - maxVisiblePages + 1)
-      }
-
-      for (let i = start; i <= end; i ++){
-        pages.push(i)
-      }
-
-      return pages
-    });
 
     const validateParams = () => {
       if (["show", "finish", "delete"].includes(todoAction.value)) {
@@ -343,85 +292,53 @@ export default {
     const confirmRequest = async(content, action) =>{
       titleError.value = null;
       dueError.value = null;
-      selectedTodos.value = [content.todo_id];
+      selectedTodoIDs.value = [content.todo_id];
       todoAction.value = action;
+      todo.value = content;
       if (todoAction.value==='finish'){
         modalTitle.value = "Todo終了確認"
       } else if (todoAction.value==='delete') {
         modalTitle.value = "Todo削除確認"
       } else if (todoAction.value==='show') {
         modalTitle.value = "Todo閲覧"
-        todo.value = content
       } else if (todoAction.value==='edit') {
         modalTitle.value = "Todo編集"
         newTodoTitle.value = content.title
         newTodoDetail.value = content.detail
         newTodoDue.value = content.due
-        todo.value = content
       }
       showModal.value = true;
     };
 
     const sendTodoRequest = async() =>{
       if (todoAction.value==='finish'){
-        await finishTodos();
+        await completeTodos();
       } else if (todoAction.value==='delete') {
-        await deleteTodos();
+        await removeTodos();
         if (currentPage.value > totalPages.value) {
             currentPage.value = totalPages.value;
         };
       } else if (todoAction.value==='edit'){
-        await editTodo();
+        await updateTodo(todo.value.todo_id);
       }
       // データを初期化
-      todoId.value = null;
       todoAction.value = null;
       todo.value = null;
-      selectedTodos.value = [];
-    };
-
-    const sortTodos = async(type) =>{
-      sortType.value = type
-      if (sortType.value==="id"){
-        todos.value.sort((item1, item2) => item1.todo_id - item2.todo_id);
-      } else {
-        todos.value.sort((item1, item2) => {
-          if (item1.due > item2.due) return 1;
-          if (item1.due < item2.due) return -1;
-          return 0;
-        });
-      }
-    };
-
-    const setActivityMessage = () => {
-      if (activityRes.value?.status === 200) {
-        activityStatus.value = activityRes.value.data.status;
-        const bonusInYen = parseInt(activityRes.value.data.bonus * 10000, 10);
-        const penaltyInYen = parseInt(activityRes.value.data.penalty * 10000, 10);
-        if (activityRes.value.data.status === "success") {
-          activityMsg.value = `目標達成!\nボーナス:${activityRes.value.data.bonus}万円(${bonusInYen}円)`;
-        } else if (activityRes.value.data.status === "failure") {
-          activityMsg.value = `目標失敗...\nペナルティ:${activityRes.value.data.penalty}万円(${penaltyInYen}円)`;
-        } else {
-          if (activityRes.value.data.target_time <= activityRes.value.data.actual_time) {
-            activityMsg.value = `目標達成!活動を終了してください\n確定後のボーナス:${activityRes.value.data.bonus}万円(${bonusInYen}円)`;
-          } else {
-            activityMsg.value = `このままだと、${activityRes.value.data.penalty}万円(${penaltyInYen}円)のペナルティが発生`;
-          }
-        }
-      }
+      selectedTodoIDs.value = [];
+      await fetchTodos();
     };
 
     onMounted( async() =>{
       // その日の活動実績を取得
-      await getTodayActivity();
-      setActivityMessage();
+      await fetchActivityByDay();
 
       // その月の月収を取得
-      await getThisMonthIncome();
+      const [year, month] = getThisMonth().split("-");
+      await fetchMonthlySalary(year, month);
 
-      // そのユーザーの未完了のtodoを取得
-      await getTodos();
+      // そのユーザーの未完了のtodoを取得、このページでは未完了のTodoのみを表示
+      statusFilter.value = false;
+      await fetchTodos();
       }
     )
 
@@ -435,10 +352,7 @@ export default {
       todoMsg,
       showModal,
       modalTitle,
-      todoId,
       todoAction,
-      year,
-      month,
       date,
       todo,
       titleError,
@@ -448,13 +362,6 @@ export default {
       sendTodoRequest,
       sortTodos,
       sortType,
-      deleteTodos,
-      finishTodos,
-      editTodo,
-      getTodayActivity,
-      getThisMonthIncome,
-      setActivityMessage,
-      getTodos,
       newTodoTitle,
       newTodoDetail,
       newTodoDue,
@@ -462,6 +369,7 @@ export default {
       getAdjustmentColors,
       getStatusColors,
       getActivityAlert,
+      getSalaryColors,
       totalItems,
       totalPages,
       currentPage,
