@@ -37,7 +37,7 @@ export const useGetTodos = (todoMsg) => {
 
   const makeQuery = () => {
     let queryParameter = "";
-    if (statusFilter.value !== null){
+    if (statusFilter.value){
       queryParameter += "status=" + statusFilter.value;
     } 
     if (startDue.value){
@@ -126,7 +126,7 @@ export const useTodoOperations = (todoMsg) => {
 
   const removeTodos = async(onSuccess) => {
     try {
-      const params = { "ids": selectedTodoIDs.value }
+      const params = { "ids": selectedTodoIDs.value };
       const res = await deleteTodos(params);
       if (res.status === 204) {
         todoMsg.value = "選択したTodoを削除しました";

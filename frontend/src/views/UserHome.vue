@@ -337,7 +337,7 @@ export default {
       await fetchMonthlySalary(year, month);
 
       // そのユーザーの未完了のtodoを取得、このページでは未完了のTodoのみを表示
-      statusFilter.value = false;
+      statusFilter.value = "false";
       await fetchTodos();
       }
     )

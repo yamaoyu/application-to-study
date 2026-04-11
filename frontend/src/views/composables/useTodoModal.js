@@ -1,15 +1,15 @@
 import { ref } from "vue";
 
 export const useTodoModal = () => {
-  const showModal = ref(false)
-  const modalTitle = ref("")
-  const todoAction = ref("show")
-  const todo = ref({ title: "", detail: "", due: "" })
+  const showModal = ref(false);
+  const modalTitle = ref("");
+  const todoAction = ref("show");
+  const todo = ref({ title: "", detail: "", due: "" });
 
   const openModal = (content, action) => {
-    todoAction.value = action
-    showModal.value = true
-    todo.value = content
+    todoAction.value = action;
+    showModal.value = true;
+    todo.value = content;
 
     switch (action) {
       case 'create': modalTitle.value = "Todo作成"; break
@@ -20,15 +20,13 @@ export const useTodoModal = () => {
   };
 
   const closeModal = (todos) => {
-    showModal.value = false
-
+    showModal.value = false;
     if (todoAction.value === "create") {
-      todos.push(todo.value)
+      todos.push(todo.value);
     } else if (todoAction.value === "delete") {
-      todos.splice(todos.indexOf(todo.value), 1)
-    }
-
-    todo.value = { title: "", detail: "", due: "" }
+      todos.splice(todos.indexOf(todo.value), 1);
+    };
+    todo.value = { title: "", detail: "", due: "" };
   };
 
   return {
