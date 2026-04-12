@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import UserInfo from '@/views/UserInfo.vue'
 import { mountComponent } from './vitest.setup';
-import axios from 'axios';
-import { backendUrl } from '@/views/lib';
+import { apiClient } from '@/views/api/client';
 
 describe('パスワード変更フォームの動作確認', () => {
     let wrapper;
@@ -258,7 +257,7 @@ describe('パスワード変更リクエストを送信', async()=>{
         await passCheckForm.setValue(newPasswordCheck);
 
         const expectedMessage = "パスワードの変更に成功しました"
-        axios.put.mockResolvedValue({
+        apiClient.put.mockResolvedValue({
             status: 200,
             data: {
                 message: expectedMessage
@@ -267,23 +266,18 @@ describe('パスワード変更リクエストを送信', async()=>{
         await wrapper.find('[data-testid="password-change-button"]').trigger('submit');
 
         // 更新リクエストが正しく行われたことを確認
-        expect(axios.put).toBeCalledWith(
-            backendUrl + "password",  // 正しいURL
+        expect(apiClient.put).toBeCalledWith(
+            "password",  // 正しいURL
             {
                 old_password: oldPassword,    // 正しいパラメータ
                 new_password: newPassword
-            },
-            {
-                headers: {
-                    Authorization: "登録なし",
-                }
-            },
+            }
         );
         expect(wrapper.vm.message).toEqual(expectedMessage);
     });
 
     it('必須項目を入力しないとリクエストを送信できない', async() =>{
         await wrapper.find('[data-testid="password-change-button"]').trigger('submit');
-        expect(axios.post).toBeCalledTimes(0);
+        expect(apiClient.post).toBeCalledTimes(0);
     })
 });

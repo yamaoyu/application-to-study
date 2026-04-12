@@ -1,7 +1,7 @@
 import { ref } from "vue";
-import { getActivitiesByStatus, getActivityByDay } from "../api/activity";
+import { getActivitiesByStatus, getActivityByDay, getActivitiesByMonth, getActivitiesByYear, getAllActivities } from "../api/activity";
 import { parseError } from "../utils/error";
-import { getToday } from "../utils/date";
+import { getToday, getThisMonth, getThisYear } from "../utils/date";
 
 export const useFetchActivtiesByStatus = () => {
   const pendingMsg = ref("");
@@ -67,5 +67,67 @@ export const useFetchActivtyByDay = () => {
     checkMsg,
     activityRes,
     fetchActivityByDay
+  }
+};
+
+export const useFetchActivitiesByMonth = (response, activities, message) => {
+  const selectedMonth = ref(getThisMonth());
+
+    const fetchActivitiesByMonth = async() => {
+    try {
+      const [year, month] = selectedMonth.value.split('-').map(Number)
+      response.value = await getActivitiesByMonth(year, month);
+      if (response.value.status===200){
+        activities.value = response.value.data.activity_list;
+        message.value = ""
+      } 
+    } catch (error) {
+      message.value = parseError(error, `${selectedMonth}の活動取得に失敗しました`);
+      activities.value = [];
+    }
+  };
+
+  return {
+    selectedMonth,
+    fetchActivitiesByMonth
+  }
+};
+
+export const useFetchActivitiesByYear = (response, activities, message) => {
+  const selectedYear = ref(getThisYear());
+
+  const fetchActivitiesByYear = async() => {
+    try {
+      response.value = await getActivitiesByYear(selectedYear.value);
+      if (response.value.status===200){
+        activities.value = response.value.data.monthly_info;
+        message.value = "";
+      } 
+    } catch (error) {
+      message.value = parseError(error, `${selectedYear}の活動取得に失敗しました`);
+      activities.value = [];
+    }
+  };
+
+  return {
+    selectedYear,
+    fetchActivitiesByYear
+  }
+};
+
+export const useFetchAllActivities = (response, message) => {
+  const fetchAllActivities = async() => {
+    try {
+      response.value = await getAllActivities();
+      if (response.value.status==200){
+            message.value = ""
+        }
+    } catch (error) {
+      message.value = parseError(error, "全期間の活動記録取得に失敗しました")
+    }
+  }
+
+  return {
+    fetchAllActivities
   }
 };
