@@ -39,7 +39,7 @@
             <router-link class="nav-link" to="/show/inquiry">問い合わせ確認</router-link>
           </li>
           <li class="nav-item">
-            <a class="nav-link" type="button" @click="logout()">ログアウト</a>
+            <a class="nav-link" type="button" @click="userLogout()">ログアウト</a>
           </li>
         </ul>
       </div>
@@ -78,12 +78,12 @@
           <router-link class="nav-link" to="/show/inquiry">問い合わせ確認</router-link>
         </li>
         <li class="nav-item">
-          <a class="nav-link" type="button" @click="logout()">ログアウト</a>
+          <a class="nav-link" type="button" @click="userLogout()">ログアウト</a>
         </li>
       </ul>
     </div>
   </nav>
-  <p v-if="logoutMsg" class="logoutMsg">{{ logoutMsg }}</p>
+  <p v-if="message" class="message">{{ message }}</p>
   <br>
   <BContainer>
     <router-view></router-view>
@@ -91,12 +91,9 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue';
-import axios from 'axios';
-import { useRouter } from 'vue-router';
-import { useAuthStore, useRoleStore } from '@/store/authenticate';
+import { computed } from 'vue';
 import { BContainer } from 'bootstrap-vue-next';
-import { backendUrl } from './views/lib';
+import { useLogout } from './views/composables/useAuth';
 
 export default {
   components: {
@@ -104,60 +101,15 @@ export default {
   },
 
   setup() {
-    const router = useRouter();
-    const authStore = useAuthStore();
-    const roleStore = useRoleStore();
-    const logoutMsg = ref("");
+    const { message, userLogout, roleStore } = useLogout();
     const MENU_SHOW_ROUTES = ["Login", "RegisterUser"];
     const isAdmin = computed(() => {
       return roleStore.getRole === "admin"
-    });
+    });;
 
-    const logout = async() =>{
-      try{
-        const logout_url = backendUrl + 'logout'
-        const logout_res = await axios.post(logout_url, 
-              {
-              },
-              {
-                headers: {Authorization: authStore.getAuthHeader},
-                withCredentials: true
-              }
-        )
-        if (logout_res.status===200){
-          authStore.clearAuthData();
-          roleStore.clearRole();
-          router.push(
-                  {"path":"/login",
-                    "query":{message:"ログアウトしました"}
-                  })
-        }
-      } catch(logout_err){
-        if (logout_err.response){
-            switch (logout_err.response.status){
-              case 401:
-                router.push(
-                  {"path":"/login",
-                    "query":{message:"再度ログインしてください"}
-                  })
-                break;
-              case 404:
-              case 500:
-                logoutMsg.value = logout_err.response.data.detail;
-                break;
-              default:
-                logoutMsg.value = "ログアウトに失敗しました";}
-          } else if (logout_err.request){
-            logoutMsg.value =  "リクエストがサーバーに到達できませんでした"
-          } else {
-            logoutMsg.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
-          }
-      }
-    }
-    
     return {
-      logoutMsg,
-      logout,
+      message,
+      userLogout,
       MENU_SHOW_ROUTES,
       isAdmin
     }

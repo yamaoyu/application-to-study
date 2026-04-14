@@ -63,11 +63,11 @@
 </template>
   
   <script>
-  import { ref, computed } from 'vue'
-  import { getResponseAlert } from './lib';
+  import { ref } from 'vue'
+  import { getResponseAlert } from './utils/ui';
   import { BForm, BFormInput, BFormInvalidFeedback, BFormValidFeedback } from 'bootstrap-vue-next';
-  import { validateUsername, validatePassword, checkPassword, validateEmail } from './utils/userValidation';
   import { useRegisterUser } from './composables/userRegisterUser';
+  import { useUserInfoCheck } from './composables/useUserInfo';
 
   export default {
     components: {
@@ -90,22 +90,13 @@
         statusCode,
         submit
       } = useRegisterUser();
-
-      const usernameValidateResult = computed(() => {
-        return validateUsername(username.value);
-      });
-
-      const passwordValidateResult = computed(() => {
-        return validatePassword(password.value);
-      });
-
-      const passwordEqualResult = computed(() => {
-        return checkPassword(password.value, passwordCheck.value);
-      });
-
-      const emailValidateResult = computed(() => {
-        return validateEmail(email.value);
-      });
+      
+      const { 
+        usernameValidateResult, 
+        passwordValidateResult, 
+        passwordEqualResult, 
+        emailValidateResult
+      } = useUserInfoCheck(username, password, passwordCheck, email);
   
       return {
         username,

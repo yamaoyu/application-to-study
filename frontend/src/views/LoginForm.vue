@@ -25,20 +25,15 @@
   
   <script>
   import { ref, onMounted, computed } from 'vue';
-  import { useRoute, useRouter } from 'vue-router';
-  import { useAuthStore, useRoleStore } from '@/store/authenticate';
-  import { getResponseAlert } from './lib';
-  import { useLogin } from './composables/useLogin';
+  import { useRoute } from 'vue-router';
+  import { getResponseAlert } from './utils/ui';
+  import { useLogin } from './composables/useAuth';
 
   export default {
     setup() {
-      const router =  useRouter();
       const route = useRoute();
       const showPassword = ref(false);
-      const authStore = useAuthStore();
-      const roleStore = useRoleStore();
-      const { username, password, message, statusCode, userLogin } =
-          useLogin(router, authStore, roleStore);
+      const { username, password, message, statusCode, router,userLogin } = useLogin();
 
       const inputType = computed(() =>
         showPassword.value ? 'text' : 'password'

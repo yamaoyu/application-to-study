@@ -7,3 +7,19 @@ export function verifyRefreshToken(){
         { withCredentials: true })
     return response
 };
+
+export const login = (username, password) => {
+  return apiClient.post(
+    "login",
+    { username, password },
+    { withCredentials: true }
+  )
+};
+
+export const logout = () => {
+  return apiClient.post(
+    "logout",
+    {},
+    { withCredentials: true }
+  )
+};
