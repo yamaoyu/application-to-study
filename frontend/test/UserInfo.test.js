@@ -127,7 +127,7 @@ describe('パスワードのバリデーション', async()=>{
         expect(wrapper.vm.newPassword).toEqual(newPassword);
 
         // バリデーションに通らないことの確認
-        expect(wrapper.vm.isValidPassword).toEqual(
+        expect(wrapper.vm.passwordValidateResult).toEqual(
             {
                 "message": "大文字が含まれていません",
                 "valid": false,
@@ -150,7 +150,7 @@ describe('パスワードのバリデーション', async()=>{
         expect(wrapper.vm.newPassword).toEqual(newPassword);
 
         // バリデーションに通らないことの確認
-        expect(wrapper.vm.isValidPassword).toEqual(
+        expect(wrapper.vm.passwordValidateResult).toEqual(
             {
                 "message": "小文字が含まれていません",
                 "valid": false,
@@ -173,7 +173,7 @@ describe('パスワードのバリデーション', async()=>{
         expect(wrapper.vm.newPassword).toEqual(newPassword);
 
         // バリデーションに通らないことの確認
-        expect(wrapper.vm.isValidPassword).toEqual(
+        expect(wrapper.vm.passwordValidateResult).toEqual(
             {
                 "message": "数字が含まれていません",
                 "valid": false,
@@ -196,7 +196,7 @@ describe('パスワードのバリデーション', async()=>{
         expect(wrapper.vm.newPassword).toEqual(newPassword);
 
         // バリデーションに通らないことの確認
-        expect(wrapper.vm.isValidPassword).toEqual(
+        expect(wrapper.vm.passwordValidateResult).toEqual(
             {
                 "message": "記号が含まれていません",
                 "valid": false,
@@ -223,7 +223,12 @@ describe('パスワードのバリデーション', async()=>{
         passCheckForm.setValue(newPasswordCheck);
 
         // バリデーションに通らないことの確認
-        expect(wrapper.vm.isEqualPassword).toBe(false);
+        expect(wrapper.vm.passwordEqualResult).toEqual(
+            {
+                "message": "パスワードが一致しません",
+                "valid": false
+            }
+        );
     });
 })
 
