@@ -18,6 +18,8 @@ export const useFetchActivtiesByStatus = () => {
       pendingStatus.value = res;
     } catch (error) {
       pendingMsg.value = parseError(error, "月収の取得に失敗しました");
+      pendingActivities.value = [];
+      pendingStatus.value = null;
     }
   }
 
@@ -82,7 +84,7 @@ export const useFetchActivitiesByMonth = (response, activities, message) => {
         message.value = ""
       } 
     } catch (error) {
-      message.value = parseError(error, `${selectedMonth}の活動取得に失敗しました`);
+      message.value = parseError(error, `${selectedMonth.value}の活動取得に失敗しました`);
       activities.value = [];
     }
   };
@@ -104,7 +106,7 @@ export const useFetchActivitiesByYear = (response, activities, message) => {
         message.value = "";
       } 
     } catch (error) {
-      message.value = parseError(error, `${selectedYear}の活動取得に失敗しました`);
+      message.value = parseError(error, `${selectedYear.value}の活動取得に失敗しました`);
       activities.value = [];
     }
   };

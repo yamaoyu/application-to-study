@@ -274,7 +274,7 @@ export default {
     const todo = ref(); // todoの情報を保持し、Todoの閲覧、編集時に使用する
     const titleError = ref(""); // todo編集時、タイトルに入力がない場合のメッセージを表示
     const dueError = ref(""); // todo編集時、期限に入力がない場合のメッセージを表示
-    const { fetchMsg: incomeMsg, fetchRes: incomeRes, fetchMonthlySalary } = useFetchMonthlySalary(todoMsg);
+    const { fetchMsg: incomeMsg, fetchRes: incomeRes, fetchMonthlySalary } = useFetchMonthlySalary();
     const { todos, statusFilter, fetchTodos } = useGetTodos(todoMsg);
     const { selectedTodoIDs, newTodoTitle, newTodoDetail, newTodoDue, updateTodo, completeTodos, removeTodos } = useTodoOperations(todoMsg);
     const { totalItems, totalPages, currentPage, visiblePages, paginatedTodos, goToPage } = usePage(todos, 5);

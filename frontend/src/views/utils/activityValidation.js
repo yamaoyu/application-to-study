@@ -15,7 +15,7 @@ export const validateTargetTime = (time) => {
 };
 
 export const hasDuplicateDate = (dates, date) => {
-  return dates.filter(d=>d && d===date) > 1;
+  return dates.filter(d=>d && d===date).length > 1;
 };
 
 export const isValidActivities = (activities) => {
