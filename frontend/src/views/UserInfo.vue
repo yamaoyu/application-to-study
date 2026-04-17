@@ -1,7 +1,7 @@
 <template>
   <h2 class="mb-5">ユーザー管理メニュー</h2>
   <div class="container col-8 card">
-    <h5 class="card-title mt-3 clickable" @click="toggleFormVisibility">
+    <h5 class="card-title mt-3 clickable" @click="isFormVisible = !isFormVisible">
       パスワード変更
       <span v-if="isFormVisible" class="ms-2">▲</span>
       <span v-else class="ms-2">▼</span>
@@ -16,7 +16,7 @@
         </div>
       </div>
       
-      <BForm @submit.prevent="submitNewPassword">
+      <BForm @submit.prevent="changePassword">
         <div class="form-group mt-3">
           <div class="input-group">
             <BFormInput :type="!showOldPassword ? 'password':'text'" placeholder="現在のパスワード(必須)" v-model="oldPassword" :disabled="!isPasswordChangeEnabled" required data-testid="oldPassword"/>
@@ -29,7 +29,7 @@
         </div>
         <div class="form-group mt-3">
           <div class="input-group">
-            <BFormInput :type="!showNewPassword ? 'password':'text'" placeholder="新しいパスワード(必須)" v-model="newPassword" :disabled="!isPasswordChangeEnabled" :state="isValidPassword.valid" required data-testid="newPassword"/>
+            <BFormInput :type="!showNewPassword ? 'password':'text'" placeholder="新しいパスワード(必須)" v-model="newPassword" :disabled="!isPasswordChangeEnabled" :state="passwordValidateResult.valid" required data-testid="newPassword"/>
             <button class="btn btn-outline-secondary" type="button"
                     @click="showNewPassword = !showNewPassword"
                     :disabled="!isPasswordChangeEnabled">
@@ -37,15 +37,15 @@
             </button>
           </div>
           <div class="feedback-container">
-            <BFormInvalidFeedback :state="isValidPassword.valid">
-              {{ isValidPassword.message }}
+            <BFormInvalidFeedback :state="passwordValidateResult.valid">
+              {{ passwordValidateResult.message }}
             </BFormInvalidFeedback>
-            <BFormValidFeedback :state="isValidPassword.valid"> OK </BFormValidFeedback>
+            <BFormValidFeedback :state="passwordValidateResult.valid"> OK </BFormValidFeedback>
           </div>
         </div>
         <div class="form-group mt-3">
           <div class="input-group">
-            <BFormInput :type="!showNewPasswordCheck ? 'password':'text'" placeholder="新しいパスワード確認(必須)" v-model="newPasswordCheck" :disabled="!isPasswordChangeEnabled" :state="isEqualPassword" required data-testid="newPasswordCheck"/>
+            <BFormInput :type="!showNewPasswordCheck ? 'password':'text'" placeholder="新しいパスワード確認(必須)" v-model="newPasswordCheck" :disabled="!isPasswordChangeEnabled" :state="passwordEqualResult.valid" required data-testid="newPasswordCheck"/>
             <button class="btn btn-outline-secondary" type="button"
                     @click="showNewPasswordCheck = !showNewPasswordCheck"
                     :disabled="!isPasswordChangeEnabled">
@@ -53,10 +53,10 @@
             </button>
           </div>
           <div class="feedback-container">
-            <BFormInvalidFeedback :state="isEqualPassword">
+            <BFormInvalidFeedback :state="passwordEqualResult.valid">
               パスワードが一致しません
             </BFormInvalidFeedback>
-            <BFormValidFeedback :state="isEqualPassword"> OK </BFormValidFeedback>
+            <BFormValidFeedback :state="passwordEqualResult.valid"> OK </BFormValidFeedback>
           </div>
         </div>
         <button type="submit" class="btn btn-outline-secondary my-3" :disabled="!isPasswordChangeEnabled" data-testid="password-change-button">変更</button>
@@ -68,120 +68,51 @@
   </div>
 </template>
   
-  <script>
-  import { ref, computed, watch } from 'vue'
-  import axios from 'axios'
-  import { getResponseAlert, verifyRefreshToken, errorWithStatusCode, validatePassword, checkPassword, backendUrl } from './lib';
-  import { useRouter } from 'vue-router';
-  import { useAuthStore } from '@/store/authenticate';
-  import { jwtDecode } from 'jwt-decode';
-  import { BForm, BFormInput, BFormInvalidFeedback, BFormValidFeedback } from 'bootstrap-vue-next';
-  
-  export default {
-    components: {
-      BForm,
-      BFormInput,
-      BFormInvalidFeedback,
-      BFormValidFeedback,
-    },
+<script>
+import { ref, watch } from 'vue'
+import { BForm, BFormInput, BFormInvalidFeedback, BFormValidFeedback } from 'bootstrap-vue-next';
+import { getResponseAlert } from './utils/ui';
+import { useChangePassword, useUserInfoCheck } from './composables/useUserInfo';
 
-    setup() {
-      const oldPassword = ref('')
-      const newPassword = ref('')
-      const newPasswordCheck = ref('')
-      const message = ref('')
-      const statusCode = ref()
-      const router = useRouter()
-      const authStore = useAuthStore()
-      const isPasswordChangeEnabled = ref(false)
-      const isFormVisible = ref(false)
-      const showOldPassword = ref(false)
-      const showNewPassword = ref(false)
-      const showNewPasswordCheck = ref(false)
-      const { handleError } = errorWithStatusCode(statusCode, message, router)
+export default {
+  components: {
+    BForm,
+    BFormInput,
+    BFormInvalidFeedback,
+    BFormValidFeedback,
+  },
 
-      const isValidPassword = computed(() => {
-        return validatePassword(newPassword).validate()
-      })
+  setup() {
+    const { oldPassword, newPassword, newPasswordCheck, message, statusCode, changePassword } = useChangePassword();
+    const isPasswordChangeEnabled = ref(false);
+    const isFormVisible = ref(false);
+    const showOldPassword = ref(false);
+    const showNewPassword = ref(false);
+    const showNewPasswordCheck = ref(false);
+    const { passwordValidateResult, passwordEqualResult } = useUserInfoCheck('', newPassword, newPasswordCheck, '');
 
-      const isEqualPassword = computed(() => {
-        return checkPassword(newPassword, newPasswordCheck).validate()
-      })
+    watch(isPasswordChangeEnabled, () => {
+      oldPassword.value = ''
+      newPassword.value = ''
+      newPasswordCheck.value = ''
+    });
 
-       // フォームの表示/非表示を切り替える
-      const toggleFormVisibility = () => {
-        isFormVisible.value = !isFormVisible.value
-      }
-
-      // パスワード変更オプションが変更されたときに入力をクリア
-      const changePassword = async() =>{
-        // パスワード変更リクエスト送信処理、submitChangePass関数で呼び出される
-        const url = backendUrl + 'password'
-        const response = await axios.put(
-          url, 
-          {old_password: oldPassword.value, new_password: newPassword.value},
-          {headers: {Authorization: authStore.getAuthHeader}}
-        )
-        if (response.status===200){
-          statusCode.value = response.status
-          message.value = response.data.message
-          oldPassword.value = ''
-          newPassword.value = ''
-          newPasswordCheck.value = ''
-        }
-      }
-
-      const submitNewPassword = async() => {
-        // 送信ボタンクリック時に実行される
-        try {
-          await changePassword();
-        } catch (error) {
-          if (error.response?.status === 401) {
-            try {
-              // リフレッシュトークンを検証して新しいアクセストークンを取得
-              const tokenResponse = await verifyRefreshToken();
-              // 新しいアクセストークンをストアに保存
-              await authStore.setAuthData(
-              tokenResponse.data.access_token,
-              tokenResponse.data.token_type,
-              jwtDecode(tokenResponse.data.access_token).exp)
-              // 再度リクエストを送信
-              await changePassword();
-            } catch (refreshError) {
-              router.push({
-                path: "/login",
-                query: { message: "再度ログインしてください" }
-              });
-            }            
-        } else {
-          handleError(error)
-        }
-        }
-      }
-  
-      watch(isPasswordChangeEnabled, () => {
-        oldPassword.value = ''
-        newPassword.value = ''
-        newPasswordCheck.value = ''
-    })
-
-      return {
-        oldPassword,
-        newPassword,
-        newPasswordCheck,
-        message,
-        statusCode,
-        getResponseAlert,
-        submitNewPassword,
-        isValidPassword,
-        isEqualPassword,
-        isPasswordChangeEnabled,
-        isFormVisible,
-        toggleFormVisibility,
-        showOldPassword,
-        showNewPassword,
-        showNewPasswordCheck
-      }
+    return {
+      oldPassword,
+      newPassword,
+      newPasswordCheck,
+      message,
+      statusCode,
+      getResponseAlert,
+      passwordValidateResult,
+      passwordEqualResult,
+      isPasswordChangeEnabled,
+      isFormVisible,
+      showOldPassword,
+      showNewPassword,
+      showNewPasswordCheck,
+      changePassword
     }
   }
-  </script>
+}
+</script>

@@ -11,24 +11,24 @@ export const MONTH_DICT = {
     "oct": '10月',
     "nov": '11月',
     "dec": '12月'
-}
+};
 
 export function getMaxYear(){
     // 1年後までが範囲となる
     const today = new Date()
     const year = today.getFullYear() + 1
     return year
-}
+};
 
 export function getMaxMonth(){
     // 1年後の12月までが範囲となる
     return `${getMaxYear()}-12`
-}
+};
 
 export function getMaxDate(){
     // 1年後の12月31日までが範囲となる
     return `${getMaxYear()}-12-31`;
-}
+};
 
 export function changeDate(date, message){
     const increaseDay = async(step) => {
@@ -49,7 +49,7 @@ export function changeDate(date, message){
     return {
         increaseDay
     }
-}
+};
 
 export function changeYear(selectedMonth){
     const increaseYear = async(step) => {
@@ -62,7 +62,7 @@ export function changeYear(selectedMonth){
     return {
         increaseYear
     }
-}
+};
 
 export function changeMonth(selectedMonth){
     const increaseMonth = async(step) => {
@@ -74,7 +74,7 @@ export function changeMonth(selectedMonth){
     return {
         increaseMonth
     }
-}
+};
 
 export function getToday(){
     const today = new Date()
@@ -82,17 +82,17 @@ export function getToday(){
     const month = `${today.getMonth()+1}`.padStart(2, '0')
     const day = `${today.getDate()}`.padStart(2, '0')
     return `${year}-${month}-${day}`
-}
+};
 
 export function getThisMonth(){
     const today = new Date()
     const year = today.getFullYear()
     const month = `${today.getMonth()+1}`.padStart(2, '0')
     return `${year}-${month}`
-}
+};
 
 export function getThisYear(){
     const today = new Date()
     const year = today.getFullYear()
     return year
-}
+};

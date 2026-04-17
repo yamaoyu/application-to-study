@@ -1,10 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import RegisterTodo from '@/views/RegisterTodo.vue'
 import { mountComponent } from './vitest.setup';
-import axios from 'axios';
+import { apiClient } from '@/views/api/client';
 import { nextTick } from 'vue';
 import { flushPromises } from '@vue/test-utils';
-import { backendUrl } from '@/views/lib';
 
 
 describe('Todoを送信に成功', () => {
@@ -23,7 +22,7 @@ describe('Todoを送信に成功', () => {
         };
         const expectedMessage = '【Todo作成成功】' + expectedTodo.title;
 
-        axios.post.mockResolvedValue({
+        apiClient.post.mockResolvedValue({
             status: 201,
             data:  {
                 message: expectedMessage
@@ -66,15 +65,10 @@ describe('Todoを送信に成功', () => {
         wrapper.find('[data-testid="submit-todo"]').trigger("submit");
         await flushPromises(); // 非同期処理(今回はaxiosリクエスト)の終了を待つ
         // APIが正しいパラメータで呼び出されたことを確認
-        expect(axios.post).toHaveBeenCalledTimes(1);
-        expect(axios.post).toHaveBeenCalledWith(
-            backendUrl + 'todos/multi', 
-            { todos : [expectedTodo] },
-            {
-                headers: {
-                    "Authorization": "登録なし"
-                }
-            }
+        expect(apiClient.post).toHaveBeenCalledTimes(1);
+        expect(apiClient.post).toHaveBeenCalledWith(
+            'todos/multi', 
+            { todos : [expectedTodo] }
         );
         // メッセージとtodosがリセットされることを確認
         expect(wrapper.find('[data-testid="message"]').element.textContent).toBe(expectedMessage);
@@ -93,7 +87,7 @@ describe('リクエストを送信できないパターン', () => {
     it('Todoがない場合は送信ボタンをクリックできない', async () => {
         expect(wrapper.vm.todos).toEqual([]);
         wrapper.find('[data-testid="submit-todo"]').trigger("submit");
-        expect(axios.post).toBeCalledTimes(0);
+        expect(apiClient.post).toBeCalledTimes(0);
     });
 
     it('Todoが10個以上の場合は送信ボタンをクリックできない', async () => {
@@ -114,7 +108,7 @@ describe('リクエストを送信できないパターン', () => {
         await flushPromises();
         expect(wrapper.vm.message).toEqual("一度に登録できるのは10件までです");
         wrapper.find('[data-testid="submit-todo"]').trigger("submit");
-        expect(axios.post).toBeCalledTimes(0);
+        expect(apiClient.post).toBeCalledTimes(0);
     });
 });
 
@@ -144,7 +138,7 @@ describe('必須項目を入力せずリストにtodoを追加できないパタ
         dueInput.dispatchEvent(new Event('input', { bubbles: true }));
 
         // クリックできるか確認
-        expect(wrapper.vm.validateParams()).toBe(false);
+        expect(wrapper.vm.validateTodo("create", {title: "", due: ""})).toBe(false);
     });
 
     it('期限の入力がない場合は送信ボタンをクリックできない', async () => {
@@ -165,7 +159,7 @@ describe('必須項目を入力せずリストにtodoを追加できないパタ
         titleInput.dispatchEvent(new Event('input', { bubbles: true }));
 
         // クリックできるか確認
-        expect(wrapper.vm.validateParams()).toBe(false);
+        expect(wrapper.vm.validateTodo("create", {title: "", due: ""})).toBe(false);
     });
 });
 

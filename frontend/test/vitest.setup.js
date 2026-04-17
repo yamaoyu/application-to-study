@@ -18,12 +18,20 @@ vi.mock('vue-router', async () => {
 })
 
 // モックのaxiosを作成
-vi.mock("axios")
+vi.mock('@/views/api/client', () => ({
+  apiClient: {
+    post: vi.fn(),
+    get: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn()
+  }
+}))
 
-export const mountComponent = (component) => {
+export const mountComponent = (component, options = {}) => {
     return mount(component, {
         global: {
             plugins: [createPinia()],
         },
+        ...options
     })
 }

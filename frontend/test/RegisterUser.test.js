@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import RegisterUser from '@/views/RegisterUser.vue'
 import { mountComponent } from './vitest.setup';
-import axios from 'axios';
-import { backendUrl } from '@/views/lib';
+import { apiClient } from '@/views/api/client';
 
 describe('ユーザー作成', () => {
     let wrapper;
@@ -19,7 +18,7 @@ describe('ユーザー作成', () => {
         const expectedMessage = `${username}の作成に成功しました`
 
 
-        axios.post.mockResolvedValue({
+        apiClient.post.mockResolvedValue({
             status: 201,
             data: {
                 "username": username,
@@ -45,15 +44,15 @@ describe('ユーザー作成', () => {
         await wrapper.find('[data-testid="passwordCheck"]').setValue("Test1234!");
         expect(wrapper.find('[data-testid="passwordCheck"]').element.value).toBe("Test1234!");
         // パスワードと確認用パスワードが一致していることを確認
-        expect(wrapper.vm.isEqualPassword).toBe(true);
+        expect(wrapper.text()).not.toContain('パスワードが一致しません')
         // メールアドレスが正しく入力されていることを確認
         await wrapper.find('[data-testid="email"]').setValue("test@example.com");
         expect(wrapper.find('[data-testid="email"]').element.value).toBe("test@example.com");
         // リクエストが正しく行われたことを確認
         await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
-        expect(axios.post).toHaveBeenCalledTimes(1);
-        expect(axios.post).toHaveBeenCalledWith(
-            backendUrl + "users",  // 正しいURL
+        expect(apiClient.post).toHaveBeenCalledTimes(1);
+        expect(apiClient.post).toHaveBeenCalledWith(
+            "users",  // 正しいURL
             {
                 username: "testuser",    // 正しいパラメータ
                 password: "Test1234!",
@@ -119,8 +118,7 @@ describe('パスワード検証', () => {
         expect(passwordInput.element.value).toBe("test1234");
         await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
         // 大文字を含むパスワードを求めるメッセージが表示されることを確認
-        expect(wrapper.vm.isValidPassword.valid).toBe(false);
-        expect(wrapper.vm.isValidPassword.message).toBe("大文字が含まれていません")
+        expect(wrapper.text()).toContain("大文字が含まれていません");
     })
 
     it('小文字が含まれていない場合', async () => {
@@ -130,8 +128,7 @@ describe('パスワード検証', () => {
         expect(passwordInput.element.value).toBe("TEST1234");
         await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
         // 小文字を含むパスワードを求めるメッセージが表示されることを確認
-        expect(wrapper.vm.isValidPassword.valid).toBe(false);
-        expect(wrapper.vm.isValidPassword.message).toBe("小文字が含まれていません")
+        expect(wrapper.text()).toContain("小文字が含まれていません");
     })
 
     it('数字が含まれていない場合', async () => {
@@ -141,8 +138,7 @@ describe('パスワード検証', () => {
         expect(passwordInput.element.value).toBe("Testtest");
         await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
         // 数字を含むパスワードを求めるメッセージが表示されることを確認
-        expect(wrapper.vm.isValidPassword.valid).toBe(false);
-        expect(wrapper.vm.isValidPassword.message).toBe("数字が含まれていません");
+        expect(wrapper.text()).toContain("数字が含まれていません");
     })
 
     it('記号が含まれていない場合', async () => {
@@ -152,8 +148,7 @@ describe('パスワード検証', () => {
         expect(passwordInput.element.value).toBe("Test1234");
         await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
         // 記号を含むパスワードを求めるメッセージが表示されることを確認
-        expect(wrapper.vm.isValidPassword.valid).toBe(false);
-        expect(wrapper.vm.isValidPassword.message).toBe("記号が含まれていません");
+        expect(wrapper.text()).toContain("記号が含まれていません");
     })
 
     it('パスワードが8文字未満の場合', async () => {
@@ -163,8 +158,7 @@ describe('パスワード検証', () => {
         expect(passwordInput.element.value).toBe("Test123");
         await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
         // 8文字以上のパスワードを求めるメッセージが表示されることを確認
-        expect(wrapper.vm.isValidPassword.valid).toBe(false);
-        expect(wrapper.vm.isValidPassword.message).toBe("パスワードは8文字以上16文字以下にして下さい");
+        expect(wrapper.text()).toContain("パスワードは8文字以上16文字以下にして下さい");
     })
 
     it('2つのパスワードが一致しない場合', async () => {
@@ -176,7 +170,7 @@ describe('パスワード検証', () => {
         await passwordCheckInput.setValue("Test12345");
         await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
         // パスワードが一致しないことを確認
-        expect(wrapper.vm.isEqualPassword).toBe(false);
+        expect(wrapper.text()).toContain('パスワードが一致しません');
     })
 })
 

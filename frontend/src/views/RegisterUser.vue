@@ -9,48 +9,48 @@
     </div>
   </nav>
   <h2>ユーザー登録</h2>
-  <BForm @submit.prevent="createUser" class="container d-flex flex-column align-items-center">
+  <BForm @submit.prevent="submit" class="container d-flex flex-column align-items-center">
     <div class="form-group mt-3 col-8">
-      <BFormInput placeholder="ユーザー名(必須)" v-model="username" :state="isValidUsername" data-testid="username" required/>
-      <BFormInvalidFeedback :state="isValidUsername">
-        ユーザー名は3文字以上16文字以下にして下さい
+      <BFormInput placeholder="ユーザー名(必須)" v-model="username" :state="usernameValidateResult.valid" data-testid="username" required/>
+      <BFormInvalidFeedback :state="usernameValidateResult.valid">
+        {{ usernameValidateResult.message }}
       </BFormInvalidFeedback>
-      <BFormValidFeedback :state="isValidUsername"> OK </BFormValidFeedback>
+      <BFormValidFeedback :state="usernameValidateResult.valid"> OK </BFormValidFeedback>
     </div>
     <div class="form-group mt-3 col-8">
       <div class="input-group">
-        <BFormInput :type="!showPassword ? 'password':'text'" placeholder="パスワード(必須)" v-model="password" :state="isValidPassword.valid" data-testid="password" required/>
+        <BFormInput :type="!showPassword ? 'password':'text'" placeholder="パスワード(必須)" v-model="password" :state="passwordValidateResult.valid" data-testid="password" required/>
         <button class="btn btn-outline-secondary" type="button" @click="showPassword = !showPassword">
           <i :class="['bi', showPassword ? 'bi-eye-slash' : 'bi-eye']"></i>
         </button>
       </div>
       <div class="feedback-container">
-        <BFormInvalidFeedback :state="isValidPassword.valid">
-          {{ isValidPassword.message }}
+        <BFormInvalidFeedback :state="passwordValidateResult.valid">
+          {{ passwordValidateResult.message }}
         </BFormInvalidFeedback>
-        <BFormValidFeedback :state="isValidPassword.valid"> OK </BFormValidFeedback>
+        <BFormValidFeedback :state="passwordValidateResult.valid"> OK </BFormValidFeedback>
       </div>
     </div>
     <div class="form-group mt-3 col-8">
       <div class="input-group">
-        <BFormInput :type="!showPasswordCheck ? 'password':'text'" placeholder="パスワード確認(必須)" v-model="passwordCheck" :state="isEqualPassword" data-testid="passwordCheck" required/>
+        <BFormInput :type="!showPasswordCheck ? 'password':'text'" placeholder="パスワード確認(必須)" v-model="passwordCheck" :state="passwordEqualResult.valid" data-testid="passwordCheck" required/>
         <button class="btn btn-outline-secondary" type="button" @click="showPasswordCheck = !showPasswordCheck">
           <i :class="['bi', showPasswordCheck ? 'bi-eye-slash' : 'bi-eye']"></i>
         </button>
       </div>
       <div class="feedback-container">
-        <BFormInvalidFeedback :state="isEqualPassword">
-          パスワードが一致しません
+        <BFormInvalidFeedback :state="passwordEqualResult.valid">
+          {{ passwordEqualResult.message }}
         </BFormInvalidFeedback>
-        <BFormValidFeedback :state="isEqualPassword"> OK </BFormValidFeedback>
+        <BFormValidFeedback :state="passwordEqualResult.valid"> OK </BFormValidFeedback>
       </div>
     </div>
     <div class="form-group mt-3 col-8" v-if="showMailForm">
-      <BFormInput placeholder="メールアドレス(任意)" type="email" v-model="email" :state="isValidEmail" data-testid="email"/>
-      <BFormInvalidFeedback :state="isValidEmail">
-        メールアドレスの形式で入力して下さい
+      <BFormInput placeholder="メールアドレス(任意)" type="email" v-model="email" :state="emailValidateResult.valid" data-testid="email"/>
+      <BFormInvalidFeedback :state="emailValidateResult.valid">
+        {{ emailValidateResult.message }}
       </BFormInvalidFeedback>
-      <BFormValidFeedback :state="isValidEmail"> OK </BFormValidFeedback>
+      <BFormValidFeedback :state="emailValidateResult.valid"> OK </BFormValidFeedback>
     </div>
     <button type="submit" class="btn btn-outline-secondary mt-3" data-testid="register-user-button">登録</button>
   </BForm>
@@ -63,11 +63,12 @@
 </template>
   
   <script>
-  import { ref, computed } from 'vue'
-  import axios from 'axios'
-  import { getResponseAlert, validateUsername, validatePassword, checkPassword, validateEmail, backendUrl } from './lib';
+  import { ref } from 'vue'
+  import { getResponseAlert } from './utils/ui';
   import { BForm, BFormInput, BFormInvalidFeedback, BFormValidFeedback } from 'bootstrap-vue-next';
-  
+  import { useRegisterUser } from './composables/userRegisterUser';
+  import { useUserInfoCheck } from './composables/useUserInfo';
+
   export default {
     components: {
       BForm,
@@ -77,73 +78,25 @@
     },
 
     setup() {
-      const username = ref('');
-      const password = ref('');
-      const passwordCheck = ref('');
-      const email = ref('');
-      const message = ref('');
-      const statusCode = ref();
       const showPassword = ref(false);
       const showPasswordCheck = ref(false);
       const showMailForm = import.meta.env.VITE_MAIL_FORM === 'true';
-
-      const isValidUsername = computed(() => {
-        return validateUsername(username).validate()
-      });
-
-      const isValidPassword = computed(() => {
-        return validatePassword(password).validate()
-      });
-
-      const isEqualPassword = computed(() => {
-        return checkPassword(password, passwordCheck).validate()
-      });
-
-      const isValidEmail = computed(() => {
-        return validateEmail(email).validate()
-      });
-
-      const createUser = async() => {
-        // パスワード不一致の場合はリクエストを送信しない
-        if (!isEqualPassword.value) {
-          statusCode.value = null;
-          message.value = "パスワードが一致しません\nパスワードを確認してください";
-          return;
-        }
-
-        try {
-          const url = backendUrl + 'users'
-          const response = await axios.post(
-            url, 
-            {
-              username: username.value,
-              password: password.value,
-              email: email.value
-            }
-          )
-          if (response.status===201){
-            statusCode.value = response.status;
-            message.value = response.data.message;
-          }
-        } catch (error) {
-          statusCode.value = null;
-          if (error.response){
-            switch (error.response.status){
-              case 422:
-                message.value = error.response.data.detail;
-                break;
-              case 500:
-                message.value =  "ユーザー作成に失敗しました"
-                break;
-              default:
-                message.value = error.response.data.detail;}
-          } else if (error.request){
-            message.value =  "リクエストがサーバーに到達できませんでした"
-          } else {
-            message.value =  "不明なエラーが発生しました。管理者にお問い合わせください"
-          }
-        }
-      }
+      const {
+        username,
+        password,
+        passwordCheck,
+        email,
+        message,
+        statusCode,
+        submit
+      } = useRegisterUser();
+      
+      const { 
+        usernameValidateResult, 
+        passwordValidateResult, 
+        passwordEqualResult, 
+        emailValidateResult
+      } = useUserInfoCheck(username, password, passwordCheck, email);
   
       return {
         username,
@@ -152,15 +105,15 @@
         email,
         message,
         statusCode,
-        createUser,
         getResponseAlert,
-        isValidUsername,
-        isValidPassword,
-        isEqualPassword,
-        isValidEmail,
+        usernameValidateResult,
+        passwordValidateResult,
+        passwordEqualResult,
+        emailValidateResult,
         showPassword,
         showPasswordCheck,
-        showMailForm
+        showMailForm,
+        submit
       }
     }
   }

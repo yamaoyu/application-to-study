@@ -31,61 +31,16 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/store/authenticate';
-import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
-import { backendUrl, commonError, verifyRefreshToken } from './lib'
+import { onMounted } from 'vue';
+import { useGetInquiries } from './composables/useInquiry';
 
 export default{
     setup() {
-        const inquiries = ref([]);
-        const router = useRouter();
-        const authStore = useAuthStore();
-        const message = ref("");
-        const { handleError } = commonError(message, router);
         const BOOL_TO_STATUS = { "true":"確認済", "false":"未確認" };
-
-        const sendRequest = async() =>{
-            const url = backendUrl + 'inquiries';
-            const response = await axios.get(url,
-                                            {headers: {Authorization: authStore.getAuthHeader}})
-            inquiries.value = response.data;
-        };
-
-        const getInquiries = async() =>{
-            try{
-                await sendRequest();
-            } catch (error){
-                if (error.response?.status === 403) {
-                    message.value = error.response.data.detail;
-                } else if (error.response?.status === 401) {
-                    try {
-                        // リフレッシュトークンを検証して新しいアクセストークンを取得
-                        const tokenResponse = await verifyRefreshToken();
-                            // 新しいアクセストークンをストアに保存
-                            await authStore.setAuthData(
-                            tokenResponse.data.access_token,
-                            tokenResponse.data.token_type,
-                            jwtDecode(tokenResponse.data.access_token).exp
-                        );
-                        // 再度リクエストを送信
-                        await sendRequestForInquiries();
-                    } catch (refreshError) {
-                        router.push({
-                        path: "/login",
-                        query: { message: "再度ログインしてください" }
-                        });
-                    }            
-                } else {
-                    handleError(error)
-                }
-            }
-        };
+        const { inquiries, message, fetchInquries } = useGetInquiries();
 
         onMounted( async()=>{
-            await getInquiries();
+            await fetchInquries();
         });
 
         return {
@@ -93,7 +48,7 @@ export default{
             message,
             BOOL_TO_STATUS,
             message,
-            getInquiries
+            fetchInquries
         }
     }
 }

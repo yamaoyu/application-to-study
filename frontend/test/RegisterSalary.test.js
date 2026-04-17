@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import RegisterSalary from '@/views/RegisterSalary.vue';
 import { mountComponent } from './vitest.setup';
-import axios from 'axios';
-import { backendUrl } from '@/views/lib';
+import { apiClient } from '@/views/api/client';
+import { flushPromises } from '@vue/test-utils';
 
 describe('月の入力', () => {
     let wrapper;
@@ -59,24 +59,37 @@ describe('月の入力', () => {
 
 describe('月収の入力', ()=>{
     let wrapper;
+    // 取得する月の設定(前月)
+    const date = new Date();
+    let expectedYear = date.getFullYear();
+    let expectedMonth = date.getMonth();
+    if (date.getMonth() == 0){
+        expectedYear = date.getFullYear() - 1
+        expectedMonth = 12
+    };
 
     beforeEach(() => {
         vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-        wrapper = mountComponent(RegisterSalary);
         }
     );
 
     it('-10万', async() =>{
+        wrapper = mountComponent(RegisterSalary);
+        await flushPromises();
         const incomeForm = wrapper.find("[data-testid='income-form']");
         incomeForm.setValue(20);
+        await flushPromises();
         expect(incomeForm.element.value).toEqual('20');
         await wrapper.find("[data-testid='minus10']").trigger('click');
         expect(incomeForm.element.value).toEqual('10');
     });
 
     it('-5万', async() =>{
+        wrapper = mountComponent(RegisterSalary);
+        await flushPromises();
         const incomeForm = wrapper.find("[data-testid='income-form']");
         incomeForm.setValue(20);
+        await flushPromises();
         expect(incomeForm.element.value).toEqual('20');
         await wrapper.find("[data-testid='minus5']").trigger('click');
         expect(incomeForm.element.value).toEqual('15');
@@ -84,7 +97,7 @@ describe('月収の入力', ()=>{
 
     it('+5万', async() =>{
         // 初期値取得
-        axios.get.mockRejectedValue({
+        apiClient.get.mockRejectedValue({
             response: {
                 status: 404,
                 data: {
@@ -92,7 +105,8 @@ describe('月収の入力', ()=>{
                 }
             }
         });
-        await wrapper.vm.getMonthlyIncome();
+        wrapper = mountComponent(RegisterSalary);
+        await flushPromises();
         // データ入力
         const incomeForm = wrapper.find("[data-testid='income-form']");
         expect(incomeForm.element.value).toEqual('5');
@@ -102,7 +116,7 @@ describe('月収の入力', ()=>{
 
     it('+10万', async() =>{
         // 初期値取得
-        axios.get.mockRejectedValue({
+        apiClient.get.mockRejectedValue({
             response: {
                 status: 404,
                 data: {
@@ -110,7 +124,8 @@ describe('月収の入力', ()=>{
                 }
             }
         });
-        await wrapper.vm.getMonthlyIncome();
+        wrapper = mountComponent(RegisterSalary);
+        await flushPromises();
         // データ入力
         const incomeForm = wrapper.find("[data-testid='income-form']");
         expect(incomeForm.element.value).toEqual('5');
@@ -122,10 +137,17 @@ describe('月収の入力', ()=>{
 
 describe('デフォルト値の確認', () =>{
     let wrapper;
+    // 取得する月の設定(前月)
+    const date = new Date();
+    let expectedYear = date.getFullYear();
+    let expectedMonth = date.getMonth();
+    if (date.getMonth() == 0){
+      expectedYear = date.getFullYear() - 1
+      expectedMonth = 12
+    };
 
     beforeEach(() => {
         vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-        wrapper = mountComponent(RegisterSalary);
         }
     );
 
@@ -139,45 +161,21 @@ describe('デフォルト値の確認', () =>{
             total_income: 25.38,
             pay_adjustment: 0.38
         };
-        // 取得する月の設定(前月)
-        const date = new Date();
-        let expectedYear = date.getFullYear();
-        let expectedMonth = date.getMonth();
-        if (date.getMonth() == 0){
-            expectedYear = date.getFullYear() - 1
-            expectedMonth = 12
-        };
 
-        axios.get.mockResolvedValue({
+        apiClient.get.mockResolvedValue({
             status: 200,
             data: expectedData
         });
-
-        await wrapper.vm.getMonthlyIncome();
-
-        expect(axios.get).toBeCalledWith(
-            backendUrl + `incomes/${expectedYear}/${expectedMonth}`,
-            {
-                "headers": {
-                    "Authorization": "登録なし",
-                },
-            },
+        wrapper = mountComponent(RegisterSalary);
+        await flushPromises();
+        expect(apiClient.get).toBeCalledWith(
+            `incomes/${expectedYear}/${expectedMonth}`,
         );
-
-        expect(wrapper.vm.incomeRes.data).toEqual(expectedData);
+        expect(wrapper.vm.monthlyIncome).toEqual(expectedData["month_info"].salary);
     });
 
     it('前年度の年収なし', async() =>{
-        // 取得する月の設定(前月)
-        const date = new Date();
-        let expectedYear = date.getFullYear();
-        let expectedMonth = date.getMonth();
-        if (date.getMonth() == 0){
-            expectedYear = date.getFullYear() - 1
-            expectedMonth = 12
-        };
-
-        axios.get.mockRejectedValue({
+        apiClient.get.mockRejectedValue({
             response: {
                 status: 404,
                 data: {
@@ -185,49 +183,42 @@ describe('デフォルト値の確認', () =>{
                 }
             }
         });
-
-        await wrapper.vm.getMonthlyIncome();
-
-        expect(axios.get).toBeCalledWith(
-            backendUrl + `incomes/${expectedYear}/${expectedMonth}`,
-            {
-                "headers": {
-                    "Authorization": "登録なし",
-                },
-            },
+        wrapper = mountComponent(RegisterSalary);
+        await flushPromises();
+        expect(apiClient.get).toBeCalledWith(
+            `incomes/${expectedYear}/${expectedMonth}`,
         );
-
         expect(wrapper.vm.monthlyIncome).toEqual(5);
     });
 });
 
-describe('デフォルト値の確認', async() =>{
+describe('登録処理', async() =>{
     let wrapper;
 
     beforeEach(() => {
         vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-        wrapper = mountComponent(RegisterSalary);
         }
     );
 
     it('月収登録に成功', async() =>{
         const expectedMessage = "2025-1の月収:25万円"
 
-        axios.post.mockResolvedValue({
+        apiClient.post.mockResolvedValue({
             status: 201,
             data: {
                 message: expectedMessage
             }
         });
+        wrapper = mountComponent(RegisterSalary);
 
         await wrapper.find('[data-testid="submit"]').trigger('submit');
-        expect(wrapper.vm.incomeMsg).toEqual(expectedMessage);
+        expect(wrapper.vm.registerMsg).toEqual(expectedMessage);
     });
 
     it('既に登録済み', async() =>{
         const expectedMessage = "その月の月収は既に登録されています"
 
-        axios.post.mockRejectedValue({
+        apiClient.post.mockRejectedValue({
             response: {
                 status: 404,
                 data: {
@@ -235,8 +226,9 @@ describe('デフォルト値の確認', async() =>{
                 }
             }
         });
+        wrapper = mountComponent(RegisterSalary);
 
         await wrapper.find('[data-testid="submit"]').trigger('submit');
-        expect(wrapper.vm.incomeMsg).toEqual(expectedMessage);
+        expect(wrapper.vm.registerMsg).toEqual(expectedMessage);
     });
 });

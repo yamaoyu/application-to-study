@@ -9,14 +9,14 @@ import { createBootstrap } from 'bootstrap-vue-next';
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue-next/dist/bootstrap-vue-next.css";
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
-import { verifyRefreshToken } from './views/lib';
+import { verifyRefreshToken } from './views/api/auth';
 
 const pinia = createPinia();
 pinia.use(createPersistedState());
 createApp(App).use(router).use(pinia).use(createBootstrap()).mount('#app')
 
 // トークンが無効、もしくはない場合はログインページとユーザー登録ページ以外は開けないようにする
-const authStore = useAuthStore()
+const authStore = useAuthStore(pinia)
 const ALLOWED_ROUTES = ['Login', 'RegisterUser']
 
 

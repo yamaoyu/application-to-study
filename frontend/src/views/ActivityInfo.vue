@@ -6,6 +6,7 @@
             @click="activeTab = tab.value"
             :variant="activeTab === tab.value ? 'primary' : 'outline-secondary'"
             class="me-2"
+            :data-testid="`tab-${tab.value}`"
         >
             {{ tab.label }}
         </BButton>
@@ -82,7 +83,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">合計</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span :class="getAdjustmentColors(response)" class="h3 fw-bold text-center" data-testid="total-income">{{ response.data.total_income }}</span>
+                            <span :class="getSalaryColors(response.data.pay_adjustment)" class="h3 fw-bold text-center" data-testid="total-income">{{ response.data.total_income }}</span>
                             万円
                         </div>
                     </div>
@@ -102,7 +103,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">ボーナス+ペナルティ</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span :class="getAdjustmentColors(response)" class="h3 fw-bold" data-testid="pay-adjustment">{{ response.data.pay_adjustment }}</span>
+                            <span :class="getSalaryColors(response.data.pay_adjustment)" class="h3 fw-bold" data-testid="pay-adjustment">{{ response.data.pay_adjustment }}</span>
                             <span class="small">万円</span>
                         </div>
                     </div>
@@ -213,112 +214,107 @@
 
 <script>
 import { ref, watch, computed, onMounted } from 'vue';
-import { debounce } from 'lodash'
+import { debounce } from 'lodash';
 import { BButton } from 'bootstrap-vue-next';
-import { 
-        getMaxMonth, getMaxYear, changeMonth, changeYear, 
-        getAdjustmentColors, getStatusColors, STATUS_DICT, MONTH_DICT,
-        getThisMonth, getThisYear, 
-        getActivityByMonth, getActivityByYear, getActivitiesAllPeriod 
-    } from './lib';
+import { STATUS_DICT, getSalaryColors, getStatusColors } from './utils/ui';
+import { getMaxMonth, getMaxYear, changeMonth, changeYear, MONTH_DICT } from './utils/date';
+import { useFetchActivitiesByMonth, useFetchActivitiesByYear, useFetchAllActivities } from './composables/useActivitesFetch';
 
 
 export default {
-    components:{
-        BButton
-    },
+  components:{
+    BButton
+  },
 
-    setup() {
-        const activeTab = ref('monthly')
-        const selectedMonth = ref(getThisMonth())
-        const selectedYear = ref(getThisYear())
-        const response = ref()
-        const activities = ref([])
-        const message = ref("")
-        const minMonth = "2024-01";
-        const maxMonth = getMaxMonth();
-        const isAtMinMonth = computed(() => selectedMonth.value <= minMonth)
-        const isAtMaxMonth = computed(() => selectedMonth.value >= maxMonth)
-        const isAtMinYear = computed(() => selectedMonth.value <= "2024-12")
-        const isAtMaxYear = computed(() => selectedMonth.value >= maxMonth.split("-")[0])
-        const minYear = "2024";
-        const maxYear = getMaxYear();
-        const { increaseYear } = changeYear(selectedMonth);
-        const { increaseMonth } = changeMonth(selectedMonth);
-        const { getMonthlyInfo } = getActivityByMonth(selectedMonth, response, activities, message)
-        const { getYearlyInfo } = getActivityByYear(selectedYear, response, activities, message)
-        const { getAllActivities } = getActivitiesAllPeriod(response, message)
-        const tabs = [
-                    { value: 'monthly', label: '月別' },
-                    { value: 'yearly', label: '年別' },
-                    { value: 'all', label: '全期間' }
-                    ]; 
+  setup() {
+    const activeTab = ref('monthly');
+    const response = ref();
+    const activities = ref([]);
+    const message = ref("");
+    const minMonth = "2024-01";
+    const maxMonth = getMaxMonth();
+    const isAtMinMonth = computed(() => selectedMonth.value <= minMonth);
+    const isAtMaxMonth = computed(() => selectedMonth.value >= maxMonth);
+    const isAtMinYear = computed(() => selectedMonth.value <= "2024-12");
+    const isAtMaxYear = computed(() => selectedMonth.value >= maxMonth.split("-")[0]);
+    const minYear = "2024";
+    const maxYear = getMaxYear();
+    const { selectedMonth, fetchActivitiesByMonth } = useFetchActivitiesByMonth(response, activities, message);
+    const { selectedYear, fetchActivitiesByYear } = useFetchActivitiesByYear(response, activities, message);
+    const { fetchAllActivities } = useFetchAllActivities(response, message)
+    const { increaseYear } = changeYear(selectedMonth);
+    const { increaseMonth } = changeMonth(selectedMonth);
+    const tabs = [
+                { value: 'monthly', label: '月別' },
+                { value: 'yearly', label: '年別' },
+                { value: 'all', label: '全期間' }
+    ]; 
 
-        const debouncedRequest = debounce(() => {
-            if (activeTab.value==='monthly'){
-                getMonthlyInfo();
-                activities.value = []
-                response.value = ""
-            } else if(activeTab.value==='yearly'){
-                getYearlyInfo();
-                activities.value = []
-                response.value = ""
-            }
-        }, 500);
+    const debouncedRequest = debounce(() => {
+        if (activeTab.value==='monthly'){
+            fetchActivitiesByMonth();
+            activities.value = [];
+            response.value = "";
+        } else if(activeTab.value==='yearly'){
+            fetchActivitiesByYear();
+            activities.value = [];
+            response.value = "";
+        }
+    }, 500);
 
-        watch(activeTab, () => {
-            activities.value = []
-            response.value = ""
-            if (activeTab.value==="all"){
-                getAllActivities()
-            } else if (activeTab.value==='monthly'){
-                getMonthlyInfo();
-            } else if(activeTab.value==='yearly'){
-                getYearlyInfo();
-            }
-        })
+    watch(activeTab, () => {
+      activities.value = [];
+      response.value = null;
+      if (activeTab.value==="all"){
+          fetchAllActivities();
+      } else if (activeTab.value==='monthly'){
+          fetchActivitiesByMonth();
+      } else if(activeTab.value==='yearly'){
+          fetchActivitiesByYear();
+      }
+    })
 
-        watch(selectedYear, () => {
-            debouncedRequest()
-        })
+    watch(selectedYear, () => {
+        debouncedRequest()
+    })
 
-        watch(selectedMonth, () =>{
-            debouncedRequest()
-        })
+    watch(selectedMonth, () =>{
+        debouncedRequest()
+    })
 
-        onMounted(()=>{
-            getMonthlyInfo()
-        })
+    onMounted(()=>{
+        fetchActivitiesByMonth();
+    })
 
 
-    return {
-        activeTab,
-        tabs,
-        selectedMonth,
-        selectedYear,
-        response,
-        activities,
-        message,
-        minMonth,
-        maxMonth,
-        isAtMinMonth,
-        isAtMaxMonth,
-        isAtMinYear,
-        isAtMaxYear,
-        minYear,
-        maxYear,
-        getAdjustmentColors,
-        getStatusColors,
-        STATUS_DICT,
-        MONTH_DICT,
-        increaseYear,
-        increaseMonth,
-        getMonthlyInfo,
-        getYearlyInfo,
-        getAllActivities
-    }
+  return {
+      activeTab,
+      tabs,
+      selectedMonth,
+      selectedYear,
+      response,
+      activities,
+      message,
+      minMonth,
+      maxMonth,
+      isAtMinMonth,
+      isAtMaxMonth,
+      isAtMinYear,
+      isAtMaxYear,
+      minYear,
+      maxYear,
+      getSalaryColors,
+      getStatusColors,
+      STATUS_DICT,
+      MONTH_DICT,
+      increaseYear,
+      increaseMonth,
+      fetchActivitiesByMonth,
+      fetchActivitiesByYear,
+      fetchAllActivities
+  }
 
-    },
+  },
 }
 
 </script>
