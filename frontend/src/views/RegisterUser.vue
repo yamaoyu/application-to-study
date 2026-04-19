@@ -55,7 +55,7 @@
     <button type="submit" class="btn btn-outline-secondary mt-3" data-testid="register-user-button">登録</button>
   </BForm>
   <div class="container d-flex flex-column align-items-center">
-    <p v-if="message" :class="getResponseAlert(statusCode)" class="mt-3 col-8">{{ message }}</p>
+    <p v-if="message" :class="getResponseAlert(statusCode)" class="mt-3 col-8" data-testid="message">{{ message }}</p>
   </div>
   <div class="mt-3">
     <router-link to="/login">ログインはこちら</router-link>
