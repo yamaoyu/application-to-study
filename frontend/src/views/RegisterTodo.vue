@@ -12,7 +12,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(todo, index) in todos" :key="index">
+        <tr v-for="(todo, index) in todos" :key="index" data-testid="todo-row">
             <td class="text-center align-middle">{{ index + 1 }}</td>
             <td class="text-center align-middle todo-title" @click="openModal(todo, 'show')">{{ todo.title }}</td>
             <td class="text-center align-middle">{{ todo.due }}</td>
@@ -45,7 +45,7 @@
       data-testid="submit-todo">登録
     </button>
   </form>
-  <div class="container d-flex justify-content-center">
+  <div class="container d-flex justify-content-center" data-testid="message">
     <p v-if="message" class="mt-3 col-8" :class="getResponseAlert(statusCode)" data-testid="message">{{ message }}</p>
   </div>
 

@@ -3,7 +3,6 @@ import RegisterUser from '@/views/RegisterUser.vue'
 import { mountComponent } from './vitest.setup';
 import { apiClient } from '@/views/api/client';
 import { VueWrapper, DOMWrapper } from '@vue/test-utils';
-import { DomEvent } from 'node_modules/@vue/test-utils/dist/constants/dom-events';
 
 const mockedPost = vi.mocked(apiClient.post);
 

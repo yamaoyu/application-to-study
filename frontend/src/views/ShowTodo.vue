@@ -33,7 +33,7 @@
             <div class="row g-3">
                 <div class="col-md-4">
                   <label class="form-label">ステータス</label>
-                  <select class="form-select" v-model="statusFilter">
+                  <select class="form-select" v-model="statusFilter" data-testid="status-filter">
                     <option value="">すべて</option>
                     <option value="true">完了</option>
                     <option value="false">未完了</option>
@@ -41,16 +41,16 @@
                 </div>
                 <div class="col-md-4">
                   <label class="form-label">期限(以降)</label>
-                  <input type="date" class="form-control" v-model="startDue">
+                  <input type="date" class="form-control" v-model="startDue" data-testid="start-due">
                 </div>
                 <div class="col-md-4">
                   <label class="form-label">期限(以前)</label>
-                  <input type="date" class="form-control" v-model="endDue">
+                  <input type="date" class="form-control" v-model="endDue" data-testid="end-due">
                 </div>
             </div>
             <div class="mt-3">
               <label>タイトル</label>
-              <input type="text" class="form-control" v-model="title">
+              <input type="text" class="form-control" v-model="title" data-testid="title">
             </div>
             <div class="d-flex justify-content-end mt-3">
               <BButton variant="secondary" class="me-2" data-testid="reset" @click="resetFilter">リセット</BButton>
@@ -110,7 +110,7 @@
               </tr>
             </thead>
             <tbody v-for="(todo, index) in paginatedTodos" :key="index">
-              <tr>
+              <tr data-testid="todo-row">
                 <td v-if="isSelectMode">
                   <input 
                     class="form-check-input" 
@@ -164,7 +164,7 @@
         </ul>
       </nav>
 
-      <div v-if="todoMsg" class="alert alert-info">
+      <div v-if="todoMsg" class="alert alert-info" data-testid="message">
         {{ todoMsg }}
       </div>
     </div>
