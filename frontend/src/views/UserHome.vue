@@ -30,7 +30,7 @@
       </div>
     </div>
     <div class="row d-flex align-items-center justify-content-center my-3">
-      <p v-if="activityMsg" class="col-8" :class="getActivityAlert(activityStatus)">
+      <p v-if="activityMsg" class="col-8" :class="getActivityAlert(activityStatus)" data-testid="activity-msg">
           {{ activityMsg }}
       </p>
     </div>
@@ -42,7 +42,9 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">合計</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span :class="getSalaryColors(incomeRes.data.total_income-incomeRes.data.month_info.salary)" class="h3 fw-bold text-center">{{ incomeRes.data.total_income }}</span>
+            <span :class="getSalaryColors(incomeRes.data.total_income-incomeRes.data.month_info.salary)" class="h3 fw-bold text-center" data-testid="total-income">
+              {{ incomeRes.data.total_income }}
+            </span>
             万円
           </div>
         </div>
@@ -85,7 +87,7 @@
       </div>
     </div>
     <div v-else class="row d-flex align-items-center justify-content-center my-3">
-      <p v-if="incomeMsg" class="col-8 alert alert-warning p-3">
+      <p v-if="incomeMsg" class="col-8 alert alert-warning p-3" data-testid="income-msg">
           {{ incomeMsg }}
       </p>
     </div>
@@ -116,7 +118,7 @@
         </tr>
       </thead>
       <tbody v-for="(todo, index) in paginatedTodos" :key="index">
-        <tr>
+        <tr data-testid="todo-row">
           <td class="text-center align-middle">{{ index + 1 }}</td>
           <td class="text-center align-middle todo-title" @click="confirmRequest(todo, 'show')">{{ todo.title }}</td>
           <td class="text-center align-middle">{{ todo.due }}</td>
@@ -159,7 +161,7 @@
       </nav>
     </div>
     <div class="row d-flex align-items-center justify-content-center my-3">
-      <p v-if="todoMsg" class="col-8 alert alert-success p-3">
+      <p v-if="todoMsg" class="col-8 alert alert-success p-3" data-testid="todo-msg">
         {{ todoMsg }}
       </p>
     </div>
