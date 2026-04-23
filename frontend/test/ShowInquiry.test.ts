@@ -2,17 +2,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ShowInquiry from '@/views/ShowInquiry.vue';
 import { mountComponent } from './vitest.setup';
 import { apiClient } from '@/views/api/client';
-import { flushPromises } from '@vue/test-utils';
+import { flushPromises, VueWrapper } from '@vue/test-utils';
+
+const mockedGet = vi.mocked(apiClient.get);
 
 describe('データあり', () => {
-    let wrapper;
+    let wrapper: VueWrapper;
 
     beforeEach(() => {
         vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-        }
+    }
     );
 
-    it('ページを開いて問い合わせ一覧が表示される', async () =>{
+    it('ページを開いて問い合わせ一覧が表示される', async () => {
         const inquiries = [
             {
                 "category": "要望",
@@ -22,14 +24,14 @@ describe('データあり', () => {
             }
         ]
 
-        apiClient.get.mockResolvedValue({
+        mockedGet.mockResolvedValue({
             status: 200,
             data: inquiries
         });
         wrapper = mountComponent(ShowInquiry);
 
         await flushPromises();
-        expect(apiClient.get).toBeCalledWith(
+        expect(mockedGet).toBeCalledWith(
             "inquiries"
         );
 
@@ -42,16 +44,16 @@ describe('データあり', () => {
 });
 
 describe('データなし', () => {
-    let wrapper;
+    let wrapper: VueWrapper;
 
     beforeEach(() => {
         vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-        }
+    }
     );
 
-    it('データがないためメッセージが表示される', async () =>{
+    it('データがないためメッセージが表示される', async () => {
         const expectedMessage = "問い合わせはありません";
-        apiClient.get.mockRejectedValue({
+        mockedGet.mockRejectedValue({
             response: {
                 status: 404,
                 data: {
@@ -62,7 +64,7 @@ describe('データなし', () => {
         wrapper = mountComponent(ShowInquiry);
         await flushPromises();
 
-        expect(apiClient.get).toBeCalledWith(
+        expect(mockedGet).toBeCalledWith(
             "inquiries"
         );
 
@@ -71,17 +73,17 @@ describe('データなし', () => {
 });
 
 describe('権限なし', () => {
-    let wrapper;
+    let wrapper: VueWrapper;
 
     beforeEach(() => {
         vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
         wrapper = mountComponent(ShowInquiry);
-        }
+    }
     );
 
-    it('権限がないためメッセージが表示される', async () =>{
+    it('権限がないためメッセージが表示される', async () => {
         const expectedMessage = "管理者権限を持つユーザー以外はアクセスできません";
-        apiClient.get.mockRejectedValue({
+        mockedGet.mockRejectedValue({
             response: {
                 status: 403,
                 data: {
@@ -93,7 +95,7 @@ describe('権限なし', () => {
         wrapper = mountComponent(ShowInquiry);
         await flushPromises();
 
-        expect(apiClient.get).toBeCalledWith(
+        expect(mockedGet).toBeCalledWith(
             "inquiries"
         );
 
