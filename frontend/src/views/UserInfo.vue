@@ -37,10 +37,12 @@
             </button>
           </div>
           <div class="feedback-container">
-            <BFormInvalidFeedback :state="passwordValidateResult.valid">
+            <BFormInvalidFeedback :state="passwordValidateResult.valid" data-testid="pass-validate-message">
               {{ passwordValidateResult.message }}
             </BFormInvalidFeedback>
-            <BFormValidFeedback :state="passwordValidateResult.valid"> OK </BFormValidFeedback>
+            <BFormValidFeedback :state="passwordValidateResult.valid" data-testid="valid-password">
+              OK
+            </BFormValidFeedback>
           </div>
         </div>
         <div class="form-group mt-3">
@@ -53,10 +55,12 @@
             </button>
           </div>
           <div class="feedback-container">
-            <BFormInvalidFeedback :state="passwordEqualResult.valid">
+            <BFormInvalidFeedback :state="passwordEqualResult.valid" data-testid="pass-equal-invalid">
               パスワードが一致しません
             </BFormInvalidFeedback>
-            <BFormValidFeedback :state="passwordEqualResult.valid"> OK </BFormValidFeedback>
+            <BFormValidFeedback :state="passwordEqualResult.valid" data-testid="pass-equal-valid">
+              OK
+            </BFormValidFeedback>
           </div>
         </div>
         <button type="submit" class="btn btn-outline-secondary my-3" :disabled="!isPasswordChangeEnabled" data-testid="password-change-button">変更</button>
@@ -64,7 +68,7 @@
     </div>
   </div>
   <div class="container d-flex flex-column align-items-center">
-    <p v-if="message" class="col-8 mt-3" :class="getResponseAlert(statusCode)">{{ message }}</p>
+    <p v-if="message" class="col-8 mt-3" :class="getResponseAlert(statusCode)" data-testid="message">{{ message }}</p>
   </div>
 </template>
   
