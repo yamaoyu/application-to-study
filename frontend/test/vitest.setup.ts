@@ -3,6 +3,7 @@ import { createPinia } from 'pinia';
 import { mount, type MountingOptions } from '@vue/test-utils'
 import type { Component } from 'vue';
 
+export const mockRouterPush = vi.fn();
 
 // モックのルーターを作成
 vi.mock('vue-router', async () => {
@@ -13,7 +14,7 @@ vi.mock('vue-router', async () => {
             query: {}
         }),
         useRouter: () => ({
-            push: vi.fn()
+            push: mockRouterPush
         })
     }
 })
