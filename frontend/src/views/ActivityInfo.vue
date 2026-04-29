@@ -162,11 +162,11 @@
                     </tr>
                 </thead>
                     <tbody>
-                        <tr v-for="(activity, index) in activities" :key="index">
-                            <td>{{ activity.date }}</td>
-                            <td>{{ activity.target_time }}時間</td>
-                            <td>{{ activity.actual_time }}時間</td>
-                            <td :class="getStatusColors[activity.status]">{{ STATUS_DICT[activity.status] }}</td>
+                        <tr v-for="(activity, index) in activities" :key="index" data-testid="monthly-activity-row">
+                            <td :data-testid="`activity-date-${index}`">{{ activity.date }}</td>
+                            <td :data-testid="`activity-target-time-${index}`">{{ activity.target_time }}時間</td>
+                            <td :data-testid="`activity-actual-time-${index}`">{{ activity.actual_time }}時間</td>
+                            <td :class="getStatusColors[activity.status]" :data-testid="`activity-status-${index}`">{{ STATUS_DICT[activity.status] }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -186,17 +186,17 @@
                     </tr>
                 </thead>
                     <tbody>
-                        <tr v-for="(activity, index) in activities" :key="index">
+                        <tr v-for="(activity, index) in activities" :key="index" data-testid="year-activity-row">
                             <td class="fw-bold">{{ MONTH_DICT[index] }}</td>
-                            <td v-if="activity.salary" class="fw-bold">{{ activity.salary }}万円</td>
+                            <td v-if="activity.salary" class="fw-bold" :data-testid="`activity-salary-${index}`">{{ activity.salary }}万円</td>
                             <td v-else>ー</td>
-                            <td v-if="activity.bonus" class="fw-bold text-center text-success">{{ activity.bonus }}万円</td>
+                            <td v-if="activity.bonus" class="fw-bold text-center text-success" :data-testid="`activity-bonus-${index}`">{{ activity.bonus }}万円</td>
                             <td v-else>ー</td>
-                            <td v-if="activity.penalty" class="fw-bold text-center text-danger">{{ activity.penalty }}万円</td>
+                            <td v-if="activity.penalty" class="fw-bold text-center text-danger" :data-testid="`activity-penalty-${index}`">{{ activity.penalty }}万円</td>
                             <td v-else>ー</td>
-                            <td v-if="activity.success_days" class="fw-bold text-center text-success">{{ activity.success_days }}日</td>
+                            <td v-if="activity.success_days" class="fw-bold text-center text-success" :data-testid="`activity-success-days-${index}`">{{ activity.success_days }}日</td>
                             <td v-else>ー</td>
-                            <td v-if="activity.fail_days" class="fw-bold text-center text-danger">{{ activity.fail_days }}日</td>
+                            <td v-if="activity.fail_days" class="fw-bold text-center text-danger" :data-testid="`activity-fail-days-${index}`">{{ activity.fail_days }}日</td>
                             <td v-else>ー</td>
                         </tr>
                     </tbody>
