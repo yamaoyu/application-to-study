@@ -14,7 +14,7 @@
           type="button" 
           class="btn btn-primary btn-sm position-absolute"
           style="top: 1rem; right: 1rem;"
-          data-testid="toggle-all-activities"
+          data-testid="select-all-activities"
           @click="toggleAll(pendingActivities)"
         >
           {{ Object.keys(pendingActivities).length===Object.keys(selectedActivities).length ? '全て解除' : '全て選択' }}

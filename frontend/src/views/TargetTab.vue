@@ -20,7 +20,7 @@
       </thead>
       <tbody>
         <tr v-for="(activity, index) in targetActivities" :key="index">
-          <td>
+          <td data-testid="target-row">
             <div class="input-group">
               <input 
                 type="date" 
