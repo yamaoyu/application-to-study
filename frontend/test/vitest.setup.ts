@@ -2,6 +2,7 @@ import { vi } from 'vitest';
 import { createPinia } from 'pinia';
 import { mount, type MountingOptions } from '@vue/test-utils'
 import type { Component } from 'vue';
+import { createBootstrap } from 'bootstrap-vue-next';
 
 export const mockRouterPush = vi.fn();
 
@@ -34,7 +35,7 @@ export const mountComponent = (
     options: MountingOptions<any> = {}) => {
     return mount(component, {
         global: {
-            plugins: [createPinia()],
+            plugins: [createPinia(), createBootstrap()]
         },
         ...options
     })
