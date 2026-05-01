@@ -112,11 +112,11 @@ describe('タブの切り替え', () => {
 
   beforeEach(() => {
     vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-    wrapper = mountComponent(ActivityHome);
   }
   );
 
   it('操作タイプ(目標、実績、終了)の切り替え', async () => {
+    const wrapper = await mountActivityHome();
     expect(wrapper.findComponent(TargetTab).exists()).toBe(true);
     expect(wrapper.findComponent(ActualTab).exists()).toBe(false);
     expect(wrapper.findComponent(FinishTab).exists()).toBe(false);
@@ -148,7 +148,7 @@ describe('月収の登録状況に応じたリダイレクト', async () => {
   it('月収の登録がある→月収登録ページにリダイレクトしない', async () => {
     const wrapper = await mountActivityHome();
     // 月収登録ページにリダイレクトせず、活動登録ページの内容が表示される
-    expect(wrapper.find("[data-testid='target'")).toBeTruthy();
+    expect(wrapper.find("[data-testid='target']").exists()).toBe(true);
     expect(wrapper.find("[data-testid='show-target-time']").text()).toEqual(String(defaultActivityData.target_time));
   });
 

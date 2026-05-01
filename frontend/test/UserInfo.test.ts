@@ -22,7 +22,7 @@ describe('パスワード変更フォームの動作確認', () => {
         expect(checkBox.element.checked).toBe(false);
         // チェックを入れて入力できるようにする
         await checkBox.setValue(true);
-        expect(checkBox.element.value).toBe("on");
+        expect(checkBox.element.checked).toBe(true);
     });
 
     it('現在のパスワード入力フォームに値が入力できる', async () => {

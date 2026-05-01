@@ -45,7 +45,7 @@
       data-testid="submit-todo">登録
     </button>
   </form>
-  <div class="container d-flex justify-content-center" data-testid="message">
+  <div class="container d-flex justify-content-center">
     <p v-if="message" class="mt-3 col-8" :class="getResponseAlert(statusCode)" data-testid="message">{{ message }}</p>
   </div>
 
