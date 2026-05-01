@@ -185,7 +185,11 @@ export default {
           const thisMonth = getThisMonth();
           const dateParts = thisMonth.split("-");
           await fetchMonthlySalary(dateParts[0], dateParts[1]);
+<<<<<<< feature/188
           if (incomeRes.value?.status === 404){
+=======
+          if (incomeRes.value?.status!==200){
+>>>>>>> main
             router.push(
               {"path":"/register/salary",
                 "query":{incomeMsg:`${incomeMsg.value}。先に月収を登録してください`}
