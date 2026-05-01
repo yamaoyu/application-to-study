@@ -9,6 +9,7 @@
           :min="minMonth"
           :max="maxMonth"
           class="form-control col-2"
+          data-testid="selected-month"
         />
         <button 
           type="button" 
@@ -102,8 +103,8 @@
     <button type="submit" class="btn btn-outline-secondary mt-3" data-testid="submit">登録</button>
   </form>
   <div class="container d-flex justify-content-center">
-    <p v-if="registerMsg" class="mt-3 p-3 col-8" :class="getResponseAlert(registerStatusCode)">{{ registerMsg }}</p>
-    <p v-else-if="queryMsg" class="mt-3 p-3 col-8" :class="getResponseAlert(404)">{{ queryMsg }}</p>
+    <p v-if="registerMsg" class="mt-3 p-3 col-8" :class="getResponseAlert(registerStatusCode)" data-testid="register-msg">{{ registerMsg }}</p>
+    <p v-else-if="queryMsg" class="mt-3 p-3 col-8" :class="getResponseAlert(404)" data-testid="query-msg">{{ queryMsg }}</p>
   </div>
 </template>
 

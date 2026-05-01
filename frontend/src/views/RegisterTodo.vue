@@ -12,7 +12,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(todo, index) in todos" :key="index">
+        <tr v-for="(todo, index) in todos" :key="index" data-testid="todo-row">
             <td class="text-center align-middle">{{ index + 1 }}</td>
             <td class="text-center align-middle todo-title" @click="openModal(todo, 'show')">{{ todo.title }}</td>
             <td class="text-center align-middle">{{ todo.due }}</td>

@@ -83,7 +83,7 @@
             <td @click="toggle(activity)">{{ activity.date }}</td>
             <td @click="toggle(activity)">{{ activity.target_time }}時間</td>
             <td>
-              <div class="input-group">
+              <div class="input-group" data-testid="actual-row">
                 <input
                   type="number"
                   v-model="activity.actual_time"

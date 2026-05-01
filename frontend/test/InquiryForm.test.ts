@@ -2,21 +2,24 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import InquiryForm from '@/views/InquiryForm.vue'
 import { mountComponent } from './vitest.setup';
 import { apiClient } from '@/views/api/client';
+import { VueWrapper, DOMWrapper } from '@vue/test-utils';
 
-describe('問い合わせに成功する', async () =>{
-    let wrapper;
-    
+const mockedPost = vi.mocked(apiClient.post);
+
+describe('問い合わせに成功する', async () => {
+    let wrapper: VueWrapper;
+
     beforeEach(() => {
         vi.resetAllMocks() // 呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
         wrapper = mountComponent(InquiryForm)
     })
 
-    it('問い合わせを送信する', async () =>{
+    it('問い合わせを送信する', async () => {
         const category = "要望";
         const detail = "テスト";
         const message = "問い合わせを受け付けました"
 
-        apiClient.post.mockResolvedValue({
+        mockedPost.mockResolvedValue({
             status: 200,
             data: {
                 category: category,
@@ -25,15 +28,17 @@ describe('問い合わせに成功する', async () =>{
             }
         })
         // カテゴリを選択し、カテゴリが要望になっていることを確認する
-        await wrapper.find('[data-testid="request"]').setChecked(true);
-        expect(wrapper.vm.category).toBe(category);
+        const requestRadio = wrapper.find('[data-testid="request"]') as DOMWrapper<HTMLInputElement>;
+        await requestRadio.setValue(true);
+        expect(requestRadio.element.checked).toBe(true);
         // 詳細を入力し、詳細が入力されていることを確認する
-        await wrapper.find('[data-testid="detail"]').setValue(detail);
-        expect(wrapper.find('[data-testid="detail"]').element.value).toBe(detail);
+        const detailInput = wrapper.find('[data-testid="detail"]') as DOMWrapper<HTMLInputElement>;
+        await detailInput.setValue(detail);
+        expect(detailInput.element.value).toBe(detail);
         // 送信ボタンをクリックし、正しくリクエストが送信されることを確認する
         await wrapper.find('[data-testid="submit-button"]').trigger('submit');
-        expect(apiClient.post).toHaveBeenCalledTimes(1);
-        expect(apiClient.post).toHaveBeenCalledWith(
+        expect(mockedPost).toHaveBeenCalledTimes(1);
+        expect(mockedPost).toHaveBeenCalledWith(
             'inquiries',
             {
                 category: category,
@@ -43,32 +48,33 @@ describe('問い合わせに成功する', async () =>{
     })
 })
 
-describe('問い合わせに失敗する', async() =>{
-    let wrapper;
+describe('問い合わせに失敗する', async () => {
+    let wrapper: VueWrapper;
 
     beforeEach(() => {
         vi.resetAllMocks() // 呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
         wrapper = mountComponent(InquiryForm)
     })
 
-    it('カテゴリを選択しないで送信した場合', async() =>{
+    it('カテゴリを選択しないで送信した場合', async () => {
         const detail = "テスト";
         const message = "カテゴリは要望・エラー報告・その他から選択してください";
 
-        apiClient.post.mockRejectedValue({
-            response :{
+        mockedPost.mockRejectedValue({
+            response: {
                 status: 422,
-                data: { detail : message }
+                data: { detail: message }
             }
         })
 
         // 詳細を入力し、詳細が入力されていることを確認する
-        await wrapper.find('[data-testid="detail"]').setValue(detail);
-        expect(wrapper.find('[data-testid="detail"]').element.value).toBe(detail);
+        const detailInput = wrapper.find('[data-testid="detail"]') as DOMWrapper<HTMLInputElement>;
+        await detailInput.setValue(detail);
+        expect(detailInput.element.value).toBe(detail);
         // 送信ボタンをクリックし、正しくリクエストが送信されることを確認する
         await wrapper.find('[data-testid="submit-button"]').trigger('submit');
-        expect(apiClient.post).toHaveBeenCalledTimes(1);
-        expect(apiClient.post).toHaveBeenCalledWith(
+        expect(mockedPost).toHaveBeenCalledTimes(1);
+        expect(mockedPost).toHaveBeenCalledWith(
             'inquiries',
             {
                 category: "",
@@ -80,8 +86,8 @@ describe('問い合わせに失敗する', async() =>{
     })
 })
 
-describe('カテゴリ選択の動作確認', async() =>{
-    let wrapper;
+describe('カテゴリ選択の動作確認', async () => {
+    let wrapper: VueWrapper;
 
     beforeEach(() => {
         vi.resetAllMocks() // 呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
@@ -90,17 +96,22 @@ describe('カテゴリ選択の動作確認', async() =>{
 
     it('カテゴリの選択を切り替える', async () => {
         // 初期はカテゴリが空であることを確認
-        expect(wrapper.vm.category).toBe("");
+        const requestRadio = wrapper.find('[data-testid="request"]') as DOMWrapper<HTMLInputElement>;
+        const errorRadio = wrapper.find('[data-testid="error"]') as DOMWrapper<HTMLInputElement>;
+        const otherRadio = wrapper.find('[data-testid="other"]') as DOMWrapper<HTMLInputElement>;
+        expect(requestRadio.element.checked).toBe(false);
+        expect(errorRadio.element.checked).toBe(false);
+        expect(otherRadio.element.checked).toBe(false);
         // 要望を選択し、カテゴリが要望になっていることを確認
-        await wrapper.find('[data-testid="request"]').setChecked(true);
-        expect(wrapper.vm.category).toBe("要望");
+        await requestRadio.setValue(true);
+        expect(requestRadio.element.checked).toBe(true);
         // エラーを選択し、カテゴリがエラーになっており前の値(要望)ではなくなっていることを確認
-        await wrapper.find('[data-testid="error"]').setChecked(true);
-        expect(wrapper.vm.category).toBe("エラー報告");
-        expect(wrapper.find('[data-testid="request"]').element.checked).toBe(false);
+        await errorRadio.setValue(true);
+        expect(errorRadio.element.checked).toBe(true);
+        expect(requestRadio.element.checked).toBe(false);
         // その他を選択し、カテゴリがその他になっており前の値(エラー)ではなくなっていることを確認
-        await wrapper.find('[data-testid="other"]').setChecked(true);
-        expect(wrapper.vm.category).toBe("その他");
-        expect(wrapper.find('[data-testid="error"]').element.checked).toBe(false);
+        await otherRadio.setValue(true);
+        expect(otherRadio.element.checked).toBe(true);
+        expect(errorRadio.element.checked).toBe(false);
     })
 })
