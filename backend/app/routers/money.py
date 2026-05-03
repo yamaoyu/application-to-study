@@ -1,6 +1,6 @@
 from app.models.money_model import RegisterIncome
 from db.database import get_db
-from lib.security import get_current_user
+from app.dependencies.auth import get_current_user
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends
 from app.services.money_service import MoneyService

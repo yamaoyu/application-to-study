@@ -1,4 +1,4 @@
-from lib.security import get_current_user, admin_only
+from app.dependencies.auth import get_current_user, admin_only
 from db.database import get_db
 from sqlalchemy.orm import Session
 from app.models.user_model import RegisterUserInfo, ResponseCreatedUser, LoginUserInfo, ChangePasswordInfo

@@ -1,12 +1,11 @@
 from db.database import get_db
-from lib.security import (get_current_user, admin_only, login_required,
-                          oauth2_scheme)
 from fastapi import APIRouter, Depends
 from typing import Optional
 from sqlalchemy.orm import Session
 from app.models.inquiry_model import (InquiryForm, ResponseInquiry,
                                       Category, Priority, EditInquiry)
 from app.services.inquiry_service import InquiryService
+from app.dependencies.auth import get_current_user, login_required, admin_only, oauth2_scheme
 
 
 router = APIRouter()

@@ -1,19 +1,12 @@
 import os
-import uuid
 import traceback
 import re
 import bcrypt
 from typing import Union
-from functools import wraps
-from datetime import datetime, timedelta, timezone, date
-from fastapi.security import OAuth2PasswordBearer
-from fastapi import Depends, HTTPException, status, Response
-from db import db_model
-from db.database import get_db
+from datetime import datetime, timedelta, timezone
+from app.exceptions import BadRequest, NotAuthorized
 from lib.log_conf import logger
-from sqlalchemy.exc import NoResultFound
-from sqlalchemy.orm import Session
-from jose import jwt, JWTError, ExpiredSignatureError
+from jose import jwt
 
 # openssl rand -hex 32
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -23,36 +16,9 @@ PEPPER = os.getenv("PEPPER")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 REFRESH_TOKEN_EXPIRE_WEEKS = int(os.getenv("REFRESH_TOKEN_EXPIRE_WEEKS"))
 ROUNDS = int(os.getenv("BCRYPT_ROUNDS", 12))
-APP_SCHEME = os.getenv("APP_SCHEME")
-COOKIE_SAMESITE = os.getenv("COOKIE_SAMESITE")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 special_characters = r"[!@#$%&*()+\-=[\]{};:<>,./?_~|]"
 
-credentials_exception = HTTPException(
-    status_code=status.HTTP_401_UNAUTHORIZED,
-    detail="証明書を認証できませんでした",
-    headers={"WWW-Authenticate": "Bearer"}
-)
-
-
-def get_user(username: str, db: Session = Depends(get_db)):
-    user = db.query(db_model.User).filter(
-        db_model.User.username == username).one_or_none()
-    if not user:
-        raise NoResultFound(f"{username}は登録されていません")
-    return user
-
-
-def get_token(user: db_model, token_type: str, response: Response = None, db=None, device_id: str = None):
-    if token_type == "access":
-        return create_access_token({"sub": user.username,
-                                    "role": user.role})
-    elif token_type == "refresh":
-        return create_refresh_token({"sub": user.username,
-                                     "role": user.role}, response=response, db=db, device_id=device_id)
-    else:
-        logger.error(f"無効なトークンタイプ: {token_type}")
-        raise HTTPException(status_code=401, detail="無効なトークンタイプです")
+credentials_exception = NotAuthorized(detail="証明書を認証できませんでした")
 
 
 def verify_password(plain_password, hashed_password) -> bool:
@@ -82,10 +48,10 @@ def is_password_complex(password: str) -> bool:
     return True
 
 
-def create_access_token(data: dict,
+def create_access_token(payload: dict,
                         expires_delta: Union[timedelta, None] = None):
     try:
-        to_encode = data.copy()
+        to_encode = payload.copy()
         if expires_delta:
             expire = datetime.now(timezone.utc) + expires_delta
         else:
@@ -95,158 +61,18 @@ def create_access_token(data: dict,
         access_token = jwt.encode(
             to_encode, SECRET_KEY, algorithm=ALGORITHM)
         return access_token
-    except HTTPException as http_e:
-        raise http_e
     except Exception:
         logger.error(f"アクセストークンの作成中にエラーが発生しました\n{traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail="トークンの作成に失敗しました")
+        raise BadRequest(detail="トークンの作成に失敗しました")
 
 
-def create_refresh_token(data: dict,
-                         response: Response,
-                         expires_delta: Union[timedelta, None] = None,
-                         db: Session = Depends(get_db),
-                         device_id: str = None):
-    try:
-        to_encode = data.copy()
-        if expires_delta:
-            expire = datetime.now(timezone.utc) + expires_delta
-        else:
-            expire = datetime.now(timezone.utc) + \
-                timedelta(weeks=REFRESH_TOKEN_EXPIRE_WEEKS)
-        to_encode.update({"exp": expire})
-        refresh_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-        if device_id:
-            # トークンが既に存在するか確認(リフレッシュトークンはユーザーとデバイスで一意)
-            existing_token = db.query(db_model.Token).filter(
-                db_model.Token.username == data["sub"],
-                db_model.Token.device_id == device_id).one_or_none()
-            # 既存のトークンがある場合は、トークンを更新
-            if existing_token:
-                existing_token.token = refresh_token
-                existing_token.expires_at = expire
-                existing_token.device_id = device_id
-            else:
-                new_token = db_model.Token(token=refresh_token,
-                                           username=data["sub"],
-                                           device_id=device_id,
-                                           expires_at=expire)
-                db.add(new_token)
-        # デバイスIDが存在しない場合は、新規作成
-        else:
-            device_id = str(uuid.uuid4())
-            new_token = db_model.Token(token=refresh_token,
-                                       username=data["sub"],
-                                       device_id=device_id,
-                                       expires_at=expire)
-            db.add(new_token)
-        db.commit()
-        response.set_cookie(
-            key="refresh_token",
-            value=refresh_token,
-            secure=APP_SCHEME.lower() == "https",
-            samesite=COOKIE_SAMESITE,
-            httponly=True,
-            expires=expire)
-        response.set_cookie(
-            key="device_id",
-            value=device_id,
-            secure=APP_SCHEME.lower() == "https",
-            samesite=COOKIE_SAMESITE,
-            httponly=True)
-        return refresh_token
-    except HTTPException as http_e:
-        raise http_e
-    except Exception:
-        logger.error(f"リフレッシュトークンの作成中にエラーが発生しました\n{traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail="トークンの作成に失敗しました")
-
-
-def verify_refresh_token(refresh_token: str,
-                         device_id: str = None,
-                         db: Session = Depends(get_db)):
-    """ リフレッシュトークンを検証する """
-    try:
-        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=ALGORITHM)
-        username = payload.get("sub")
-        if username is None:
-            return False
-        user = get_user(username, db)
-        if not user:
-            return False
-        fetch_token = db.query(db_model.Token).filter(
-            db_model.Token.username == username, db_model.Token.device_id == device_id).one_or_none()
-        if not fetch_token:
-            return False
-        if fetch_token.expires_at < date.today():
-            return False
-        if refresh_token != fetch_token.token:
-            return False
-        return True
-    except Exception:
-        logger.error(f"リフレッシュトークンの検証中にエラーが発生しました\n{traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail="リフレッシュトークンの検証に失敗しました")
-
-
-def get_current_user(token: str = Depends(oauth2_scheme),
-                     db: Session = Depends(get_db)):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
-        username = payload.get("sub")
-        if username is None:
-            raise HTTPException(status_code=401, detail="ユーザー名を取得できませんでした")
-        user = get_user(username, db)
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="ユーザーが見つかりません")
-        return {"username": username, "role": user.role}
-    except ExpiredSignatureError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="再度ログインしてください")
-    except JWTError:
-        raise credentials_exception
-    except HTTPException as http_e:
-        raise http_e
-    except Exception:
-        logger.error(f"ユーザーの認証に失敗しました\n{traceback.format_exc()}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="ユーザーの認証に失敗しました")
-
-
-def admin_only():
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            role = kwargs["current_user"]["role"]
-            if role == "admin":
-                return func(*args, **kwargs)
-            else:
-                raise HTTPException(
-                    status_code=403, detail="管理者権限を持つユーザー以外はアクセスできません")
-        return wrapper
-    return decorator
-
-
-def login_required():
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            try:
-                token = kwargs["token"]
-                db = kwargs["db"]
-                payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
-                username = payload.get("sub")
-                if username is None:
-                    raise credentials_exception
-                user = get_user(username, db)
-                if not user:
-                    raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND, detail="ユーザーが見つかりません")
-                return func(*args, **kwargs)
-            except ExpiredSignatureError:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED, detail="再度ログインしてください")
-            except JWTError:
-                raise credentials_exception
-        return wrapper
-    return decorator
+def create_refresh_token_value(payload: dict, expires_delta: Union[timedelta, None] = None) -> tuple:
+    to_encode = payload.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + \
+            timedelta(weeks=REFRESH_TOKEN_EXPIRE_WEEKS)
+    to_encode.update({"exp": expire})
+    refresh_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return refresh_token, expire
