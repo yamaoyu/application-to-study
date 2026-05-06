@@ -5,20 +5,15 @@ from typing import Union
 from lib.security import get_password_hash, verify_password, create_access_token, create_refresh_token_value
 from lib.log_conf import logger
 from sqlalchemy.exc import IntegrityError
-from fastapi import Response
 from app.repositories.user_repository import UserRepository
 from app.repositories.token_repository import TokenRepository
 from app.exceptions import NotFound, Conflict, NotAuthorized
 from jose import jwt, JWTError, ExpiredSignatureError
 from datetime import date, timedelta
-from fastapi.security import OAuth2PasswordBearer
 
 # openssl rand -hex 32
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
-APP_SCHEME = os.getenv("APP_SCHEME")
-COOKIE_SAMESITE = os.getenv("COOKIE_SAMESITE")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
 class UserService():
@@ -49,29 +44,28 @@ class UserService():
             "role": role
         }
 
-    def login(self, username: str, plain_password: str, device_id: str, response: Response) -> dict:
+    def login(self, username: str, plain_password: str, device_id: str) -> dict:
         wrong_info_msg = "入力情報が正しくありません。\nユーザー名またはパスワードをご確認ください"
         user = self.get_user(username, message=wrong_info_msg)
         is_password = verify_password(plain_password, user.password)
         if not is_password:
             raise NotAuthorized(detail=wrong_info_msg)
-        print("device id", device_id)
         access_token = create_access_token({"sub": user.username, "role": user.role})
-        refresh_token = self.create_or_update_refresh_token(
-            {"sub": user.username, "role": user.role}, response=response, device_id=device_id)
+        token_info = self.create_or_update_refresh_token(
+            {"sub": user.username, "role": user.role}, device_id=device_id)
         logger.info(f"{username}がログイン")
         return {"access_token": access_token,
                 "token_type": "Bearer",
-                "refresh_token": refresh_token,
+                "refresh_token": token_info["refresh_token"],
+                "device_id": token_info["device_id"],
+                "expires_at": token_info["expires_at"],
                 "role": user.role}
 
-    def logout(self, username: str, device_id: str, response: Response) -> dict:
+    def logout(self, username: str, device_id: str) -> dict:
         token = self.token_repo.get_refresh_token(username, device_id)
         if token:
             self.token_repo.delete_refresh_token(username, device_id)
         logger.info(f"{username}がログアウト")
-        response.delete_cookie(key="refresh_token")
-        response.delete_cookie(key="device_id")
         return {"message": f"{username}がログアウト"}
 
     def regenerate_access_token(self, refresh_token: str, device_id: str) -> dict:
@@ -94,7 +88,6 @@ class UserService():
         return {"message": "パスワードの変更に成功しました"}
 
     def create_or_update_refresh_token(self, data: dict,
-                                       response: Response,
                                        device_id: str,
                                        expires_delta: Union[timedelta, None] = None):
         try:
@@ -109,20 +102,11 @@ class UserService():
                 expires_at=expire
             )
             self.token_repo.db.flush()
-            response.set_cookie(
-                key="refresh_token",
-                value=refresh_token,
-                secure=APP_SCHEME.lower() == "https",
-                samesite=COOKIE_SAMESITE,
-                httponly=True,
-                expires=expire)
-            response.set_cookie(
-                key="device_id",
-                value=device_id,
-                secure=APP_SCHEME.lower() == "https",
-                samesite=COOKIE_SAMESITE,
-                httponly=True)
-            return refresh_token
+            return {
+                "refresh_token": refresh_token,
+                "device_id": device_id,
+                "expires_at": expire,
+            }
         except NotAuthorized as http_e:
             raise http_e
         except Exception:

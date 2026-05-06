@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.models.inquiry_model import (InquiryForm, ResponseInquiry,
                                       Category, Priority, EditInquiry)
 from app.services.inquiry_service import InquiryService
-from app.dependencies.auth import get_current_user, login_required, admin_only, oauth2_scheme
+from app.dependencies.auth import get_current_user, admin_only
 
 
 router = APIRouter()
@@ -16,10 +16,9 @@ def get_inquiry_service(db):
 
 
 @router.post("/inquiries", status_code=201, response_model=ResponseInquiry)
-@login_required()
 def send_inquiry(param: InquiryForm,
                  db: Session = Depends(get_db),
-                 token: str = Depends(oauth2_scheme)):
+                 current_user: dict = Depends(get_current_user)):
     service = get_inquiry_service(db)
     return service.create_inquiry(param.category, param.detail)
 

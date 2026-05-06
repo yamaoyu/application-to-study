@@ -65,20 +65,24 @@ def test_login(client, create_resource_owner):
                  "password": RESOURCE_OWNER_PLAIN_PASSWORD}
     response = client.post("/login", json=user_info)
     access_token = response.json()["access_token"]
-    refresh_token = response.json()["refresh_token"]
     assert response.status_code == 200
     assert response.json()["token_type"] == "Bearer"
-    assert len(response.json()) == 4
+    assert len(response.json()) == 3
     assert response.json()["role"] == "general"
+
+    assert "refresh_token" in response.cookies
+    assert response.cookies["refresh_token"] is not None
+    assert len(response.cookies["refresh_token"]) >= 100
+
+    assert "device_id" in response.cookies
+    assert response.cookies["device_id"] is not None
     # 作成されるトークンは最低100文字
     assert len(access_token) >= 100
-    assert len(refresh_token) >= 100
     try:
-        for token in [access_token, refresh_token]:
-            decoded_token = jwt.decode(
-                token, SECRET_KEY, ALGORITHM)
-            assert "sub" in decoded_token
-            assert decoded_token["sub"] == "testuser"
+        decoded_token = jwt.decode(
+            access_token, SECRET_KEY, ALGORITHM)
+        assert "sub" in decoded_token
+        assert decoded_token["sub"] == "testuser"
     except jwt.JWTError as e:
         pytest.fail(f"Invalid JWT token {str(e)}")
 

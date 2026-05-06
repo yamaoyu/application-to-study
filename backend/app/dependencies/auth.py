@@ -4,8 +4,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from db.database import get_db
 from app.services.user_service import UserService
-from jose import jwt, JWTError, ExpiredSignatureError
-from app.exceptions import NotFound, NotAuthorized, Forbidden
+from app.exceptions import Forbidden
 from functools import wraps
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
@@ -33,29 +32,5 @@ def admin_only():
                 return func(*args, **kwargs)
             else:
                 raise Forbidden(detail="管理者権限を持つユーザー以外はアクセスできません")
-        return wrapper
-    return decorator
-
-
-def login_required():
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            try:
-                token = kwargs["token"]
-                db = kwargs["db"]
-                service = UserService(db)
-                payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
-                username = payload.get("sub")
-                if username is None:
-                    raise NotAuthorized(detail="証明書を認証できませんでした")
-                user = service.get_user(username, message="ユーザーが見つかりません")
-                if not user:
-                    raise NotFound(detail="ユーザーが見つかりません")
-                return func(*args, **kwargs)
-            except ExpiredSignatureError:
-                raise NotAuthorized(detail="再度ログインしてください")
-            except JWTError:
-                raise NotAuthorized(detail="証明書を認証できませんでした")
         return wrapper
     return decorator
