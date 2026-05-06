@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from db.database import get_db
 from sqlalchemy.orm import Session
 from app.models.todo_model import Todo, Todos, IDList
-from lib.security import get_current_user
+from app.dependencies.auth import get_current_user
 from typing import Optional
 from ..services.todo_service import TodoService
 

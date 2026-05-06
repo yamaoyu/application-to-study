@@ -23,3 +23,8 @@ class Conflict(AppError):
 class NotAuthorized(AppError):
     """認証失敗、認証されていない場合の例外"""
     pass
+
+
+class Forbidden(AppError):
+    """認可されていない場合の例外"""
+    pass

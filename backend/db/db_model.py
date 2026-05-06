@@ -1,7 +1,7 @@
 from sqlalchemy import (Column, Integer, Float, Date, Boolean, Enum,
                         CHAR, VARCHAR, ForeignKey, UniqueConstraint, PrimaryKeyConstraint)
 from sqlalchemy.orm import relationship
-from db.database import Base, engine
+from db.database import Base
 
 
 class Activity(Base):
@@ -77,6 +77,3 @@ class Inquiry(Base):
     date = Column(Date, nullable=False)
     priority = Column(Enum("高", "中", "低"), default="低")
     is_checked = Column(Boolean, default=False)
-
-
-Base.metadata.create_all(bind=engine)

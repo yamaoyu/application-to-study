@@ -1,13 +1,15 @@
-from lib.security import get_current_user, admin_only
+import os
+from app.dependencies.auth import get_current_user, admin_only
 from db.database import get_db
 from sqlalchemy.orm import Session
 from app.models.user_model import RegisterUserInfo, ResponseCreatedUser, LoginUserInfo, ChangePasswordInfo
 from fastapi import APIRouter, Depends, Response, Cookie
 from app.services.user_service import UserService
 
+APP_SCHEME = os.getenv("APP_SCHEME")
+COOKIE_SAMESITE = os.getenv("COOKIE_SAMESITE")
 
 router = APIRouter()
-response = Response()
 
 
 def get_user_service(db: Session = Depends(get_db)) -> UserService:
@@ -30,20 +32,40 @@ def create_admin_user(user: RegisterUserInfo,
 
 @router.post("/login", status_code=200)
 def login(user_info: LoginUserInfo,
+          response: Response,
           db: Session = Depends(get_db),
-          device_id: str = Cookie(default=None),
-          response: Response = response):
+          device_id: str = Cookie(default=None)):
     service = get_user_service(db)
-    return service.login(user_info.username, user_info.password, device_id, response)
+    token_info = service.login(user_info.username, user_info.password, device_id)
+    response.set_cookie(
+        key="refresh_token",
+        value=token_info["refresh_token"],
+        secure=APP_SCHEME.lower() == "https",
+        samesite=COOKIE_SAMESITE,
+        httponly=True,
+        expires=token_info["expires_at"])
+    response.set_cookie(
+        key="device_id",
+        value=token_info["device_id"],
+        secure=APP_SCHEME.lower() == "https",
+        samesite=COOKIE_SAMESITE,
+        httponly=True)
+    return {
+        "access_token": token_info["access_token"],
+        "token_type": token_info["token_type"],
+        "role": token_info["role"]
+    }
 
 
 @router.post("/logout", status_code=200)
 def logout(device_id: str = Cookie(default=None),
+           response: Response = None,
            current_user: dict = Depends(get_current_user),
-           db: Session = Depends(get_db),
-           response: Response = response):
+           db: Session = Depends(get_db)):
     service = get_user_service(db)
-    return service.logout(current_user["username"], device_id, response)
+    response.delete_cookie(key="refresh_token")
+    response.delete_cookie(key="device_id")
+    return service.logout(current_user["username"], device_id)
 
 
 @router.post("/token", status_code=200)

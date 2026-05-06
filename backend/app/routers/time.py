@@ -6,7 +6,7 @@ from app.models.time_model import (
 )
 from app.models.common_model import CheckDate, CheckYearMonth, CheckYear
 from db.database import get_db
-from lib.security import get_current_user
+from app.dependencies.auth import get_current_user
 from sqlalchemy.orm import Session
 from app.services.time_service import TimeService
 

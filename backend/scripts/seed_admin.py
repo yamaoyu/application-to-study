@@ -22,6 +22,8 @@ try:
         db.add(admin_data)
         db.commit()
         db.refresh(admin_data)
-
+except Exception as e:
+    print(f"Error occurred: {e}")
+    db.rollback()
 finally:
     db.close()
