@@ -1,27 +1,29 @@
 from app.models.common_model import CheckDate
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from lib.log_conf import logger
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from pydantic import ValidationError
 from app.repositories.time_repository import TimeRepository
 from app.repositories.money_repository import MoneyRepository
-from app.exceptions import NotFound, BadRequest, Conflict
+from app.exceptions import NotFound, BadRequest
 from app.models.time_model import TargetTimeIn, ActualTimeIn
 from collections import defaultdict
 
 
-def fetch_one_activity(date: str, username: str, repo: TimeRepository, error_msg: str = "活動記録は未登録です"):
-    activity = repo.get_activity_by_date_and_username(date, username)
+def fetch_one_activity(target_date: date, username: str, repo: TimeRepository, error_msg: str = "活動記録は未登録です"):
+    activity = repo.get_activity_by_date_and_username(target_date, username)
     if not activity:
-        raise NotFound(detail=f"{date}の{error_msg}")
+        # 0埋めしない日付を作成
+        raise NotFound(
+            detail=f"{target_date.year}-{target_date.month}-{target_date.day}の{error_msg}")
     return activity
 
 
-def fetch_one_income(year_month: str, username: str, money_repo: MoneyRepository, error_msg: str = "月収は未登録です"):
-    income = money_repo.get_monthly_salary(year_month, username)
+def fetch_one_income(income_month: date, username: str, money_repo: MoneyRepository, error_msg: str = "月収は未登録です"):
+    income = money_repo.get_monthly_salary(income_month, username)
     if not income:
-        raise NotFound(detail=f"{year_month}の{error_msg}")
+        raise NotFound(detail=f"{income_month.year}-{income_month.month}の{error_msg}")
     return income
 
 
@@ -42,7 +44,7 @@ def get_month_info(activities: list, incomes: list):
                   7: "jul", 8: "aug", 9: "sep", 10: "oct", 11: "nov", 12: "dec"}
     monthly_info = {}
 
-    income_by_month = {int(income.year_month.split("-")[1]): income for income in incomes}
+    income_by_month = {income.income_month.month: income for income in incomes}
 
     activities_by_month = defaultdict(list)
     for act in activities:
@@ -80,10 +82,12 @@ class TimeService():
         self.money_repo = MoneyRepository(db)
 
     def get_day_activity(self, year: int, month: int, day: int, username: str) -> dict:
-        date = f"{year}-{month}-{day}"
+        """ 特定日の活動実績を確認する """
         username = username
-        activity = fetch_one_activity(date, username, self.time_repo)
-        income = self.money_repo.get_monthly_salary(f"{year}-{month}", username)
+        target_date = date(year, month, day)
+        activity = fetch_one_activity(target_date, username, self.time_repo)
+        income_month = date(year, month, 1)
+        income = self.money_repo.get_monthly_salary(income_month, username)
         if activity.status != "pending":
             bonus = activity.bonus
             penalty = activity.penalty
@@ -94,8 +98,8 @@ class TimeService():
             bonus = 0
             diff = round((activity.target_time - activity.actual_time), 1)
             penalty = round(((income.salary / 200) * diff), 2)
-        logger.info(f"{username}が{date}の活動実績を取得")
-        return {"date": date,
+        logger.info(f"{username}が{target_date.year}-{target_date.month}-{target_date.day}の活動実績を取得")
+        return {"date": f"{target_date.year}-{target_date.month}-{target_date.day}",
                 "target_time": activity.target_time,
                 "actual_time": activity.actual_time,
                 "status": activity.status,
@@ -103,15 +107,27 @@ class TimeService():
                 "penalty": penalty}
 
     def get_month_activities(self, year: int, month: int, username: str) -> dict:
-        year_month = f"{year}-{month}"
         activities = fetch_monthly_activities(year, month, username, self.time_repo)
-        income = fetch_one_income(year_month, username, self.money_repo)
+        income_month = date(year, month, 1)
+        income = fetch_one_income(income_month, username, self.money_repo)
         success_days = [act for act in activities if act.status == "success"]
         total_bonus = round(income.total_bonus, 2)
         total_penalty = round(income.total_penalty, 2)
         total_monthly_income = round((income.salary + total_bonus - total_penalty), 2)
         pay_adjustment = round((total_bonus - total_penalty), 2)
-        logger.info(f"{username}が{year_month}の活動実績を取得")
+        logger.info(f"{username}が{income_month.year}-{income_month.month}の活動実績を取得")
+        activity_list = []
+        # 日付を0埋めしない形式で作成
+        for act in activities:
+            activity_list.append({
+                "activity_id": act.activity_id,
+                "date": f"{act.date.year}-{act.date.month}-{act.date.day}",
+                "target_time": act.target_time,
+                "actual_time": act.actual_time,
+                "status": act.status,
+                "bonus": act.bonus,
+                "penalty": act.penalty
+            })
         return {
             "total_income": total_monthly_income,
             "salary": income.salary,
@@ -120,12 +136,12 @@ class TimeService():
             "penalty": total_penalty,
             "success_days": len(success_days),
             "fail_days": len(activities) - len(success_days),
-            "activity_list": activities
+            "activity_list": activity_list
         }
 
     def get_year_activities(self, year: int, username: str) -> dict:
-        start_date = datetime(year, 1, 1).date()
-        end_date = datetime(year, 12, 31).date()
+        start_date = date(year, 1, 1)
+        end_date = date(year, 12, 31)
         activities = self.time_repo.get_yearly_activities(start_date, end_date, username)
         if not activities:
             raise NotFound(detail=f"{year}年の活動は登録されていません")
@@ -184,75 +200,39 @@ class TimeService():
             raise NotFound(detail=f"ステータスが「{status_dic[status]}」の活動は登録されていません")
         return {"activities": activities}
 
-    def register_target_time(self, target_time: float, year: int, month: int, day: int, username: str) -> None:
-        date = f"{year}-{month}-{day}"
-        # 目標時間を登録する前に、その月の月収が存在するか確認
-        fetch_one_income(f"{year}-{month}", username, self.money_repo)
-        try:
-            self.time_repo.insert_target_time(date, target_time, username)
-            self.time_repo.flush()
-        except IntegrityError:
-            raise Conflict(detail=f"{date}の目標時間は既に登録済みです")
-        message = f"{date}の目標時間を{target_time}時間に設定しました"
-        logger.info(f"{username}が{date}の目標時間を登録")
-        return {
-            "date": date,
-            "target_time": target_time,
-            "actual_time": 0,
-            "status": "pending",
-            "message": message
-        }
-
     def register_target_time_bulk(self, activities: list[dict], username: str):
         error_count = 0
         message = ""
         for activity in activities:
             username = username
             target_time = activity["target_time"]
-            date = activity["date"]
+            d = activity["date"]
             try:
                 # 目標時間の形式をチェック
                 TargetTimeIn(target_time=target_time)
                 # 日付の形式をチェック
-                year, month, day = map(int, date.split("-"))
+                year, month, day = map(int, d.split("-"))
                 CheckDate(year=year, month=month, day=day)
             except ValidationError as validate_e:
                 error_count += 1
-                message += f"{date}の活動終了に失敗:{str(validate_e.errors()[0]['ctx']['error'])}\n"
+                message += f"{d}の活動終了に失敗:{str(validate_e.errors()[0]['ctx']['error'])}\n"
                 continue
             # 目標時間を登録する前に、その日の活動実績が存在するか確認
-            year_month = f"{year}-{month}"
-            fetch_one_income(year_month, username, self.money_repo, "月収は未登録です\n先に月収を登録してください")
+            income_month = date(year, month, 1)
+            fetch_one_income(income_month, username, self.money_repo, "月収は未登録です\n先に月収を登録してください")
 
             try:
                 with self.time_repo.begin_nested():
-                    self.time_repo.insert_target_time(date, target_time, username)
+                    self.time_repo.insert_target_time(d, target_time, username)
                     self.time_repo.flush()
                 logger.info(f"{username}が複数日の目標時間を登録")
-                message += f"{date}の目標時間を{target_time}時間に登録しました\n"
+                message += f"{d}の目標時間を{target_time}時間に登録しました\n"
             except IntegrityError:
                 error_count += 1
-                message += f"{date}の目標時間登録に失敗: 目標時間は既に登録済みです\n"
+                message += f"{d}の目標時間登録に失敗: 目標時間は既に登録済みです\n"
         if error_count > 0:
             raise BadRequest(detail=message[:-1])
         return {"message": message[:-1]}
-
-    def register_actual_time(self, actual_time: float, year: int, month: int, day: int, username: str) -> None:
-        date = f"{year}-{month}-{day}"
-        activity = fetch_one_activity(
-            date, username, self.time_repo, error_msg="目標時間を先に登録してください")
-        if activity.bonus == 0 and activity.penalty == 0:
-            self.time_repo.update_actual_time(activity, actual_time)
-            self.time_repo.flush()
-            message = f"{date}の活動時間を{actual_time}時間に設定しました"
-            logger.info(f"{username}が{date}の活動時間を登録")
-            return {"date": date,
-                    "target_time": activity.target_time,
-                    "actual_time": actual_time,
-                    "status": "pending",
-                    "message": message}
-        else:
-            raise Conflict(detail=f"{date}の活動実績は既に確定済みです。変更できません")
 
     def register_actual_time_bulk(self, params: list[dict], username: str):
         error_count = 0
@@ -260,69 +240,33 @@ class TimeService():
         for param in params:
             username = username
             actual_time = param["actual_time"]
-            date = param["date"]
             # 目標時間の形式をチェック
             ActualTimeIn(actual_time=actual_time)
             # 日付の形式をチェック
-            year, month, day = map(int, date.split("-"))
+            year, month, day = map(int, param["date"].split("-"))
             try:
                 CheckDate(year=year, month=month, day=day)
             except ValidationError as validate_e:
                 error_count += 1
-                message += f"{date}の活動時間登録に失敗:{str(validate_e.errors()[0]['ctx']['error'])}\n"
+                message += f"{param['date']}の活動時間登録に失敗:{str(validate_e.errors()[0]['ctx']['error'])}\n"
                 continue
             # 目標時間を登録する前に、その日の活動実績が存在するか確認
-            year_month = f"{year}-{month}"
-            fetch_one_income(year_month, username, self.money_repo)
-            activity = fetch_one_activity(date, username, self.time_repo)
+            income_month = date(year, month, 1)
+            fetch_one_income(income_month, username, self.money_repo)
+            target_date = date(year, month, day)
+            activity = fetch_one_activity(target_date, username, self.time_repo)
 
             if activity.bonus != 0 or activity.penalty != 0:
                 error_count += 1
-                message += f"{date}の活動時間登録に失敗: 既に確定されています\n"
+                message += f"{target_date.year}-{target_date.month}-{target_date.day}の活動時間登録に失敗: 既に確定されています\n"
             else:
                 self.time_repo.update_actual_time(activity, actual_time)
                 self.time_repo.flush()
-                message += f"{date}の活動時間を{actual_time}時間に登録しました\n"
+                message += f"{target_date.year}-{target_date.month}-{target_date.day}の活動時間を{actual_time}時間に登録しました\n"
                 logger.info(f"{username}が複数日の活動時間を登録")
         if error_count > 0:
             raise BadRequest(detail=message[:-1])
         return {"message": message[:-1]}
-
-    def finish_activity(self, year: int, month: int, day: int, username: str) -> None:
-        date = f"{year}-{month}-{day}"
-        activity = fetch_one_activity(date, username, self.time_repo)
-        if activity.status != "pending":
-            raise Conflict(detail=f"{date}の実績は登録済みです")
-        # 達成している場合はincomesテーブルのボーナスを、達成していない場合はpenaltyを加算する。
-        target_time = activity.target_time
-        actual_time = activity.actual_time
-        income = fetch_one_income(f"{year}-{month}", username, self.money_repo)
-        monthly_activities = fetch_monthly_activities(year, month, username, self.time_repo)
-        if actual_time >= target_time:
-            status = "success"
-            bonus = round(((income.salary / 200) * actual_time), 2)
-            penalty = 0
-            total_bonus = sum([act.bonus for act in monthly_activities]) + bonus
-            total_penalty = income.total_penalty
-            message = f"目標達成！{bonus}万円({int(bonus * 10000)}円)ボーナス追加！"
-        else:
-            status = "failure"
-            bonus = 0
-            diff = round((target_time - actual_time), 1)
-            penalty = round(((income.salary / 200) * diff), 2)
-            total_bonus = income.total_bonus
-            total_penalty = sum([act.penalty for act in monthly_activities]) + penalty
-            message = f"{diff}時間足りませんでした。{penalty}万円({int(penalty * 10000)}円)ペナルティ追加"
-        self.time_repo.update_activity_status_and_bonus(activity, status, bonus, penalty)
-        self.money_repo.update_bonus_and_penalty(income, total_bonus, total_penalty)
-        self.time_repo.flush()
-        logger.info(f"{username}が{date}の活動を終了")
-        return {
-            "date": date,
-            "target_time": target_time,
-            "actual_time": actual_time,
-            "status": status,
-            "message": message}
 
     def finish_activities(self, dates: list, username: str) -> dict:
         error_count = 0
@@ -333,24 +277,25 @@ class TimeService():
         penalty_sum = 0
         if len(dates) == 0:
             raise BadRequest(detail="日付を指定してください")
-        for date in dates:
-            year, month, day = map(int, date.split("-"))
+        for d in dates:
+            year, month, day = map(int, d.split("-"))
             try:
                 CheckDate(year=year, month=month, day=day)
             except ValidationError as validate_e:
                 error_count += 1
-                message += f"{date}の活動終了に失敗:{str(validate_e.errors()[0]['ctx']['error'])}\n"
+                message += f"{d}の活動終了に失敗:{str(validate_e.errors()[0]['ctx']['error'])}\n"
                 continue
-            date = f"{year}-{month}-{day}"
+            d = date(year, month, day)
             username = username
-            activity = fetch_one_activity(date, username, self.time_repo)
+            activity = fetch_one_activity(d, username, self.time_repo)
             if activity.status != "pending":
                 error_count += 1
-                message += f"{date}の活動終了に失敗:既に確定済みです\n"
+                message += f"{d}の活動終了に失敗:既に確定済みです\n"
                 continue
             target_time = activity.target_time
             actual_time = activity.actual_time
-            income = fetch_one_income(f"{year}-{month}", username, self.money_repo)
+            income_month = date(year, month, 1)
+            income = fetch_one_income(income_month, username, self.money_repo)
             monthly_activities = fetch_monthly_activities(year, month, username, self.time_repo)
             # 達成している場合はincomesテーブルのボーナスを、達成していない場合はpenaltyを加算する。
             if actual_time >= target_time:
@@ -360,7 +305,7 @@ class TimeService():
                 penalty = 0
                 total_bonus = sum([act.bonus for act in monthly_activities]) + bonus
                 total_penalty = income.total_penalty
-                message += f"{date}の活動を終了:ボーナス{bonus}万円({int(bonus * 10000)}円)\n"
+                message += f"{d.year}-{d.month}-{d.day}の活動を終了:ボーナス{bonus}万円({int(bonus * 10000)}円)\n"
             else:
                 status = "failure"
                 bonus = 0
@@ -369,11 +314,11 @@ class TimeService():
                 penalty_sum = round((penalty_sum + penalty), 2)
                 total_bonus = income.total_bonus
                 total_penalty = sum([act.penalty for act in monthly_activities]) + penalty
-                message += f"{date}の活動を終了:ペナルティ{penalty}万円({int(penalty * 10000)}円)\n"
+                message += f"{d.year}-{d.month}-{d.day}の活動を終了:ペナルティ{penalty}万円({int(penalty * 10000)}円)\n"
             self.time_repo.update_activity_status_and_bonus(activity, status, bonus, penalty)
             self.money_repo.update_bonus_and_penalty(income, total_bonus, total_penalty)
             self.time_repo.flush()
-            logger.info(f"{username}が{date}の活動を終了")
+            logger.info(f"{username}が{d.year}-{d.month}-{d.day}の活動を終了")
         if error_count > 0:
             raise BadRequest(detail=message[:-1])
         pay_adjustment = round((bonus_sum - penalty_sum), 2)

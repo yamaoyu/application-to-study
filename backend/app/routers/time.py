@@ -23,7 +23,11 @@ def get_day_activity(params: CheckDate = Depends(),
                      current_user: dict = Depends(get_current_user)):
     """ 特定日の活動実績を確認する """
     service = get_time_service(db)
-    return service.get_day_activity(params.year, params.month, params.day, current_user["username"])
+    # パスパラメータで受け取る年、月、日は文字列のため、intに変換する
+    year = int(params.year)
+    month = int(params.month)
+    day = int(params.day)
+    return service.get_day_activity(year, month, day, current_user["username"])
 
 
 @router.post("/activities/{year}/{month}/{day}/target",
@@ -35,8 +39,12 @@ def register_target_time(target: TargetTimeIn,
                          current_user: dict = Depends(get_current_user)):
     """ 目標活動時間を登録する """
     target_time = target.target_time
+    # パスパラメータで受け取る年、月、日は文字列のため、intに変換する
+    year = int(date.year)
+    month = int(date.month)
+    day = int(date.day)
     service = get_time_service(db)
-    return service.register_target_time(target_time, date.year, date.month, date.day, current_user["username"])
+    return service.register_target_time(target_time, year, month, day, current_user["username"])
 
 
 @router.post("/activities/multi/target", status_code=201)
@@ -69,7 +77,11 @@ def update_actual_time(actual: ActualTimeIn,
                        current_user: dict = Depends(get_current_user)):
     """ 目標時間が登録済みの場合、活動時間を入力 """
     service = get_time_service(db)
-    return service.register_actual_time(actual.actual_time, date.year, date.month, date.day, current_user["username"])
+    # パスパラメータで受け取る年、月、日は文字列のため、intに変換する
+    year = int(date.year)
+    month = int(date.month)
+    day = int(date.day)
+    return service.register_actual_time(actual.actual_time, year, month, day, current_user["username"])
 
 
 @router.put("/activities/{year}/{month}/{day}/finish",
@@ -80,7 +92,11 @@ def finish_activity(params: CheckDate = Depends(),
                     current_user: dict = Depends(get_current_user)):
     """ 特定日の作業時間を確定し、目標を達成しているのかを確認する """
     service = get_time_service(db)
-    return service.finish_activity(params.year, params.month, params.day, current_user["username"])
+    # パスパラメータで受け取る年、月、日は文字列のため、intに変換する
+    year = int(params.year)
+    month = int(params.month)
+    day = int(params.day)
+    return service.finish_activity(year, month, day, current_user["username"])
 
 
 @router.put("/activities/multi/finish", status_code=200)
