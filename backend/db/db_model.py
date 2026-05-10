@@ -22,12 +22,12 @@ class Activity(Base):
 class Income(Base):
     __tablename__ = "incomes"
     income_id = Column(Integer, primary_key=True, autoincrement=True)
-    year_month = Column(CHAR(7), nullable=False)
+    income_month = Column(Date, nullable=False)
     salary = Column(Float, nullable=False)
     total_bonus = Column(Float, server_default="0")
     total_penalty = Column(Float, server_default="0")
     username = Column(VARCHAR(16), ForeignKey("users.username"))
-    __table_args__ = (UniqueConstraint(year_month, username),)
+    __table_args__ = (UniqueConstraint(income_month, username),)
 
     user = relationship('User', back_populates='incomes')
 

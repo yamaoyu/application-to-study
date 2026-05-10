@@ -17,9 +17,7 @@ def setup_salary_for_test(client, get_resource_owner_headers):
 
 
 def test_register_income(client, get_resource_owner_headers):
-    data = {"salary": test_salary,
-            "year": test_year,
-            "month": test_month}
+    data = {"salary": test_salary}
     response = client.post(f"/incomes/{test_year}/{test_month}",
                            json=data, headers=get_resource_owner_headers)
     assert response.status_code == 201
@@ -101,7 +99,6 @@ def test_get_income(client, get_resource_owner_headers):
     assert response.json() == {
         "month_info": {
             "salary": test_salary,
-            "year_month": f"{test_year}-{test_month}",
             "total_penalty": 0.0,
             "income_id": 1,
             "username": RESOURCE_OWNER_USERNAME,

@@ -1,4 +1,5 @@
 from db import db_model
+from datetime import date
 from sqlalchemy.orm import Session
 
 
@@ -15,18 +16,19 @@ class TimeRepository():
     def begin_nested(self) -> None:
         return self.db.begin_nested()
 
-    def get_activity_by_date_and_username(self, date: str, username: str) -> db_model.Activity:
+    def get_activity_by_date_and_username(self, day: date, username: str) -> db_model.Activity:
+        print(day)
         return self.db.query(db_model.Activity).filter(
-            db_model.Activity.date == date,
+            db_model.Activity.date == day,
             db_model.Activity.username == username).one_or_none()
 
-    def get_monthly_activities(self, start_date, end_date, username: str) -> list[db_model.Activity]:
+    def get_monthly_activities(self, start_date: date, end_date: date, username: str) -> list[db_model.Activity]:
         return self.db.query(db_model.Activity).filter(
             db_model.Activity.date.between(start_date, end_date),
             db_model.Activity.username == username).order_by(
             db_model.Activity.date).all()
 
-    def get_yearly_activities(self, start_date, end_date, username: str) -> list[db_model.Activity]:
+    def get_yearly_activities(self, start_date: date, end_date: date, username: str) -> list[db_model.Activity]:
         return self.db.query(db_model.Activity).filter(
             db_model.Activity.date.between(start_date, end_date),
             db_model.Activity.username == username).order_by(

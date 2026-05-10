@@ -13,52 +13,48 @@ test_month = "5"
 
 
 def setup_target_time_for_test(client, get_resource_owner_headers):
-    data = {"target_time": 5.0}
-    client.post(f"/activities{test_date_path}/target",
+    data = {
+        "activities": [
+            {"date": test_date, "target_time": 5.0}
+        ]
+    }
+    client.post("/activities/multi/target",
                 json=data,
                 headers=get_resource_owner_headers)
 
 
 def setup_actual_time_for_test(client, get_resource_owner_headers):
-    data = {"actual_time": 5.0}
-    client.put(f"/activities{test_date_path}/actual",
+    data = {
+        "activities": [
+            {"date": test_date, "actual_time": 5.0}
+        ]
+    }
+    client.put("/activities/multi/actual",
                json=data,
                headers=get_resource_owner_headers)
 
 
 def setup_finish_activity_for_test(client, get_resource_owner_headers):
-    client.put(f"/activities{test_date_path}/finish",
+    data = {
+        "dates": [test_date]
+    }
+    client.put("/activities/multi/finish",
+               json=data,
                headers=get_resource_owner_headers)
 
 
 def setup_monthly_income_for_test(client, get_resource_owner_headers):
-    data = {"salary": test_salary,
-            "year": test_year,
-            "month": test_month}
+    data = {"salary": test_salary}
     client.post(f"/incomes/{test_year}/{test_month}",
                 json=data,
                 headers=get_resource_owner_headers)
-
-
-def test_register_target(client, get_resource_owner_headers):
-    setup_monthly_income_for_test(client, get_resource_owner_headers)
-    data = {"target_time": 5.0}
-    response = client.post(f"/activities{test_date_path}/target",
-                           json=data,
-                           headers=get_resource_owner_headers)
-    assert response.status_code == 201
-    assert response.json() == {"date": test_date,
-                               "target_time": 5.0,
-                               "actual_time": 0,
-                               "status": "pending",
-                               "message": f"{test_date}の目標時間を5.0時間に設定しました"}
 
 
 def test_register_multi_target_without_monthly_income(client, get_resource_owner_headers):
     """ 月収が登録されていない状態で目標時間を登録しようとした場合 """
     data = {
         "activities": [
-            {"date": "2024-5-5", "target_time": 5.0}
+            {"date": test_date, "target_time": 5.0}
         ]
     }
     response = client.post("/activities/multi/target",
@@ -66,20 +62,25 @@ def test_register_multi_target_without_monthly_income(client, get_resource_owner
                            headers=get_resource_owner_headers)
     assert response.status_code == 404
     assert response.json() == {
-        "detail": "2024-5の月収は未登録です\n先に月収を登録してください"
+        "detail": f"{test_year}-{test_month}の月収は未登録です\n先に月収を登録してください"
     }
 
 
-def test_register_target_with_expired_token(client):
+def test_register_target_with_expired_token(client, get_resource_owner_headers):
     """ 期限の切れたトークンで目標時間を登録しようとした場合 """
     def mock_create_access_token(data, expires_delta=timedelta(minutes=-30)):
         return create_access_token(data, expires_delta)
 
     with patch("lib.security.create_access_token", mock_create_access_token):
         access_token = mock_create_access_token(data={"sub": RESOURCE_OWNER_USERNAME})
-        data = {"target_time": 5}
         headers = {"Authorization": f"Bearer {access_token}"}
-        response = client.post(f"/activities{test_date_path}/target",
+        setup_monthly_income_for_test(client, get_resource_owner_headers)
+        data = {
+            "activities": [
+                {"date": test_date, "target_time": 5.0}
+            ]
+        }
+        response = client.post("/activities/multi/target",
                                json=data,
                                headers=headers)
         assert response.status_code == 401
@@ -90,20 +91,29 @@ def test_register_target_twice(client, get_resource_owner_headers):
     """ 既に目標時間が登録されている日の目標時間を登録 """
     setup_monthly_income_for_test(client, get_resource_owner_headers)
     setup_target_time_for_test(client, get_resource_owner_headers)
-    data = {"target_time": 5.0}
-    response = client.post(f"/activities{test_date_path}/target",
+    data = {
+        "activities": [
+            {"date": test_date, "target_time": 5.0}
+        ]
+    }
+    response = client.post("/activities/multi/target",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 409
+    assert response.status_code == 400
     assert response.json() == {
-        "detail": f"{test_date}の目標時間は既に登録済みです"
+        "detail": f"{test_date}の目標時間登録に失敗: 目標時間は既に登録済みです"
     }
 
 
 def test_register_target_out_of_range(client, get_resource_owner_headers):
     """ 入力上限の12時間を超えた目標時間を登録 """
-    data = {"target_time": 12.5}
-    response = client.post(f"/activities{test_date_path}/target",
+    setup_monthly_income_for_test(client, get_resource_owner_headers)
+    data = {
+        "activities": [
+            {"date": test_date, "target_time": 15.0}
+        ]
+    }
+    response = client.post("/activities/multi/target",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -112,8 +122,13 @@ def test_register_target_out_of_range(client, get_resource_owner_headers):
 
 def test_register_target_with_incorrect_hour(client, get_resource_owner_headers):
     """ 0.5単位でない時間を入力した場合 """
-    data = {"target_time": 2.3}
-    response = client.post(f"/activities{test_date_path}/target",
+    setup_monthly_income_for_test(client, get_resource_owner_headers)
+    data = {
+        "activities": [
+            {"date": "2024-5-5", "target_time": 5.3}
+        ]
+    }
+    response = client.post("/activities/multi/target",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -122,18 +137,43 @@ def test_register_target_with_incorrect_hour(client, get_resource_owner_headers)
 
 def test_register_target_with_invalid_year(client, get_resource_owner_headers):
     """ 年が2024 <= year <= 2099ではない """
-    data = {"target_time": 5.0}
-    response = client.post("/activities/2022/6/30/target",
+    setup_monthly_income_for_test(client, get_resource_owner_headers)
+    data = {
+        "activities": [
+            {"date": "20240-5-5", "target_time": 5.0}
+        ]
+    }
+    response = client.post("/activities/multi/target",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
     assert response.json() == {"detail": "年は2024~2099の範囲で入力してください"}
 
 
+def test_register_target_with_invalid_month(client, get_resource_owner_headers):
+    """ 存在しない月の場合 """
+    setup_monthly_income_for_test(client, get_resource_owner_headers)
+    data = {
+        "activities": [
+            {"date": "2024-13-30", "target_time": 5.0}
+        ]
+    }
+    response = client.post("/activities/multi/target",
+                           json=data,
+                           headers=get_resource_owner_headers)
+    assert response.status_code == 422
+    assert response.json() == {"detail": "月は1~12の範囲で入力してください"}
+
+
 def test_register_target_with_invalid_date(client, get_resource_owner_headers):
-    """ 存在しない日付の場合 """
-    data = {"target_time": 5.0}
-    response = client.post("/activities/2024/6/31/target",
+    """ 存在しない月の場合 """
+    setup_monthly_income_for_test(client, get_resource_owner_headers)
+    data = {
+        "activities": [
+            {"date": "2024-2-30", "target_time": 5.0}
+        ]
+    }
+    response = client.post("/activities/multi/target",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -145,7 +185,7 @@ def test_register_multi_target(client, get_resource_owner_headers):
     setup_monthly_income_for_test(client, get_resource_owner_headers)
     data = {
         "activities": [
-            {"date": "2024-5-5", "target_time": 5.0},
+            {"date": test_date, "target_time": 5.0},
             {"date": "2024-5-6", "target_time": 6.0},
             {"date": "2024-5-7", "target_time": 7.0}
         ]
@@ -169,7 +209,7 @@ def test_register_multi_target_already_registered(client, get_resource_owner_hea
     setup_target_time_for_test(client, get_resource_owner_headers)
     data = {
         "activities": [
-            {"date": "2024-5-5", "target_time": 5.0},
+            {"date": test_date, "target_time": 5.0},
             {"date": "2024-5-6", "target_time": 6.0}
         ]
     }
@@ -191,7 +231,7 @@ def test_register_multi_target_with_invalid_data(client, get_resource_owner_head
     # 目標時間が不正
     data = {
         "activities": [
-            {"date": "2024-5-5", "target_time": 5.2},
+            {"date": test_date, "target_time": 5.2},
             {"date": "2024-5-6", "target_time": 6.0},
             {"date": "2024-5-7", "target_time": 15.0}
         ]
@@ -246,31 +286,20 @@ def test_register_multi_target_with_invalid_data(client, get_resource_owner_head
     }
 
 
-def test_register_actual(client, get_resource_owner_headers):
-    setup_monthly_income_for_test(client, get_resource_owner_headers)
-    setup_target_time_for_test(client, get_resource_owner_headers)
-    data = {"actual_time": 5.0}
-    response = client.put(f"/activities{test_date_path}/actual",
-                          json=data,
-                          headers=get_resource_owner_headers)
-    assert response.status_code == 200
-    assert response.json() == {
-        "date": test_date,
-        "target_time": 5.0,
-        "actual_time": data["actual_time"],
-        "status": "pending",
-        "message": f"{test_date}の活動時間を{data['actual_time']}時間に設定しました"
-    }
-
-
 def test_register_actual_before_register_target(client, get_resource_owner_headers):
     """ 目標時間登録前に活動時間を登録した場合 """
-    data = {"actual_time": 5.0}
-    response = client.put("/activities/2024/5/10/actual",
+    # TODO:
+    setup_monthly_income_for_test(client, get_resource_owner_headers)
+    data = {
+        "activities": [
+            {"date": "2024-5-10", "actual_time": 5.0}
+        ]
+    }
+    response = client.put("/activities/multi/actual",
                           json=data,
                           headers=get_resource_owner_headers)
     assert response.status_code == 404
-    assert response.json() == {"detail": "2024-5-10の目標時間を先に登録してください"}
+    assert response.json() == {"detail": "2024-5-10の活動記録は未登録です"}
 
 
 def test_register_actual_with_invalid_hour(client, get_resource_owner_headers):
@@ -290,13 +319,17 @@ def test_register_actual_after_finish(client, get_resource_owner_headers):
     setup_target_time_for_test(client, get_resource_owner_headers)
     setup_actual_time_for_test(client, get_resource_owner_headers)
     setup_finish_activity_for_test(client, get_resource_owner_headers)
-    data = {"actual_time": 5.0}
-    response = client.put(f"/activities{test_date_path}/actual",
+    data = {
+        "activities": [
+            {"date": test_date, "actual_time": 5.0}
+        ]
+    }
+    response = client.put("/activities/multi/actual",
                           json=data,
                           headers=get_resource_owner_headers)
-    assert response.status_code == 409
+    assert response.status_code == 400
     assert response.json() == {"detail":
-                               f"{test_date}の活動実績は既に確定済みです。変更できません"}
+                               f"{test_date}の活動時間登録に失敗: 既に確定されています"}
 
 
 def test_register_multi_actual(client, get_resource_owner_headers):
@@ -305,7 +338,7 @@ def test_register_multi_actual(client, get_resource_owner_headers):
     # 目標時間を複数登録
     data = {
         "activities": [
-            {"date": "2024-5-5", "target_time": 5.0},
+            {"date": test_date, "target_time": 5.0},
             {"date": "2024-5-6", "target_time": 6.0},
             {"date": "2024-5-7", "target_time": 7.0}
         ]
@@ -316,7 +349,7 @@ def test_register_multi_actual(client, get_resource_owner_headers):
     # 活動時間を登録
     data = {
         "activities": [
-            {"date": "2024-5-5", "actual_time": 5.0},
+            {"date": test_date, "actual_time": 5.0},
             {"date": "2024-5-6", "actual_time": 6.0},
             {"date": "2024-5-7", "actual_time": 7.0}
         ]
@@ -340,7 +373,7 @@ def test_register_multi_actual_with_invalid_data(client, get_resource_owner_head
     # 活動時間を登録
     data = {
         "activities": [
-            {"date": "2024-5-5", "actual_time": 15.0}  # 上限を超える活動時間
+            {"date": test_date, "actual_time": 15.0}  # 上限を超える活動時間
         ]
     }
     response = client.put("/activities/multi/actual",
@@ -377,7 +410,7 @@ def test_update_already_finished_activity(client, get_resource_owner_headers):
     # 目標時間を登録する活動の中に既に終了した活動が含まれている場合
     data = {
         "activities": [
-            {"date": "2024-5-5", "target_time": 5.0}
+            {"date": test_date, "target_time": 5.0}
         ]
     }
     response = client.post("/activities/multi/target",
@@ -393,7 +426,7 @@ def test_update_already_finished_activity(client, get_resource_owner_headers):
     # 活動時間を登録する活動の中に既に終了した活動が含まれている場合
     data = {
         "activities": [
-            {"date": "2024-5-5", "actual_time": 5.0}
+            {"date": test_date, "actual_time": 5.0}
         ]
     }
     response = client.put("/activities/multi/actual",
@@ -403,21 +436,6 @@ def test_update_already_finished_activity(client, get_resource_owner_headers):
     assert response.json() == {
         "detail": "2024-5-5の活動時間登録に失敗: 既に確定されています"
     }
-
-
-def test_finish_activity(client, get_resource_owner_headers):
-    setup_monthly_income_for_test(client, get_resource_owner_headers)
-    setup_target_time_for_test(client, get_resource_owner_headers)
-    setup_actual_time_for_test(client, get_resource_owner_headers)
-    response = client.put(f"/activities{test_date_path}/finish",
-                          headers=get_resource_owner_headers)
-    assert response.status_code == 200
-    assert response.json() == {
-        "date": test_date,
-        "target_time": 5.0,
-        "actual_time": 5.0,
-        "status": "success",
-        "message": f"目標達成！{f"{test_bonus}万円({int(test_bonus * 10000)}円)"}ボーナス追加！"}
 
 
 def test_finish_multi_activity(client, get_resource_owner_headers):
@@ -430,7 +448,7 @@ def test_finish_multi_activity(client, get_resource_owner_headers):
     # 複数の目標時間を登録
     data = {
         "activities": [
-            {"date": "2024-5-5", "target_time": 5.0},
+            {"date": test_date, "target_time": 5.0},
             {"date": "2024-5-6", "target_time": 6.0},
             {"date": "2024-5-7", "target_time": 7.0}
         ]
@@ -441,7 +459,7 @@ def test_finish_multi_activity(client, get_resource_owner_headers):
     # 複数の活動時間を登録
     data = {
         "activities": [
-            {"date": "2024-5-5", "actual_time": 5.0},
+            {"date": test_date, "actual_time": 5.0},
             {"date": "2024-5-6", "actual_time": 3.0},
             {"date": "2024-5-7", "actual_time": 7.0}
         ]
@@ -451,7 +469,7 @@ def test_finish_multi_activity(client, get_resource_owner_headers):
                headers=get_resource_owner_headers)
     # 活動を終了
     data = {
-        "dates": ["2024-5-5", "2024-5-6", "2024-5-7"]
+        "dates": [test_date, "2024-5-6", "2024-5-7"]
     }
     response = client.put("/activities/multi/finish",
                           json=data,
@@ -522,11 +540,10 @@ def test_get_day_activities_registered_target(client, get_resource_owner_headers
     """ 目標時間登録まで行った日の情報を取得 """
     setup_monthly_income_for_test(client, get_resource_owner_headers)
     setup_target_time_for_test(client, get_resource_owner_headers)
-    date = test_date
     response = client.get(f"/activities{test_date_path}",
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
-    assert response.json() == {"date": date,
+    assert response.json() == {"date": test_date,
                                "target_time": 5.0,
                                "actual_time": 0.0,
                                "status": "pending",
@@ -539,11 +556,10 @@ def test_get_day_activities_registered_actual(client, get_resource_owner_headers
     setup_monthly_income_for_test(client, get_resource_owner_headers)
     setup_target_time_for_test(client, get_resource_owner_headers)
     setup_actual_time_for_test(client, get_resource_owner_headers)
-    date = test_date
     response = client.get(f"/activities{test_date_path}",
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
-    assert response.json() == {"date": date,
+    assert response.json() == {"date": test_date,
                                "target_time": 5.0,
                                "actual_time": 5.0,
                                "status": "pending",
@@ -557,11 +573,10 @@ def test_get_day_activities(client, get_resource_owner_headers):
     setup_target_time_for_test(client, get_resource_owner_headers)
     setup_actual_time_for_test(client, get_resource_owner_headers)
     setup_finish_activity_for_test(client, get_resource_owner_headers)
-    date = test_date
     response = client.get(f"/activities{test_date_path}",
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
-    assert response.json() == {"date": date,
+    assert response.json() == {"date": test_date,
                                "target_time": 5.0,
                                "actual_time": 5.0,
                                "status": "success",
@@ -611,13 +626,12 @@ def test_get_month_acitivities(client, get_resource_owner_headers):
                                "success_days": 1,
                                "fail_days": 0,
                                "activity_list": [{"activity_id": 1,
-                                                  "date": "2024-05-05",
+                                                  "date": "2024-5-5",
                                                   "target_time": 5.0,
                                                   "actual_time": 5.0,
                                                   "status": "success",
                                                   "bonus": test_bonus,
-                                                  "penalty": 0.0,
-                                                  "username": RESOURCE_OWNER_USERNAME}]}
+                                                  "penalty": 0.0}]}
 
 
 def test_get_all_acitivities(client, get_resource_owner_headers):
