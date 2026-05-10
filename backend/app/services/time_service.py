@@ -240,11 +240,11 @@ class TimeService():
         for param in params:
             username = username
             actual_time = param["actual_time"]
-            # 目標時間の形式をチェック
-            ActualTimeIn(actual_time=actual_time)
-            # 日付の形式をチェック
-            year, month, day = map(int, param["date"].split("-"))
             try:
+                # 目標時間の形式をチェック
+                ActualTimeIn(actual_time=actual_time)
+                # 日付の形式をチェック
+                year, month, day = map(int, param["date"].split("-"))
                 CheckDate(year=year, month=month, day=day)
             except ValidationError as validate_e:
                 error_count += 1

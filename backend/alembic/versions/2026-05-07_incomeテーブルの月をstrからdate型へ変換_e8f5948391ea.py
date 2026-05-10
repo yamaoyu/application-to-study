@@ -24,14 +24,14 @@ def upgrade() -> None:
     op.execute("""
         UPDATE incomes
         SET income_month = STR_TO_DATE(CONCAT(TRIM(`year_month`), '-01'), '%Y-%c-%d')
-        WHERE 'year_month' IS NOT NULL
+        WHERE `year_month` IS NOT NULL
     """)
     conn = op.get_bind()
     invalid_count = conn.execute(sa.text("""
         SELECT COUNT(*)
         FROM incomes
-        WHERE 'year_month' IS NOT NULL
-        AND 'income_month' IS NULL
+        WHERE `year_month` IS NOT NULL
+        AND `income_month` IS NULL
     """)).scalar()
 
     if invalid_count:
@@ -56,11 +56,11 @@ def downgrade() -> None:
     op.execute("""
         UPDATE incomes
         SET year_month = CONCAT(
-            YEAR('income_month'),
+            YEAR(`income_month`),
             '-',
-            MONTH('income_month')
+            MONTH(`income_month`)
         )
-        WHERE 'income_month' IS NOT NULL
+        WHERE `income_month` IS NOT NULL
     """)
     op.alter_column(
         "incomes",
