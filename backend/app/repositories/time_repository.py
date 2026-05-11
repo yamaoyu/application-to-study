@@ -1,6 +1,7 @@
 from db import db_model
 from datetime import date
 from sqlalchemy.orm import Session
+from sqlalchemy import func, case, extract
 
 
 class TimeRepository():
@@ -24,13 +25,15 @@ class TimeRepository():
 
     def get_monthly_activities(self, start_date: date, end_date: date, username: str) -> list[db_model.Activity]:
         return self.db.query(db_model.Activity).filter(
-            db_model.Activity.date.between(start_date, end_date),
+            db_model.Activity.date >= start_date,
+            db_model.Activity.date < end_date,
             db_model.Activity.username == username).order_by(
             db_model.Activity.date).all()
 
     def get_yearly_activities(self, start_date: date, end_date: date, username: str) -> list[db_model.Activity]:
         return self.db.query(db_model.Activity).filter(
-            db_model.Activity.date.between(start_date, end_date),
+            db_model.Activity.date >= start_date,
+            db_model.Activity.date < end_date,
             db_model.Activity.username == username).order_by(
                 db_model.Activity.date).all()
 
@@ -53,3 +56,47 @@ class TimeRepository():
         activity.status = status
         activity.bonus = bonus
         activity.penalty = penalty
+
+    def get_activity_summary(self, username: str, start_date: date | None = None, end_date: date | None = None) -> dict:
+        query = self.db.query(
+            func.coalesce(func.sum(db_model.Activity.bonus), 0.0).label("bonus"),
+            func.coalesce(func.sum(db_model.Activity.penalty), 0.0).label("penalty"),
+            func.sum(case((db_model.Activity.status == "success", 1), else_=0)
+                     ).label("success_days"),
+            func.sum(case((db_model.Activity.status == "pending", 1), else_=0)
+                     ).label("pending_days"),
+            func.sum(case((db_model.Activity.status == "failure", 1), else_=0)).label("fail_days"),
+        ).filter(
+            db_model.Activity.username == username,
+        )
+        if start_date is not None:
+            query = query.filter(db_model.Activity.date >= start_date)
+        if end_date is not None:
+            query = query.filter(db_model.Activity.date < end_date)
+        result = query.one()
+
+        return {
+            "bonus": round(result.bonus or 0.0, 2),
+            "penalty": round(result.penalty or 0.0, 2),
+            "success_days": result.success_days or 0,
+            "pending_days": result.pending_days or 0,
+            "fail_days": result.fail_days or 0,
+        }
+
+    def get_monthly_activity_summary(self, username: str, start_date: date, end_date: date) -> dict:
+        rows = self.db.query(
+            extract("month", db_model.Activity.date).label("month"),
+            func.count().label("activity_count"),
+            func.sum(case((db_model.Activity.status == "success", 1), else_=0)).label("success_days"),
+            func.sum(case((db_model.Activity.status == "failure", 1), else_=0)).label("fail_days"),
+            func.coalesce(func.sum(db_model.Activity.bonus), 0).label("bonus"),
+            func.coalesce(func.sum(db_model.Activity.penalty), 0).label("penalty"),
+        ).filter(
+            db_model.Activity.username == username,
+            db_model.Activity.date >= start_date,
+            db_model.Activity.date <= end_date,
+        ).group_by(
+            extract("month", db_model.Activity.date)
+        ).all()
+
+        return rows

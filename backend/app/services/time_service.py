@@ -11,6 +11,12 @@ from app.models.time_model import TargetTimeIn, ActualTimeIn
 from collections import defaultdict
 
 
+def get_next_month_start(d: date) -> date:
+    if d.month == 12:
+        return date(d.year + 1, 1, 1)
+    return date(d.year, d.month + 1, 1)
+
+
 def fetch_one_activity(target_date: date, username: str, repo: TimeRepository, error_msg: str = "活動記録は未登録です"):
     activity = repo.get_activity_by_date_and_username(target_date, username)
     if not activity:
@@ -39,7 +45,7 @@ def fetch_monthly_activities(year: int, month: int, username: str, time_repo: Ti
     return activities
 
 
-def get_month_info(activities: list, incomes: list):
+def get_month_info(activities: list, incomes: list, summary_each_month: dict) -> dict:
     month_dict = {1: "jan", 2: "feb", 3: "mar", 4: "apr", 5: "may", 6: "jun",
                   7: "jul", 8: "aug", 9: "sep", 10: "oct", 11: "nov", 12: "dec"}
     monthly_info = {}
@@ -52,16 +58,34 @@ def get_month_info(activities: list, incomes: list):
         month = int(date.split("-")[1])
         activities_by_month[month].append(act)
 
+    summary = {
+        int(row.month): {
+            "success_days": row.success_days,
+            "fail_days": row.fail_days,
+            "bonus": round(row.bonus, 2),
+            "penalty": round(row.penalty, 2),
+            "pay_adjustment": round(row.bonus - row.penalty, 2),
+        }
+        for row in summary_each_month
+    }
+
     for month in range(1, 13):
         info = {}
         if month not in income_by_month:
             monthly_info[month_dict[month]] = info
             continue
         income = income_by_month[month]
+        summary_by_month = summary.get(month, {
+            "success_days": 0,
+            "fail_days": 0,
+            "bonus": 0.0,
+            "penalty": 0.0,
+            "pay_adjustment": 0.0,
+        })
         info["salary"] = income.salary
-        info["bonus"] = income.total_bonus
-        info["penalty"] = income.total_penalty
-        info["pay_adjustment"] = round((income.total_bonus - income.total_penalty), 2)
+        info["bonus"] = summary_by_month["bonus"]
+        info["penalty"] = summary_by_month["penalty"]
+        info["pay_adjustment"] = round((info["bonus"] - info["penalty"]), 2)
 
         if month in activities_by_month:
             success_days = sum(1 for act in activities_by_month[month] if act.status == "success")
@@ -110,9 +134,11 @@ class TimeService():
         activities = fetch_monthly_activities(year, month, username, self.time_repo)
         income_month = date(year, month, 1)
         income = fetch_one_income(income_month, username, self.money_repo)
-        success_days = [act for act in activities if act.status == "success"]
-        total_bonus = round(income.total_bonus, 2)
-        total_penalty = round(income.total_penalty, 2)
+        end_date = get_next_month_start(income_month)
+        summary = self.time_repo.get_activity_summary(
+            username, income_month, end_date)
+        total_bonus = round(summary["bonus"], 2)
+        total_penalty = round(summary["penalty"], 2)
         total_monthly_income = round((income.salary + total_bonus - total_penalty), 2)
         pay_adjustment = round((total_bonus - total_penalty), 2)
         logger.info(f"{username}が{income_month.year}-{income_month.month}の活動実績を取得")
@@ -134,8 +160,8 @@ class TimeService():
             "pay_adjustment": pay_adjustment,
             "bonus": total_bonus,
             "penalty": total_penalty,
-            "success_days": len(success_days),
-            "fail_days": len(activities) - len(success_days),
+            "success_days": summary["success_days"],
+            "fail_days": summary["fail_days"] + summary["pending_days"],
             "activity_list": activity_list
         }
 
@@ -148,16 +174,18 @@ class TimeService():
         incomes = self.money_repo.get_yearly_salaries(year, username)
         if not incomes:
             raise NotFound(detail=f"{year}年で月収が登録されている月はありません")
-        success_days = sum(1 for act in activities if act.status == "success")
-        fail_days = len(activities) - success_days
+        summary_year = self.time_repo.get_activity_summary(
+            username, start_date, end_date)
 
-        total_bonus = round(sum(income.total_bonus for income in incomes), 2)
-        total_penalty = round(sum(income.total_penalty for income in incomes), 2)
+        total_bonus = round(summary_year["bonus"], 2)
+        total_penalty = round(summary_year["penalty"], 2)
         salary = sum(income.salary for income in incomes)
         total_income = round((salary + total_bonus - total_penalty), 2)
         pay_adjustment = round((total_bonus - total_penalty), 2)
 
-        monthly_info = get_month_info(activities, incomes)
+        summary_each_month = self.time_repo.get_monthly_activity_summary(
+            username, start_date, end_date)
+        monthly_info = get_month_info(activities, incomes, summary_each_month)
 
         logger.info(f"{username}が{year}年の活動実績を取得")
         return {
@@ -166,8 +194,8 @@ class TimeService():
             "pay_adjustment": pay_adjustment,
             "bonus": total_bonus,
             "penalty": total_penalty,
-            "success_days": success_days,
-            "fail_days": fail_days,
+            "success_days": summary_year["success_days"],
+            "fail_days": summary_year["fail_days"] + summary_year["pending_days"],
             "monthly_info": monthly_info
         }
 
@@ -179,11 +207,12 @@ class TimeService():
         if not incomes:
             raise NotFound(detail="給料が登録されていません")
         salary = round(sum([income.salary for income in incomes]), 2)
-        total_bonus = round(sum([income.total_bonus for income in incomes]), 2)
-        total_penalty = round(sum([income.total_penalty for income in incomes]), 2)
+        summary = self.time_repo.get_activity_summary(username, None, None)
+        total_bonus = round(summary["bonus"], 2)
+        total_penalty = round(summary["penalty"], 2)
         pay_adjustment = round(total_bonus - total_penalty, 2)
         total_income = round((salary + total_bonus - total_penalty), 2)
-        success_days = sum(1 for act in activities if act.status == "success")
+        success_days = summary["success_days"]
         logger.info(f"{username}が全期間の活動実績を取得")
         return {"total_income": total_income,  # 総収入(総給与 + ボーナス - ペナルティ)
                 "salary": salary,  # 総給与(ベースとなる月収の合計)
