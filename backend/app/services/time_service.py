@@ -9,12 +9,7 @@ from app.repositories.money_repository import MoneyRepository
 from app.exceptions import NotFound, BadRequest
 from app.models.time_model import TargetTimeIn, ActualTimeIn
 from collections import defaultdict
-
-
-def get_next_month_start(d: date) -> date:
-    if d.month == 12:
-        return date(d.year + 1, 1, 1)
-    return date(d.year, d.month + 1, 1)
+from lib.common import get_next_month_start
 
 
 def fetch_one_activity(target_date: date, username: str, repo: TimeRepository, error_msg: str = "活動記録は未登録です"):
@@ -315,7 +310,6 @@ class TimeService():
                 message += f"{d}の活動終了に失敗:{str(validate_e.errors()[0]['ctx']['error'])}\n"
                 continue
             d = date(year, month, day)
-            username = username
             activity = fetch_one_activity(d, username, self.time_repo)
             if activity.status != "pending":
                 error_count += 1
@@ -325,15 +319,12 @@ class TimeService():
             actual_time = activity.actual_time
             income_month = date(year, month, 1)
             income = fetch_one_income(income_month, username, self.money_repo)
-            monthly_activities = fetch_monthly_activities(year, month, username, self.time_repo)
             # 達成している場合はincomesテーブルのボーナスを、達成していない場合はpenaltyを加算する。
             if actual_time >= target_time:
                 status = "success"
                 bonus = round(((income.salary / 200) * actual_time), 2)
                 bonus_sum = round((bonus_sum + bonus), 2)
                 penalty = 0
-                total_bonus = sum([act.bonus for act in monthly_activities]) + bonus
-                total_penalty = income.total_penalty
                 message += f"{d.year}-{d.month}-{d.day}の活動を終了:ボーナス{bonus}万円({int(bonus * 10000)}円)\n"
             else:
                 status = "failure"
@@ -341,11 +332,8 @@ class TimeService():
                 diff = round((target_time - actual_time), 1)
                 penalty = round(((income.salary / 200) * diff), 2)
                 penalty_sum = round((penalty_sum + penalty), 2)
-                total_bonus = income.total_bonus
-                total_penalty = sum([act.penalty for act in monthly_activities]) + penalty
                 message += f"{d.year}-{d.month}-{d.day}の活動を終了:ペナルティ{penalty}万円({int(penalty * 10000)}円)\n"
             self.time_repo.update_activity_status_and_bonus(activity, status, bonus, penalty)
-            self.money_repo.update_bonus_and_penalty(income, total_bonus, total_penalty)
             self.time_repo.flush()
             logger.info(f"{username}が{d.year}-{d.month}-{d.day}の活動を終了")
         if error_count > 0:

@@ -99,13 +99,13 @@ def test_get_income(client, get_resource_owner_headers):
     assert response.json() == {
         "month_info": {
             "salary": test_salary,
-            "total_penalty": 0.0,
             "income_id": 1,
             "username": RESOURCE_OWNER_USERNAME,
-            "total_bonus": 0.0
         },
         "total_income": test_salary,
         "pay_adjustment": 0.0,
+        "total_penalty": 0.0,
+        "total_bonus": 0.0
     }
 
 
