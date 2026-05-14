@@ -71,7 +71,7 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">ボーナス</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center text-success">{{ incomeRes.data.month_info.total_bonus }}</span>
+            <span class="h3 fw-bold text-center text-success">{{ incomeRes.data.total_bonus }}</span>
             万円
           </div>
         </div>
@@ -80,7 +80,7 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">ペナルティ</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center text-danger">{{ incomeRes.data.month_info.total_penalty }}</span>
+            <span class="h3 fw-bold text-center text-danger">{{ incomeRes.data.total_penalty }}</span>
             万円
           </div>
         </div>

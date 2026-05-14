@@ -21,8 +21,6 @@ class MoneyRepository():
         return self.db.query(db_model.Income).options(
             load_only(
                 db_model.Income.salary,
-                db_model.Income.total_bonus,
-                db_model.Income.total_penalty,
                 db_model.Income.username,
             )
         ).filter(
@@ -38,7 +36,3 @@ class MoneyRepository():
     def get_all_salaries(self, username: str) -> list[db_model.Income]:
         return self.db.query(db_model.Income).filter(
             db_model.Income.username == username).all()
-
-    def update_bonus_and_penalty(self, income: db_model.Income, total_bonus: float, total_penalty: float) -> None:
-        income.total_bonus = total_bonus
-        income.total_penalty = total_penalty

@@ -24,8 +24,6 @@ class Income(Base):
     income_id = Column(Integer, primary_key=True, autoincrement=True)
     income_month = Column(Date, nullable=False)
     salary = Column(Float, nullable=False)
-    total_bonus = Column(Float, server_default="0")
-    total_penalty = Column(Float, server_default="0")
     username = Column(VARCHAR(16), ForeignKey("users.username"))
     __table_args__ = (UniqueConstraint(income_month, username),)
 

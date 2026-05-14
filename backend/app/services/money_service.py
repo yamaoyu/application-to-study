@@ -2,19 +2,22 @@ from lib.log_conf import logger
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.repositories.money_repository import MoneyRepository
+from app.repositories.time_repository import TimeRepository
 from app.exceptions import NotFound, BadRequest, Conflict
 from datetime import date
+from lib.common import get_next_month_start
 
 
 class MoneyService():
     def __init__(self, db: Session) -> None:
-        self.repo = MoneyRepository(db)
+        self.income_repo = MoneyRepository(db)
+        self.time_repo = TimeRepository(db)
 
     def register_monthly_salary(self, year: int, month: int, salary: float, username: str) -> dict:
         try:
             income_month = date(year, month, 1)
-            self.repo.insert_monthly_salary(income_month, salary, username)
-            self.repo.flush()
+            self.income_repo.insert_monthly_salary(income_month, salary, username)
+            self.income_repo.flush()
             logger.info(f"{username}:{income_month}の月収を登録")
             return {"message": f"{year}-{month}の月収:{salary}万円"}
         except IntegrityError as sqlalchemy_error:
@@ -24,10 +27,21 @@ class MoneyService():
 
     def get_monthly_income(self, year: int, month: int, username: str) -> dict:
         income_month = date(year, month, 1)
-        result = self.repo.get_monthly_salary(income_month, username)
-        if not result:
+        income = self.income_repo.get_monthly_salary(income_month, username)
+        if not income:
             raise NotFound(detail=f"{year}-{month}の月収は未登録です")
-        total_income = round((result.salary + result.total_bonus - result.total_penalty), 2)
-        pay_adjustment = round((result.total_bonus - result.total_penalty), 2)
+        end_date = get_next_month_start(income_month)
+        activity_summary = self.time_repo.get_activity_summary(
+            username, income_month, end_date)
+        total_bonus = round(activity_summary["bonus"], 2)
+        total_penalty = round(activity_summary["penalty"], 2)
+        pay_adjustment = round((total_bonus - total_penalty), 2)
+        total_income = round((income.salary + pay_adjustment), 2)
         logger.info(f"{username}:{year}-{month}の月収を取得")
-        return {"month_info": result, "total_income": total_income, "pay_adjustment": pay_adjustment}
+        return {
+            "month_info": income,
+            "total_income": total_income,
+            "pay_adjustment": pay_adjustment,
+            "total_bonus": total_bonus,
+            "total_penalty": total_penalty
+        }
