@@ -12,10 +12,10 @@ test_year = "2024"
 test_month = "5"
 
 
-def setup_target_time_for_test(client, get_resource_owner_headers):
+def setup_target_time_for_test(client, get_resource_owner_headers, target_date=test_date):
     data = {
         "activities": [
-            {"date": test_date, "target_time": 5.0}
+            {"date": target_date, "target_time": 5.0}
         ]
     }
     client.post("/activities/multi/target",
@@ -631,6 +631,30 @@ def test_get_month_acitivities(client, get_resource_owner_headers):
                                                   "actual_time": 5.0,
                                                   "status": "success",
                                                   "bonus": test_bonus,
+                                                  "penalty": 0.0}]}
+
+
+def test_get_month_acitivities_end_month(client, get_resource_owner_headers):
+    """ 月ごとの情報を取得し、月の最終日も登録されていることを確認 """
+    setup_monthly_income_for_test(client, get_resource_owner_headers)
+    setup_target_time_for_test(client, get_resource_owner_headers, "2024-5-31")
+    total_monthly_income = test_salary
+    response = client.get("/activities/2024/5",
+                          headers=get_resource_owner_headers)
+    assert response.status_code == 200
+    assert response.json() == {"total_income": total_monthly_income,
+                               "salary": test_salary,
+                               "pay_adjustment": 0.0,
+                               "bonus": 0.0,
+                               "penalty": 0.0,
+                               "success_days": 0,
+                               "fail_days": 1,
+                               "activity_list": [{"activity_id": 1,
+                                                  "date": "2024-5-31",
+                                                  "target_time": 5.0,
+                                                  "actual_time": 0.0,
+                                                  "status": "pending",
+                                                  "bonus": 0.0,
                                                   "penalty": 0.0}]}
 
 
