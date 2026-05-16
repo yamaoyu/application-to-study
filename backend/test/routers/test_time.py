@@ -288,7 +288,6 @@ def test_register_multi_target_with_invalid_data(client, get_resource_owner_head
 
 def test_register_actual_before_register_target(client, get_resource_owner_headers):
     """ 目標時間登録前に活動時間を登録した場合 """
-    # TODO:
     setup_monthly_income_for_test(client, get_resource_owner_headers)
     data = {
         "activities": [
@@ -305,8 +304,12 @@ def test_register_actual_before_register_target(client, get_resource_owner_heade
 def test_register_actual_with_invalid_hour(client, get_resource_owner_headers):
     """ 時間を1x.0or5、もしくはx.0or5の形で入力していない場合 """
     setup_target_time_for_test(client, get_resource_owner_headers)
-    data = {"actual_time": 5.2}
-    response = client.put("/activities/2024/5/5/actual",
+    data = {
+        "activities": [
+            {"date": "2024-5-10", "actual_time": 5.2}
+        ]
+    }
+    response = client.put("/activities/multi/actual",
                           json=data,
                           headers=get_resource_owner_headers)
     assert response.status_code == 422

@@ -1,9 +1,5 @@
 from fastapi import APIRouter, Depends, Body
-from app.models.time_model import (
-    TargetTimeIn, MultiTargetTimeIn,
-    ActualTimeIn, MultiActualTimeIn,
-    RegisterActivities, ValidateStatus
-)
+from app.models.time_model import MultiTargetTimeIn, MultiActualTimeIn, ValidateStatus
 from app.models.common_model import CheckDate, CheckYearMonth, CheckYear
 from db.database import get_db
 from app.dependencies.auth import get_current_user
@@ -30,23 +26,6 @@ def get_day_activity(params: CheckDate = Depends(),
     return service.get_day_activity(year, month, day, current_user["username"])
 
 
-@router.post("/activities/{year}/{month}/{day}/target",
-             status_code=201,
-             response_model=RegisterActivities)
-def register_target_time(target: TargetTimeIn,
-                         date: CheckDate = Depends(),
-                         db: Session = Depends(get_db),
-                         current_user: dict = Depends(get_current_user)):
-    """ 目標活動時間を登録する """
-    target_time = target.target_time
-    # パスパラメータで受け取る年、月、日は文字列のため、intに変換する
-    year = int(date.year)
-    month = int(date.month)
-    day = int(date.day)
-    service = get_time_service(db)
-    return service.register_target_time(target_time, year, month, day, current_user["username"])
-
-
 @router.post("/activities/multi/target", status_code=201)
 def register_multi_target_time(activities: MultiTargetTimeIn,
                                db: Session = Depends(get_db),
@@ -66,37 +45,6 @@ def update_multi_actual_time(activities: MultiActualTimeIn,
     data = [{"date": activity["date"], "actual_time": activity["actual_time"]}
             for activity in activities.activities]
     return service.register_actual_time_bulk(data, current_user["username"])
-
-
-@router.put("/activities/{year}/{month}/{day}/actual",
-            status_code=200,
-            response_model=RegisterActivities)
-def update_actual_time(actual: ActualTimeIn,
-                       date: CheckDate = Depends(),
-                       db: Session = Depends(get_db),
-                       current_user: dict = Depends(get_current_user)):
-    """ 目標時間が登録済みの場合、活動時間を入力 """
-    service = get_time_service(db)
-    # パスパラメータで受け取る年、月、日は文字列のため、intに変換する
-    year = int(date.year)
-    month = int(date.month)
-    day = int(date.day)
-    return service.register_actual_time(actual.actual_time, year, month, day, current_user["username"])
-
-
-@router.put("/activities/{year}/{month}/{day}/finish",
-            status_code=200,
-            response_model=RegisterActivities)
-def finish_activity(params: CheckDate = Depends(),
-                    db: Session = Depends(get_db),
-                    current_user: dict = Depends(get_current_user)):
-    """ 特定日の作業時間を確定し、目標を達成しているのかを確認する """
-    service = get_time_service(db)
-    # パスパラメータで受け取る年、月、日は文字列のため、intに変換する
-    year = int(params.year)
-    month = int(params.month)
-    day = int(params.day)
-    return service.finish_activity(year, month, day, current_user["username"])
 
 
 @router.put("/activities/multi/finish", status_code=200)
