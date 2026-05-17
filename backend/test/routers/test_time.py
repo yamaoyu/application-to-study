@@ -501,20 +501,21 @@ def test_finish_multi_activity_with_invalid_data(client, get_resource_owner_head
     response = client.put("/activities/multi/finish",
                           json=data,
                           headers=get_resource_owner_headers)
-    assert response.status_code == 400
+    assert response.status_code == 422
     assert response.json() == {
-        'detail': "20241-5-5の活動終了に失敗:年は2024~2099の範囲で入力してください"
+        'detail': "年は2024~2099の範囲で入力してください"
     }
 
+    # 月が不正
     data = {
         "dates": ["2024-15-5"]
     }
     response = client.put("/activities/multi/finish",
                           json=data,
                           headers=get_resource_owner_headers)
-    assert response.status_code == 400
+    assert response.status_code == 422
     assert response.json() == {
-        "detail": "2024-15-5の活動終了に失敗:月は1~12の範囲で入力してください"
+        "detail": "月は1~12の範囲で入力してください"
     }
 
     # 日付が不正
@@ -524,9 +525,9 @@ def test_finish_multi_activity_with_invalid_data(client, get_resource_owner_head
     response = client.put("/activities/multi/finish",
                           json=data,
                           headers=get_resource_owner_headers)
-    assert response.status_code == 400
+    assert response.status_code == 422
     assert response.json() == {
-        'detail': '2024-5-50の活動終了に失敗:日付が不正です'
+        'detail': '日付が不正です'
     }
 
 
@@ -535,8 +536,8 @@ def test_finish_multi_acitivity_with_no_dates(client, get_resource_owner_headers
     response = client.put("/activities/multi/finish",
                           json={},
                           headers=get_resource_owner_headers)
-    assert response.status_code == 400
-    assert response.json() == {"detail": "日付を指定してください"}
+    assert response.status_code == 422
+    assert response.json() == {"detail": "入力データが不足しています"}
 
 
 def test_get_day_activities_registered_target(client, get_resource_owner_headers):

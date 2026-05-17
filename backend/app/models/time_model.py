@@ -20,6 +20,7 @@ class RegisterActivities(BaseModel):
 
 class TargetTimeIn(BaseModel):
     target_time: float
+    date: str
 
     @field_validator("target_time")
     def validate_target_time(cls, target_time):
@@ -31,22 +32,20 @@ class TargetTimeIn(BaseModel):
 
         return target_time
 
+    @field_validator("date")
+    def validate_date(cls, v):
+        year, month, day = map(int, v.split("-"))
+        CheckDate(year=year, month=month, day=day)
+        return v
+
 
 class MultiTargetTimeIn(BaseModel):
-    activities: list
-
-    @field_validator("activities")
-    def validate_activities(cls, activities):
-        for activity in activities:
-            year, month, day = map(int, activity["date"].split("-"))
-            CheckDate(year=year, month=month, day=day)
-            TargetTimeIn(target_time=activity["target_time"])
-
-        return activities
+    activities: list[TargetTimeIn]
 
 
 class ActualTimeIn(BaseModel):
     actual_time: float
+    date: str
 
     @field_validator("actual_time")
     def validate_actual_time(cls, actual_time):
@@ -58,18 +57,27 @@ class ActualTimeIn(BaseModel):
 
         return actual_time
 
+    @field_validator("date")
+    def validate_date(cls, v):
+        year, month, day = map(int, v.split("-"))
+        CheckDate(year=year, month=month, day=day)
+        return v
+
 
 class MultiActualTimeIn(BaseModel):
-    activities: list
+    activities: list[ActualTimeIn]
 
-    @field_validator("activities")
-    def validate_activities(cls, activities):
-        for activity in activities:
-            year, month, day = map(int, activity["date"].split("-"))
+
+class MultiFinishActivityIn(BaseModel):
+    dates: list[str]
+
+    @field_validator("dates")
+    def validate_dates(cls, dates):
+        for date_str in dates:
+            year, month, day = map(int, date_str.split("-"))
+            print(year, month, day)
             CheckDate(year=year, month=month, day=day)
-            ActualTimeIn(actual_time=activity["actual_time"])
-
-        return activities
+        return dates
 
 
 class ValidateStatus(BaseModel):

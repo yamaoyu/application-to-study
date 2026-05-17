@@ -1,13 +1,10 @@
-from app.models.common_model import CheckDate
 from datetime import datetime, date
 from lib.log_conf import logger
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from pydantic import ValidationError
 from app.repositories.time_repository import TimeRepository
 from app.repositories.money_repository import MoneyRepository
 from app.exceptions import NotFound, BadRequest
-from app.models.time_model import TargetTimeIn, ActualTimeIn
 from collections import defaultdict
 from lib.common import get_next_month_start
 
@@ -226,23 +223,15 @@ class TimeService():
         for activity in activities:
             target_time = activity["target_time"]
             date_str = activity["date"]
-            try:
-                # 目標時間の形式をチェック
-                TargetTimeIn(target_time=target_time)
-                # 日付の形式をチェック
-                year, month, day = map(int, date_str.split("-"))
-                CheckDate(year=year, month=month, day=day)
-            except ValidationError as validate_e:
-                error_count += 1
-                message += f"{date_str}の活動終了に失敗:{str(validate_e.errors()[0]['ctx']['error'])}\n"
-                continue
+            year, month, day = map(int, date_str.split("-"))
             # 目標時間を登録する前に、その日の活動実績が存在するか確認
             income_month = date(year, month, 1)
             fetch_one_income(income_month, username, self.money_repo, "月収は未登録です\n先に月収を登録してください")
 
             try:
                 with self.time_repo.begin_nested():
-                    self.time_repo.insert_target_time(date_str, target_time, username)
+                    parsed_date = date(year, month, day)
+                    self.time_repo.insert_target_time(parsed_date, target_time, username)
                     self.time_repo.flush()
                 logger.info(f"{username}が複数日の目標時間を登録")
                 message += f"{date_str}の目標時間を{target_time}時間に登録しました\n"
@@ -259,16 +248,7 @@ class TimeService():
         for param in params:
             actual_time = param["actual_time"]
             date_str = param["date"]
-            try:
-                # 目標時間の形式をチェック
-                ActualTimeIn(actual_time=actual_time)
-                # 日付の形式をチェック
-                year, month, day = map(int, date_str.split("-"))
-                CheckDate(year=year, month=month, day=day)
-            except ValidationError as validate_e:
-                error_count += 1
-                message += f"{date_str}の活動時間登録に失敗:{str(validate_e.errors()[0]['ctx']['error'])}\n"
-                continue
+            year, month, day = map(int, date_str.split("-"))
             # 目標時間を登録する前に、その日の活動実績が存在するか確認
             income_month = date(year, month, 1)
             fetch_one_income(income_month, username, self.money_repo)
@@ -296,13 +276,7 @@ class TimeService():
         bonus_sum = 0
         penalty_sum = 0
         for date_str in dates:
-            try:
-                year, month, day = map(int, date_str.split("-"))
-                CheckDate(year=year, month=month, day=day)
-            except ValidationError as validate_e:
-                error_count += 1
-                message += f"{date_str}の活動終了に失敗:{str(validate_e.errors()[0]['ctx']['error'])}\n"
-                continue
+            year, month, day = map(int, date_str.split("-"))
             parsed_date = date(year, month, day)
             activity = fetch_one_activity(parsed_date, username, self.time_repo)
             if activity.status != "pending":

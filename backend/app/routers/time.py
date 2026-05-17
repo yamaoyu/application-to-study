@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, Body
-from app.models.time_model import MultiTargetTimeIn, MultiActualTimeIn, ValidateStatus
+from fastapi import APIRouter, Depends
+from app.models.time_model import MultiTargetTimeIn, MultiActualTimeIn, ValidateStatus, MultiFinishActivityIn
 from app.models.common_model import CheckDate, CheckYearMonth, CheckYear
 from db.database import get_db
 from app.dependencies.auth import get_current_user
@@ -31,7 +31,7 @@ def register_multi_target_time(activities: MultiTargetTimeIn,
                                db: Session = Depends(get_db),
                                current_user: dict = Depends(get_current_user)):
     service = get_time_service(db)
-    data = [{"date": activity["date"], "target_time": activity["target_time"]}
+    data = [{"date": activity.date, "target_time": activity.target_time}
             for activity in activities.activities]
     return service.register_target_time_bulk(data, current_user["username"])
 
@@ -42,18 +42,19 @@ def update_multi_actual_time(activities: MultiActualTimeIn,
                              current_user: dict = Depends(get_current_user)):
     """ 複数日の活動時間を登録する """
     service = get_time_service(db)
-    data = [{"date": activity["date"], "actual_time": activity["actual_time"]}
+    data = [{"date": activity.date, "actual_time": activity.actual_time}
             for activity in activities.activities]
     return service.register_actual_time_bulk(data, current_user["username"])
 
 
 @router.put("/activities/multi/finish", status_code=200)
-def finish_multi_activities(request: dict = Body(),
+def finish_multi_activities(params: MultiFinishActivityIn,
                             db: Session = Depends(get_db),
                             current_user: dict = Depends(get_current_user)):
     """ 複数日の活動を確定する """
     service = get_time_service(db)
-    return service.finish_activities(request.get("dates", []), current_user["username"])
+    data = params.dates
+    return service.finish_activities(data, current_user["username"])
 
 
 @router.get("/activities/{year}/{month}", status_code=200)
