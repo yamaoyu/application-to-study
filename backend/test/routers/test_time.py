@@ -2,6 +2,7 @@ from unittest.mock import patch
 from datetime import timedelta
 from testdata import RESOURCE_OWNER_USERNAME
 from lib.security import create_access_token
+from app.domain.activity_calculator import round_money
 
 # セットアップ用変数
 test_salary = 23.0
@@ -54,15 +55,16 @@ def test_register_multi_target_without_monthly_income(client, get_resource_owner
     """ 月収が登録されていない状態で目標時間を登録しようとした場合 """
     data = {
         "activities": [
-            {"date": test_date, "target_time": 5.0}
+            {"date": test_date, "target_time": 5.0},
+            {"date": f"{test_year}-{test_month}-10", "target_time": 5.0}
         ]
     }
     response = client.post("/activities/multi/target",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 404
+    assert response.status_code == 400
     assert response.json() == {
-        "detail": f"{test_year}-{test_month}の月収は未登録です\n先に月収を登録してください"
+        "detail": f"{test_date}の目標時間登録に失敗: 2024-5の月収が未登録です\n{test_year}-{test_month}-10の目標時間登録に失敗: 2024-5の月収が未登録です"
     }
 
 
@@ -291,14 +293,16 @@ def test_register_actual_before_register_target(client, get_resource_owner_heade
     setup_monthly_income_for_test(client, get_resource_owner_headers)
     data = {
         "activities": [
-            {"date": "2024-5-10", "actual_time": 5.0}
+            {"date": "2024-5-10", "actual_time": 5.0},
+            {"date": "2024-5-11", "actual_time": 5.0}
         ]
     }
     response = client.put("/activities/multi/actual",
                           json=data,
                           headers=get_resource_owner_headers)
-    assert response.status_code == 404
-    assert response.json() == {"detail": "2024-5-10の活動記録は未登録です"}
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": "2024-5-10の活動時間登録に失敗: 活動記録は未登録です\n2024-5-11の活動時間登録に失敗: 活動記録は未登録です"}
 
 
 def test_register_actual_with_invalid_hour(client, get_resource_owner_headers):
@@ -445,9 +449,9 @@ def test_finish_multi_activity(client, get_resource_owner_headers):
     """ 複数の活動を終了させた場合 """
     setup_monthly_income_for_test(client, get_resource_owner_headers)
     # 今回のテストでのボーナス等を定義
-    pay_adjustment = 1.04
     total_bonus = 1.39
     total_penalty = 0.35
+    pay_adjustment = round_money(total_bonus - total_penalty)
     # 複数の目標時間を登録
     data = {
         "activities": [
@@ -479,14 +483,69 @@ def test_finish_multi_activity(client, get_resource_owner_headers):
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
-        "message": (
-            "2024-5-5の活動を終了:ボーナス0.58万円(5800円)\n"
-            "2024-5-6の活動を終了:ペナルティ0.35万円(3500円)\n"
-            "2024-5-7の活動を終了:ボーナス0.81万円(8100円)"
-        ),
-        "pay_adjustment": f"{pay_adjustment}万円({int(pay_adjustment * 10000)}円)",
-        "total_bonus": f"{total_bonus}万円({int(total_bonus * 10000)}円)",
-        "total_penalty": f"{total_penalty}万円({int(total_penalty * 10000)}円)"
+        "pay_adjustment": pay_adjustment,
+        "total_bonus": total_bonus,
+        "total_penalty": total_penalty,
+        "results": [
+            {"date": "2024-5-5", "status": "success", "bonus": 0.58, "penalty": 0.0},
+            {"date": "2024-5-6", "status": "failure", "bonus": 0.0, "penalty": 0.35},
+            {"date": "2024-5-7", "status": "success", "bonus": 0.81, "penalty": 0.0}
+        ],
+        "errors": []
+    }
+
+
+def test_finish_multi_activity_with_errors(client, get_resource_owner_headers):
+    """ 複数の活動を終了させた場合 """
+    setup_monthly_income_for_test(client, get_resource_owner_headers)
+    setup_target_time_for_test(client, get_resource_owner_headers)
+    setup_actual_time_for_test(client, get_resource_owner_headers)
+    setup_finish_activity_for_test(client, get_resource_owner_headers)
+    # 今回のテストでのボーナス等を定義
+    total_bonus = 0.81
+    total_penalty = 0.35
+    pay_adjustment = round_money(total_bonus - total_penalty)
+    # 複数の目標時間を登録
+    data = {
+        "activities": [
+            {"date": test_date, "target_time": 5.0},
+            {"date": "2024-5-6", "target_time": 6.0},
+            {"date": "2024-5-7", "target_time": 7.0}
+        ]
+    }
+    client.post("/activities/multi/target",
+                json=data,
+                headers=get_resource_owner_headers)
+    # 複数の活動時間を登録
+    data = {
+        "activities": [
+            {"date": test_date, "actual_time": 5.0},
+            {"date": "2024-5-6", "actual_time": 3.0},
+            {"date": "2024-5-7", "actual_time": 7.0}
+        ]
+    }
+    client.put("/activities/multi/actual",
+               json=data,
+               headers=get_resource_owner_headers)
+    # 活動を終了
+    data = {
+        "dates": [test_date, "2024-5-6", "2024-5-7"]
+    }
+    response = client.put("/activities/multi/finish",
+                          json=data,
+                          headers=get_resource_owner_headers)
+    assert response.status_code == 200
+    assert response.json() == {
+        "pay_adjustment": pay_adjustment,
+        "total_bonus": total_bonus,
+        "total_penalty": total_penalty,
+        "results": [
+            {"date": "2024-5-6", "status": "failure", "bonus": 0.0, "penalty": 0.35},
+            {"date": "2024-5-7", "status": "success", "bonus": 0.81, "penalty": 0.0}
+        ],
+        "errors": [
+            {"date": "2024-5-5", "message": "既に確定済みです"}
+        ]
     }
 
 
@@ -703,6 +762,7 @@ def test_get_year_acitivities(client, get_resource_owner_headers):
                                    "mar": {},
                                    "apr": {},
                                    "may": {
+                                       "total_income": total_income,
                                        "salary": test_salary,
                                        "bonus": test_bonus,
                                        "penalty": 0.0,

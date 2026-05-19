@@ -7,22 +7,15 @@ from app.repositories.money_repository import MoneyRepository
 from app.exceptions import NotFound, BadRequest
 from collections import defaultdict
 from lib.common import get_next_month_start
+from app.domain.activity_calculator import calc_bonus_penalty, calc_activity_result, round_money
 
 
-def fetch_one_activity(parsed_date: date, username: str, repo: TimeRepository, error_msg: str = "活動記録は未登録です"):
-    activity = repo.get_activity_by_date_and_username(parsed_date, username)
-    if not activity:
-        # 0埋めしない日付を作成
-        raise NotFound(
-            detail=f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}の{error_msg}")
-    return activity
+def fetch_one_activity(parsed_date: date, username: str, repo: TimeRepository):
+    return repo.get_activity_by_date_and_username(parsed_date, username)
 
 
-def fetch_one_income(income_month: date, username: str, money_repo: MoneyRepository, error_msg: str = "月収は未登録です"):
-    income = money_repo.get_monthly_salary(income_month, username)
-    if not income:
-        raise NotFound(detail=f"{income_month.year}-{income_month.month}の{error_msg}")
-    return income
+def fetch_one_income(income_month: date, username: str, money_repo: MoneyRepository):
+    return money_repo.get_monthly_salary(income_month, username)
 
 
 def fetch_monthly_activities(year: int, month: int, username: str, time_repo: TimeRepository):
@@ -74,7 +67,8 @@ def get_month_info(activities: list, incomes: list, summary_each_month: dict) ->
         info["salary"] = income.salary
         info["bonus"] = summary_by_month["bonus"]
         info["penalty"] = summary_by_month["penalty"]
-        info["pay_adjustment"] = round((info["bonus"] - info["penalty"]), 2)
+        info["pay_adjustment"] = round_money(info["bonus"] - info["penalty"])
+        info["total_income"] = round_money(info["salary"] + info["bonus"] - info["penalty"])
 
         if month in activities_by_month:
             success_days = sum(1 for act in activities_by_month[month] if act.status == "success")
@@ -98,18 +92,21 @@ class TimeService():
         """ 特定日の活動実績を確認する """
         parsed_date = date(year, month, day)
         activity = fetch_one_activity(parsed_date, username, self.time_repo)
+        if not activity:
+            raise NotFound(
+                detail=f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}の活動記録は未登録です")
         income_month = date(year, month, 1)
-        income = self.money_repo.get_monthly_salary(income_month, username)
+        income = fetch_one_income(income_month, username, self.money_repo)
+        if not income:
+            raise NotFound(detail=f"{income_month.year}-{income_month.month}の月収は未登録です")
         if activity.status != "pending":
             bonus = activity.bonus
             penalty = activity.penalty
-        elif activity.target_time <= activity.actual_time:
-            bonus = round(((income.salary / 200) * activity.actual_time), 2)
-            penalty = 0
         else:
-            bonus = 0
-            diff = round((activity.target_time - activity.actual_time), 1)
-            penalty = round(((income.salary / 200) * diff), 2)
+            adjustment = calc_bonus_penalty(
+                income.salary, activity.target_time, activity.actual_time)
+            bonus = adjustment.bonus
+            penalty = adjustment.penalty
         logger.info(f"{username}が{parsed_date.year}-{parsed_date.month}-{parsed_date.day}の活動実績を取得")
         return {"date": f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
                 "target_time": activity.target_time,
@@ -122,13 +119,15 @@ class TimeService():
         activities = fetch_monthly_activities(year, month, username, self.time_repo)
         income_month = date(year, month, 1)
         income = fetch_one_income(income_month, username, self.money_repo)
+        if not income:
+            raise NotFound(detail=f"{income_month.year}-{income_month.month}の月収は未登録です")
         end_date = get_next_month_start(income_month)
         summary = self.time_repo.get_activity_summary(
             username, income_month, end_date)
-        total_bonus = round(summary["bonus"], 2)
-        total_penalty = round(summary["penalty"], 2)
-        total_monthly_income = round((income.salary + total_bonus - total_penalty), 2)
-        pay_adjustment = round((total_bonus - total_penalty), 2)
+        total_bonus = round_money(summary["bonus"])
+        total_penalty = round_money(summary["penalty"])
+        total_monthly_income = round_money(income.salary + total_bonus - total_penalty)
+        pay_adjustment = round_money(total_bonus - total_penalty)
         logger.info(f"{username}が{income_month.year}-{income_month.month}の活動実績を取得")
         activity_list = []
         # 日付を0埋めしない形式で作成
@@ -165,11 +164,11 @@ class TimeService():
         summary_year = self.time_repo.get_activity_summary(
             username, start_date, end_date)
 
-        total_bonus = round(summary_year["bonus"], 2)
-        total_penalty = round(summary_year["penalty"], 2)
-        salary = sum(income.salary for income in incomes)
-        total_income = round((salary + total_bonus - total_penalty), 2)
-        pay_adjustment = round((total_bonus - total_penalty), 2)
+        total_bonus = round_money(summary_year["bonus"])
+        total_penalty = round_money(summary_year["penalty"])
+        salary = round_money(sum(income.salary for income in incomes))
+        total_income = round_money(salary + total_bonus - total_penalty)
+        pay_adjustment = round_money(total_bonus - total_penalty)
 
         summary_each_month = self.time_repo.get_monthly_activity_summary(
             username, start_date, end_date)
@@ -194,12 +193,12 @@ class TimeService():
         incomes = self.money_repo.get_all_salaries(username)
         if not incomes:
             raise NotFound(detail="給料が登録されていません")
-        salary = round(sum([income.salary for income in incomes]), 2)
+        salary = round_money(sum([income.salary for income in incomes]))
         summary = self.time_repo.get_activity_summary(username, None, None)
-        total_bonus = round(summary["bonus"], 2)
-        total_penalty = round(summary["penalty"], 2)
-        pay_adjustment = round(total_bonus - total_penalty, 2)
-        total_income = round((salary + total_bonus - total_penalty), 2)
+        total_bonus = round_money(summary["bonus"])
+        total_penalty = round_money(summary["penalty"])
+        pay_adjustment = round_money(total_bonus - total_penalty)
+        total_income = round_money(salary + total_bonus - total_penalty)
         success_days = summary["success_days"]
         logger.info(f"{username}が全期間の活動実績を取得")
         return {"total_income": total_income,  # 総収入(総給与 + ボーナス - ペナルティ)
@@ -226,8 +225,11 @@ class TimeService():
             year, month, day = map(int, date_str.split("-"))
             # 目標時間を登録する前に、その日の活動実績が存在するか確認
             income_month = date(year, month, 1)
-            fetch_one_income(income_month, username, self.money_repo, "月収は未登録です\n先に月収を登録してください")
-
+            income = fetch_one_income(income_month, username, self.money_repo)
+            if not income:
+                error_count += 1
+                message += f"{date_str}の目標時間登録に失敗: {income_month.year}-{income_month.month}の月収が未登録です\n"
+                continue
             try:
                 with self.time_repo.begin_nested():
                     parsed_date = date(year, month, day)
@@ -251,10 +253,17 @@ class TimeService():
             year, month, day = map(int, date_str.split("-"))
             # 目標時間を登録する前に、その日の活動実績が存在するか確認
             income_month = date(year, month, 1)
-            fetch_one_income(income_month, username, self.money_repo)
+            income = fetch_one_income(income_month, username, self.money_repo)
+            if not income:
+                error_count += 1
+                message += f"{date_str}の活動時間登録に失敗: {income_month.year}-{income_month.month}の月収が未登録です\n"
+                continue
             parsed_date = date(year, month, day)
             activity = fetch_one_activity(parsed_date, username, self.time_repo)
-
+            if not activity:
+                error_count += 1
+                message += f"{date_str}の活動時間登録に失敗: 活動記録は未登録です\n"
+                continue
             if activity.bonus != 0 or activity.penalty != 0:
                 error_count += 1
                 message += f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}の活動時間登録に失敗: 既に確定されています\n"
@@ -270,46 +279,58 @@ class TimeService():
     def finish_activities(self, dates: list, username: str) -> dict:
         if not dates:
             raise BadRequest(detail="日付を指定してください")
-        error_count = 0
-        message = ""
         # まとめて終了された活動の合計を集計
         bonus_sum = 0
         penalty_sum = 0
+        results = []
+        errors = []
         for date_str in dates:
             year, month, day = map(int, date_str.split("-"))
             parsed_date = date(year, month, day)
             activity = fetch_one_activity(parsed_date, username, self.time_repo)
+            if not activity:
+                errors.append({
+                    "date": f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
+                    "message": "活動記録は未登録です"
+                })
+                continue
             if activity.status != "pending":
-                error_count += 1
-                message += f"{parsed_date}の活動終了に失敗:既に確定済みです\n"
+                errors.append({
+                    "date": f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
+                    "message": "既に確定済みです"
+                })
                 continue
             target_time = activity.target_time
             actual_time = activity.actual_time
             income_month = date(year, month, 1)
             income = fetch_one_income(income_month, username, self.money_repo)
+            if not income:
+                errors.append({
+                    "date": f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
+                    "message": "月収は未登録です"
+                })
+                continue
             # 達成している場合はincomesテーブルのボーナスを、達成していない場合はpenaltyを加算する。
-            if actual_time >= target_time:
-                status = "success"
-                bonus = round(((income.salary / 200) * actual_time), 2)
-                bonus_sum = round((bonus_sum + bonus), 2)
-                penalty = 0
-                message += f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}の活動を終了:ボーナス{bonus}万円({int(bonus * 10000)}円)\n"
-            else:
-                status = "failure"
-                bonus = 0
-                diff = round((target_time - actual_time), 1)
-                penalty = round(((income.salary / 200) * diff), 2)
-                penalty_sum = round((penalty_sum + penalty), 2)
-                message += f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}の活動を終了:ペナルティ{penalty}万円({int(penalty * 10000)}円)\n"
+            activity_result = calc_activity_result(income.salary, target_time, actual_time)
+            bonus = activity_result.bonus
+            penalty = activity_result.penalty
+            status = activity_result.status
+            bonus_sum += bonus
+            penalty_sum += penalty
+            result = {
+                "date": f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
+                "status": status,
+                "bonus": bonus,
+                "penalty": penalty
+            }
+            results.append(result)
             self.time_repo.update_activity_status_and_bonus(activity, status, bonus, penalty)
             self.time_repo.flush()
             logger.info(f"{username}が{parsed_date.year}-{parsed_date.month}-{parsed_date.day}の活動を終了")
-        if error_count > 0:
-            raise BadRequest(detail=message[:-1])
-        pay_adjustment = round((bonus_sum - penalty_sum), 2)
         return {
-            "message": message[:-1],
-            "pay_adjustment": f"{pay_adjustment}万円({int(pay_adjustment * 10000)}円)",
-            "total_bonus": f"{bonus_sum}万円({int(bonus_sum * 10000)}円)",
-            "total_penalty": f"{penalty_sum}万円({int(penalty_sum * 10000)}円)"
+            "pay_adjustment": round_money(bonus_sum - penalty_sum),
+            "total_bonus": round_money(bonus_sum),
+            "total_penalty": round_money(penalty_sum),
+            "results": results,
+            "errors": errors
         }

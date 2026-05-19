@@ -41,10 +41,10 @@ export const STATUS_DICT = {
   'pending': '未確定'
 };
 
-export const getAdjustmentColors = (message) => {
+export const getAdjustmentColors = (payAdjustment) => {
   // TODO: 仮実装でメッセージに「ボーナス」や「ペナルティ」が含まれているかで色を変えているが、将来的にはAPIからのレスポンスでボーナスとペナルティを分けて受け取るようにする
   // ボーナス-ペナルティの結果に応じた文字の色のクラスを返す
-  if (!message.includes("-")) {
+  if (payAdjustment >= 0) {
       return 'alert alert-success';
   } else {
       return 'alert alert-danger';

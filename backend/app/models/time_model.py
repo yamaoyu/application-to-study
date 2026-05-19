@@ -75,7 +75,6 @@ class MultiFinishActivityIn(BaseModel):
     def validate_dates(cls, dates):
         for date_str in dates:
             year, month, day = map(int, date_str.split("-"))
-            print(year, month, day)
             CheckDate(year=year, month=month, day=day)
         return dates
 
