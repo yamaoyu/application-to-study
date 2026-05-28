@@ -55,16 +55,21 @@ def test_register_multi_target_without_monthly_income(client, get_resource_owner
     """ 月収が登録されていない状態で目標時間を登録しようとした場合 """
     data = {
         "activities": [
-            {"date": test_date, "target_time": 5.0},
-            {"date": f"{test_year}-{test_month}-10", "target_time": 5.0}
+            {"date": test_date, "target_time": 5.0}
         ]
     }
     response = client.post("/activities/multi/target",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 400
+    assert response.status_code == 201
     assert response.json() == {
-        "detail": f"{test_date}の目標時間登録に失敗: 2024-5の月収が未登録です\n{test_year}-{test_month}-10の目標時間登録に失敗: 2024-5の月収が未登録です"
+        "results": [
+            {
+                "date": test_date,
+                "result": "error",
+                "reason": "income_not_found"
+            }
+        ]
     }
 
 
@@ -101,9 +106,15 @@ def test_register_target_twice(client, get_resource_owner_headers):
     response = client.post("/activities/multi/target",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 400
+    assert response.status_code == 201
     assert response.json() == {
-        "detail": f"{test_date}の目標時間登録に失敗: 目標時間は既に登録済みです"
+        "results": [
+            {
+                "date": test_date,
+                "result": "error",
+                "reason": "target_time_already_registered"
+            }
+        ]
     }
 
 
@@ -197,11 +208,23 @@ def test_register_multi_target(client, get_resource_owner_headers):
                            headers=get_resource_owner_headers)
     assert response.status_code == 201
     assert response.json() == {
-        "message": (
-            "2024-5-5の目標時間を5.0時間に登録しました\n"
-            "2024-5-6の目標時間を6.0時間に登録しました\n"
-            "2024-5-7の目標時間を7.0時間に登録しました"
-        )
+        "results": [
+            {
+                "date": test_date,
+                "result": "success",
+                "target_time": 5.0
+            },
+            {
+                "date": "2024-5-6",
+                "result": "success",
+                "target_time": 6.0
+            },
+            {
+                "date": "2024-5-7",
+                "result": "success",
+                "target_time": 7.0
+            }
+        ]
     }
 
 
@@ -218,12 +241,20 @@ def test_register_multi_target_already_registered(client, get_resource_owner_hea
     response = client.post("/activities/multi/target",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 400
+    assert response.status_code == 201
     assert response.json() == {
-        "detail": (
-            "2024-5-5の目標時間登録に失敗: 目標時間は既に登録済みです\n"
-            "2024-5-6の目標時間を6.0時間に登録しました"
-        )
+        "results": [
+            {
+                "date": "2024-5-5",
+                "result": "error",
+                "reason": "target_time_already_registered"
+            },
+            {
+                "date": "2024-5-6",
+                "result": "success",
+                "target_time": 6.0
+            }
+        ]
     }
 
 
@@ -288,6 +319,53 @@ def test_register_multi_target_with_invalid_data(client, get_resource_owner_head
     }
 
 
+def test_register_multi_actual(client, get_resource_owner_headers):
+    """ 複数の活動時間を登録した場合 """
+    setup_monthly_income_for_test(client, get_resource_owner_headers)
+    # 目標時間を複数登録
+    data = {
+        "activities": [
+            {"date": test_date, "target_time": 5.0},
+            {"date": "2024-5-6", "target_time": 6.0},
+            {"date": "2024-5-7", "target_time": 7.0}
+        ]
+    }
+    client.post("/activities/multi/target",
+                json=data,
+                headers=get_resource_owner_headers)
+    # 活動時間を登録
+    data = {
+        "activities": [
+            {"date": test_date, "actual_time": 5.0},
+            {"date": "2024-5-6", "actual_time": 6.0},
+            {"date": "2024-5-7", "actual_time": 7.0}
+        ]
+    }
+    response = client.put("/activities/multi/actual",
+                          json=data,
+                          headers=get_resource_owner_headers)
+    assert response.status_code == 200
+    assert response.json() == {
+        "results": [
+            {
+                "date": test_date,
+                "result": "success",
+                "actual_time": 5.0
+            },
+            {
+                "date": "2024-5-6",
+                "result": "success",
+                "actual_time": 6.0
+            },
+            {
+                "date": "2024-5-7",
+                "result": "success",
+                "actual_time": 7.0
+            }
+        ]
+    }
+
+
 def test_register_actual_before_register_target(client, get_resource_owner_headers):
     """ 目標時間登録前に活動時間を登録した場合 """
     setup_monthly_income_for_test(client, get_resource_owner_headers)
@@ -300,9 +378,21 @@ def test_register_actual_before_register_target(client, get_resource_owner_heade
     response = client.put("/activities/multi/actual",
                           json=data,
                           headers=get_resource_owner_headers)
-    assert response.status_code == 400
+    assert response.status_code == 200
     assert response.json() == {
-        "detail": "2024-5-10の活動時間登録に失敗: 活動記録は未登録です\n2024-5-11の活動時間登録に失敗: 活動記録は未登録です"}
+        "results": [
+            {
+                "date": "2024-5-10",
+                "result": "error",
+                "reason": "activity_not_found"
+            },
+            {
+                "date": "2024-5-11",
+                "result": "error",
+                "reason": "activity_not_found"
+            }
+        ]
+    }
 
 
 def test_register_actual_with_invalid_hour(client, get_resource_owner_headers):
@@ -334,43 +424,15 @@ def test_register_actual_after_finish(client, get_resource_owner_headers):
     response = client.put("/activities/multi/actual",
                           json=data,
                           headers=get_resource_owner_headers)
-    assert response.status_code == 400
-    assert response.json() == {"detail":
-                               f"{test_date}の活動時間登録に失敗: 既に確定されています"}
-
-
-def test_register_multi_actual(client, get_resource_owner_headers):
-    """ 複数の活動時間を登録した場合 """
-    setup_monthly_income_for_test(client, get_resource_owner_headers)
-    # 目標時間を複数登録
-    data = {
-        "activities": [
-            {"date": test_date, "target_time": 5.0},
-            {"date": "2024-5-6", "target_time": 6.0},
-            {"date": "2024-5-7", "target_time": 7.0}
-        ]
-    }
-    client.post("/activities/multi/target",
-                json=data,
-                headers=get_resource_owner_headers)
-    # 活動時間を登録
-    data = {
-        "activities": [
-            {"date": test_date, "actual_time": 5.0},
-            {"date": "2024-5-6", "actual_time": 6.0},
-            {"date": "2024-5-7", "actual_time": 7.0}
-        ]
-    }
-    response = client.put("/activities/multi/actual",
-                          json=data,
-                          headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
-        "message": (
-            "2024-5-5の活動時間を5.0時間に登録しました\n"
-            "2024-5-6の活動時間を6.0時間に登録しました\n"
-            "2024-5-7の活動時間を7.0時間に登録しました"
-        )
+        "results": [
+            {
+                "date": test_date,
+                "result": "error",
+                "reason": "activity_already_finished"
+            }
+        ]
     }
 
 
@@ -409,7 +471,7 @@ def test_register_multi_actual_with_invalid_data(client, get_resource_owner_head
 
 
 def test_update_already_finished_activity(client, get_resource_owner_headers):
-    """ 既に終了した活動の時間を更新しようとした場合 """
+    """ 既に終了した活動と同じ日に目標時間や活動時間を登録しようとした場合 """
     setup_monthly_income_for_test(client, get_resource_owner_headers)
     setup_target_time_for_test(client, get_resource_owner_headers)
     setup_actual_time_for_test(client, get_resource_owner_headers)
@@ -423,11 +485,15 @@ def test_update_already_finished_activity(client, get_resource_owner_headers):
     response = client.post("/activities/multi/target",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 400
+    assert response.status_code == 201
     assert response.json() == {
-        "detail": (
-            "2024-5-5の目標時間登録に失敗: 目標時間は既に登録済みです"
-        )
+        "results": [
+            {
+                "date": test_date,
+                "result": "error",
+                "reason": "target_time_already_registered"
+            }
+        ]
     }
 
     # 活動時間を登録する活動の中に既に終了した活動が含まれている場合
@@ -439,9 +505,15 @@ def test_update_already_finished_activity(client, get_resource_owner_headers):
     response = client.put("/activities/multi/actual",
                           json=data,
                           headers=get_resource_owner_headers)
-    assert response.status_code == 400
+    assert response.status_code == 200
     assert response.json() == {
-        "detail": "2024-5-5の活動時間登録に失敗: 既に確定されています"
+        "results": [
+            {
+                "date": test_date,
+                "result": "error",
+                "reason": "activity_already_finished"
+            }
+        ]
     }
 
 
@@ -487,11 +559,10 @@ def test_finish_multi_activity(client, get_resource_owner_headers):
         "total_bonus": total_bonus,
         "total_penalty": total_penalty,
         "results": [
-            {"date": "2024-5-5", "status": "success", "bonus": 0.58, "penalty": 0.0},
-            {"date": "2024-5-6", "status": "failure", "bonus": 0.0, "penalty": 0.35},
-            {"date": "2024-5-7", "status": "success", "bonus": 0.81, "penalty": 0.0}
-        ],
-        "errors": []
+            {"date": "2024-5-5", "result": "success", "status": "success", "bonus": 0.58, "penalty": 0.0},
+            {"date": "2024-5-6", "result": "success", "status": "failure", "bonus": 0.0, "penalty": 0.35},
+            {"date": "2024-5-7", "result": "success", "status": "success", "bonus": 0.81, "penalty": 0.0}
+        ]
     }
 
 
@@ -540,11 +611,9 @@ def test_finish_multi_activity_with_errors(client, get_resource_owner_headers):
         "total_bonus": total_bonus,
         "total_penalty": total_penalty,
         "results": [
-            {"date": "2024-5-6", "status": "failure", "bonus": 0.0, "penalty": 0.35},
-            {"date": "2024-5-7", "status": "success", "bonus": 0.81, "penalty": 0.0}
-        ],
-        "errors": [
-            {"date": "2024-5-5", "message": "既に確定済みです"}
+            {"date": test_date, "result": "error", "reason": "activity_already_finished"},
+            {"date": "2024-5-6", "result": "success", "status": "failure", "bonus": 0.0, "penalty": 0.35},
+            {"date": "2024-5-7", "result": "success", "status": "success", "bonus": 0.81, "penalty": 0.0}
         ]
     }
 
