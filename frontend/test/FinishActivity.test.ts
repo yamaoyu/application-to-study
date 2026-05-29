@@ -18,6 +18,12 @@ const pendingActivities = [
     target_time: 3.5,
     actual_time: 3.5,
     status: "pending"
+  },
+  {
+    date: "2025/1/3",
+    target_time: 3,
+    actual_time: 0,
+    status: "pending"
   }
 ];
 
@@ -86,12 +92,12 @@ describe('活動の終了(一括)', () => {
 
 
   it('成功', async () => {
-    const originalMessage = "ボーナス：0.5万円(5000円)\nペナルティ：0.2万円(2000円)\n2025/1/1の活動を終了：ボーナス0.5万円(5000円)\n2025/1/2の活動を終了：ペナルティ0.2万円(2000円)";
+    const originalMessage = "ボーナス：0.5万円(5000円)\nペナルティ：0.2万円(2000円)\n2025/1/1の活動を終了：ボーナス3万円(30000円)\n2025/1/2の活動を終了：ボーナス3.5万円(35000円)\n2025/1/3の活動を終了：ペナルティ3万円(30000円)";
     const payAdjustment = "0.3";
     const totalBonus = "0.5";
     const totalPenalty = "0.2";
     const expectedDates = [
-      "2025/1/1", "2025/1/2"
+      "2025/1/1", "2025/1/2", "2025/1/3"
     ];
     mockedPut.mockResolvedValue({
       status: 200,
@@ -100,10 +106,10 @@ describe('活動の終了(一括)', () => {
         total_bonus: totalBonus,
         total_penalty: totalPenalty,
         results: [
-          { "date": "2025/1/1", "status": "success", "bonus": 0.5, "penalty": 0.0 },
-          { "date": "2025/1/2", "status": "failure", "bonus": 0.0, "penalty": 0.2 }
-        ],
-        errors: []
+          { "date": "2025/1/1", "result": "success", "status": "success", "bonus": 3, "penalty": 3 },
+          { "date": "2025/1/2", "result": "success", "status": "success", "bonus": 3.5, "penalty": 3.5 },
+          { "date": "2025/1/3", "result": "success", "status": "failure", "bonus": 0, "penalty": 3.0 }
+        ]
       }
     });
 
@@ -125,6 +131,45 @@ describe('活動の終了(一括)', () => {
       }
     );
     const expectedMessage = "ボーナス-ペナルティ：0.3万円(3000円)\n" + originalMessage;
+    expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);
+  })
+
+  it('失敗', async () => {
+    const expectedMessage = "2025/1/1の活動終了に失敗: 目標時間が未登録です\n2025/1/2の活動終了に失敗: 月収が未登録です\n2025/1/3の活動終了に失敗: 予期せぬエラーが発生しました";
+    const expectedDates = [
+      "2025/1/1", "2025/1/2", "2025/1/3"
+    ];
+    mockedPut.mockResolvedValue({
+      status: 200,
+      data: {
+        pay_adjustment: 0,
+        total_bonus: 0,
+        total_penalty: 0,
+        results: [
+          { "date": "2025/1/1", "result": "error", "reason": "activity_not_found" },
+          { "date": "2025/1/2", "result": "error", "reason": "income_not_found" },
+          { "date": "2025/1/3", "result": "error", "reason": "unexpected_error" }
+        ]
+      }
+    });
+
+    await wrapper.find("[data-testid='select-all-activities']").trigger("click");
+    await flushPromises();
+
+    await wrapper.find("[data-testid='finish-multi']").trigger("click");
+    await flushPromises();
+
+    // モーダルのOKボタンをクリック
+    const bModal = wrapper.findComponent({ name: 'BModal' });
+    await bModal.vm.$emit('ok');
+    await flushPromises();
+
+    expect(mockedPut).toBeCalledWith(
+      `activities/multi/finish`,
+      {
+        dates: expectedDates
+      }
+    );
     expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);
   })
 });
