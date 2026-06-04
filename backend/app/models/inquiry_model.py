@@ -1,6 +1,7 @@
 from enum import Enum
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, ConfigDict
 from typing import Optional
+from datetime import date
 
 
 class Category(str, Enum):
@@ -32,15 +33,16 @@ class InquiryForm(BaseModel):
         return detail
 
 
-class ResponseInquiry(InquiryForm):
+class ResponseCreateInquiry(InquiryForm):
     message: str
 
 
-class GetInquiry(BaseModel):
-    year: Optional[str] = None
-    month: Optional[str] = None
-    day: Optional[str] = None
-    category: Optional[Category] = None
+class InquiryResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    detail: str
+    date: date
+    category: Category
     priority: Optional[Priority] = None
     is_checked: Optional[bool] = None
 

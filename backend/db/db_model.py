@@ -1,7 +1,8 @@
 from sqlalchemy import (Column, Integer, Float, Date, Boolean, Enum,
                         CHAR, VARCHAR, ForeignKey, UniqueConstraint, PrimaryKeyConstraint)
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from db.database import Base
+import datetime
 
 
 class Activity(Base):
@@ -69,9 +70,17 @@ class Token(Base):
 
 class Inquiry(Base):
     __tablename__ = "inquiries"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    category = Column(Enum("要望", "エラー報告", "その他"), nullable=False)
-    detail = Column(VARCHAR(256), nullable=False)
-    date = Column(Date, nullable=False)
-    priority = Column(Enum("高", "中", "低"), default="低")
-    is_checked = Column(Boolean, default=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    category: Mapped[str] = mapped_column(Enum("要望", "エラー報告", "その他"), nullable=False)
+    detail: Mapped[str] = mapped_column(VARCHAR(256), nullable=False)
+    date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
+    priority: Mapped[str | None] = mapped_column(
+        Enum("高", "中", "低"),
+        default="低",
+        nullable=True,
+    )
+    is_checked: Mapped[bool | None] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=True,
+    )

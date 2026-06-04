@@ -1,11 +1,12 @@
 from lib.log_conf import logger
-from datetime import datetime
+from datetime import date
 from sqlalchemy.orm import Session
 from app.repositories.inquiry_repository import InquiryRepository
 from app.exceptions import NotFound, BadRequest
 from app.models.common_model import CheckYearMonth
 from typing import Optional
 from app.models.inquiry_model import Category, Priority
+from db import db_model
 
 
 class InquiryService():
@@ -13,14 +14,14 @@ class InquiryService():
         self.repo = InquiryRepository(db)
 
     def create_inquiry(self, category: str, detail: str) -> dict:
-        date = datetime.today()
-        inquiry = self.repo.get_inquiry_by_content(category, detail, date)
+        today = date.today()
+        inquiry = self.repo.get_inquiry_by_content(category, detail)
         # 同じ内容で登録があれば日付を更新
         if inquiry:
-            self.repo.update_date(inquiry, date)
+            self.repo.update_date(inquiry, today)
         # 同じ内容で登録がなければ追加
         else:
-            self.repo.insert_inquiry(category, detail, date)
+            self.repo.insert_inquiry(category, detail, today)
         logger.info("問い合わせを受付")
         return {
             "category": category,
@@ -28,11 +29,16 @@ class InquiryService():
             "message": "こちらの内容で受け付けました"
         }
 
-    def get_inquiries(self, year: int, month: int, category: Optional[Category], priority: Optional[Priority], is_checked: bool) -> dict:
+    def get_inquiries(self,
+                      year: Optional[int],
+                      month: Optional[int],
+                      category: Optional[Category],
+                      priority: Optional[Priority],
+                      is_checked: Optional[bool]) -> list[db_model.Inquiry]:
         if not year and month:
             raise BadRequest(detail="月を指定する場合は年も指定してください")
         if year and month:
-            CheckYearMonth(year, month)
+            CheckYearMonth(year=year, month=month)
         inquiries = self.repo.get_inquiries(year, month, category, priority, is_checked)
         if not inquiries:
             message = ""
@@ -49,7 +55,7 @@ class InquiryService():
             raise NotFound(detail=f"{message}問い合わせはありません")
         return inquiries
 
-    def edit_inquiry(self, id: int, priority: Optional[str], is_checked: Optional[bool]) -> dict:
+    def edit_inquiry(self, id: int, priority: Optional[Priority], is_checked: Optional[bool]) -> db_model.Inquiry:
         inquiry = self.repo.get_inquiry_by_id(id)
         if not inquiry:
             raise NotFound(detail=f"idが「{id}の問い合わせはありません」")
