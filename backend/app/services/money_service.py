@@ -6,6 +6,7 @@ from app.repositories.time_repository import TimeRepository
 from app.exceptions import NotFound, BadRequest, Conflict
 from datetime import date
 from lib.common import get_next_month_start
+from app.models.money_model import RegisterIncomeResponse, GetIncomeResponse
 
 
 class MoneyService():
@@ -13,19 +14,19 @@ class MoneyService():
         self.income_repo = MoneyRepository(db)
         self.time_repo = TimeRepository(db)
 
-    def register_monthly_salary(self, year: int, month: int, salary: float, username: str) -> dict:
+    def register_monthly_salary(self, year: int, month: int, salary: float, username: str) -> RegisterIncomeResponse:
         try:
             income_month = date(year, month, 1)
             self.income_repo.insert_monthly_salary(income_month, salary, username)
             self.income_repo.flush()
             logger.info(f"{username}:{income_month}の月収を登録")
-            return {"message": f"{year}-{month}の月収:{salary}万円"}
+            return RegisterIncomeResponse(message=f"{year}-{month}の月収:{salary}万円")
         except IntegrityError as sqlalchemy_error:
             if "Duplicate entry" in str(getattr(sqlalchemy_error, "orig", sqlalchemy_error)):
                 raise Conflict(detail="その月の月収は既に登録されています")
             raise BadRequest(detail="データの整合性エラーが発生しました。入力データを確認してください")
 
-    def get_monthly_income(self, year: int, month: int, username: str) -> dict:
+    def get_monthly_income(self, year: int, month: int, username: str) -> GetIncomeResponse:
         income_month = date(year, month, 1)
         income = self.income_repo.get_monthly_salary(income_month, username)
         if not income:
@@ -36,12 +37,10 @@ class MoneyService():
         total_bonus = round(activity_summary["bonus"], 2)
         total_penalty = round(activity_summary["penalty"], 2)
         pay_adjustment = round((total_bonus - total_penalty), 2)
-        total_income = round((income.salary + pay_adjustment), 2)
         logger.info(f"{username}:{year}-{month}の月収を取得")
-        return {
-            "month_info": income,
-            "total_income": total_income,
-            "pay_adjustment": pay_adjustment,
-            "total_bonus": total_bonus,
-            "total_penalty": total_penalty
-        }
+        return GetIncomeResponse(
+            base_income=income.salary,
+            pay_adjustment=pay_adjustment,
+            total_bonus=total_bonus,
+            total_penalty=total_penalty
+        )

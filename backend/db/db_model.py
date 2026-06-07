@@ -22,10 +22,10 @@ class Activity(Base):
 
 class Income(Base):
     __tablename__ = "incomes"
-    income_id = Column(Integer, primary_key=True, autoincrement=True)
-    income_month = Column(Date, nullable=False)
-    salary = Column(Float, nullable=False)
-    username = Column(VARCHAR(16), ForeignKey("users.username"))
+    income_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    income_month: Mapped[datetime.date] = mapped_column(Date, nullable=False)
+    salary: Mapped[float] = mapped_column(Float, nullable=False)
+    username: Mapped[str] = mapped_column(VARCHAR(16), ForeignKey("users.username"))
     __table_args__ = (UniqueConstraint(income_month, username),)
 
     user = relationship('User', back_populates='incomes')

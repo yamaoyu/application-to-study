@@ -154,7 +154,7 @@ export default {
       }
       await fetchMonthlySalary(year, month);
       if (fetchRes.value?.status === 200) {
-        monthlyIncome.value = fetchRes.value.data["month_info"].salary;
+        monthlyIncome.value = fetchRes.value.data.base_income;
       } else {
         monthlyIncome.value = 5;
       };

@@ -1,4 +1,4 @@
-from app.models.money_model import RegisterIncome
+from app.models.money_model import RegisterIncomeRequest, RegisterIncomeResponse, GetIncomeResponse
 from db.database import get_db
 from app.dependencies.auth import get_current_user
 from sqlalchemy.orm import Session
@@ -18,8 +18,8 @@ def get_year_month(year: int, month: int) -> CheckYearMonth:
     return CheckYearMonth(year=year, month=month)
 
 
-@router.post("/incomes/{year}/{month}", status_code=201)
-def register_salary(income: RegisterIncome,
+@router.post("/incomes/{year}/{month}", status_code=201, response_model=RegisterIncomeResponse)
+def register_salary(income: RegisterIncomeRequest,
                     param: CheckYearMonth = Depends(),
                     current_user: dict = Depends(get_current_user),
                     service: MoneyService = Depends(get_money_service)):
@@ -28,7 +28,7 @@ def register_salary(income: RegisterIncome,
     return service.register_monthly_salary(param.year, param.month, income.salary, username)
 
 
-@router.get("/incomes/{year}/{month}", status_code=200)
+@router.get("/incomes/{year}/{month}", status_code=200, response_model=GetIncomeResponse)
 def get_monthly_income(current_user: dict = Depends(get_current_user),
                        param: CheckYearMonth = Depends(),
                        service: MoneyService = Depends(get_money_service)):

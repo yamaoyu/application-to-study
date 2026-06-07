@@ -14,6 +14,9 @@ export const useFetchMonthlySalary = () => {
         fetchMsg.value = "";
       } 
       fetchRes.value = res;
+      const totalIncome = Math.round((res.data.base_income + res.data.pay_adjustment) * 100) / 100;
+      // total_incomeはbase_income+pay_adjustmentで計算できるためフロントエンドで計算している
+      fetchRes.value.data["total_income"] = totalIncome;
     } catch (error) {
       fetchMsg.value = parseError(error, "月収の取得に失敗しました");
       fetchRes.value = error.response ?? null;
