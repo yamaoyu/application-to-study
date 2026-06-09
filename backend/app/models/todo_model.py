@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, ConfigDict
 from datetime import date
 from typing import Optional
 
@@ -21,9 +21,28 @@ class Todo(BaseModel):
         return detail
 
 
-class Todos(BaseModel):
-    todos: list
+class TodosCreateRequest(BaseModel):
+    todos: list[Todo]
 
 
-class IDList(BaseModel):
+class TodosCreateResponse(BaseModel):
+    message: str
+
+
+class TodoIdsRequest(BaseModel):
     ids: list[int]
+
+
+class TodosGetResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    todo_id: int
+    title: str
+    status: bool
+    due: date
+    detail: Optional[str] = None
+
+
+class TodosFinishResponse(BaseModel):
+    message: str
+    titles: str

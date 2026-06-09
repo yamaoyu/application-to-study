@@ -69,7 +69,7 @@ describe('Todoを送信に成功', () => {
         // APIが正しいパラメータで呼び出されたことを確認
         expect(mockedPost).toHaveBeenCalledTimes(1);
         expect(mockedPost).toHaveBeenCalledWith(
-            'todos/multi',
+            'todos',
             { todos: [expectedTodo] }
         );
         // メッセージとtodosがリセットされることを確認

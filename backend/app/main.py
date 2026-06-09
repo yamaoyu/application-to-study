@@ -49,6 +49,7 @@ def unhandled_exception_handler(request: Request, exc: Exception):
 @app.exception_handler(RequestValidationError)
 def validation_exception_handler(request, exc):
     if exc.errors():
+        print(exc.errors())
         match exc.errors()[0]["type"]:
             case "float_parsing" | "int_parsing":
                 return JSONResponse(status_code=422,

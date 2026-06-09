@@ -3,6 +3,7 @@ from sqlalchemy import (Column, Integer, Float, Date, Boolean, Enum,
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from db.database import Base
 import datetime
+from typing import Optional
 
 
 class Activity(Base):
@@ -33,12 +34,12 @@ class Income(Base):
 
 class Todo(Base):
     __tablename__ = "todos"
-    todo_id = Column(Integer, primary_key=True, autoincrement=True)
-    title = Column(VARCHAR(32), nullable=False)
-    status = Column(Boolean, default=False)
-    due = Column(Date, nullable=False)
-    username = Column(VARCHAR(16), ForeignKey("users.username"), nullable=False)
-    detail = Column(VARCHAR(200))
+    todo_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(VARCHAR(32), nullable=False)
+    status: Mapped[bool] = mapped_column(Boolean, default=False)
+    due: Mapped[datetime.date] = mapped_column(Date, nullable=False)
+    username: Mapped[str] = mapped_column(VARCHAR(16), ForeignKey("users.username"), nullable=False)
+    detail: Mapped[Optional[str]] = mapped_column(VARCHAR(200), nullable=True)
 
     user = relationship('User', back_populates='todos')
 

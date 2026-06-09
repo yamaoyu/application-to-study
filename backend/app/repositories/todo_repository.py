@@ -1,6 +1,7 @@
 from db import db_model
 from sqlalchemy.orm import Session
 from typing import Optional
+from datetime import date
 
 
 class TodoRepository():
@@ -10,7 +11,7 @@ class TodoRepository():
     def flush(self):
         self.db.flush()
 
-    def insert_todo(self, title: str, due: str, detail: str, username: str):
+    def insert_todo(self, title: str, due: date, detail: str | None, username: str):
         data = db_model.Todo(title=title, due=due, detail=detail, username=username)
         self.db.add(data)
 
@@ -19,7 +20,13 @@ class TodoRepository():
             db_model.Todo.todo_id == todo_id,
             db_model.Todo.username == username).one_or_none()
 
-    def get_todos(self, username: str, status: bool = None, start_due: str = None, end_due: str = None, title: str = None, ids: Optional[list[int]] = None) -> list[db_model.Todo]:
+    def get_todos(self,
+                  username: str,
+                  status: bool | None = None,
+                  start_due: str | None = None,
+                  end_due: str | None = None,
+                  title: str | None = None,
+                  ids: Optional[list[int]] = None) -> list[db_model.Todo]:
         sqlstatement = self.db.query(db_model.Todo).filter(
             db_model.Todo.username == username)
         if status is not None:
@@ -44,7 +51,7 @@ class TodoRepository():
             db_model.Todo.todo_id.in_(ids),
             db_model.Todo.username == username).delete()
 
-    def update_todo_content(self, todo: db_model.Todo, title: str = None, due: str = None, detail: str = None) -> None:
+    def update_todo_content(self, todo: db_model.Todo, title: str, due: date, detail: Optional[str]) -> None:
         todo.title = title
         todo.due = due
         todo.detail = detail
