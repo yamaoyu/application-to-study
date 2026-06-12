@@ -1,5 +1,5 @@
 import os
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, field_validator
 from typing import Optional
 from email_validator import validate_email
 from lib.security import is_password_complex, special_characters
@@ -37,18 +37,32 @@ class RegisterUserInfo(BaseModel):
             raise ValueError("正しい形式のメールアドレスを入力してください")
 
 
+class RegisterUserResponse(BaseModel):
+    username: str
+    password: str
+    email: Optional[str] = None
+    message: str
+    role: Optional[str] = None
+
+
 class LoginUserInfo(BaseModel):
     username: str
     password: str
 
 
-class ResponseCreatedUser(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    username: str
-    password: str
-    email: Optional[str] = None
-    role: Optional[str] = None
+class LoginUserResponse(BaseModel):
+    access_token: str
+    token_type: str
+    role: str
+
+
+class logoutResponse(BaseModel):
     message: str
+
+
+class regenerateAccessTokenResponse(BaseModel):
+    access_token: str
+    token_type: str
 
 
 class ChangePasswordInfo(BaseModel):
@@ -62,3 +76,7 @@ class ChangePasswordInfo(BaseModel):
         elif not is_password_complex(new_password):
             raise ValueError(f"パスワードは大文字、小文字、数字、記号({special_characters})をそれぞれ1文字以上含む必要があります")
         return new_password
+
+
+class changePasswordResponse(BaseModel):
+    message: str

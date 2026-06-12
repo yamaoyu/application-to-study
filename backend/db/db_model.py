@@ -46,10 +46,10 @@ class Todo(Base):
 
 class User(Base):
     __tablename__ = "users"
-    username = Column(VARCHAR(16), primary_key=True)
-    password = Column(CHAR(60), nullable=False)
-    email = Column(VARCHAR(32))
-    role = Column(Enum("admin", "general"), default="general")
+    username: Mapped[str] = mapped_column(VARCHAR(16), primary_key=True)
+    password: Mapped[str] = mapped_column(CHAR(60), nullable=False)
+    email: Mapped[Optional[str]] = mapped_column(VARCHAR(32), nullable=True, unique=True)
+    role: Mapped[str] = mapped_column(Enum("admin", "general"), default="general", nullable=False)
 
     incomes = relationship('Income', back_populates='user')
     todos = relationship('Todo', back_populates='user')
@@ -59,10 +59,10 @@ class User(Base):
 
 class Token(Base):
     __tablename__ = "tokens"
-    username = Column(VARCHAR(16), ForeignKey("users.username"), nullable=False)
-    device_id = Column(CHAR(36), nullable=False)
-    token = Column(VARCHAR(256))
-    expires_at = Column(Date, nullable=False)
+    username: Mapped[str] = mapped_column(VARCHAR(16), ForeignKey("users.username"), nullable=False)
+    device_id: Mapped[str] = mapped_column(CHAR(36), nullable=False)
+    token: Mapped[str] = mapped_column(VARCHAR(256), nullable=False)
+    expires_at: Mapped[datetime.date] = mapped_column(Date, nullable=False)
 
     __table_args__ = (PrimaryKeyConstraint(username, device_id),)
 

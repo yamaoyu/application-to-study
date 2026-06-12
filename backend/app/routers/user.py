@@ -2,12 +2,30 @@ import os
 from app.dependencies.auth import get_current_user, admin_only
 from db.database import get_db
 from sqlalchemy.orm import Session
-from app.models.user_model import RegisterUserInfo, ResponseCreatedUser, LoginUserInfo, ChangePasswordInfo
+from app.models.user_model import (RegisterUserInfo,
+                                   RegisterUserResponse,
+                                   LoginUserInfo,
+                                   LoginUserResponse,
+                                   logoutResponse,
+                                   regenerateAccessTokenResponse,
+                                   ChangePasswordInfo,
+                                   changePasswordResponse)
 from fastapi import APIRouter, Depends, Response, Cookie
 from app.services.user_service import UserService
+from typing import Literal
 
-APP_SCHEME = os.getenv("APP_SCHEME")
-COOKIE_SAMESITE = os.getenv("COOKIE_SAMESITE")
+CookieSameSite = Literal["lax", "strict", "none"]
+
+
+def get_cookie_samesite() -> CookieSameSite:
+    value = os.getenv("COOKIE_SAMESITE", "lax").lower()
+    if value not in ("lax", "strict", "none"):
+        raise ValueError("COOKIE_SAMESITE must be one of: lax, strict, none")
+    return value
+
+
+APP_SCHEME = os.getenv("APP_SCHEME", "http")
+COOKIE_SAMESITE = get_cookie_samesite()
 
 router = APIRouter()
 
@@ -16,13 +34,13 @@ def get_user_service(db: Session = Depends(get_db)) -> UserService:
     return UserService(db)
 
 
-@router.post("/users", response_model=ResponseCreatedUser, status_code=201)
+@router.post("/users", response_model=RegisterUserResponse, status_code=201)
 def create_user(user: RegisterUserInfo, db: Session = Depends(get_db)):
     service = get_user_service(db)
     return service.create_user(user.username, user.password, user.email, "general")
 
 
-@router.post("/admins", response_model=ResponseCreatedUser, status_code=201)
+@router.post("/admins", response_model=RegisterUserResponse, status_code=201)
 @admin_only()
 def create_admin_user(user: RegisterUserInfo,
                       db: Session = Depends(get_db)):
@@ -30,7 +48,7 @@ def create_admin_user(user: RegisterUserInfo,
     return service.create_user(user.username, user.password, user.email, "admin")
 
 
-@router.post("/login", status_code=200)
+@router.post("/login", status_code=200, response_model=LoginUserResponse)
 def login(user_info: LoginUserInfo,
           response: Response,
           db: Session = Depends(get_db),
@@ -57,9 +75,9 @@ def login(user_info: LoginUserInfo,
     }
 
 
-@router.post("/logout", status_code=200)
-def logout(device_id: str = Cookie(default=None),
-           response: Response = None,
+@router.post("/logout", status_code=200, response_model=logoutResponse)
+def logout(response: Response,
+           device_id: str = Cookie(default=None),
            current_user: dict = Depends(get_current_user),
            db: Session = Depends(get_db)):
     service = get_user_service(db)
@@ -68,7 +86,7 @@ def logout(device_id: str = Cookie(default=None),
     return service.logout(current_user["username"], device_id)
 
 
-@router.post("/token", status_code=200)
+@router.post("/token", status_code=200, response_model=regenerateAccessTokenResponse)
 def regenerate_access_token(refresh_token: str = Cookie(default=None),
                             device_id: str = Cookie(default=None),
                             db: Session = Depends(get_db)):
@@ -77,7 +95,7 @@ def regenerate_access_token(refresh_token: str = Cookie(default=None),
     return service.regenerate_access_token(refresh_token, device_id)
 
 
-@router.put("/password", status_code=200)
+@router.put("/password", status_code=200, response_model=changePasswordResponse)
 def change_password(params: ChangePasswordInfo,
                     db: Session = Depends(get_db),
                     current_user: dict = Depends(get_current_user)):
