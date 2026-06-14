@@ -2,6 +2,7 @@ import re
 from enum import Enum
 from pydantic import BaseModel, field_validator
 from app.models.common_model import CheckDate
+from typing import Optional
 
 
 class Status(str, Enum):
@@ -43,6 +44,17 @@ class MultiTargetTimeIn(BaseModel):
     activities: list[TargetTimeIn]
 
 
+class RegisterTargetTime(BaseModel):
+    date: str
+    target_time: Optional[float] = None
+    result: str
+    reason: Optional[str] = None
+
+
+class RegisterTargetTimeResponse(BaseModel):
+    results: list[RegisterTargetTime]
+
+
 class ActualTimeIn(BaseModel):
     actual_time: float
     date: str
@@ -68,6 +80,17 @@ class MultiActualTimeIn(BaseModel):
     activities: list[ActualTimeIn]
 
 
+class RegisterActualTime(BaseModel):
+    date: str
+    actual_time: Optional[float] = None
+    result: str
+    reason: Optional[str] = None
+
+
+class RegisterActualTimeResponse(BaseModel):
+    results: list[RegisterActualTime]
+
+
 class MultiFinishActivityIn(BaseModel):
     dates: list[str]
 
@@ -79,5 +102,74 @@ class MultiFinishActivityIn(BaseModel):
         return dates
 
 
+class FinishActivity(BaseModel):
+    date: str
+    status: Optional[Status] = None
+    bonus: Optional[float] = None
+    penalty: Optional[float] = None
+    result: str
+    reason: Optional[str] = None
+
+
+class FinishActivityResponse(BaseModel):
+    pay_adjustment: float
+    total_bonus: float
+    total_penalty: float
+    results: list[FinishActivity]
+
+
 class ValidateStatus(BaseModel):
     status: Status
+
+
+class getDayActivityResponse(BaseModel):
+    date: str
+    target_time: float
+    actual_time: float
+    status: Status
+    bonus: float
+    penalty: float
+
+
+class OneActivity(BaseModel):
+    date: str
+    target_time: float
+    actual_time: float
+    status: Status
+    bonus: float
+    penalty: float
+
+
+class ActivitySummary(BaseModel):
+    total_income: float
+    salary: float
+    pay_adjustment: float
+    bonus: float
+    penalty: float
+    success_days: int
+    fail_days: int
+
+
+class getMonthActivityResponse(ActivitySummary):
+    activity_list: list[OneActivity]
+
+
+class MonthlyInfo(BaseModel):
+    salary: Optional[float] = None
+    pay_adjustment: Optional[float] = None
+    bonus: Optional[float] = None
+    penalty: Optional[float] = None
+    success_days: Optional[int] = None
+    fail_days: Optional[int] = None
+
+
+class getYearActivityResponse(ActivitySummary):
+    monthly_info: dict[str, Optional[MonthlyInfo]]
+
+
+class getAllActivitiesResponse(ActivitySummary):
+    pass
+
+
+class getActivitiesByStatusResponse(BaseModel):
+    activities: list[getDayActivityResponse]

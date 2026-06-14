@@ -1,5 +1,13 @@
-from sqlalchemy import (Column, Integer, Float, Date, Boolean, Enum,
-                        CHAR, VARCHAR, ForeignKey, UniqueConstraint, PrimaryKeyConstraint)
+from sqlalchemy import (Integer,
+                        Float,
+                        Date,
+                        Boolean,
+                        Enum,
+                        CHAR,
+                        VARCHAR,
+                        ForeignKey,
+                        UniqueConstraint,
+                        PrimaryKeyConstraint)
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from db.database import Base
 import datetime
@@ -8,14 +16,15 @@ from typing import Optional
 
 class Activity(Base):
     __tablename__ = "activities"
-    activity_id = Column(Integer, primary_key=True, autoincrement=True)
-    date = Column(Date)
-    target_time = Column(Float)
-    actual_time = Column(Float, default=0)
-    status = Column(Enum("pending", "success", "failure"), server_default="pending")
-    bonus = Column(Float, server_default="0")
-    penalty = Column(Float, server_default="0")
-    username = Column(VARCHAR(16), ForeignKey("users.username"), nullable=False)
+    activity_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
+    target_time: Mapped[float] = mapped_column(Float, nullable=False)
+    actual_time: Mapped[float] = mapped_column(Float, default=0, nullable=False)
+    status: Mapped[str] = mapped_column(
+        Enum("pending", "success", "failure"), server_default="pending", nullable=False)
+    bonus: Mapped[float] = mapped_column(Float, server_default="0", nullable=False)
+    penalty: Mapped[float] = mapped_column(Float, server_default="0", nullable=False)
+    username: Mapped[str] = mapped_column(VARCHAR(16), ForeignKey("users.username"), nullable=False)
     __table_args__ = (UniqueConstraint(date, username),)
 
     user = relationship('User', back_populates='activities')

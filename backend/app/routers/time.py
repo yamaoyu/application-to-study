@@ -1,5 +1,16 @@
 from fastapi import APIRouter, Depends
-from app.models.time_model import MultiTargetTimeIn, MultiActualTimeIn, ValidateStatus, MultiFinishActivityIn
+from app.models.time_model import (MultiTargetTimeIn,
+                                   MultiActualTimeIn,
+                                   ValidateStatus,
+                                   MultiFinishActivityIn,
+                                   getDayActivityResponse,
+                                   RegisterTargetTimeResponse,
+                                   RegisterActualTimeResponse,
+                                   FinishActivityResponse,
+                                   getMonthActivityResponse,
+                                   getYearActivityResponse,
+                                   getAllActivitiesResponse,
+                                   getActivitiesByStatusResponse)
 from app.models.common_model import CheckDate, CheckYearMonth, CheckYear
 from db.database import get_db
 from app.dependencies.auth import get_current_user
@@ -13,7 +24,9 @@ def get_time_service(db: Session = Depends(get_db)) -> TimeService:
     return TimeService(db)
 
 
-@router.get("/activities/{year}/{month}/{day}", status_code=200)
+@router.get("/activities/{year}/{month}/{day}",
+            status_code=200,
+            response_model=getDayActivityResponse)
 def get_day_activity(params: CheckDate = Depends(),
                      db: Session = Depends(get_db),
                      current_user: dict = Depends(get_current_user)):
@@ -26,7 +39,9 @@ def get_day_activity(params: CheckDate = Depends(),
     return service.get_day_activity(year, month, day, current_user["username"])
 
 
-@router.post("/activities/multi/target", status_code=201)
+@router.post("/activities/multi/target",
+             status_code=201,
+             response_model=RegisterTargetTimeResponse)
 def register_multi_target_time(activities: MultiTargetTimeIn,
                                db: Session = Depends(get_db),
                                current_user: dict = Depends(get_current_user)):
@@ -36,7 +51,9 @@ def register_multi_target_time(activities: MultiTargetTimeIn,
     return service.register_target_time_bulk(data, current_user["username"])
 
 
-@router.put("/activities/multi/actual", status_code=200)
+@router.put("/activities/multi/actual",
+            status_code=200,
+            response_model=RegisterActualTimeResponse)
 def update_multi_actual_time(activities: MultiActualTimeIn,
                              db: Session = Depends(get_db),
                              current_user: dict = Depends(get_current_user)):
@@ -47,7 +64,9 @@ def update_multi_actual_time(activities: MultiActualTimeIn,
     return service.register_actual_time_bulk(data, current_user["username"])
 
 
-@router.put("/activities/multi/finish", status_code=200)
+@router.put("/activities/multi/finish",
+            status_code=200,
+            response_model=FinishActivityResponse)
 def finish_multi_activities(params: MultiFinishActivityIn,
                             db: Session = Depends(get_db),
                             current_user: dict = Depends(get_current_user)):
@@ -57,7 +76,9 @@ def finish_multi_activities(params: MultiFinishActivityIn,
     return service.finish_activities(data, current_user["username"])
 
 
-@router.get("/activities/{year}/{month}", status_code=200)
+@router.get("/activities/{year}/{month}",
+            status_code=200,
+            response_model=getMonthActivityResponse)
 def get_month_activities(params: CheckYearMonth = Depends(),
                          db: Session = Depends(get_db),
                          current_user: dict = Depends(get_current_user)):
@@ -66,16 +87,22 @@ def get_month_activities(params: CheckYearMonth = Depends(),
     return service.get_month_activities(params.year, params.month, current_user["username"])
 
 
-@router.get("/activities/{year:int}", status_code=200)
+@router.get("/activities/{year:int}",
+            status_code=200,
+            response_model=getYearActivityResponse)
 def get_year_activities(param: CheckYear = Depends(),
                         db: Session = Depends(get_db),
                         current_user: dict = Depends(get_current_user)):
     """ 特定年のデータを取得 """
     service = get_time_service(db)
-    return service.get_year_activities(param.year, current_user["username"])
+    res = service.get_year_activities(param.year, current_user["username"])
+    print(res)
+    return res
 
 
-@router.get("/activities/total", status_code=200)
+@router.get("/activities/total",
+            status_code=200,
+            response_model=getAllActivitiesResponse)
 def get_all_activities(db: Session = Depends(get_db),
                        current_user: dict = Depends(get_current_user)):
     """ 全期間を集計したデータを取得 """
@@ -83,7 +110,9 @@ def get_all_activities(db: Session = Depends(get_db),
     return service.get_all_activities(current_user["username"])
 
 
-@router.get("/activities", status_code=200)
+@router.get("/activities",
+            status_code=200,
+            response_model=getActivitiesByStatusResponse)
 def get_activities_by_status(param: ValidateStatus = Depends(),
                              db: Session = Depends(get_db),
                              current_user: dict = Depends(get_current_user)):

@@ -1,7 +1,8 @@
 from db import db_model
 from datetime import date
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, SessionTransaction
 from sqlalchemy import func, case, extract
+from typing import Optional
 
 
 class TimeRepository():
@@ -14,11 +15,10 @@ class TimeRepository():
     def rollback(self) -> None:
         self.db.rollback()
 
-    def begin_nested(self) -> None:
+    def begin_nested(self) -> SessionTransaction:
         return self.db.begin_nested()
 
-    def get_activity_by_date_and_username(self, day: date, username: str) -> db_model.Activity:
-        print(day)
+    def get_activity_by_date_and_username(self, day: date, username: str) -> Optional[db_model.Activity]:
         return self.db.query(db_model.Activity).filter(
             db_model.Activity.date == day,
             db_model.Activity.username == username).one_or_none()
@@ -37,16 +37,16 @@ class TimeRepository():
             db_model.Activity.username == username).order_by(
                 db_model.Activity.date).all()
 
-    def get_all_activities(self, username: str, status: bool = None) -> list[db_model.Activity]:
+    def get_all_activities(self, username: str, status: Optional[str] = None) -> list[db_model.Activity]:
         sqlstatement = self.db.query(db_model.Activity).filter(
             db_model.Activity.username == username)
         if status is not None:
             sqlstatement = sqlstatement.filter(db_model.Activity.status == status)
         return sqlstatement.order_by(db_model.Activity.date).all()
 
-    def insert_target_time(self, date: str, target_time: int, username: str) -> None:
+    def insert_target_time(self, target_date: date, target_time: int, username: str) -> None:
         insert_data = db_model.Activity(
-            date=date, target_time=target_time, username=username)
+            date=target_date, target_time=target_time, username=username)
         self.db.add(insert_data)
 
     def update_actual_time(self, activity: db_model.Activity, actual_time: int) -> None:
@@ -83,7 +83,7 @@ class TimeRepository():
             "fail_days": result.fail_days or 0,
         }
 
-    def get_monthly_activity_summary(self, username: str, start_date: date, end_date: date) -> dict:
+    def get_monthly_activity_summary(self, username: str, start_date: date, end_date: date) -> list:
         rows = self.db.query(
             extract("month", db_model.Activity.date).label("month"),
             func.count().label("activity_count"),

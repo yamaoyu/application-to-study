@@ -67,7 +67,8 @@ def test_register_multi_target_without_monthly_income(client, get_resource_owner
             {
                 "date": test_date,
                 "result": "error",
-                "reason": "income_not_found"
+                "reason": "income_not_found",
+                "target_time": None
             }
         ]
     }
@@ -112,7 +113,8 @@ def test_register_target_twice(client, get_resource_owner_headers):
             {
                 "date": test_date,
                 "result": "error",
-                "reason": "target_time_already_registered"
+                "reason": "target_time_already_registered",
+                "target_time": None
             }
         ]
     }
@@ -212,17 +214,20 @@ def test_register_multi_target(client, get_resource_owner_headers):
             {
                 "date": test_date,
                 "result": "success",
-                "target_time": 5.0
+                "target_time": 5.0,
+                "reason": None
             },
             {
                 "date": "2024-5-6",
                 "result": "success",
-                "target_time": 6.0
+                "target_time": 6.0,
+                "reason": None
             },
             {
                 "date": "2024-5-7",
                 "result": "success",
-                "target_time": 7.0
+                "target_time": 7.0,
+                "reason": None
             }
         ]
     }
@@ -247,12 +252,14 @@ def test_register_multi_target_already_registered(client, get_resource_owner_hea
             {
                 "date": "2024-5-5",
                 "result": "error",
+                "target_time": None,
                 "reason": "target_time_already_registered"
             },
             {
                 "date": "2024-5-6",
                 "result": "success",
-                "target_time": 6.0
+                "target_time": 6.0,
+                "reason": None
             }
         ]
     }
@@ -350,17 +357,20 @@ def test_register_multi_actual(client, get_resource_owner_headers):
             {
                 "date": test_date,
                 "result": "success",
-                "actual_time": 5.0
+                "actual_time": 5.0,
+                "reason": None
             },
             {
                 "date": "2024-5-6",
                 "result": "success",
-                "actual_time": 6.0
+                "actual_time": 6.0,
+                "reason": None
             },
             {
                 "date": "2024-5-7",
                 "result": "success",
-                "actual_time": 7.0
+                "actual_time": 7.0,
+                "reason": None
             }
         ]
     }
@@ -384,11 +394,13 @@ def test_register_actual_before_register_target(client, get_resource_owner_heade
             {
                 "date": "2024-5-10",
                 "result": "error",
+                "actual_time": None,
                 "reason": "activity_not_found"
             },
             {
                 "date": "2024-5-11",
                 "result": "error",
+                "actual_time": None,
                 "reason": "activity_not_found"
             }
         ]
@@ -430,6 +442,7 @@ def test_register_actual_after_finish(client, get_resource_owner_headers):
             {
                 "date": test_date,
                 "result": "error",
+                "actual_time": None,
                 "reason": "activity_already_finished"
             }
         ]
@@ -491,6 +504,7 @@ def test_update_already_finished_activity(client, get_resource_owner_headers):
             {
                 "date": test_date,
                 "result": "error",
+                "target_time": None,
                 "reason": "target_time_already_registered"
             }
         ]
@@ -511,6 +525,7 @@ def test_update_already_finished_activity(client, get_resource_owner_headers):
             {
                 "date": test_date,
                 "result": "error",
+                "actual_time": None,
                 "reason": "activity_already_finished"
             }
         ]
@@ -559,9 +574,30 @@ def test_finish_multi_activity(client, get_resource_owner_headers):
         "total_bonus": total_bonus,
         "total_penalty": total_penalty,
         "results": [
-            {"date": "2024-5-5", "result": "success", "status": "success", "bonus": 0.58, "penalty": 0.0},
-            {"date": "2024-5-6", "result": "success", "status": "failure", "bonus": 0.0, "penalty": 0.35},
-            {"date": "2024-5-7", "result": "success", "status": "success", "bonus": 0.81, "penalty": 0.0}
+            {
+                "date": "2024-5-5",
+                "result": "success",
+                "status": "success",
+                "bonus": 0.58,
+                "penalty": 0.0,
+                "reason": None
+            },
+            {
+                "date": "2024-5-6",
+                "result": "success",
+                "status": "failure",
+                "bonus": 0.0,
+                "penalty": 0.35,
+                "reason": None
+            },
+            {
+                "date": "2024-5-7",
+                "result": "success",
+                "status": "success",
+                "bonus": 0.81,
+                "penalty": 0.0,
+                "reason": None
+            }
         ]
     }
 
@@ -611,9 +647,30 @@ def test_finish_multi_activity_with_errors(client, get_resource_owner_headers):
         "total_bonus": total_bonus,
         "total_penalty": total_penalty,
         "results": [
-            {"date": test_date, "result": "error", "reason": "activity_already_finished"},
-            {"date": "2024-5-6", "result": "success", "status": "failure", "bonus": 0.0, "penalty": 0.35},
-            {"date": "2024-5-7", "result": "success", "status": "success", "bonus": 0.81, "penalty": 0.0}
+            {
+                "date": test_date,
+                "result": "error",
+                "reason": "activity_already_finished",
+                "bonus": None,
+                "penalty": None,
+                "status": None
+            },
+            {
+                "date": "2024-5-6",
+                "result": "success",
+                "status": "failure",
+                "bonus": 0.0,
+                "penalty": 0.35,
+                "reason": None
+            },
+            {
+                "date": "2024-5-7",
+                "result": "success",
+                "status": "success",
+                "bonus": 0.81,
+                "penalty": 0.0,
+                "reason": None
+            }
         ]
     }
 
@@ -740,7 +797,7 @@ def test_get_day_activities_with_expired_token(client, get_resource_owner_header
         assert response.json() == {"detail": "再度ログインしてください"}
 
 
-def test_get_month_acitivities(client, get_resource_owner_headers):
+def test_get_month_activities(client, get_resource_owner_headers):
     """ 月ごとの情報を取得 """
     setup_monthly_income_for_test(client, get_resource_owner_headers)
     setup_target_time_for_test(client, get_resource_owner_headers)
@@ -757,8 +814,7 @@ def test_get_month_acitivities(client, get_resource_owner_headers):
                                "penalty": 0.0,
                                "success_days": 1,
                                "fail_days": 0,
-                               "activity_list": [{"activity_id": 1,
-                                                  "date": "2024-5-5",
+                               "activity_list": [{"date": "2024-5-5",
                                                   "target_time": 5.0,
                                                   "actual_time": 5.0,
                                                   "status": "success",
@@ -766,7 +822,7 @@ def test_get_month_acitivities(client, get_resource_owner_headers):
                                                   "penalty": 0.0}]}
 
 
-def test_get_month_acitivities_end_month(client, get_resource_owner_headers):
+def test_get_month_activities_end_month(client, get_resource_owner_headers):
     """ 月ごとの情報を取得し、月の最終日も登録されていることを確認 """
     setup_monthly_income_for_test(client, get_resource_owner_headers)
     setup_target_time_for_test(client, get_resource_owner_headers, "2024-5-31")
@@ -781,8 +837,7 @@ def test_get_month_acitivities_end_month(client, get_resource_owner_headers):
                                "penalty": 0.0,
                                "success_days": 0,
                                "fail_days": 1,
-                               "activity_list": [{"activity_id": 1,
-                                                  "date": "2024-5-31",
+                               "activity_list": [{"date": "2024-5-31",
                                                   "target_time": 5.0,
                                                   "actual_time": 0.0,
                                                   "status": "pending",
@@ -790,7 +845,7 @@ def test_get_month_acitivities_end_month(client, get_resource_owner_headers):
                                                   "penalty": 0.0}]}
 
 
-def test_get_all_acitivities(client, get_resource_owner_headers):
+def test_get_all_activities(client, get_resource_owner_headers):
     """ 対象ユーザーのすべての情報を取得 """
     setup_monthly_income_for_test(client, get_resource_owner_headers)
     setup_target_time_for_test(client, get_resource_owner_headers)
@@ -809,7 +864,7 @@ def test_get_all_acitivities(client, get_resource_owner_headers):
                                "fail_days": 0}
 
 
-def test_get_year_acitivities(client, get_resource_owner_headers):
+def test_get_year_activities(client, get_resource_owner_headers):
     """ 月ごとの情報を取得 """
     setup_monthly_income_for_test(client, get_resource_owner_headers)
     setup_target_time_for_test(client, get_resource_owner_headers)
@@ -826,29 +881,117 @@ def test_get_year_acitivities(client, get_resource_owner_headers):
                                "success_days": 1,
                                "fail_days": 0,
                                "monthly_info": {
-                                   "jan": {},
-                                   "feb": {},
-                                   "mar": {},
-                                   "apr": {},
+                                   "jan": {
+                                       "salary": None,
+                                       "bonus": None,
+                                       "penalty": None,
+                                       "pay_adjustment": None,
+                                       "success_days": None,
+                                       "fail_days": None
+                                   },
+                                   "feb": {
+                                       "salary": None,
+                                       "bonus": None,
+                                       "penalty": None,
+                                       "pay_adjustment": None,
+                                       "success_days": None,
+                                       "fail_days": None},
+                                   "mar": {
+                                       "salary": None,
+                                       "bonus": None,
+                                       "penalty": None,
+                                       "pay_adjustment": None,
+                                       "success_days": None,
+                                       "fail_days": None},
+                                   "apr": {
+                                       "salary": None,
+                                       "bonus": None,
+                                       "penalty": None,
+                                       "pay_adjustment": None,
+                                       "success_days": None,
+                                       "fail_days": None},
                                    "may": {
-                                       "total_income": total_income,
                                        "salary": test_salary,
                                        "bonus": test_bonus,
                                        "penalty": 0.0,
                                        "pay_adjustment": test_bonus,
                                        "success_days": 1,
                                        "fail_days": 0},
-                                   "jun": {},
-                                   "jul": {},
-                                   "aug": {},
-                                   "sep": {},
-                                   "oct": {},
-                                   "nov": {},
-                                   "dec": {}
+                                   "jun": {
+                                       "salary": None,
+                                       "bonus": None,
+                                       "penalty": None,
+                                       "pay_adjustment": None,
+                                       "success_days": None,
+                                       "fail_days": None},
+                                   "jul": {
+                                       "salary": None,
+                                       "bonus": None,
+                                       "penalty": None,
+                                       "pay_adjustment": None,
+                                       "success_days": None,
+                                       "fail_days": None},
+                                   "aug": {
+                                       "salary": None,
+                                       "bonus": None,
+                                       "penalty": None,
+                                       "pay_adjustment": None,
+                                       "success_days": None,
+                                       "fail_days": None},
+                                   "sep": {
+                                       "salary": None,
+                                       "bonus": None,
+                                       "penalty": None,
+                                       "pay_adjustment": None,
+                                       "success_days": None,
+                                       "fail_days": None},
+                                   "oct": {
+                                       "salary": None,
+                                       "bonus": None,
+                                       "penalty": None,
+                                       "pay_adjustment": None,
+                                       "success_days": None,
+                                       "fail_days": None},
+                                   "nov": {
+                                       "salary": None,
+                                       "bonus": None,
+                                       "penalty": None,
+                                       "pay_adjustment": None,
+                                       "success_days": None,
+                                       "fail_days": None},
+                                   "dec": {
+                                       "salary": None,
+                                       "bonus": None,
+                                       "penalty": None,
+                                       "pay_adjustment": None,
+                                       "success_days": None,
+                                       "fail_days": None}
                                }}
 
 
-def test_get_acitivities_with_wrong_status(client, get_resource_owner_headers):
+def test_get_activities_by_status(client, get_resource_owner_headers):
+    """ ステータスを指定して情報を取得 """
+    setup_monthly_income_for_test(client, get_resource_owner_headers)
+    setup_target_time_for_test(client, get_resource_owner_headers)
+    setup_actual_time_for_test(client, get_resource_owner_headers)
+    setup_finish_activity_for_test(client, get_resource_owner_headers)
+    response = client.get("/activities?status=success", headers=get_resource_owner_headers)
+    assert response.status_code == 200
+    assert response.json() == {
+        "activities": [
+            {
+                "date": test_date,
+                "target_time": 5.0,
+                "actual_time": 5.0,
+                "status": "success",
+                "bonus": test_bonus,
+                "penalty": 0.0
+            }
+        ]
+    }
+
+
+def test_get_activities_with_wrong_status(client, get_resource_owner_headers):
     """ ステータス名を間違えた状態で取得 """
     response = client.get("/activities?status=pendin", headers=get_resource_owner_headers)
     assert response.status_code == 422

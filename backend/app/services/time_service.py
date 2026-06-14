@@ -8,17 +8,39 @@ from app.exceptions import NotFound, BadRequest
 from collections import defaultdict
 from lib.common import get_next_month_start
 from app.domain.activity_calculator import calc_bonus_penalty, calc_activity_result, round_money
+from app.models.time_model import (getDayActivityResponse,
+                                   RegisterTargetTimeResponse,
+                                   RegisterActualTimeResponse,
+                                   FinishActivityResponse,
+                                   getMonthActivityResponse,
+                                   getYearActivityResponse,
+                                   getAllActivitiesResponse,
+                                   getActivitiesByStatusResponse,
+                                   MonthlyInfo,
+                                   Status)
+from typing import Optional
+from db import db_model
 
 
-def fetch_one_activity(parsed_date: date, username: str, repo: TimeRepository):
+def fetch_one_activity(parsed_date: date,
+                       username: str,
+                       repo: TimeRepository
+                       ) -> Optional[db_model.Activity]:
     return repo.get_activity_by_date_and_username(parsed_date, username)
 
 
-def fetch_one_income(income_month: date, username: str, money_repo: MoneyRepository):
+def fetch_one_income(income_month: date,
+                     username: str,
+                     money_repo: MoneyRepository
+                     ) -> Optional[db_model.Activity]:
     return money_repo.get_monthly_salary(income_month, username)
 
 
-def fetch_monthly_activities(year: int, month: int, username: str, time_repo: TimeRepository):
+def fetch_monthly_activities(year: int,
+                             month: int,
+                             username: str,
+                             time_repo: TimeRepository
+                             ) -> list[db_model.Activity]:
     start_date = datetime(year, month, 1).date()
     end_date = get_next_month_start(start_date)
     activities = time_repo.get_monthly_activities(start_date, end_date, username)
@@ -27,7 +49,10 @@ def fetch_monthly_activities(year: int, month: int, username: str, time_repo: Ti
     return activities
 
 
-def get_month_info(activities: list, incomes: list, summary_each_month: dict) -> dict:
+def get_month_info(activities: list,
+                   incomes: list,
+                   summary_each_month: list
+                   ) -> dict[str, Optional[MonthlyInfo]]:
     month_dict = {1: "jan", 2: "feb", 3: "mar", 4: "apr", 5: "may", 6: "jun",
                   7: "jul", 8: "aug", 9: "sep", 10: "oct", 11: "nov", 12: "dec"}
     monthly_info = {}
@@ -79,7 +104,6 @@ def get_month_info(activities: list, incomes: list, summary_each_month: dict) ->
             info["fail_days"] = 0
 
         monthly_info[month_dict[month]] = info
-
     return monthly_info
 
 
@@ -88,7 +112,12 @@ class TimeService():
         self.time_repo = TimeRepository(db)
         self.money_repo = MoneyRepository(db)
 
-    def get_day_activity(self, year: int, month: int, day: int, username: str) -> dict:
+    def get_day_activity(self,
+                         year: int,
+                         month: int,
+                         day: int,
+                         username: str
+                         ) -> getDayActivityResponse:
         """ 特定日の活動実績を確認する """
         parsed_date = date(year, month, day)
         activity = fetch_one_activity(parsed_date, username, self.time_repo)
@@ -108,14 +137,20 @@ class TimeService():
             bonus = adjustment.bonus
             penalty = adjustment.penalty
         logger.info(f"{username}が{parsed_date.year}-{parsed_date.month}-{parsed_date.day}の活動実績を取得")
-        return {"date": f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
-                "target_time": activity.target_time,
-                "actual_time": activity.actual_time,
-                "status": activity.status,
-                "bonus": bonus,
-                "penalty": penalty}
+        return getDayActivityResponse(
+            date=f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
+            target_time=activity.target_time,
+            actual_time=activity.actual_time,
+            status=Status(activity.status),
+            bonus=bonus,
+            penalty=penalty
+        )
 
-    def get_month_activities(self, year: int, month: int, username: str) -> dict:
+    def get_month_activities(self,
+                             year: int,
+                             month: int,
+                             username: str
+                             ) -> getMonthActivityResponse:
         activities = fetch_monthly_activities(year, month, username, self.time_repo)
         income_month = date(year, month, 1)
         income = fetch_one_income(income_month, username, self.money_repo)
@@ -133,7 +168,6 @@ class TimeService():
         # 日付を0埋めしない形式で作成
         for act in activities:
             activity_list.append({
-                "activity_id": act.activity_id,
                 "date": f"{act.date.year}-{act.date.month}-{act.date.day}",
                 "target_time": act.target_time,
                 "actual_time": act.actual_time,
@@ -141,18 +175,21 @@ class TimeService():
                 "bonus": act.bonus,
                 "penalty": act.penalty
             })
-        return {
-            "total_income": total_monthly_income,
-            "salary": income.salary,
-            "pay_adjustment": pay_adjustment,
-            "bonus": total_bonus,
-            "penalty": total_penalty,
-            "success_days": summary["success_days"],
-            "fail_days": summary["fail_days"] + summary["pending_days"],
-            "activity_list": activity_list
-        }
+        return getMonthActivityResponse(
+            total_income=total_monthly_income,
+            salary=income.salary,
+            pay_adjustment=pay_adjustment,
+            bonus=total_bonus,
+            penalty=total_penalty,
+            success_days=summary["success_days"],
+            fail_days=summary["fail_days"] + summary["pending_days"],
+            activity_list=activity_list
+        )
 
-    def get_year_activities(self, year: int, username: str) -> dict:
+    def get_year_activities(self,
+                            year: int,
+                            username: str
+                            ) -> getYearActivityResponse:
         start_date = date(year, 1, 1)
         end_date = date(year, 12, 31)
         activities = self.time_repo.get_yearly_activities(start_date, end_date, username)
@@ -175,18 +212,18 @@ class TimeService():
         monthly_info = get_month_info(activities, incomes, summary_each_month)
 
         logger.info(f"{username}が{year}年の活動実績を取得")
-        return {
-            "total_income": total_income,
-            "salary": salary,
-            "pay_adjustment": pay_adjustment,
-            "bonus": total_bonus,
-            "penalty": total_penalty,
-            "success_days": summary_year["success_days"],
-            "fail_days": summary_year["fail_days"] + summary_year["pending_days"],
-            "monthly_info": monthly_info
-        }
+        return getYearActivityResponse(
+            total_income=total_income,
+            salary=salary,
+            pay_adjustment=pay_adjustment,
+            bonus=total_bonus,
+            penalty=total_penalty,
+            success_days=summary_year["success_days"],
+            fail_days=summary_year["fail_days"] + summary_year["pending_days"],
+            monthly_info=monthly_info
+        )
 
-    def get_all_activities(self, username: str) -> dict:
+    def get_all_activities(self, username: str) -> getAllActivitiesResponse:
         activities = self.time_repo.get_all_activities(username)
         if not activities:
             raise NotFound(detail="活動は登録されていません")
@@ -201,22 +238,39 @@ class TimeService():
         total_income = round_money(salary + total_bonus - total_penalty)
         success_days = summary["success_days"]
         logger.info(f"{username}が全期間の活動実績を取得")
-        return {"total_income": total_income,  # 総収入(総給与 + ボーナス - ペナルティ)
-                "salary": salary,  # 総給与(ベースとなる月収の合計)
-                "pay_adjustment": pay_adjustment,
-                "bonus": total_bonus,
-                "penalty": total_penalty,
-                "success_days": success_days,
-                "fail_days": len(activities) - success_days}
+        return getAllActivitiesResponse(
+            total_income=total_income,
+            salary=salary,
+            pay_adjustment=pay_adjustment,
+            bonus=total_bonus,
+            penalty=total_penalty,
+            success_days=success_days,
+            fail_days=len(activities) - success_days
+        )
 
-    def get_activities_by_status(self, status: str, username: str) -> list:
+    def get_activities_by_status(self,
+                                 status: str,
+                                 username: str
+                                 ) -> getActivitiesByStatusResponse:
         activities = self.time_repo.get_all_activities(username, status)
         if not activities:
             status_dic = {"pending": "未確定", "failure": "未達成", "success": "達成"}
             raise NotFound(detail=f"ステータスが「{status_dic[status]}」の活動は登録されていません")
-        return {"activities": activities}
+        return getActivitiesByStatusResponse(activities=[
+            getDayActivityResponse(
+                date=f"{act.date.year}-{act.date.month}-{act.date.day}",
+                target_time=act.target_time,
+                actual_time=act.actual_time,
+                status=Status(act.status),
+                bonus=act.bonus,
+                penalty=act.penalty
+            ) for act in activities
+        ])
 
-    def register_target_time_bulk(self, activities: list[dict], username: str):
+    def register_target_time_bulk(self,
+                                  activities: list[dict],
+                                  username: str
+                                  ) -> RegisterTargetTimeResponse:
         results = []
         for activity in activities:
             target_time = activity["target_time"]
@@ -229,7 +283,8 @@ class TimeService():
                 results.append({
                     "date": f"{year}-{month}-{day}",
                     "result": "error",
-                    "reason": "income_not_found"
+                    "reason": "income_not_found",
+                    "target_time": None
                 })
                 continue
             try:
@@ -241,24 +296,30 @@ class TimeService():
                 results.append({
                     "date": f"{year}-{month}-{day}",
                     "result": "success",
-                    "target_time": target_time
+                    "target_time": target_time,
+                    "reason": None
                 })
             except IntegrityError:
                 results.append({
                     "date": f"{year}-{month}-{day}",
                     "result": "error",
-                    "reason": "target_time_already_registered"
+                    "reason": "target_time_already_registered",
+                    "target_time": None
                 })
             except Exception as e:
                 results.append({
                     "date": f"{year}-{month}-{day}",
                     "result": "error",
-                    "reason": "unexpected_error"
+                    "reason": "unexpected_error",
+                    "target_time": None
                 })
                 logger.error(f"Error registering target time for {date_str}: {str(e)}")
-        return {"results": results}
+        return RegisterTargetTimeResponse(results=results)
 
-    def register_actual_time_bulk(self, params: list[dict], username: str):
+    def register_actual_time_bulk(self,
+                                  params: list[dict],
+                                  username: str
+                                  ) -> RegisterActualTimeResponse:
         results = []
         for param in params:
             actual_time = param["actual_time"]
@@ -271,7 +332,8 @@ class TimeService():
                 results.append({
                     "date": f"{year}-{month}-{day}",
                     "result": "error",
-                    "reason": "income_not_found"
+                    "reason": "income_not_found",
+                    "actual_time": None
                 })
                 continue
             try:
@@ -281,14 +343,16 @@ class TimeService():
                     results.append({
                         "date": f"{year}-{month}-{day}",
                         "result": "error",
-                        "reason": "activity_not_found"
+                        "reason": "activity_not_found",
+                        "actual_time": None
                     })
                     continue
                 if activity.status != "pending":
                     results.append({
                         "date": f"{year}-{month}-{day}",
                         "result": "error",
-                        "reason": "activity_already_finished"
+                        "reason": "activity_already_finished",
+                        "actual_time": None
                     })
                 else:
                     with self.time_repo.begin_nested():
@@ -297,19 +361,24 @@ class TimeService():
                     results.append({
                         "date": f"{year}-{month}-{day}",
                         "result": "success",
-                        "actual_time": actual_time
+                        "actual_time": actual_time,
+                        "reason": None
                     })
                     logger.info(f"{username}が複数日の活動時間を登録")
             except Exception as e:
                 results.append({
                     "date": f"{year}-{month}-{day}",
                     "result": "error",
-                    "reason": "unexpected_error"
+                    "reason": "unexpected_error",
+                    "actual_time": None
                 })
                 logger.error(f"Error registering actual time for {date_str}: {str(e)}")
-        return {"results": results}
+        return RegisterActualTimeResponse(results=results)
 
-    def finish_activities(self, dates: list, username: str) -> dict:
+    def finish_activities(self,
+                          dates: list,
+                          username: str
+                          ) -> FinishActivityResponse:
         if not dates:
             raise BadRequest(detail="日付を指定してください")
         # まとめて終了された活動の合計を集計
@@ -324,14 +393,20 @@ class TimeService():
                 results.append({
                     "date": f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
                     "reason": "activity_not_found",
-                    "result": "error"
+                    "result": "error",
+                    "bonus": None,
+                    "penalty": None,
+                    "status": None
                 })
                 continue
             if activity.status != "pending":
                 results.append({
                     "date": f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
                     "reason": "activity_already_finished",
-                    "result": "error"
+                    "result": "error",
+                    "bonus": None,
+                    "penalty": None,
+                    "status": None
                 })
                 continue
             target_time = activity.target_time
@@ -342,7 +417,10 @@ class TimeService():
                 results.append({
                     "date": f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
                     "reason": "income_not_found",
-                    "result": "error"
+                    "result": "error",
+                    "bonus": None,
+                    "penalty": None,
+                    "status": None
                 })
                 continue
             try:
@@ -358,7 +436,8 @@ class TimeService():
                     "status": status,
                     "bonus": bonus,
                     "penalty": penalty,
-                    "result": "success"
+                    "result": "success",
+                    "reason": None
                 }
                 results.append(result)
                 with self.time_repo.begin_nested():
@@ -371,12 +450,13 @@ class TimeService():
                 results.append({
                     "date": f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
                     "reason": "unexpected_error",
-                    "result": "error"
+                    "result": "error",
+                    "bonus": None,
+                    "penalty": None,
+                    "status": None
                 })
                 logger.error(f"Error finishing activity for {date_str}: {str(e)}")
-        return {
-            "pay_adjustment": round_money(bonus_sum - penalty_sum),
-            "total_bonus": round_money(bonus_sum),
-            "total_penalty": round_money(penalty_sum),
-            "results": results
-        }
+        return FinishActivityResponse(pay_adjustment=round_money(bonus_sum - penalty_sum),
+                                      total_bonus=round_money(bonus_sum),
+                                      total_penalty=round_money(penalty_sum),
+                                      results=results)
