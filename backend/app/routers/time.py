@@ -39,7 +39,7 @@ def get_day_activity(params: CheckDate = Depends(),
     return service.get_day_activity(year, month, day, current_user["username"])
 
 
-@router.post("/activities/multi/target",
+@router.post("/activities/target",
              status_code=201,
              response_model=RegisterTargetTimeResponse)
 def register_multi_target_time(activities: MultiTargetTimeIn,
@@ -51,7 +51,7 @@ def register_multi_target_time(activities: MultiTargetTimeIn,
     return service.register_target_time_bulk(data, current_user["username"])
 
 
-@router.put("/activities/multi/actual",
+@router.put("/activities/actual",
             status_code=200,
             response_model=RegisterActualTimeResponse)
 def update_multi_actual_time(activities: MultiActualTimeIn,
@@ -64,7 +64,7 @@ def update_multi_actual_time(activities: MultiActualTimeIn,
     return service.register_actual_time_bulk(data, current_user["username"])
 
 
-@router.put("/activities/multi/finish",
+@router.put("/activities/finish",
             status_code=200,
             response_model=FinishActivityResponse)
 def finish_multi_activities(params: MultiFinishActivityIn,
@@ -95,9 +95,7 @@ def get_year_activities(param: CheckYear = Depends(),
                         current_user: dict = Depends(get_current_user)):
     """ 特定年のデータを取得 """
     service = get_time_service(db)
-    res = service.get_year_activities(param.year, current_user["username"])
-    print(res)
-    return res
+    return service.get_year_activities(param.year, current_user["username"])
 
 
 @router.get("/activities/total",

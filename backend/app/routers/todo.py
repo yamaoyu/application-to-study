@@ -6,6 +6,7 @@ from app.models.todo_model import (Todo,
                                    TodoIdsRequest,
                                    TodosCreateResponse,
                                    TodosGetResponse,
+                                   TodoEditResponse,
                                    TodosFinishResponse)
 from app.dependencies.auth import get_current_user
 from typing import Optional
@@ -54,7 +55,7 @@ def delete_todos(params: TodoIdsRequest,
     return service.delete_todos(params, username)
 
 
-@router.put("/todos/update/{todo_id}", status_code=200)
+@router.put("/todos/update/{todo_id}", status_code=200, response_model=TodoEditResponse)
 def edit_todo(todo_id: int,
               new_todo: Todo,
               service: TodoService = Depends(get_todo_service),

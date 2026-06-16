@@ -46,3 +46,10 @@ class TodosGetResponse(BaseModel):
 class TodosFinishResponse(BaseModel):
     message: str
     titles: str
+
+
+class TodoEditResponse(BaseModel):
+    message: str
+    title: str
+    due: date
+    detail: Optional[str] = None

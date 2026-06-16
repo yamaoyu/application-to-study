@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.repositories.time_repository import TimeRepository
 from app.repositories.money_repository import MoneyRepository
-from app.exceptions import NotFound, BadRequest
+from app.exceptions import NotFound, BadRequest, BulkOperationFailed
 from collections import defaultdict
 from lib.common import get_next_month_start
 from app.domain.activity_calculator import calc_bonus_penalty, calc_activity_result, round_money
@@ -138,6 +138,7 @@ class TimeService():
             penalty = adjustment.penalty
         logger.info(f"{username}が{parsed_date.year}-{parsed_date.month}-{parsed_date.day}の活動実績を取得")
         return getDayActivityResponse(
+            activity_id=activity.activity_id,
             date=f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
             target_time=activity.target_time,
             actual_time=activity.actual_time,
@@ -258,6 +259,7 @@ class TimeService():
             raise NotFound(detail=f"ステータスが「{status_dic[status]}」の活動は登録されていません")
         return getActivitiesByStatusResponse(activities=[
             getDayActivityResponse(
+                activity_id=act.activity_id,
                 date=f"{act.date.year}-{act.date.month}-{act.date.day}",
                 target_time=act.target_time,
                 actual_time=act.actual_time,
@@ -272,6 +274,7 @@ class TimeService():
                                   username: str
                                   ) -> RegisterTargetTimeResponse:
         results = []
+        error_count = 0
         for activity in activities:
             target_time = activity["target_time"]
             date_str = activity["date"]
@@ -286,6 +289,7 @@ class TimeService():
                     "reason": "income_not_found",
                     "target_time": None
                 })
+                error_count += 1
                 continue
             try:
                 with self.time_repo.begin_nested():
@@ -306,6 +310,7 @@ class TimeService():
                     "reason": "target_time_already_registered",
                     "target_time": None
                 })
+                error_count += 1
             except Exception as e:
                 results.append({
                     "date": f"{year}-{month}-{day}",
@@ -313,7 +318,10 @@ class TimeService():
                     "reason": "unexpected_error",
                     "target_time": None
                 })
+                error_count += 1
                 logger.error(f"Error registering target time for {date_str}: {str(e)}")
+        if error_count > 0:
+            BulkOperationFailed(results=results, detail="活動時間の登録に失敗しました")
         return RegisterTargetTimeResponse(results=results)
 
     def register_actual_time_bulk(self,
@@ -321,6 +329,7 @@ class TimeService():
                                   username: str
                                   ) -> RegisterActualTimeResponse:
         results = []
+        error_count = 0
         for param in params:
             actual_time = param["actual_time"]
             date_str = param["date"]
@@ -335,6 +344,7 @@ class TimeService():
                     "reason": "income_not_found",
                     "actual_time": None
                 })
+                error_count += 1
                 continue
             try:
                 parsed_date = date(year, month, day)
@@ -346,6 +356,7 @@ class TimeService():
                         "reason": "activity_not_found",
                         "actual_time": None
                     })
+                    error_count += 1
                     continue
                 if activity.status != "pending":
                     results.append({
@@ -354,6 +365,7 @@ class TimeService():
                         "reason": "activity_already_finished",
                         "actual_time": None
                     })
+                    error_count += 1
                 else:
                     with self.time_repo.begin_nested():
                         self.time_repo.update_actual_time(activity, actual_time)
@@ -372,7 +384,10 @@ class TimeService():
                     "reason": "unexpected_error",
                     "actual_time": None
                 })
+                error_count += 1
                 logger.error(f"Error registering actual time for {date_str}: {str(e)}")
+        if error_count > 0:
+            BulkOperationFailed(results=results, detail="目標時間の登録に失敗しました")
         return RegisterActualTimeResponse(results=results)
 
     def finish_activities(self,
@@ -385,6 +400,7 @@ class TimeService():
         bonus_sum = 0
         penalty_sum = 0
         results = []
+        error_count = 0
         for date_str in dates:
             year, month, day = map(int, date_str.split("-"))
             parsed_date = date(year, month, day)
@@ -398,6 +414,7 @@ class TimeService():
                     "penalty": None,
                     "status": None
                 })
+                error_count += 1
                 continue
             if activity.status != "pending":
                 results.append({
@@ -408,6 +425,7 @@ class TimeService():
                     "penalty": None,
                     "status": None
                 })
+                error_count += 1
                 continue
             target_time = activity.target_time
             actual_time = activity.actual_time
@@ -422,6 +440,7 @@ class TimeService():
                     "penalty": None,
                     "status": None
                 })
+                error_count += 1
                 continue
             try:
                 # 達成している場合はincomesテーブルのボーナスを、達成していない場合はpenaltyを加算する。
@@ -455,7 +474,10 @@ class TimeService():
                     "penalty": None,
                     "status": None
                 })
+                error_count += 1
                 logger.error(f"Error finishing activity for {date_str}: {str(e)}")
+        if error_count > 0:
+            BulkOperationFailed(results=results, detail="活動の終了に失敗しました")
         return FinishActivityResponse(pay_adjustment=round_money(bonus_sum - penalty_sum),
                                       total_bonus=round_money(bonus_sum),
                                       total_penalty=round_money(penalty_sum),

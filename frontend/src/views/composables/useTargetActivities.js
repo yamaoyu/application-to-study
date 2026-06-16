@@ -41,8 +41,11 @@ export const useRegisterTargets = () => {
         targetActivities.value = [{ date: '', target_time: 0.5 }];
       };
     } catch (error) {
-      console.error(error);
-      reqMsg.value = parseError(error, "活動時間の登録に失敗しました");
+      if (error.response?.data?.results) {
+        reqMsg.value = makeMessage(error.response.data.results);
+      } else {
+        reqMsg.value = parseError(error, "活動時間の登録に失敗しました");
+      }
       statusCode.value = error.response?.status ?? null;
     }
   }

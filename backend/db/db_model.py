@@ -57,7 +57,7 @@ class User(Base):
     __tablename__ = "users"
     username: Mapped[str] = mapped_column(VARCHAR(16), primary_key=True)
     password: Mapped[str] = mapped_column(CHAR(60), nullable=False)
-    email: Mapped[Optional[str]] = mapped_column(VARCHAR(32), nullable=True, unique=True)
+    email: Mapped[Optional[str]] = mapped_column(VARCHAR(32), nullable=True)
     role: Mapped[str] = mapped_column(Enum("admin", "general"), default="general", nullable=False)
 
     incomes = relationship('Income', back_populates='user')

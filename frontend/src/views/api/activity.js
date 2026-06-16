@@ -32,21 +32,21 @@ export const getAllActivities = () => {
 
 export const registerTargets = (activities) => {
   return apiClient.post(
-    "activities/multi/target",
+    "activities/target",
     { activities }
   )
 };
 
 export const registerActuals = (activities) => {
   return apiClient.put(
-    "activities/multi/actual",
+    "activities/actual",
     { activities }
   )
 };
 
 export const finishActivies = (dates) => {
   return apiClient.put(
-    "activities/multi/finish",
+    "activities/finish",
     { dates }
   )
 };

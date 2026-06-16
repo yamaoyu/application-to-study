@@ -28,3 +28,11 @@ class NotAuthorized(AppError):
 class Forbidden(AppError):
     """認可されていない場合の例外"""
     pass
+
+
+class BulkOperationFailed(AppError):
+    """活動記録などが複数送られた場合の例外"""
+
+    def __init__(self, results: list, detail: str = "処理に失敗しました"):
+        self.results = results
+        self.detail = detail

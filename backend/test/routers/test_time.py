@@ -19,7 +19,7 @@ def setup_target_time_for_test(client, get_resource_owner_headers, target_date=t
             {"date": target_date, "target_time": 5.0}
         ]
     }
-    client.post("/activities/multi/target",
+    client.post("/activities/target",
                 json=data,
                 headers=get_resource_owner_headers)
 
@@ -30,7 +30,7 @@ def setup_actual_time_for_test(client, get_resource_owner_headers):
             {"date": test_date, "actual_time": 5.0}
         ]
     }
-    client.put("/activities/multi/actual",
+    client.put("/activities/actual",
                json=data,
                headers=get_resource_owner_headers)
 
@@ -39,7 +39,7 @@ def setup_finish_activity_for_test(client, get_resource_owner_headers):
     data = {
         "dates": [test_date]
     }
-    client.put("/activities/multi/finish",
+    client.put("/activities/finish",
                json=data,
                headers=get_resource_owner_headers)
 
@@ -58,7 +58,7 @@ def test_register_multi_target_without_monthly_income(client, get_resource_owner
             {"date": test_date, "target_time": 5.0}
         ]
     }
-    response = client.post("/activities/multi/target",
+    response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 201
@@ -88,7 +88,7 @@ def test_register_target_with_expired_token(client, get_resource_owner_headers):
                 {"date": test_date, "target_time": 5.0}
             ]
         }
-        response = client.post("/activities/multi/target",
+        response = client.post("/activities/target",
                                json=data,
                                headers=headers)
         assert response.status_code == 401
@@ -104,7 +104,7 @@ def test_register_target_twice(client, get_resource_owner_headers):
             {"date": test_date, "target_time": 5.0}
         ]
     }
-    response = client.post("/activities/multi/target",
+    response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 201
@@ -128,7 +128,7 @@ def test_register_target_out_of_range(client, get_resource_owner_headers):
             {"date": test_date, "target_time": 15.0}
         ]
     }
-    response = client.post("/activities/multi/target",
+    response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -143,7 +143,7 @@ def test_register_target_with_incorrect_hour(client, get_resource_owner_headers)
             {"date": "2024-5-5", "target_time": 5.3}
         ]
     }
-    response = client.post("/activities/multi/target",
+    response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -158,7 +158,7 @@ def test_register_target_with_invalid_year(client, get_resource_owner_headers):
             {"date": "20240-5-5", "target_time": 5.0}
         ]
     }
-    response = client.post("/activities/multi/target",
+    response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -173,7 +173,7 @@ def test_register_target_with_invalid_month(client, get_resource_owner_headers):
             {"date": "2024-13-30", "target_time": 5.0}
         ]
     }
-    response = client.post("/activities/multi/target",
+    response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -188,7 +188,7 @@ def test_register_target_with_invalid_date(client, get_resource_owner_headers):
             {"date": "2024-2-30", "target_time": 5.0}
         ]
     }
-    response = client.post("/activities/multi/target",
+    response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -205,7 +205,7 @@ def test_register_multi_target(client, get_resource_owner_headers):
             {"date": "2024-5-7", "target_time": 7.0}
         ]
     }
-    response = client.post("/activities/multi/target",
+    response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 201
@@ -243,7 +243,7 @@ def test_register_multi_target_already_registered(client, get_resource_owner_hea
             {"date": "2024-5-6", "target_time": 6.0}
         ]
     }
-    response = client.post("/activities/multi/target",
+    response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 201
@@ -276,7 +276,7 @@ def test_register_multi_target_with_invalid_data(client, get_resource_owner_head
             {"date": "2024-5-7", "target_time": 15.0}
         ]
     }
-    response = client.post("/activities/multi/target",
+    response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -290,7 +290,7 @@ def test_register_multi_target_with_invalid_data(client, get_resource_owner_head
             {"date": "20240-5-5", "target_time": 5.0}
         ]
     }
-    response = client.post("/activities/multi/target",
+    response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -303,7 +303,7 @@ def test_register_multi_target_with_invalid_data(client, get_resource_owner_head
             {"date": "2024-13-6", "target_time": 6.0}
         ]
     }
-    response = client.post("/activities/multi/target",
+    response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -317,7 +317,7 @@ def test_register_multi_target_with_invalid_data(client, get_resource_owner_head
             {"date": "2024-5-35", "target_time": 5.0}
         ]
     }
-    response = client.post("/activities/multi/target",
+    response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -337,7 +337,7 @@ def test_register_multi_actual(client, get_resource_owner_headers):
             {"date": "2024-5-7", "target_time": 7.0}
         ]
     }
-    client.post("/activities/multi/target",
+    client.post("/activities/target",
                 json=data,
                 headers=get_resource_owner_headers)
     # 活動時間を登録
@@ -348,7 +348,7 @@ def test_register_multi_actual(client, get_resource_owner_headers):
             {"date": "2024-5-7", "actual_time": 7.0}
         ]
     }
-    response = client.put("/activities/multi/actual",
+    response = client.put("/activities/actual",
                           json=data,
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
@@ -385,7 +385,7 @@ def test_register_actual_before_register_target(client, get_resource_owner_heade
             {"date": "2024-5-11", "actual_time": 5.0}
         ]
     }
-    response = client.put("/activities/multi/actual",
+    response = client.put("/activities/actual",
                           json=data,
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
@@ -415,7 +415,7 @@ def test_register_actual_with_invalid_hour(client, get_resource_owner_headers):
             {"date": "2024-5-10", "actual_time": 5.2}
         ]
     }
-    response = client.put("/activities/multi/actual",
+    response = client.put("/activities/actual",
                           json=data,
                           headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -433,7 +433,7 @@ def test_register_actual_after_finish(client, get_resource_owner_headers):
             {"date": test_date, "actual_time": 5.0}
         ]
     }
-    response = client.put("/activities/multi/actual",
+    response = client.put("/activities/actual",
                           json=data,
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
@@ -458,7 +458,7 @@ def test_register_multi_actual_with_invalid_data(client, get_resource_owner_head
             {"date": test_date, "actual_time": 15.0}  # 上限を超える活動時間
         ]
     }
-    response = client.put("/activities/multi/actual",
+    response = client.put("/activities/actual",
                           json=data,
                           headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -474,7 +474,7 @@ def test_register_multi_actual_with_invalid_data(client, get_resource_owner_head
         ]
     }
 
-    response = client.put("/activities/multi/actual",
+    response = client.put("/activities/actual",
                           json=data,
                           headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -495,7 +495,7 @@ def test_update_already_finished_activity(client, get_resource_owner_headers):
             {"date": test_date, "target_time": 5.0}
         ]
     }
-    response = client.post("/activities/multi/target",
+    response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 201
@@ -516,7 +516,7 @@ def test_update_already_finished_activity(client, get_resource_owner_headers):
             {"date": test_date, "actual_time": 5.0}
         ]
     }
-    response = client.put("/activities/multi/actual",
+    response = client.put("/activities/actual",
                           json=data,
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
@@ -547,7 +547,7 @@ def test_finish_multi_activity(client, get_resource_owner_headers):
             {"date": "2024-5-7", "target_time": 7.0}
         ]
     }
-    client.post("/activities/multi/target",
+    client.post("/activities/target",
                 json=data,
                 headers=get_resource_owner_headers)
     # 複数の活動時間を登録
@@ -558,14 +558,14 @@ def test_finish_multi_activity(client, get_resource_owner_headers):
             {"date": "2024-5-7", "actual_time": 7.0}
         ]
     }
-    client.put("/activities/multi/actual",
+    client.put("/activities/actual",
                json=data,
                headers=get_resource_owner_headers)
     # 活動を終了
     data = {
         "dates": [test_date, "2024-5-6", "2024-5-7"]
     }
-    response = client.put("/activities/multi/finish",
+    response = client.put("/activities/finish",
                           json=data,
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
@@ -620,7 +620,7 @@ def test_finish_multi_activity_with_errors(client, get_resource_owner_headers):
             {"date": "2024-5-7", "target_time": 7.0}
         ]
     }
-    client.post("/activities/multi/target",
+    client.post("/activities/target",
                 json=data,
                 headers=get_resource_owner_headers)
     # 複数の活動時間を登録
@@ -631,14 +631,14 @@ def test_finish_multi_activity_with_errors(client, get_resource_owner_headers):
             {"date": "2024-5-7", "actual_time": 7.0}
         ]
     }
-    client.put("/activities/multi/actual",
+    client.put("/activities/actual",
                json=data,
                headers=get_resource_owner_headers)
     # 活動を終了
     data = {
         "dates": [test_date, "2024-5-6", "2024-5-7"]
     }
-    response = client.put("/activities/multi/finish",
+    response = client.put("/activities/finish",
                           json=data,
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
@@ -683,7 +683,7 @@ def test_finish_multi_activity_with_invalid_data(client, get_resource_owner_head
     data = {
         "dates": ["20241-5-5"]
     }
-    response = client.put("/activities/multi/finish",
+    response = client.put("/activities/finish",
                           json=data,
                           headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -695,7 +695,7 @@ def test_finish_multi_activity_with_invalid_data(client, get_resource_owner_head
     data = {
         "dates": ["2024-15-5"]
     }
-    response = client.put("/activities/multi/finish",
+    response = client.put("/activities/finish",
                           json=data,
                           headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -707,7 +707,7 @@ def test_finish_multi_activity_with_invalid_data(client, get_resource_owner_head
     data = {
         "dates": ["2024-5-50"]
     }
-    response = client.put("/activities/multi/finish",
+    response = client.put("/activities/finish",
                           json=data,
                           headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -718,7 +718,7 @@ def test_finish_multi_activity_with_invalid_data(client, get_resource_owner_head
 
 def test_finish_multi_acitivity_with_no_dates(client, get_resource_owner_headers):
     """ 複数の活動を終了させた場合に日付が指定されていない場合 """
-    response = client.put("/activities/multi/finish",
+    response = client.put("/activities/finish",
                           json={},
                           headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -732,12 +732,15 @@ def test_get_day_activities_registered_target(client, get_resource_owner_headers
     response = client.get(f"/activities{test_date_path}",
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
-    assert response.json() == {"date": test_date,
-                               "target_time": 5.0,
-                               "actual_time": 0.0,
-                               "status": "pending",
-                               "bonus": 0.0,
-                               "penalty": test_penalty}
+    assert response.json() == {
+        "activity_id": 1,
+        "date": test_date,
+        "target_time": 5.0,
+        "actual_time": 0.0,
+        "status": "pending",
+        "bonus": 0.0,
+        "penalty": test_penalty
+    }
 
 
 def test_get_day_activities_registered_actual(client, get_resource_owner_headers):
@@ -748,12 +751,15 @@ def test_get_day_activities_registered_actual(client, get_resource_owner_headers
     response = client.get(f"/activities{test_date_path}",
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
-    assert response.json() == {"date": test_date,
-                               "target_time": 5.0,
-                               "actual_time": 5.0,
-                               "status": "pending",
-                               "bonus": test_bonus,
-                               "penalty": 0.0}
+    assert response.json() == {
+        "activity_id": 1,
+        "date": test_date,
+        "target_time": 5.0,
+        "actual_time": 5.0,
+        "status": "pending",
+        "bonus": test_bonus,
+        "penalty": 0.0
+    }
 
 
 def test_get_day_activities(client, get_resource_owner_headers):
@@ -765,12 +771,15 @@ def test_get_day_activities(client, get_resource_owner_headers):
     response = client.get(f"/activities{test_date_path}",
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
-    assert response.json() == {"date": test_date,
-                               "target_time": 5.0,
-                               "actual_time": 5.0,
-                               "status": "success",
-                               "bonus": test_bonus,
-                               "penalty": 0.0}
+    assert response.json() == {
+        "activity_id": 1,
+        "date": test_date,
+        "target_time": 5.0,
+        "actual_time": 5.0,
+        "status": "success",
+        "bonus": test_bonus,
+        "penalty": 0.0
+    }
 
 
 def test_get_day_activities_before_register_activity(client, get_resource_owner_headers):
@@ -980,6 +989,7 @@ def test_get_activities_by_status(client, get_resource_owner_headers):
     assert response.json() == {
         "activities": [
             {
+                "activity_id": 1,
                 "date": test_date,
                 "target_time": 5.0,
                 "actual_time": 5.0,

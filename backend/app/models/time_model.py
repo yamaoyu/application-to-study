@@ -123,6 +123,7 @@ class ValidateStatus(BaseModel):
 
 
 class getDayActivityResponse(BaseModel):
+    activity_id: int
     date: str
     target_time: float
     actual_time: float
