@@ -125,7 +125,7 @@ describe('活動の終了(一括)', () => {
     await flushPromises();
 
     expect(mockedPut).toBeCalledWith(
-      `activities/multi/finish`,
+      `activities/finish`,
       {
         dates: expectedDates
       }
@@ -165,7 +165,7 @@ describe('活動の終了(一括)', () => {
     await flushPromises();
 
     expect(mockedPut).toBeCalledWith(
-      `activities/multi/finish`,
+      `activities/finish`,
       {
         dates: expectedDates
       }

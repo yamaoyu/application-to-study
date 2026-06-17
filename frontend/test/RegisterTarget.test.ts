@@ -61,7 +61,7 @@ describe('目標時間の登録(一括)', () => {
         await bModal.vm.$emit('ok');
         await flushPromises();
         expect(mockedPost).toBeCalledWith(
-            `activities/multi/target`,
+            `activities/target`,
             {
                 activities: [
                     {
@@ -110,7 +110,7 @@ describe('目標時間の登録(一括)', () => {
         await bModal.vm.$emit('ok');
         await flushPromises();
         expect(mockedPost).toBeCalledWith(
-            `activities/multi/target`,
+            `activities/target`,
             {
                 activities: insertData
             }

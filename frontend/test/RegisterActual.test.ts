@@ -142,7 +142,7 @@ describe('実績時間の登録(一括)', () => {
     await flushPromises();
 
     expect(mockedPut).toBeCalledWith(
-      `activities/multi/actual`,
+      `activities/actual`,
       {
         activities: pendingActivities
       }
@@ -175,7 +175,7 @@ describe('実績時間の登録(一括)', () => {
     await flushPromises();
 
     expect(mockedPut).toBeCalledWith(
-      `activities/multi/actual`,
+      `activities/actual`,
       {
         activities: pendingActivities
       }

@@ -450,6 +450,12 @@ class TimeService():
                 status = activity_result.status
                 bonus_sum += bonus
                 penalty_sum += penalty
+                with self.time_repo.begin_nested():
+                    self.time_repo.update_activity_status_and_bonus(
+                        activity, status, bonus, penalty)
+                    self.time_repo.flush()
+                    logger.info(
+                        f"{username}が{parsed_date.year}-{parsed_date.month}-{parsed_date.day}の活動を終了")
                 result = {
                     "date": f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
                     "status": status,
@@ -459,12 +465,6 @@ class TimeService():
                     "reason": None
                 }
                 results.append(result)
-                with self.time_repo.begin_nested():
-                    self.time_repo.update_activity_status_and_bonus(
-                        activity, status, bonus, penalty)
-                    self.time_repo.flush()
-                    logger.info(
-                        f"{username}が{parsed_date.year}-{parsed_date.month}-{parsed_date.day}の活動を終了")
             except Exception as e:
                 results.append({
                     "date": f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
