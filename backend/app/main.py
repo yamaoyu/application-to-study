@@ -10,14 +10,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from lib.log_conf import logger
 from fastapi.responses import JSONResponse
-from app.exceptions import NotFound, BadRequest, Conflict, NotAuthorized, Forbidden
+from app.exceptions import (NotFound,
+                            BadRequest,
+                            Conflict,
+                            NotAuthorized,
+                            Forbidden,
+                            BulkOperationFailed)
 from pydantic import ValidationError
 
 app = FastAPI()
 router = APIRouter()
 
-APP_SCHEME = os.getenv("APP_SCHEME")
-FRONTEND_HOST = os.getenv("FRONTEND_HOST")
+APP_SCHEME = os.environ["APP_SCHEME"]
+FRONTEND_HOST = os.environ["FRONTEND_HOST"]
 FRONTEND_URL = APP_SCHEME + "://" + FRONTEND_HOST
 
 app.add_middleware(
@@ -114,3 +119,14 @@ def not_authorized_exception_handler(request, exc):
 @app.exception_handler(Forbidden)
 def forbidden_exception_handler(request, exc):
     return JSONResponse(status_code=403, content={"detail": exc.detail})
+
+
+@app.exception_handler(BulkOperationFailed)
+def bulk_operation_failed_handler(request, exc):
+    return JSONResponse(
+        status_code=400,
+        content={
+            "results": exc.results,
+            "detail": exc.results
+        }
+    )

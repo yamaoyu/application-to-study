@@ -24,11 +24,7 @@ const defaultActivityData = {
 };
 
 const defaultIncomeData = {
-  month_info: {
-    salary: 25,
-    total_bonus: 0.38,
-    total_penalty: 0
-  },
+  base_income: 25.0,
   total_income: 25.38,
   pay_adjustment: 0.38
 };

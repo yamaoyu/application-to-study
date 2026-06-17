@@ -162,11 +162,7 @@ describe('デフォルト値の確認', () => {
 
     it('前年度の年収あり', async () => {
         const expectedData = {
-            month_info: {
-                salary: 25,
-                total_bonus: 0.38,
-                total_penalty: 0
-            },
+            base_income: 25.0,
             total_income: 25.38,
             pay_adjustment: 0.38
         };
@@ -181,8 +177,8 @@ describe('デフォルト値の確認', () => {
             `incomes/${expectedYear}/${expectedMonth}`,
         );
         const incomeForm = wrapper.find("[data-testid='income-form']") as DOMWrapper<HTMLInputElement>;
-        incomeForm.setValue(expectedData["month_info"].salary.toString());
-        expect(incomeForm.element.value).toEqual(expectedData["month_info"].salary.toString());
+        incomeForm.setValue(expectedData["base_income"].toString());
+        expect(incomeForm.element.value).toEqual(expectedData["base_income"].toString());
     });
 
     it('前年度の年収なし', async () => {

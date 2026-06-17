@@ -122,7 +122,12 @@ describe('実績時間の登録(一括)', () => {
 
     mockedPut.mockResolvedValue({
       status: 200,
-      data: { message: expectedMessage }
+      data: {
+        results: [
+          { result: "success", date: "2025/1/1", actual_time: 3 },
+          { result: "success", date: "2025/1/2", actual_time: 3.5 }
+        ]
+      }
     });
     // 全て選択をクリック
     wrapper.find("[data-testid='select-all-activities']").trigger("click");
@@ -137,7 +142,40 @@ describe('実績時間の登録(一括)', () => {
     await flushPromises();
 
     expect(mockedPut).toBeCalledWith(
-      `activities/multi/actual`,
+      `activities/actual`,
+      {
+        activities: pendingActivities
+      }
+    );
+    expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);
+  })
+
+  it('失敗', async () => {
+    const expectedMessage = "2025/1/1の活動時間登録に失敗: 目標時間が未登録です\n2025/2/1の活動時間登録に失敗: 月収が未登録です";
+
+    mockedPut.mockResolvedValue({
+      status: 200,
+      data: {
+        results: [
+          { result: "error", date: "2025/1/1", actual_time: 3, reason: "activity_not_found" },
+          { result: "error", date: "2025/2/1", actual_time: 3.5, reason: "income_not_found" }
+        ]
+      }
+    });
+    // 全て選択をクリック
+    wrapper.find("[data-testid='select-all-activities']").trigger("click");
+    await flushPromises(); // html要素が変わるため変更を待つ
+
+    await wrapper.find("[data-testid='submit-multi-actual']").trigger("click");
+    await flushPromises();
+
+    // モーダルのOKボタンをクリック
+    const bModal = wrapper.findComponent({ name: 'BModal' });
+    await bModal.vm.$emit('ok');
+    await flushPromises();
+
+    expect(mockedPut).toBeCalledWith(
+      `activities/actual`,
       {
         activities: pendingActivities
       }

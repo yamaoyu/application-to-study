@@ -27,11 +27,7 @@ const defaultActivityData = {
 };
 
 const defaultIncomeData = {
-    month_info: {
-        salary: 25,
-        total_bonus: 0.38,
-        total_penalty: 0
-    },
+    base_income: 25.0,
     total_income: 25.38,
     pay_adjustment: 0.38
 };
@@ -253,7 +249,7 @@ describe('Todoの操作', () => {
         await bModal.vm.$emit('ok');
         await flushPromises();
         expect(mockedPut).toHaveBeenCalledWith(
-            "todos/1",
+            "todos/update/1",
             {
                 title: defaultTodosData[0].title,
                 detail: defaultTodosData[0].detail,
@@ -306,7 +302,7 @@ describe('Todoの操作', () => {
         await flushPromises();
 
         expect(mockedPut).toHaveBeenCalledWith(
-            "todos/multi/finish",
+            "todos/finish",
             {
                 ids: [1]
             }
@@ -347,7 +343,7 @@ describe('Todoの操作', () => {
         await flushPromises();
 
         expect(mockedPut).toHaveBeenCalledWith(
-            "todos/multi/delete",
+            "todos/delete",
             {
                 ids: [1]
             }

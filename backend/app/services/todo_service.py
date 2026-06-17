@@ -1,7 +1,7 @@
 import traceback
 from lib.log_conf import logger
 from sqlalchemy.orm import Session
-from app.models.todo_model import Todo, Todos, IDList
+from app.models.todo_model import Todo, TodoIdsRequest, TodosCreateResponse, TodosGetResponse
 from sqlalchemy.exc import IntegrityError
 from typing import Optional
 from app.repositories.todo_repository import TodoRepository
@@ -12,30 +12,14 @@ class TodoService():
     def __init__(self, db: Session):
         self.repo = TodoRepository(db)
 
-    def create_todo(self, todo: Todo, username: str):
-        title = todo.title
-        due = todo.due
-        detail = todo.detail
-        try:
-            self.repo.insert_todo(title, due, detail, username)
-            self.repo.flush()
-            logger.info(f"{username}がTodo作成 内容:{title}")
-            return {"message": "以下の内容で作成しました", "title": title, "due": due, "detail": detail}
-        except IntegrityError as sqlalchemy_error:
-            if "Duplicate entry" in str(sqlalchemy_error.orig):
-                raise Conflict(detail="既に登録されている内容です")
-            raise BadRequest(detail="データの整合性エラーが発生しました。入力データを確認してください")
-
-    def create_todos(self, todos: Todos, username: str):
+    def create_todos(self, todos: list[Todo], username: str) -> TodosCreateResponse:
         error_count = 0
         response_messages = ""
-        todos = todos.todos
         for todo in todos:
-            Todo(title=todo["title"], detail=todo["detail"], due=todo["due"])
+            title = todo.title
+            due = todo.due
+            detail = todo.detail
             try:
-                title = todo["title"]
-                due = todo["due"]
-                detail = todo["detail"]
                 self.repo.insert_todo(title, due, detail, username)
                 self.repo.flush()
                 response_messages += f"【Todo作成成功】{title}\n"
@@ -52,7 +36,7 @@ class TodoService():
 
         if error_count > 0:
             raise BadRequest(detail=response_messages[:-1])
-        return {"message": response_messages[:-1]}  # 最後の改行を削除して返す
+        return TodosCreateResponse(message=response_messages[:-1])  # 最後の改行を削除して返す
 
     def get_todo(self, todo_id: int, username: str):
         todo = self.repo.get_todo(todo_id, username)
@@ -66,27 +50,20 @@ class TodoService():
                   start_due: Optional[str],
                   end_due: Optional[str],
                   title: Optional[str],
-                  username: str):
+                  username: str) -> list[TodosGetResponse]:
         todos = self.repo.get_todos(username=username, status=status,
                                     start_due=start_due, end_due=end_due, title=title)
         if not todos:
             raise NotFound(detail="登録された情報はありません")
         logger.info(f"ユーザー名:{username}  Todoを全て取得")
-        return todos
+        return [TodosGetResponse.model_validate(todo) for todo in todos]
 
-    def delete_todo(self, todo_id: int, username: str):
-        todo = self.repo.get_todo(todo_id, username)
-        if not todo:
-            raise NotFound(detail="選択されたTodoは存在しません")
-        self.repo.delete_todo(todo_id, username)
-        logger.info(f"{username}がTodoを削除 ID:{todo_id}")
-
-    def delete_todos(self, params: IDList, username: str):
+    def delete_todos(self, params: TodoIdsRequest, username: str):
         ids = params.ids
         # 削除するTodoが存在するか確認
         todos = self.repo.get_todos(username=username, ids=ids)
         if not todos:
-            raise NotFound(detail="削除リクエストされたTodoは全て存在しません")
+            raise NotFound(detail="選択されたTodoは存在しません")
         elif len(todos) < len(ids):
             ids_can_delete = set(ids) & set(todo.todo_id for todo in todos)
             title_can_delete = [todo.title for todo in todos]
@@ -116,25 +93,13 @@ class TodoService():
                 raise Conflict(detail="既に登録されている内容です")
             raise BadRequest(detail="データの整合性エラーが発生しました。入力データを確認してください")
 
-    def finish_todo(self, todo_id: int, username: str):
-        todo = self.repo.get_todo(todo_id, username)
-        if not todo:
-            raise NotFound(detail="選択されたTodoは存在しません")
-        if todo.status:
-            raise Conflict(detail="既に終了したTodoです")
-        self.repo.update_todo_status(todo, True)
-        logger.info(f"{username}がTodoを完了 ID:{todo.todo_id}")
-        return {"message": "選択したTodoを終了しました",
-                "title": todo.title,
-                "status": todo.status}
-
-    def finish_todos(self, params: IDList, username: str):
+    def finish_todos(self, params: TodoIdsRequest, username: str):
         ids = params.ids
         msg = ""
         # 終了するTodoが存在するか確認
         todos = self.repo.get_todos(username=username, status=False, ids=ids)
         if not todos:
-            raise Conflict(detail="終了リクエストされたTodoは全て存在しないか、既に終了しています")
+            raise NotFound(detail="終了リクエストされたTodoは存在しないか、既に終了しています")
         can_finish_ids = [todo.todo_id for todo in todos if not todo.status]
         finish_titles = [todo.title for todo in todos if not todo.status]
         if len(can_finish_ids) < len(ids):

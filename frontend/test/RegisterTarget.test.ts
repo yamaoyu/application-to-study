@@ -37,7 +37,7 @@ describe('目標時間の登録(一括)', () => {
 
     it('成功', async () => {
         // タブの切り替え    
-        const expectedMessage = "2025/1/1の目標時間を3時間に登録しました\n2025/1/2の目標時間を3.5時間に登録しました";
+        const expectedMessage = "2025/1/1の目標時間を3時間に登録しました";
 
         const insertDate = "2025-01-01";
         const insertTime = 3;
@@ -50,7 +50,7 @@ describe('目標時間の登録(一括)', () => {
 
         mockedPost.mockResolvedValue({
             status: 201,
-            data: { message: expectedMessage }
+            data: { results: [{ result: "success", date: "2025/1/1", target_time: insertTime }] }
         });
 
         await wrapper.find("[data-testid='submit-multi-target']").trigger("click");
@@ -61,7 +61,7 @@ describe('目標時間の登録(一括)', () => {
         await bModal.vm.$emit('ok');
         await flushPromises();
         expect(mockedPost).toBeCalledWith(
-            `activities/multi/target`,
+            `activities/target`,
             {
                 activities: [
                     {
@@ -69,6 +69,50 @@ describe('目標時間の登録(一括)', () => {
                         target_time: insertTime
                     }
                 ]
+            }
+        );
+        expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);
+    });
+
+    it('失敗', async () => {
+        // タブの切り替え    
+        const expectedMessage = "2025/1/1の目標時間登録に失敗: 既に登録されています\n2025/2/1の目標時間登録に失敗: 月収が未登録です";
+
+        const insertData = [{ "date": "2025-01-01", "target_time": 3 }, { "date": "2025-02-01", "target_time": 4 }];
+
+        await wrapper.find("[data-testid='increase-target-row']").trigger("click");
+        await flushPromises();
+
+        for (let i = 0; i < insertData.length; i++) {
+            const { date, target_time } = insertData[i];
+            const dateField = wrapper.find(`[data-testid='target-date-row-${i}']`) as DOMWrapper<HTMLInputElement>;
+            await dateField.setValue(date);
+            const timeField = wrapper.find(`[data-testid='target-time-row-${i}']`) as DOMWrapper<HTMLInputElement>;
+            await timeField.setValue(target_time);
+            await flushPromises();
+        }
+
+        mockedPost.mockResolvedValue({
+            status: 201,
+            data: {
+                results: [
+                    { result: "error", date: "2025/1/1", reason: "target_time_already_registered" },
+                    { result: "error", date: "2025/2/1", reason: "income_not_found" }
+                ]
+            }
+        });
+
+        await wrapper.find("[data-testid='submit-multi-target']").trigger("click");
+        await flushPromises();
+
+        // モーダルのOKボタンをクリック
+        const bModal = wrapper.findComponent({ name: 'BModal' });
+        await bModal.vm.$emit('ok');
+        await flushPromises();
+        expect(mockedPost).toBeCalledWith(
+            `activities/target`,
+            {
+                activities: insertData
             }
         );
         expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);

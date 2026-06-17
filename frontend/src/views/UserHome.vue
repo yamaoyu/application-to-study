@@ -42,7 +42,7 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">合計</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span :class="getSalaryColors(incomeRes.data.total_income-incomeRes.data.month_info.salary)" class="h3 fw-bold text-center" data-testid="total-income">
+            <span :class="getSalaryColors(incomeRes.data.total_income-incomeRes.data.base_income)" class="h3 fw-bold text-center" data-testid="total-income">
               {{ incomeRes.data.total_income }}
             </span>
             万円
@@ -53,7 +53,7 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">月収</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center">{{ incomeRes.data.month_info.salary }}</span>
+            <span class="h3 fw-bold text-center">{{ incomeRes.data.base_income }}</span>
             万円
           </div>
         </div>

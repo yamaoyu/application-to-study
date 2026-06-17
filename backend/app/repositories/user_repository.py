@@ -1,5 +1,6 @@
 from db import db_model
 from sqlalchemy.orm import Session
+from typing import Optional
 
 
 class UserRepository():
@@ -9,7 +10,7 @@ class UserRepository():
     def flush(self) -> None:
         self.db.flush()
 
-    def insert_user(self, username: str, hash_password: str, email: str, role: str) -> None:
+    def insert_user(self, username: str, hash_password: str, email: Optional[str], role: str) -> None:
         form_data = db_model.User(
             username=username, password=hash_password, email=email, role=role)
         self.db.add(form_data)

@@ -2,7 +2,7 @@ import { apiClient } from "./client";
 
 export const postTodos = (todos) => {
   return apiClient.post(
-    "todos/multi",
+    "todos",
     { todos }
   )
 };
@@ -14,21 +14,21 @@ export const getTodos = (query) => {
 
 export const editTodo = (id, params) => {
   return apiClient.put(
-    `todos/${id}`,
+    `todos/update/${id}`,
     params
   )
 };
 
 export const finishTodos = (ids) => {
   return apiClient.put(
-    `todos/multi/finish`,
+    `todos/finish`,
     ids
   )
 };
 
 export const deleteTodos = (ids) => {
   return apiClient.put(
-    `todos/multi/delete`,
+    `todos/delete`,
     ids
   );
 };
