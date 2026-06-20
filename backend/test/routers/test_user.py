@@ -2,6 +2,7 @@ import pytest
 from conftest import SECRET_KEY, ALGORITHM
 from testdata import RESOURCE_OWNER_USERNAME, RESOURCE_OWNER_PLAIN_PASSWORD
 from jose import jwt
+from jose.exceptions import JWTError
 
 # conftestで登録したユーザーとは別にこのファイルでユーザー作成する際に使うパスワード
 password = "P@ssword1"
@@ -16,7 +17,6 @@ def test_register_user(client):
         "username": "test",
         "password": "*********",
         "email": None,
-        "message": "testの作成に成功しました",
         "role": "general"
     }
 
@@ -27,7 +27,15 @@ def test_register_user_with_short_username(client):
                  "password": password}
     response = client.post("/users", json=user_info)
     assert response.status_code == 422
-    assert response.json() == {"detail": "ユーザー名は3文字以上、16文字以下としてください"}
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_VALUE",
+                "field": "username"
+            }
+        ]
+    }
 
 
 def test_register_user_with_invalid_password(client):
@@ -36,7 +44,15 @@ def test_register_user_with_invalid_password(client):
                  "password": "test"}
     response = client.post("/users", json=user_info)
     assert response.status_code == 422
-    assert response.json() == {"detail": "パスワードは8文字以上、16文字以下としてください"}
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_VALUE",
+                "field": "password"
+            }
+        ]
+    }
 
 
 def test_register_user_with_invalid_email(client):
@@ -46,7 +62,15 @@ def test_register_user_with_invalid_email(client):
                  "email": "aaaaa"}
     response = client.post("/users", json=user_info)
     assert response.status_code == 422
-    assert response.json() == {"detail": "正しい形式のメールアドレスを入力してください"}
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_EMAIL",
+                "field": "email"
+            }
+        ]
+    }
 
 
 def test_register_with_duplicate_user_name(client, create_resource_owner):
@@ -56,7 +80,7 @@ def test_register_with_duplicate_user_name(client, create_resource_owner):
     response = client.post("/users", json=user_info)
     assert response.status_code == 409
     assert response.json() == {
-        "detail": "入力された情報は既に使用されています。\n別のユーザー名またはメールアドレスをお試しください"
+        "code": "USER_ALREADY_EXISTS"
     }
 
 
@@ -83,7 +107,7 @@ def test_login(client, create_resource_owner):
             access_token, SECRET_KEY, ALGORITHM)
         assert "sub" in decoded_token
         assert decoded_token["sub"] == "testuser"
-    except jwt.JWTError as e:
+    except JWTError as e:
         pytest.fail(f"Invalid JWT token {str(e)}")
 
 
@@ -94,7 +118,7 @@ def test_login_with_invalid_password(client, create_resource_owner):
     response = client.post("/login", json=user_info)
     assert response.status_code == 401
     assert response.json() == {
-        "detail": "入力情報が正しくありません。\nユーザー名またはパスワードをご確認ください"
+        "code": "NOT_AUTHORIZED"
     }
 
 
@@ -109,7 +133,6 @@ def test_login_not_registered_user(client):
 def test_logout(client, get_resource_owner_headers):
     response = client.post("/logout", headers=get_resource_owner_headers)
     assert response.status_code == 200
-    assert response.json() == {"message": f"{RESOURCE_OWNER_USERNAME}がログアウト"}
 
 
 def test_regenerate_token(client, get_resource_owner_headers):
@@ -122,16 +145,37 @@ def test_regenerate_token(client, get_resource_owner_headers):
         decoded_token = jwt.decode(access_token, SECRET_KEY, ALGORITHM)
         assert "sub" in decoded_token
         assert decoded_token["sub"] == "testuser"
-    except jwt.JWTError as e:
+    except JWTError as e:
         pytest.fail(f"Invalid JWT token {str(e)}")
 
 
-def test_change_password(client, get_resource_owner_headers):
+def test_change_password_with_invalid_old_password(client, get_resource_owner_headers):
     new_password = "newP@ssword1"
+    data = {
+        "old_password": new_password,
+        "new_password": new_password
+    }
+    response = client.put("/password", json=data, headers=get_resource_owner_headers)
+    assert response.status_code == 401
+    assert response.json() == {
+        "code": "INVALID_CURRENT_PASSWORD"
+    }
+
+
+def test_change_password_with_invalid_password(client, get_resource_owner_headers):
+    new_password = "invalid"
     data = {
         "old_password": RESOURCE_OWNER_PLAIN_PASSWORD,
         "new_password": new_password
     }
     response = client.put("/password", json=data, headers=get_resource_owner_headers)
-    assert response.status_code == 200
-    assert response.json() == {"message": "パスワードの変更に成功しました"}
+    assert response.status_code == 422
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_VALUE",
+                "field": "new_password"
+            }
+        ]
+    }

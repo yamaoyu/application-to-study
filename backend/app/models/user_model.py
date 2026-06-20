@@ -41,7 +41,6 @@ class RegisterUserResponse(BaseModel):
     username: str
     password: str
     email: Optional[str] = None
-    message: str
     role: Optional[str] = None
 
 
@@ -54,10 +53,6 @@ class LoginUserResponse(BaseModel):
     access_token: str
     token_type: str
     role: str
-
-
-class logoutResponse(BaseModel):
-    message: str
 
 
 class regenerateAccessTokenResponse(BaseModel):
@@ -76,7 +71,3 @@ class ChangePasswordInfo(BaseModel):
         elif not is_password_complex(new_password):
             raise ValueError(f"パスワードは大文字、小文字、数字、記号({special_characters})をそれぞれ1文字以上含む必要があります")
         return new_password
-
-
-class changePasswordResponse(BaseModel):
-    message: str

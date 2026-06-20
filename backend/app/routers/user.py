@@ -6,10 +6,8 @@ from app.models.user_model import (RegisterUserInfo,
                                    RegisterUserResponse,
                                    LoginUserInfo,
                                    LoginUserResponse,
-                                   logoutResponse,
                                    regenerateAccessTokenResponse,
-                                   ChangePasswordInfo,
-                                   changePasswordResponse)
+                                   ChangePasswordInfo)
 from fastapi import APIRouter, Depends, Response, Cookie
 from app.services.user_service import UserService
 from typing import Literal
@@ -75,7 +73,7 @@ def login(user_info: LoginUserInfo,
     }
 
 
-@router.post("/logout", status_code=200, response_model=logoutResponse)
+@router.post("/logout", status_code=200, response_model=None)
 def logout(response: Response,
            device_id: str = Cookie(default=None),
            current_user: dict = Depends(get_current_user),
@@ -95,7 +93,7 @@ def regenerate_access_token(refresh_token: str = Cookie(default=None),
     return service.regenerate_access_token(refresh_token, device_id)
 
 
-@router.put("/password", status_code=200, response_model=changePasswordResponse)
+@router.put("/password", status_code=200, response_model=None)
 def change_password(params: ChangePasswordInfo,
                     db: Session = Depends(get_db),
                     current_user: dict = Depends(get_current_user)):

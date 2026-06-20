@@ -19,7 +19,8 @@ MYSQL_HOST = os.getenv("MYSQL_HOST")
 TEST_MYSQL_DATABASE = os.getenv("TEST_MYSQL_DATABASE")
 TEST_DATABASE_URL = f"mysql+pymysql://{MYSQL_USER}:{
     MYSQL_PASSWORD}@{MYSQL_HOST}/{TEST_MYSQL_DATABASE}"
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = os.getenv(
+    "SECRET_KEY", "testc5925849aksd0d30a95c3cb10726a5831521c5a93f4c4252466de771dhsk")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
 engine = create_engine(TEST_DATABASE_URL, poolclass=NullPool)
