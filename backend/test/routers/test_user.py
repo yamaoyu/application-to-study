@@ -3,6 +3,7 @@ from conftest import SECRET_KEY, ALGORITHM
 from testdata import RESOURCE_OWNER_USERNAME, RESOURCE_OWNER_PLAIN_PASSWORD
 from jose import jwt
 from jose.exceptions import JWTError
+from app.error_codes import NotAuthorizedCode, ConflictCode
 
 # conftestで登録したユーザーとは別にこのファイルでユーザー作成する際に使うパスワード
 password = "P@ssword1"
@@ -80,7 +81,7 @@ def test_register_with_duplicate_user_name(client, create_resource_owner):
     response = client.post("/users", json=user_info)
     assert response.status_code == 409
     assert response.json() == {
-        "code": "USER_ALREADY_EXISTS"
+        "code": ConflictCode.USER_ALREADY_EXISTS
     }
 
 
@@ -118,7 +119,7 @@ def test_login_with_invalid_password(client, create_resource_owner):
     response = client.post("/login", json=user_info)
     assert response.status_code == 401
     assert response.json() == {
-        "code": "NOT_AUTHORIZED"
+        "code": NotAuthorizedCode.NOT_AUTHORIZED
     }
 
 
@@ -158,7 +159,7 @@ def test_change_password_with_invalid_old_password(client, get_resource_owner_he
     response = client.put("/password", json=data, headers=get_resource_owner_headers)
     assert response.status_code == 401
     assert response.json() == {
-        "code": "INVALID_CURRENT_PASSWORD"
+        "code": NotAuthorizedCode.INVALID_CURRENT_PASSWORD
     }
 
 

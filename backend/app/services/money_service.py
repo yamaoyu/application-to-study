@@ -7,6 +7,7 @@ from app.exceptions import NotFound, BadRequest, Conflict
 from datetime import date
 from lib.common import get_next_month_start
 from app.models.money_model import RegisterSalaryResponse, GetIncomeResponse
+from app.error_codes import NotFoundCode, ConflictCode, BadRequestCode
 
 
 class MoneyService():
@@ -23,14 +24,14 @@ class MoneyService():
             return RegisterSalaryResponse(year=year, month=month, salary=salary)
         except IntegrityError as sqlalchemy_error:
             if "Duplicate entry" in str(getattr(sqlalchemy_error, "orig", sqlalchemy_error)):
-                raise Conflict(code="SALARY_ALREADY_EXISTS")
-            raise BadRequest(code="UNEXPECTED_ERROR")
+                raise Conflict(code=ConflictCode.SALARY_ALREADY_EXISTS)
+            raise BadRequest(code=BadRequestCode.UNEXPECTED_ERROR)
 
     def get_monthly_income(self, year: int, month: int, username: str) -> GetIncomeResponse:
         income_month = date(year, month, 1)
         income = self.income_repo.get_monthly_salary(income_month, username)
         if not income:
-            raise NotFound(code="NOT_FOUND_ERROR")
+            raise NotFound(code=NotFoundCode.SALARY_NOT_FOUND_ERROR)
         end_date = get_next_month_start(income_month)
         activity_summary = self.time_repo.get_activity_summary(
             username, income_month, end_date)

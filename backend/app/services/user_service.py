@@ -12,6 +12,7 @@ from jose import jwt, JWTError, ExpiredSignatureError
 from datetime import date, timedelta
 from app.models.user_model import (RegisterUserResponse,
                                    regenerateAccessTokenResponse)
+from app.error_codes import NotAuthorizedCode, ConflictCode, NotFoundCode
 
 # openssl rand -hex 32
 SECRET_KEY = os.environ["SECRET_KEY"]
@@ -26,7 +27,7 @@ class UserService():
     def get_user(self, username: str):
         user = self.user_repo.get_user(username)
         if not user:
-            raise NotFound(code="USER_NOT_FOUND")
+            raise NotFound(code=NotFoundCode.USER_NOT_FOUND)
         return user
 
     def create_user(self,
@@ -40,7 +41,7 @@ class UserService():
             self.user_repo.flush()
         except IntegrityError as sqlalchemy_error:
             logger.warning(f"ユーザー作成に失敗しました\n{str(sqlalchemy_error)}")
-            raise Conflict(code="USER_ALREADY_EXISTS")
+            raise Conflict(code=ConflictCode.USER_ALREADY_EXISTS)
         logger.info(f"ユーザー作成:{username}")
         return RegisterUserResponse(
             username=username,
@@ -60,7 +61,7 @@ class UserService():
         user = self.get_user(username)
         is_password = verify_password(plain_password, user.password)
         if not is_password:
-            raise NotAuthorized(code="NOT_AUTHORIZED")
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
         access_token = create_access_token({"sub": user.username, "role": user.role})
         token_info = self.create_or_update_refresh_token(
             {"sub": user.username, "role": user.role}, device_id=device_id)
@@ -86,12 +87,12 @@ class UserService():
             access_token = create_access_token({"sub": user.username, "role": user.role})
             return regenerateAccessTokenResponse(access_token=access_token, token_type="Bearer")
         else:
-            raise NotAuthorized(code="NOT_AUTHORIZED")
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
 
     def change_password(self, old_password: str, new_password: str, username: str) -> None:
         user = self.get_user(username)
         if not verify_password(old_password, user.password):
-            raise NotAuthorized(code="INVALID_CURRENT_PASSWORD")
+            raise NotAuthorized(code=NotAuthorizedCode.INVALID_CURRENT_PASSWORD)
         self.user_repo.update_password(user, get_password_hash(new_password))
         self.user_repo.flush()
 
@@ -117,27 +118,27 @@ class UserService():
             }
         except Exception:
             logger.error(f"リフレッシュトークンの作成中にエラーが発生しました\n{traceback.format_exc()}")
-            raise NotAuthorized(code="NOT_AUTHORIZED")
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
 
     def get_current_user_from_token(self, token: str) -> dict:
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
             username = payload.get("sub")
             if username is None:
-                raise NotAuthorized(code="NOT_AUTHORIZED")
+                raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
             user = self.user_repo.get_user(username)
             if not user:
-                raise NotFound(code="USER_NOT_FOUND")
+                raise NotFound(code=NotFoundCode.USER_NOT_FOUND)
             return {"username": username, "role": user.role}
         except ExpiredSignatureError:
-            raise NotAuthorized(code="NOT_AUTHORIZED")
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
         except JWTError:
-            raise NotAuthorized(code="NOT_AUTHORIZED")
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
         except NotAuthorized as http_e:
             raise http_e
         except Exception:
             logger.error(f"ユーザーの認証に失敗しました\n{traceback.format_exc()}")
-            raise NotAuthorized(code="NOT_AUTHORIZED")
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
 
     def verify_refresh_token(self, refresh_token: str,
                              device_id: str) -> bool:
@@ -160,4 +161,4 @@ class UserService():
             return True
         except Exception:
             logger.error(f"リフレッシュトークンの検証中にエラーが発生しました\n{traceback.format_exc()}")
-            raise NotAuthorized(code="NOT_AUTHORIZED")
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)

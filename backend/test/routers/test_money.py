@@ -1,3 +1,5 @@
+from app.error_codes import ConflictCode, NotFoundCode
+
 # テストで使用する変数
 test_year = 2024
 test_month = 6
@@ -83,7 +85,7 @@ def test_register_income_already_registered(client, get_resource_owner_headers):
                            json=data, headers=get_resource_owner_headers)
     assert response.status_code == 409
     assert response.json() == {
-        "code": "SALARY_ALREADY_EXISTS"
+        "code": ConflictCode.SALARY_ALREADY_EXISTS
     }
 
 
@@ -117,6 +119,16 @@ def test_get_income(client, get_resource_owner_headers):
         "pay_adjustment": 0.0,
         "total_penalty": 0.0,
         "total_bonus": 0.0
+    }
+
+
+def test_get_income_without_register(client, get_resource_owner_headers):
+    year = test_year
+    month = test_month
+    response = client.get(f"/incomes/{year}/{month}", headers=get_resource_owner_headers)
+    assert response.status_code == 404
+    assert response.json() == {
+        "code": NotFoundCode.SALARY_NOT_FOUND_ERROR
     }
 
 
@@ -161,5 +173,5 @@ def test_get_income_by_another_user(client, get_resource_owner_headers, get_non_
     response = client.get(f"/incomes/{year}/{month}", headers=user2_headers)
     assert response.status_code == 404
     assert response.json() == {
-        "code": "NOT_FOUND_ERROR"
+        "code": NotFoundCode.SALARY_NOT_FOUND_ERROR
     }

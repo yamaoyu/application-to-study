@@ -1,7 +1,7 @@
 import { ref, computed } from "vue";
 import { updatePassword } from "../api/user";
 import { parseError } from "../utils/error";
-  import { validateUsername, validatePassword, checkPassword, validateEmail } from '../utils/userValidation';
+import { validateUsername, validatePassword, checkPassword, validateEmail } from '../utils/userValidation';
 
 export const useChangePassword = () => {
   const oldPassword = ref('');
@@ -15,7 +15,7 @@ export const useChangePassword = () => {
       const res = await updatePassword(oldPassword.value, newPassword.value);
       if (res.status===200){
         statusCode.value = res.status
-        message.value = res.data.message
+        message.value = "パスワードの変更に成功しました"
         oldPassword.value = ''
         newPassword.value = ''
         newPasswordCheck.value = ''

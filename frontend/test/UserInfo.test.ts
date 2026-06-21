@@ -68,16 +68,6 @@ describe('パスワード変更フォームの動作確認', () => {
         expect(newPassForm.element.value).toEqual(newPassword);
     });
 
-    it('新しいパスワード(1回目)を入力フォームに値が入力できない', async () => {
-        // パスワードを変更するにチェックを入れず、入力できないことを確認する
-        const newPassForm = wrapper.find('[data-testid="newPassword"]') as DOMWrapper<HTMLInputElement>;
-        expect(newPassForm.element.disabled).toBe(true);
-        expect(newPassForm.element.value).toBe("");
-
-        // 値がないとリクエストを送信できないことを確認する
-        await wrapper.find('[data-testid="password-change-button"]').trigger('submit');
-        expect(mockedPut).toBeCalledTimes(0);
-    });
 
     it('新しいパスワード(確認用)を入力フォームで値を更新できる', async () => {
         // 初期状態では入力フォームに入力できない
@@ -93,17 +83,6 @@ describe('パスワード変更フォームの動作確認', () => {
         const newPasswordCheck = "newP@ssword1";
         await passCheckForm.setValue(newPasswordCheck);
         expect(passCheckForm.element.value).toEqual(newPasswordCheck);
-    });
-
-    it('新しいパスワード(確認用)を入力フォームに値が入力できない', async () => {
-        // パスワードを変更するにチェックを入れず、入力できないことを確認する
-        const passCheckForm = wrapper.find('[data-testid="newPasswordCheck"]') as DOMWrapper<HTMLInputElement>;
-        expect(passCheckForm.element.disabled).toBe(true);
-        expect(passCheckForm.element.value).toBe("");
-
-        // 値がないとリクエストを送信できないことを確認する
-        await wrapper.find('[data-testid="password-change-button"]').trigger('submit');
-        expect(mockedPut).toBeCalledTimes(0);
     });
 });
 
@@ -235,7 +214,7 @@ describe('パスワード変更リクエストを送信', async () => {
     }
     );
 
-    it('パスワードを変更リクエストを送信', async () => {
+    it('パスワードを変更に成功', async () => {
         // パスワードを変更するにチェックを入れ、入力できるようにする
         const checkBox = wrapper.find('[data-testid="isPasswordChangeEnabled"]');
         await checkBox.setValue(true);
@@ -258,9 +237,7 @@ describe('パスワード変更リクエストを送信', async () => {
         const expectedMessage = "パスワードの変更に成功しました"
         mockedPut.mockResolvedValue({
             status: 200,
-            data: {
-                message: expectedMessage
-            }
+            data: {}
         });
         await wrapper.find('[data-testid="password-change-button"]').trigger('submit');
 
@@ -274,6 +251,35 @@ describe('パスワード変更リクエストを送信', async () => {
         );
         expect(wrapper.find("[data-testid='message']").text()).toEqual(expectedMessage);
     });
+
+    it('パスワードを変更に失敗', async () => {
+        // パスワードを変更するにチェックを入れ、入力できるようにする
+        const checkBox = wrapper.find('[data-testid="isPasswordChangeEnabled"]');
+        await checkBox.setValue(true);
+
+        // 現在のパスワード
+        const oldPassForm = wrapper.find('[data-testid="oldPassword"]');
+        await oldPassForm.setValue("invalidPassword");
+
+        // 新しいパスワード
+        const newPassForm = wrapper.find('[data-testid="newPassword"]');
+        await newPassForm.setValue("newP@ssword1");
+
+        // パスワード確認
+        const passCheckForm = wrapper.find('[data-testid="newPasswordCheck"]');
+        await passCheckForm.setValue("newP@ssword1");
+
+        const expectedMessage = "現在のパスワードに誤りがあります"
+        mockedPut.mockRejectedValue({
+            response: {
+                status: 401,
+                code: "INVALID_CURRENT_PASSWORD"
+            }
+        });
+        await wrapper.find('[data-testid="password-change-button"]').trigger('submit');
+        expect(wrapper.find("[data-testid='message']").text()).toEqual(expectedMessage);
+    });
+
 
     it('必須項目を入力しないとリクエストを送信できない', async () => {
         await wrapper.find('[data-testid="password-change-button"]').trigger('submit');

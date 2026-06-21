@@ -1,0 +1,20 @@
+from enum import StrEnum
+
+
+class ConflictCode(StrEnum):
+    SALARY_ALREADY_EXISTS = "SALARY_ALREADY_EXISTS"
+    USER_ALREADY_EXISTS = "USER_ALREADY_EXISTS"
+
+
+class NotFoundCode(StrEnum):
+    SALARY_NOT_FOUND_ERROR = "SALARY_NOT_FOUND_ERROR"
+    USER_NOT_FOUND = "USER_NOT_FOUND"
+
+
+class NotAuthorizedCode(StrEnum):
+    NOT_AUTHORIZED = "NOT_AUTHORIZED"
+    INVALID_CURRENT_PASSWORD = "INVALID_CURRENT_PASSWORD"
+
+
+class BadRequestCode(StrEnum):
+    UNEXPECTED_ERROR = "UNEXPECTED_ERROR"

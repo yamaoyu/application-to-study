@@ -110,7 +110,7 @@ describe('月収の入力', () => {
             response: {
                 status: 404,
                 data: {
-                    detail: "2025-1の月収は未登録です"
+                    code: "NOT_FOUND_ERROR"
                 }
             }
         });
@@ -129,7 +129,7 @@ describe('月収の入力', () => {
             response: {
                 status: 404,
                 data: {
-                    detail: "2025-1の月収は未登録です"
+                    code: "NOT_FOUND_ERROR"
                 }
             }
         });
@@ -186,7 +186,7 @@ describe('デフォルト値の確認', () => {
             response: {
                 status: 404,
                 data: {
-                    detail: "2025-1の月収は未登録です"
+                    code: "SALARY_NOT_FOUND_ERROR"
                 }
             }
         });
@@ -215,11 +215,15 @@ describe('登録処理', async () => {
         mockedPost.mockResolvedValue({
             status: 201,
             data: {
-                message: expectedMessage
+                year: 2025,
+                month: 1,
+                salary: 25
             }
         });
         wrapper = mountComponent(RegisterSalary);
 
+        await wrapper.find('[data-testid="selected-month"').setValue("2025-01");
+        await wrapper.find('[data-testid="income-form"').setValue(25);
         await wrapper.find('[data-testid="submit"]').trigger('submit');
         expect(wrapper.find('[data-testid="register-msg"]').text()).toEqual(expectedMessage);
     });
@@ -231,7 +235,7 @@ describe('登録処理', async () => {
             response: {
                 status: 404,
                 data: {
-                    detail: expectedMessage
+                    code: "SALARY_ALREADY_EXISTS"
                 }
             }
         });
