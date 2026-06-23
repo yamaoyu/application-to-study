@@ -91,7 +91,16 @@ class RegisterActualTimeResponse(BaseModel):
     results: list[RegisterActualTime]
 
 
-class MultiFinishActivityIn(BaseModel):
+class FinishActivity(BaseModel):
+    date: str
+    status: Optional[Status] = None
+    bonus: Optional[float] = None
+    penalty: Optional[float] = None
+    result: str
+    reason: Optional[str] = None
+
+
+class FinishActivityRequest(BaseModel):
     dates: list[str]
 
     @field_validator("dates")
@@ -100,15 +109,6 @@ class MultiFinishActivityIn(BaseModel):
             year, month, day = map(int, date_str.split("-"))
             CheckDate(year=year, month=month, day=day)
         return dates
-
-
-class FinishActivity(BaseModel):
-    date: str
-    status: Optional[Status] = None
-    bonus: Optional[float] = None
-    penalty: Optional[float] = None
-    result: str
-    reason: Optional[str] = None
 
 
 class FinishActivityResponse(BaseModel):

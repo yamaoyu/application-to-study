@@ -34,6 +34,10 @@ class Forbidden(AppError):
 class BulkOperationFailed(AppError):
     """活動記録などが複数送られた場合の例外"""
 
-    def __init__(self, results: list, detail: str = "処理に失敗しました"):
+    def __init__(
+        self,
+        results: list,
+        code: str
+    ):
+        super().__init__(code=code)
         self.results = results
-        self.detail = detail

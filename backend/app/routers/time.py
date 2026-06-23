@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends
 from app.models.time_model import (MultiTargetTimeIn,
                                    MultiActualTimeIn,
                                    ValidateStatus,
-                                   MultiFinishActivityIn,
                                    getDayActivityResponse,
                                    RegisterTargetTimeResponse,
                                    RegisterActualTimeResponse,
+                                   FinishActivityRequest,
                                    FinishActivityResponse,
                                    getMonthActivityResponse,
                                    getYearActivityResponse,
@@ -67,7 +67,7 @@ def update_multi_actual_time(activities: MultiActualTimeIn,
 @router.put("/activities/finish",
             status_code=200,
             response_model=FinishActivityResponse)
-def finish_multi_activities(params: MultiFinishActivityIn,
+def finish_multi_activities(params: FinishActivityRequest,
                             db: Session = Depends(get_db),
                             current_user: dict = Depends(get_current_user)):
     """ 複数日の活動を確定する """

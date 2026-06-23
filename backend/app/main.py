@@ -135,7 +135,7 @@ def bulk_operation_failed_handler(request, exc):
     return JSONResponse(
         status_code=400,
         content={
+            "code": exc.code,
             "results": exc.results,
-            "detail": exc.results
         }
     )
