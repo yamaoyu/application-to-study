@@ -38,13 +38,13 @@ const createResolvedMock = (data: Record<string, any>, status = 200): mock => ({
   }
 });
 
-const createRejectedMock = (detail: string, status = 404): mock => ({
+const createRejectedMock = (code: string, status = 404): mock => ({
   type: "reject",
   value: {
     response: {
       status,
       data: {
-        detail: detail
+        code: code
       }
     }
   }
@@ -52,7 +52,7 @@ const createRejectedMock = (detail: string, status = 404): mock => ({
 
 type mock =
   | { type: 'resolve'; value: { status: number; data: Record<string, any> } }
-  | { type: 'reject'; value: { response: { status: number; data: { detail: string } } } };
+  | { type: 'reject'; value: { response: { status: number; data: { code: string } } } };
 
 const mountActivityInfo = async ({
   activitiesMock = createResolvedMock(defaultMonthlyActivities)
@@ -97,15 +97,15 @@ describe('月ごとのアクティビティ情報の表示', () => {
   });
 
   it('データがない', async () => {
-    const expectedMessage = "2025年1月の活動は登録されていません"
+    const expectedMessage = "活動は登録されていません"
     mockedGet.mockRejectedValue({
       response: {
         status: 404,
-        data: { detail: expectedMessage }
+        data: { code: "ACTIVITY_NOT_FOUND" }
       }
     });
     wrapper = await mountActivityInfo({
-      activitiesMock: createRejectedMock(expectedMessage)
+      activitiesMock: createRejectedMock("ACTIVITY_NOT_FOUND")
     });
     expect(wrapper.find('[data-testid="message"]').text()).toBe(expectedMessage);
   })
@@ -178,11 +178,11 @@ describe('年ごとのアクティビティ情報の表示', () => {
 
   it('データがない', async () => {
     wrapper = await mountActivityInfo();
-    const expectedMessage = "2025年の活動は登録されていません"
+    const expectedMessage = "活動は登録されていません"
     mockedGet.mockRejectedValue({
       response: {
         status: 404,
-        data: { detail: expectedMessage }
+        data: { code: "ACTIVITY_NOT_FOUND" }
       }
     });
     // タブを変更
@@ -244,7 +244,7 @@ describe('全期間のアクティビティ情報の表示', async () => {
     mockedGet.mockRejectedValue({
       response: {
         status: 404,
-        data: { detail: expectedMessage }
+        data: { code: "ACTIVITY_NOT_FOUND" }
       }
     });
     // タブを変更

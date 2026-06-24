@@ -64,7 +64,7 @@ def test_register_multi_target_without_monthly_income(client, get_resource_owner
                            headers=get_resource_owner_headers)
     assert response.status_code == 400
     assert response.json() == {
-        "code": BadRequestCode.BULK_OPERATION_FAILED,
+        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
         "results": [
             {
                 "date": test_date,
@@ -113,7 +113,7 @@ def test_register_target_twice(client, get_resource_owner_headers):
                            headers=get_resource_owner_headers)
     assert response.status_code == 400
     assert response.json() == {
-        "code": BadRequestCode.BULK_OPERATION_FAILED,
+        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
         "results": [
             {
                 "date": test_date,
@@ -323,7 +323,7 @@ def test_register_multi_target_with_all_errors(client, get_resource_owner_header
                            headers=get_resource_owner_headers)
     assert response.status_code == 400
     assert response.json() == {
-        "code": BadRequestCode.BULK_OPERATION_FAILED,
+        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
         "results": [
             {
                 "date": "2024-5-5",
@@ -525,7 +525,7 @@ def test_register_actual_with_all_errors(client, get_resource_owner_headers):
                           headers=get_resource_owner_headers)
     assert response.status_code == 400
     assert response.json() == {
-        "code": BadRequestCode.BULK_OPERATION_FAILED,
+        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
         "results": [
             {
                 "date": test_date,
@@ -582,7 +582,7 @@ def test_register_actual_after_finish(client, get_resource_owner_headers):
                           headers=get_resource_owner_headers)
     assert response.status_code == 400
     assert response.json() == {
-        "code": BadRequestCode.BULK_OPERATION_FAILED,
+        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
         "results": [
             {
                 "date": test_date,
@@ -655,7 +655,7 @@ def test_update_already_finished_activity(client, get_resource_owner_headers):
                           headers=get_resource_owner_headers)
     assert response.status_code == 400
     assert response.json() == {
-        "code": BadRequestCode.BULK_OPERATION_FAILED,
+        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
         "results": [
             {
                 "date": test_date,
@@ -821,7 +821,7 @@ def test_finish_multi_activity_with_all_errors(client, get_resource_owner_header
                           headers=get_resource_owner_headers)
     assert response.status_code == 400
     assert response.json() == {
-        "code": BadRequestCode.BULK_OPERATION_FAILED,
+        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
         "results": [
             {
                 "date": test_date,

@@ -153,6 +153,8 @@ class TimeService():
                              username: str
                              ) -> getMonthActivityResponse:
         activities = fetch_monthly_activities(year, month, username, self.time_repo)
+        if not activities:
+            raise NotFound(code=NotFoundCode.ACTIVITY_NOT_FOUND)
         income_month = date(year, month, 1)
         income = fetch_one_income(income_month, username, self.money_repo)
         if not income:
@@ -320,7 +322,8 @@ class TimeService():
                 error_count += 1
                 logger.error(f"Error registering target time for {date_str}: {str(e)}")
         if error_count == len(activities):
-            raise BulkOperationFailed(results=results, code=BadRequestCode.BULK_OPERATION_FAILED)
+            raise BulkOperationFailed(
+                results=results, code=BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED)
         return RegisterTargetTimeResponse(results=results)
 
     def register_actual_time_bulk(self,
@@ -386,7 +389,8 @@ class TimeService():
                 error_count += 1
                 logger.error(f"Error registering actual time for {date_str}: {str(e)}")
         if error_count == len(params):
-            raise BulkOperationFailed(results=results, code=BadRequestCode.BULK_OPERATION_FAILED)
+            raise BulkOperationFailed(
+                results=results, code=BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED)
         return RegisterActualTimeResponse(results=results)
 
     def finish_activities(self,
@@ -474,7 +478,8 @@ class TimeService():
                 error_count += 1
                 logger.error(f"Error finishing activity for {date_str}: {str(e)}")
         if error_count == len(dates):
-            raise BulkOperationFailed(results=results, code=BadRequestCode.BULK_OPERATION_FAILED)
+            raise BulkOperationFailed(
+                results=results, code=BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED)
         return FinishActivityResponse(pay_adjustment=round_money(bonus_sum - penalty_sum),
                                       total_bonus=round_money(bonus_sum),
                                       total_penalty=round_money(penalty_sum),

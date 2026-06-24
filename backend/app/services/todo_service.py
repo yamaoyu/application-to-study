@@ -54,7 +54,7 @@ class TodoService():
         todos = self.repo.get_todos(username=username, status=status,
                                     start_due=start_due, end_due=end_due, title=title)
         if not todos:
-            raise NotFound(detail="登録された情報はありません")
+            raise NotFound(code="TODO_NOT_FOUND")
         logger.info(f"ユーザー名:{username}  Todoを全て取得")
         return [TodosGetResponse.model_validate(todo) for todo in todos]
 

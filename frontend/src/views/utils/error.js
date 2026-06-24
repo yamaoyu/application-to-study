@@ -5,7 +5,9 @@ const errorMessages = {
   "USER_NOT_FOUND": "ユーザーが見つかりません",
   "SALARY_ALREADY_EXISTS": "その月の月収は既に登録されています",
   "USER_ALREADY_EXISTS": "既に登録されているユーザーです",
-  "UNEXPECTED_ERROR": "予期せぬエラーが発生しました"
+  "UNEXPECTED_ERROR": "予期せぬエラーが発生しました",
+  "BULK_ACTIVITY_OPERATION_FAILED": "一部/全ての活動登録に失敗しました",
+  "ACTIVITY_NOT_FOUND": "活動は登録されていません"
 }
 
 export const parseError = (error, message) => {
