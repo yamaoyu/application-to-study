@@ -1,5 +1,5 @@
 from db import db_model
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, SessionTransaction
 from typing import Optional
 from datetime import date
 
@@ -10,6 +10,9 @@ class TodoRepository():
 
     def flush(self):
         self.db.flush()
+
+    def begin_nested(self) -> SessionTransaction:
+        return self.db.begin_nested()
 
     def insert_todo(self, title: str, due: date, detail: str | None, username: str):
         data = db_model.Todo(title=title, due=due, detail=detail, username=username)

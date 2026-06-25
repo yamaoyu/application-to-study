@@ -26,14 +26,16 @@ class TodosCreateRequest(BaseModel):
 
 
 class TodosCreateResponse(BaseModel):
-    message: str
+    success_count: int
+    error_count: int
+    results: list
 
 
 class TodoIdsRequest(BaseModel):
     ids: list[int]
 
 
-class TodosGetResponse(BaseModel):
+class TodoGetResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     todo_id: int
@@ -44,12 +46,12 @@ class TodosGetResponse(BaseModel):
 
 
 class TodosFinishResponse(BaseModel):
-    message: str
-    titles: str
+    success_count: int
+    error_count: int
+    titles: list[str]
 
 
 class TodoEditResponse(BaseModel):
-    message: str
     title: str
     due: date
     detail: Optional[str] = None
