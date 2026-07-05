@@ -25,14 +25,22 @@ class TodosCreateRequest(BaseModel):
     todos: list[Todo]
 
 
-class TodosCreateResponse(BaseModel):
+class TodoManupulate(BaseModel):
     success_count: int
     error_count: int
     results: list
 
 
+class TodosCreateResponse(TodoManupulate):
+    pass
+
+
 class TodoIdsRequest(BaseModel):
     ids: list[int]
+
+    @field_validator("ids")
+    def remove_duplicates(cls, ids):
+        return list(set(ids))
 
 
 class TodoGetResponse(BaseModel):
@@ -45,13 +53,13 @@ class TodoGetResponse(BaseModel):
     detail: Optional[str] = None
 
 
-class TodosFinishResponse(BaseModel):
-    success_count: int
-    error_count: int
-    titles: list[str]
+class TodosFinishResponse(TodoManupulate):
+    pass
 
 
-class TodoEditResponse(BaseModel):
-    title: str
-    due: date
-    detail: Optional[str] = None
+class TodosDeleteResponse(TodoManupulate):
+    pass
+
+
+class TodoEditResponse(TodoManupulate):
+    pass

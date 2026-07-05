@@ -2,7 +2,7 @@ from unittest.mock import patch
 from datetime import timedelta
 from testdata import RESOURCE_OWNER_USERNAME
 from lib.security import create_access_token
-from app.error_codes import NotFoundCode, ConflictCode, NotAuthorizedCode
+from app.error_codes import NotFoundCode, NotAuthorizedCode
 
 test_title = "create test"
 test_due = "2024-11-10"
@@ -186,7 +186,20 @@ def test_delete_todo(client, get_resource_owner_headers):
     setup_create_todo(client, get_resource_owner_headers)
     data = {"ids": [1]}
     response = client.put("/todos/delete", json=data, headers=get_resource_owner_headers)
-    assert response.status_code == 204
+    assert response.status_code == 200
+    assert response.json() == {
+        "success_count": 1,
+        "error_count": 0,
+        "results": [
+            {
+                "title": test_title,
+                "due": test_due,
+                "detail": test_detail,
+                "result": "success",
+                "reason": None
+            }
+        ]
+    }
 
 
 def test_delete_todo_by_another_user(client, get_resource_owner_headers, get_non_resource_owner_headers):
@@ -212,12 +225,32 @@ def test_delete_todo_not_exist(client, get_resource_owner_headers):
 
 
 def test_delete_todos(client, get_resource_owner_headers):
-    """ 複数Todoの一括削除"""
+    """ 複数Todoの一括削除で一部のTodoが存在しない場合 """
     for _ in range(2):
         setup_create_todo(client, get_resource_owner_headers)
     data = {"ids": [1, 2]}
     response = client.put("/todos/delete", json=data, headers=get_resource_owner_headers)
-    assert response.status_code == 204
+    assert response.status_code == 200
+    assert response.json() == {
+        "success_count": 2,
+        "error_count": 0,
+        "results": [
+            {
+                "title": test_title,
+                "due": test_due,
+                "detail": test_detail,
+                "result": "success",
+                "reason": None
+            },
+            {
+                "title": test_title,
+                "due": test_due,
+                "detail": test_detail,
+                "result": "success",
+                "reason": None
+            }
+        ]
+    }
 
 
 def test_delete_todos_not_exist(client, get_resource_owner_headers):
@@ -236,9 +269,17 @@ def test_edit_todo(client, get_resource_owner_headers):
     response = client.put("/todos/update/1", json=data, headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
-        "title": "new title",
-        "due": "2024-11-11",
-        "detail": "new detail"
+        "success_count": 1,
+        "error_count": 0,
+        "results": [
+            {
+                "title": "new title",
+                "due": "2024-11-11",
+                "detail": "new detail",
+                "result": "success",
+                "reason": None
+            }
+        ]
     }
 
 
@@ -271,7 +312,15 @@ def test_finish_todo(client, get_resource_owner_headers):
     assert response.json() == {
         "success_count": 1,
         "error_count": 0,
-        "titles": [test_title]
+        "results": [
+            {
+                "title": test_title,
+                "due": test_due,
+                "detail": test_detail,
+                "result": "success",
+                "reason": None
+            }
+        ]
     }
 
 
@@ -291,9 +340,10 @@ def test_finish_todo_already_finished(client, get_resource_owner_headers):
     setup_finish_todo(client, get_resource_owner_headers)
     data = {"ids": [1]}
     response = client.put("/todos/finish", json=data, headers=get_resource_owner_headers)
-    assert response.status_code == 409
+    # ステータスが終了でないものをDBから取得しており、終了のものは取得されないため、NotFoundが返る
+    assert response.status_code == 404
     assert response.json() == {
-        "code": ConflictCode.TODO_ALREADY_FINISHED
+        "code": NotFoundCode.TODO_NOT_FOUND
     }
 
 
@@ -306,8 +356,22 @@ def test_finish_todos(client, get_resource_owner_headers):
     assert response.json() == {
         "success_count": 2,
         "error_count": 0,
-        "titles": [test_title,
-                   test_title]
+        "results": [
+            {
+                "title": test_title,
+                "due": test_due,
+                "detail": test_detail,
+                "result": "success",
+                "reason": None
+            },
+            {
+                "title": test_title,
+                "due": test_due,
+                "detail": test_detail,
+                "result": "success",
+                "reason": None
+            }
+        ]
     }
 
 
@@ -323,7 +387,15 @@ def test_finish_todos_with_finished_todo(client, get_resource_owner_headers):
     assert response.json() == {
         "success_count": 1,
         "error_count": 1,
-        "titles": [test_title]
+        "results": [
+            {
+                "title": test_title,
+                "due": test_due,
+                "detail": test_detail,
+                "result": "success",
+                "reason": None
+            }
+        ]
     }
 
 

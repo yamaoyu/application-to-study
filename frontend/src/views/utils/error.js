@@ -7,21 +7,21 @@ const errorMessages = {
   "USER_ALREADY_EXISTS": "既に登録されているユーザーです",
   "UNEXPECTED_ERROR": "予期せぬエラーが発生しました",
   "BULK_ACTIVITY_OPERATION_FAILED": "一部/全ての活動登録に失敗しました",
-  "ACTIVITY_NOT_FOUND": "活動は登録されていません"
+  "ACTIVITY_NOT_FOUND": "活動は登録されていません",
+  "TODO_NOT_FOUND": "登録されたTODOはありません",
+  "TODO_ALREADY_FINISHED": "既に完了したTODOです"
 }
 
 export const parseError = (error, message) => {
   if (error.response) {
-    const code = error.response.data?.code ?? error.response.code;
-    if (code && errorMessages[code]) {
-      return errorMessages[code];
-    }
-
     switch (error.response.status) {
       case 500:
         return message;
-      default:
-        return error.response.data.detail;
+    }
+
+    const code = error.response.data?.code ?? error.response.code;
+    if (code && errorMessages[code]) {
+      return errorMessages[code];
     }
   };
 

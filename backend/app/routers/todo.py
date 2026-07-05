@@ -7,6 +7,7 @@ from app.models.todo_model import (Todo,
                                    TodosCreateResponse,
                                    TodoGetResponse,
                                    TodoEditResponse,
+                                   TodosDeleteResponse,
                                    TodosFinishResponse)
 from app.dependencies.auth import get_current_user
 from typing import Optional
@@ -47,7 +48,7 @@ def get_specific_todo(todo_id: int,
     return service.get_todo(todo_id, username)
 
 
-@router.put("/todos/delete", status_code=204)
+@router.put("/todos/delete", status_code=200, response_model=TodosDeleteResponse)
 def delete_todos(params: TodoIdsRequest,
                  service: TodoService = Depends(get_todo_service),
                  current_user: dict = Depends(get_current_user)):
