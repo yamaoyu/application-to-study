@@ -6,6 +6,7 @@ from db.database import get_db
 from app.services.user_service import UserService
 from app.exceptions import Forbidden
 from functools import wraps
+from app.error_codes import NotAuthorizedCode
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -31,6 +32,6 @@ def admin_only():
             if role == "admin":
                 return func(*args, **kwargs)
             else:
-                raise Forbidden(detail="管理者権限を持つユーザー以外はアクセスできません")
+                raise Forbidden(code=NotAuthorizedCode.NOT_HAVE_PERMISSION)
         return wrapper
     return decorator

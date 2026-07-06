@@ -34,7 +34,7 @@ class InquiryForm(BaseModel):
 
 
 class ResponseCreateInquiry(InquiryForm):
-    message: str
+    pass
 
 
 class InquiryResponse(BaseModel):

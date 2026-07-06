@@ -63,7 +63,7 @@ describe('問い合わせに失敗する', async () => {
         mockedPost.mockRejectedValue({
             response: {
                 status: 422,
-                data: { detail: message }
+                data: { code: "INVALID_CATEGORY" }
             }
         })
 

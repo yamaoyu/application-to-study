@@ -57,7 +57,7 @@ describe('データなし', () => {
             response: {
                 status: 404,
                 data: {
-                    detail: expectedMessage
+                    code: "INQUIRY_NOT_FOUND"
                 }
             }
         });
@@ -82,12 +82,12 @@ describe('権限なし', () => {
     );
 
     it('権限がないためメッセージが表示される', async () => {
-        const expectedMessage = "管理者権限を持つユーザー以外はアクセスできません";
+        const expectedMessage = "権限がありません";
         mockedGet.mockRejectedValue({
             response: {
                 status: 403,
                 data: {
-                    detail: expectedMessage
+                    code: "NOT_HAVE_PERMISSION"
                 }
             }
         });

@@ -2,11 +2,12 @@ from lib.log_conf import logger
 from datetime import date
 from sqlalchemy.orm import Session
 from app.repositories.inquiry_repository import InquiryRepository
-from app.exceptions import NotFound, BadRequest
+from app.exceptions import NotFound
 from app.models.common_model import CheckYearMonth
 from typing import Optional
 from app.models.inquiry_model import Category, Priority
 from db import db_model
+from app.error_codes import NotFoundCode
 
 
 class InquiryService():
@@ -25,8 +26,7 @@ class InquiryService():
         logger.info("問い合わせを受付")
         return {
             "category": category,
-            "detail": detail,
-            "message": "こちらの内容で受け付けました"
+            "detail": detail
         }
 
     def get_inquiries(self,
@@ -35,8 +35,6 @@ class InquiryService():
                       category: Optional[Category],
                       priority: Optional[Priority],
                       is_checked: Optional[bool]) -> list[db_model.Inquiry]:
-        if not year and month:
-            raise BadRequest(detail="月を指定する場合は年も指定してください")
         if year and month:
             CheckYearMonth(year=year, month=month)
         inquiries = self.repo.get_inquiries(year, month, category, priority, is_checked)
@@ -52,13 +50,13 @@ class InquiryService():
                 message += f"確認済みが「{is_checked}」、"
             if message:
                 message = message[:-1] + "の"
-            raise NotFound(detail=f"{message}問い合わせはありません")
+            raise NotFound(code=NotFoundCode.INQUIRY_NOT_FOUND)
         return inquiries
 
     def edit_inquiry(self, id: int, priority: Optional[Priority], is_checked: Optional[bool]) -> db_model.Inquiry:
         inquiry = self.repo.get_inquiry_by_id(id)
         if not inquiry:
-            raise NotFound(detail=f"idが「{id}の問い合わせはありません」")
+            raise NotFound(code=NotFoundCode.INQUIRY_NOT_FOUND)
         if priority is not None:
             self.repo.update_priority(inquiry, priority)
         if is_checked is not None:

@@ -319,10 +319,13 @@ describe('Todoの操作', () => {
 
     it('Todo終了に失敗', async () => {
         const expectedMessage = "登録されたTODOはありません";
+        wrapper = await mountUserHome();
 
         // finishTodo()のモック
-        mockedPut.mockRejectedValue("TODO_NOT_FOUND")
-        wrapper = await mountUserHome();
+        mockedPut.mockRejectedValue({
+            response:
+                { status: 404, data: { code: 'TODO_NOT_FOUND' } }
+        })
         // finishTodo()後のtodo再取得処理のモック
         mockedGet.mockResolvedValueOnce({
             response: {

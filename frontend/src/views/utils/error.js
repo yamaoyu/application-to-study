@@ -9,10 +9,14 @@ const errorMessages = {
   "BULK_ACTIVITY_OPERATION_FAILED": "一部/全ての活動登録に失敗しました",
   "ACTIVITY_NOT_FOUND": "活動は登録されていません",
   "TODO_NOT_FOUND": "登録されたTODOはありません",
-  "TODO_ALREADY_FINISHED": "既に完了したTODOです"
+  "TODO_ALREADY_FINISHED": "既に完了したTODOです",
+  "INQUIRY_NOT_FOUND": "問い合わせはありません",
+  "NOT_HAVE_PERMISSION": "権限がありません",
+  "INVALID_CATEGORY": "カテゴリは要望・エラー報告・その他から選択してください"
 }
 
 export const parseError = (error, message) => {
+  console.log(error);
   if (error.response) {
     switch (error.response.status) {
       case 500:

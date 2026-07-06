@@ -47,7 +47,7 @@ def unhandled_exception_handler(request: Request, exc: Exception):
                  exc_info=True)
     return JSONResponse(
         status_code=500,
-        content={"detail": "サーバーでエラーが発生しました。管理者にお問い合わせください"},
+        content={"code": "UNEXPECTED_ERROR"},
     )
 
 
@@ -62,6 +62,8 @@ def get_validation_error_code(error_type: str, field) -> str:
                 return "INVALID_DATE"
             case "email":
                 return "INVALID_EMAIL"
+            case "category":
+                return "INVALID_CATEGORY"
             case _:
                 return "INVALID_VALUE"
 
