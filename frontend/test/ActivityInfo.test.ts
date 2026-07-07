@@ -97,7 +97,6 @@ describe('月ごとのアクティビティ情報の表示', () => {
   });
 
   it('データがない', async () => {
-    const expectedMessage = "活動は登録されていません"
     mockedGet.mockRejectedValue({
       response: {
         status: 404,
@@ -107,7 +106,7 @@ describe('月ごとのアクティビティ情報の表示', () => {
     wrapper = await mountActivityInfo({
       activitiesMock: createRejectedMock("ACTIVITY_NOT_FOUND")
     });
-    expect(wrapper.find('[data-testid="message"]').text()).toBe(expectedMessage);
+    expect(wrapper.find('[data-testid="message"]').text()).toBe("活動は登録されていません");
   })
 });
 
@@ -178,7 +177,6 @@ describe('年ごとのアクティビティ情報の表示', () => {
 
   it('データがない', async () => {
     wrapper = await mountActivityInfo();
-    const expectedMessage = "活動は登録されていません"
     mockedGet.mockRejectedValue({
       response: {
         status: 404,
@@ -189,7 +187,7 @@ describe('年ごとのアクティビティ情報の表示', () => {
     await wrapper.find("[data-testid='tab-yearly']").trigger("click");
     await flushPromises();
 
-    expect(wrapper.find('[data-testid="message"]').text()).toBe(expectedMessage);
+    expect(wrapper.find('[data-testid="message"]').text()).toBe("活動は登録されていません");
   })
 })
 
@@ -239,8 +237,6 @@ describe('全期間のアクティビティ情報の表示', async () => {
 
   it('データがない', async () => {
     wrapper = await mountActivityInfo();
-
-    const expectedMessage = "活動は登録されていません"
     mockedGet.mockRejectedValue({
       response: {
         status: 404,
@@ -251,6 +247,6 @@ describe('全期間のアクティビティ情報の表示', async () => {
     await wrapper.find("[data-testid='tab-yearly']").trigger('click');
     await flushPromises();
 
-    expect(wrapper.find('[data-testid="message"]').text()).toBe(expectedMessage);
+    expect(wrapper.find('[data-testid="message"]').text()).toBe("活動は登録されていません");
   })
 });

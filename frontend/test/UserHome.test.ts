@@ -134,13 +134,12 @@ describe('ユーザーホームの表示(データあり)', () => {
             bonus: 0,
             penalty: 0.38
         };
-        const expectedMessage = "目標失敗...\nペナルティ:0.38万円(3800円)";
 
         wrapper = await mountUserHome({ activityMock: createResolvedMock(expectedData) });
         expect(mockedGet).toBeCalledWith(
             `activities/${expectedYear}/${expectedMonth}/${expectedDate}`
         );
-        expect(wrapper.find("[data-testid='activity-msg']").text()).toEqual(expectedMessage);
+        expect(wrapper.find("[data-testid='activity-msg']").text()).toEqual("目標失敗...\nペナルティ:0.38万円(3800円)");
     });
 
     it('給料のデータがある', async () => {
@@ -170,31 +169,26 @@ describe('ユーザーホームの表示(データなし)', () => {
     );
 
     it('活動実績のデータがない', async () => {
-        const expectedMessage = "活動は登録されていません";
         wrapper = await mountUserHome({
             activityMock: createRejectedMock("ACTIVITY_NOT_FOUND")
         });
-        expect(wrapper.find("[data-testid='activity-msg']").text()).toEqual(expectedMessage);
+        expect(wrapper.find("[data-testid='activity-msg']").text()).toEqual("活動は登録されていません");
     });
 
     it('給料のデータがない', async () => {
-        const expectedMessage = "月収が登録されていません";
-
         wrapper = await mountUserHome({
             incomeMock: createRejectedMock("SALARY_NOT_FOUND_ERROR")
         });
 
-        expect(wrapper.find("[data-testid='income-msg']").text()).toEqual(expectedMessage);
+        expect(wrapper.find("[data-testid='income-msg']").text()).toEqual("月収が登録されていません");
     });
 
     it('未完了Todoのデータがない', async () => {
-        const expectedMessage = "登録されたTODOはありません";
-
         wrapper = await mountUserHome({
             todosMock: createRejectedMock("TODO_NOT_FOUND")
         });
 
-        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual(expectedMessage);
+        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual("登録されたTODOはありません");
     });
 });
 
@@ -207,7 +201,6 @@ describe('Todoの操作', () => {
     );
 
     it('Todo編集', async () => {
-        const expectedMessage = "Todoを更新しました";
         const title = "new title";
         const detail = "new detail";
         const due = "new due";
@@ -216,10 +209,15 @@ describe('Todoの操作', () => {
         mockedPut.mockResolvedValue({
             status: 200,
             data: {
-                message: expectedMessage,
-                title: title,
-                detail: detail,
-                due: due
+                results: [
+                    {
+                        title: title,
+                        detail: detail,
+                        due: due,
+                        result: "success",
+                        reason: null
+                    }
+                ]
             }
         })
         wrapper = await mountUserHome();
@@ -257,12 +255,11 @@ describe('Todoの操作', () => {
             }
         );
         expect(mockedPut).toBeCalledTimes(1);
-        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual(expectedMessage);
+        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual("【Todo更新成功】: new title");
     });
 
     it('Todo終了に成功', async () => {
         const title = "Test Todo";
-        const expectedMessage = `1件のTodoを終了しました\n【Todo終了成功】: ${title}`;
 
         // finishTodo()のモック
         mockedPut.mockResolvedValue({
@@ -314,11 +311,10 @@ describe('Todoの操作', () => {
                 ids: [1]
             }
         );
-        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual(`${expectedMessage}`);
+        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual(`1件のTodoを終了しました\n【Todo終了成功】: ${title}`);
     });
 
     it('Todo終了に失敗', async () => {
-        const expectedMessage = "登録されたTODOはありません";
         wrapper = await mountUserHome();
 
         // finishTodo()のモック
@@ -360,7 +356,7 @@ describe('Todoの操作', () => {
                 ids: [1]
             }
         );
-        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual(`${expectedMessage}`);
+        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual("登録されたTODOはありません");
     })
 
 

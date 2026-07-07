@@ -125,7 +125,7 @@ export const useTodoOperations = (todoMsg) => {
       };
       const res = await editTodo(id, params);
       if (res.status === 200) {
-        todoMsg.value = res.data.message;
+        todoMsg.value = makeMessage(res.data.results, "更新");
         if (onSuccess) {
           await onSuccess();
         }

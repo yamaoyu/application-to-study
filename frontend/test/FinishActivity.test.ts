@@ -92,7 +92,6 @@ describe('活動の終了(一括)', () => {
 
 
   it('成功', async () => {
-    const originalMessage = "ボーナス：0.5万円(5000円)\nペナルティ：0.2万円(2000円)\n2025/1/1の活動を終了：ボーナス3万円(30000円)\n2025/1/2の活動を終了：ボーナス3.5万円(35000円)\n2025/1/3の活動を終了：ペナルティ3万円(30000円)";
     const payAdjustment = "0.3";
     const totalBonus = "0.5";
     const totalPenalty = "0.2";
@@ -130,12 +129,11 @@ describe('活動の終了(一括)', () => {
         dates: expectedDates
       }
     );
-    const expectedMessage = "ボーナス-ペナルティ：0.3万円(3000円)\n" + originalMessage;
+    const expectedMessage = "ボーナス-ペナルティ：0.3万円(3000円)\n" + "ボーナス：0.5万円(5000円)\nペナルティ：0.2万円(2000円)\n2025/1/1の活動を終了：ボーナス3万円(30000円)\n2025/1/2の活動を終了：ボーナス3.5万円(35000円)\n2025/1/3の活動を終了：ペナルティ3万円(30000円)";
     expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);
   })
 
   it('失敗', async () => {
-    const expectedMessage = "2025/1/1の活動終了に失敗: 目標時間が未登録です\n2025/1/2の活動終了に失敗: 月収が未登録です\n2025/1/3の活動終了に失敗: 予期せぬエラーが発生しました";
     const expectedDates = [
       "2025/1/1", "2025/1/2", "2025/1/3"
     ];
@@ -170,6 +168,7 @@ describe('活動の終了(一括)', () => {
         dates: expectedDates
       }
     );
+    const expectedMessage = "2025/1/1の活動終了に失敗: 目標時間が未登録です\n2025/1/2の活動終了に失敗: 月収が未登録です\n2025/1/3の活動終了に失敗: 予期せぬエラーが発生しました";
     expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);
   })
 });

@@ -16,7 +16,6 @@ const errorMessages = {
 }
 
 export const parseError = (error, message) => {
-  console.log(error);
   if (error.response) {
     switch (error.response.status) {
       case 500:

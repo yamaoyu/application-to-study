@@ -52,7 +52,6 @@ describe('データなし', () => {
     );
 
     it('データがないためメッセージが表示される', async () => {
-        const expectedMessage = "問い合わせはありません";
         mockedGet.mockRejectedValue({
             response: {
                 status: 404,
@@ -68,7 +67,7 @@ describe('データなし', () => {
             "inquiries"
         );
 
-        expect(wrapper.find("[data-testid='message']").text()).toEqual(expectedMessage);
+        expect(wrapper.find("[data-testid='message']").text()).toEqual("問い合わせはありません");
     });
 });
 
@@ -82,7 +81,6 @@ describe('権限なし', () => {
     );
 
     it('権限がないためメッセージが表示される', async () => {
-        const expectedMessage = "権限がありません";
         mockedGet.mockRejectedValue({
             response: {
                 status: 403,
@@ -99,6 +97,6 @@ describe('権限なし', () => {
             "inquiries"
         );
 
-        expect(wrapper.find("[data-testid='message']").text()).toEqual(expectedMessage);
+        expect(wrapper.find("[data-testid='message']").text()).toEqual("権限がありません");
     });
 });
