@@ -1,7 +1,8 @@
 from enum import Enum
-from pydantic import BaseModel, field_validator, ConfigDict
+from pydantic import BaseModel, field_validator, ConfigDict, ValidationInfo, Field
 from typing import Optional
 from datetime import date
+from pydantic_core import PydanticCustomError
 
 
 class Category(str, Enum):
@@ -50,3 +51,32 @@ class InquiryResponse(BaseModel):
 class EditInquiry(BaseModel):
     priority: Optional[Priority] = None
     is_checked: Optional[bool] = None
+
+
+class InquirySearchQuery(BaseModel):
+    month: Optional[int] = None
+    year: Optional[int] = Field(default=None, validate_default=True)
+    category: Optional[Category] = None
+    priority: Optional[Priority] = None
+    is_checked: Optional[bool] = None
+
+    @field_validator("year")
+    def check_year_required_when_month_exists(cls, year, info: ValidationInfo):
+        month = info.data.get("month")
+
+        if month is not None and year is None:
+            raise PydanticCustomError(
+                "YEAR_REQUIRED_WHEN_MONTH_SPECIFIED",
+                "月が指定されている場合、年は必須です"
+            )
+
+        if year is not None and not (2024 <= year <= 2099):
+            raise ValueError("年は2024~2099の範囲で入力してください")
+
+        return year
+
+    @field_validator("month")
+    def check_month(cls, month):
+        if month is not None and not (1 <= month <= 12):
+            raise ValueError("月は1~12の範囲で入力してください")
+        return month

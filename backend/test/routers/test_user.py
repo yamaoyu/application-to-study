@@ -119,7 +119,7 @@ def test_login_with_invalid_password(client, create_resource_owner):
     response = client.post("/login", json=user_info)
     assert response.status_code == 401
     assert response.json() == {
-        "code": NotAuthorizedCode.NOT_AUTHORIZED
+        "code": NotAuthorizedCode.LOGIN_FAILED
     }
 
 

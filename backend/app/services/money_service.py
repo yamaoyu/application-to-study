@@ -31,7 +31,7 @@ class MoneyService():
         income_month = date(year, month, 1)
         income = self.income_repo.get_monthly_salary(income_month, username)
         if not income:
-            raise NotFound(code=NotFoundCode.SALARY_NOT_FOUND_ERROR)
+            raise NotFound(code=NotFoundCode.SALARY_NOT_FOUND)
         end_date = get_next_month_start(income_month)
         activity_summary = self.time_repo.get_activity_summary(
             username, income_month, end_date)

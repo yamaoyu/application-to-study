@@ -1,6 +1,7 @@
 from pydantic import BaseModel, field_validator, ConfigDict
 from datetime import date
 from typing import Optional
+from pydantic_core import PydanticCustomError
 
 
 class Todo(BaseModel):
@@ -40,6 +41,11 @@ class TodoIdsRequest(BaseModel):
 
     @field_validator("ids")
     def remove_duplicates(cls, ids):
+        if not ids:
+            raise PydanticCustomError(
+                "empty_list",
+                "idsは1件以上指定してください",
+            )
         return list(set(ids))
 
 

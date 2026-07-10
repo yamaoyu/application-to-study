@@ -61,7 +61,7 @@ class UserService():
         user = self.get_user(username)
         is_password = verify_password(plain_password, user.password)
         if not is_password:
-            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+            raise NotAuthorized(code=NotAuthorizedCode.LOGIN_FAILED)
         access_token = create_access_token({"sub": user.username, "role": user.role})
         token_info = self.create_or_update_refresh_token(
             {"sub": user.username, "role": user.role}, device_id=device_id)

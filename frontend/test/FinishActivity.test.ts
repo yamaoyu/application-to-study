@@ -144,9 +144,9 @@ describe('活動の終了(一括)', () => {
         total_bonus: 0,
         total_penalty: 0,
         results: [
-          { "date": "2025/1/1", "result": "error", "reason": "activity_not_found" },
-          { "date": "2025/1/2", "result": "error", "reason": "income_not_found" },
-          { "date": "2025/1/3", "result": "error", "reason": "unexpected_error" }
+          { "date": "2025/1/1", "result": "error", "reason": "ACTIVITY_NOT_FOUND" },
+          { "date": "2025/1/2", "result": "error", "reason": "SALARY_NOT_FOUND" },
+          { "date": "2025/1/3", "result": "error", "reason": "UNEXPECTED_ERROR" }
         ]
       }
     });

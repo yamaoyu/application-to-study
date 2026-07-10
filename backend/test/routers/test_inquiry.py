@@ -59,6 +59,21 @@ def test_get_inquiries(client, get_admin_headers, get_resource_owner_headers):
     ]
 
 
+def test_get_inquiries_filter_by_month_without_year(client, get_admin_headers, get_resource_owner_headers):
+    setup_create_inquiry(client, get_resource_owner_headers)
+    response = client.get("/inquiries?month=1", headers=get_admin_headers)
+    assert response.status_code == 422
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "field": "year",
+                "code": "YEAR_REQUIRED_WHEN_MONTH_SPECIFIED"
+            }
+        ]
+    }
+
+
 def test_get_inquiries_filter_by_category(client, get_admin_headers, get_resource_owner_headers):
     setup_create_inquiry(client, get_resource_owner_headers)
     response = client.get("/inquiries?category=エラー報告", headers=get_admin_headers)

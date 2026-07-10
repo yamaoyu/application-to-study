@@ -69,7 +69,7 @@ def test_register_multi_target_without_monthly_income(client, get_resource_owner
             {
                 "date": test_date,
                 "result": "error",
-                "reason": NotFoundCode.SALARY_NOT_FOUND_ERROR,
+                "reason": NotFoundCode.SALARY_NOT_FOUND,
                 "target_time": None
             }
         ]
@@ -329,13 +329,13 @@ def test_register_multi_target_with_all_errors(client, get_resource_owner_header
                 "date": "2024-5-5",
                 "result": "error",
                 "target_time": None,
-                "reason": NotFoundCode.SALARY_NOT_FOUND_ERROR
+                "reason": NotFoundCode.SALARY_NOT_FOUND
             },
             {
                 "date": "2024-5-6",
                 "result": "error",
                 "target_time": None,
-                "reason": NotFoundCode.SALARY_NOT_FOUND_ERROR
+                "reason": NotFoundCode.SALARY_NOT_FOUND
             }
         ]
     }
@@ -531,13 +531,13 @@ def test_register_actual_with_all_errors(client, get_resource_owner_headers):
                 "date": test_date,
                 "result": "error",
                 "actual_time": None,
-                "reason": NotFoundCode.SALARY_NOT_FOUND_ERROR
+                "reason": NotFoundCode.SALARY_NOT_FOUND
             },
             {
                 "date": "2024-5-11",
                 "result": "error",
                 "actual_time": None,
-                "reason": NotFoundCode.SALARY_NOT_FOUND_ERROR
+                "reason": NotFoundCode.SALARY_NOT_FOUND
             }
         ]
     }

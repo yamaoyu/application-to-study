@@ -149,7 +149,7 @@ describe('月収の登録状況に応じたリダイレクト', async () => {
 
   it('月収の登録がない→月収登録ページにリダイレクト', async () => {
     await mountActivityHome({
-      incomeMock: createRejectedMock("SALARY_NOT_FOUND_ERROR")
+      incomeMock: createRejectedMock("SALARY_NOT_FOUND")
     });
 
     expect(mockRouterPush).toHaveBeenCalledWith({

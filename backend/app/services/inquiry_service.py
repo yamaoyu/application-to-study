@@ -3,7 +3,6 @@ from datetime import date
 from sqlalchemy.orm import Session
 from app.repositories.inquiry_repository import InquiryRepository
 from app.exceptions import NotFound
-from app.models.common_model import CheckYearMonth
 from typing import Optional
 from app.models.inquiry_model import Category, Priority
 from db import db_model
@@ -35,8 +34,6 @@ class InquiryService():
                       category: Optional[Category],
                       priority: Optional[Priority],
                       is_checked: Optional[bool]) -> list[db_model.Inquiry]:
-        if year and month:
-            CheckYearMonth(year=year, month=month)
         inquiries = self.repo.get_inquiries(year, month, category, priority, is_checked)
         if not inquiries:
             message = ""

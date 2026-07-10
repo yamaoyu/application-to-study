@@ -52,6 +52,15 @@ def unhandled_exception_handler(request: Request, exc: Exception):
 
 
 def get_validation_error_code(error_type: str, field) -> str:
+    # 独自のバリデーションエラーコードを返す
+    # yearでバリデーションエラーが発生した場合、monthが指定されているがyearが指定されてない場合と
+    # yearが2024~2099の範囲外の場合の2パターンがあるため、エラーコードを分けるため
+    if error_type == "YEAR_REQUIRED_WHEN_MONTH_SPECIFIED":
+        return "YEAR_REQUIRED_WHEN_MONTH_SPECIFIED"
+
+    if error_type == "empty_list":
+        return "EMPTY_LIST"
+
     if error_type == "value_error":
         match field:
             case "year":

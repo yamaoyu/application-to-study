@@ -177,7 +177,7 @@ describe('ユーザーホームの表示(データなし)', () => {
 
     it('給料のデータがない', async () => {
         wrapper = await mountUserHome({
-            incomeMock: createRejectedMock("SALARY_NOT_FOUND_ERROR")
+            incomeMock: createRejectedMock("SALARY_NOT_FOUND")
         });
 
         expect(wrapper.find("[data-testid='income-msg']").text()).toEqual("月収が登録されていません");

@@ -127,7 +127,7 @@ class TimeService():
         income_month = date(year, month, 1)
         income = fetch_one_income(income_month, username, self.money_repo)
         if not income:
-            raise NotFound(code=NotFoundCode.SALARY_NOT_FOUND_ERROR)
+            raise NotFound(code=NotFoundCode.SALARY_NOT_FOUND)
         if activity.status != "pending":
             bonus = activity.bonus
             penalty = activity.penalty
@@ -158,7 +158,7 @@ class TimeService():
         income_month = date(year, month, 1)
         income = fetch_one_income(income_month, username, self.money_repo)
         if not income:
-            raise NotFound(code=NotFoundCode.SALARY_NOT_FOUND_ERROR)
+            raise NotFound(code=NotFoundCode.SALARY_NOT_FOUND)
         end_date = get_next_month_start(income_month)
         summary = self.time_repo.get_activity_summary(
             username, income_month, end_date)
@@ -200,7 +200,7 @@ class TimeService():
             raise NotFound(code=NotFoundCode.ACTIVITY_NOT_FOUND)
         incomes = self.money_repo.get_yearly_salaries(year, username)
         if not incomes:
-            raise NotFound(code=NotFoundCode.SALARY_NOT_FOUND_ERROR)
+            raise NotFound(code=NotFoundCode.SALARY_NOT_FOUND)
         summary_year = self.time_repo.get_activity_summary(
             username, start_date, end_date)
 
@@ -232,7 +232,7 @@ class TimeService():
             raise NotFound(code=NotFoundCode.ACTIVITY_NOT_FOUND)
         incomes = self.money_repo.get_all_salaries(username)
         if not incomes:
-            raise NotFound(code=NotFoundCode.SALARY_NOT_FOUND_ERROR)
+            raise NotFound(code=NotFoundCode.SALARY_NOT_FOUND)
         salary = round_money(sum([income.salary for income in incomes]))
         summary = self.time_repo.get_activity_summary(username, None, None)
         total_bonus = round_money(summary["bonus"])
@@ -287,7 +287,7 @@ class TimeService():
                 results.append({
                     "date": f"{year}-{month}-{day}",
                     "result": "error",
-                    "reason": NotFoundCode.SALARY_NOT_FOUND_ERROR,
+                    "reason": NotFoundCode.SALARY_NOT_FOUND,
                     "target_time": None
                 })
                 error_count += 1
@@ -343,7 +343,7 @@ class TimeService():
                 results.append({
                     "date": f"{year}-{month}-{day}",
                     "result": "error",
-                    "reason": NotFoundCode.SALARY_NOT_FOUND_ERROR,
+                    "reason": NotFoundCode.SALARY_NOT_FOUND,
                     "actual_time": None
                 })
                 error_count += 1
@@ -435,7 +435,7 @@ class TimeService():
             if not income:
                 results.append({
                     "date": f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
-                    "reason": NotFoundCode.SALARY_NOT_FOUND_ERROR,
+                    "reason": NotFoundCode.SALARY_NOT_FOUND,
                     "result": "error",
                     "bonus": None,
                     "penalty": None,

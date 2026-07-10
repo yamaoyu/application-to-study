@@ -263,6 +263,22 @@ def test_delete_todos_not_exist(client, get_resource_owner_headers):
     }
 
 
+def test_delete_todos_empty(client, get_resource_owner_headers):
+    """ 空のTodo IDリストで削除しようとした場合 """
+    data = {"ids": []}
+    response = client.put("/todos/delete", json=data, headers=get_resource_owner_headers)
+    assert response.status_code == 422
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_VALUE",
+                "field": "ids"
+            }
+        ]
+    }
+
+
 def test_edit_todo(client, get_resource_owner_headers):
     setup_create_todo(client, get_resource_owner_headers)
     data = {"title": "new title", "due": "2024-11-11", "detail": "new detail"}

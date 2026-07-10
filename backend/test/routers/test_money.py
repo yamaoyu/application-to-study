@@ -128,7 +128,7 @@ def test_get_income_without_register(client, get_resource_owner_headers):
     response = client.get(f"/incomes/{year}/{month}", headers=get_resource_owner_headers)
     assert response.status_code == 404
     assert response.json() == {
-        "code": NotFoundCode.SALARY_NOT_FOUND_ERROR
+        "code": NotFoundCode.SALARY_NOT_FOUND
     }
 
 
@@ -173,5 +173,5 @@ def test_get_income_by_another_user(client, get_resource_owner_headers, get_non_
     response = client.get(f"/incomes/{year}/{month}", headers=user2_headers)
     assert response.status_code == 404
     assert response.json() == {
-        "code": NotFoundCode.SALARY_NOT_FOUND_ERROR
+        "code": NotFoundCode.SALARY_NOT_FOUND
     }

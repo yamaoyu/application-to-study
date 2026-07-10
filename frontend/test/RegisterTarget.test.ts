@@ -90,8 +90,8 @@ describe('目標時間の登録(一括)', () => {
             status: 201,
             data: {
                 results: [
-                    { result: "error", date: "2025/1/1", reason: "target_time_already_registered" },
-                    { result: "error", date: "2025/2/1", reason: "income_not_found" }
+                    { result: "error", date: "2025/1/1", reason: "TARGET_TIME_ALREADY_REGISTERED" },
+                    { result: "error", date: "2025/2/1", reason: "SALARY_NOT_FOUND" }
                 ]
             }
         });
