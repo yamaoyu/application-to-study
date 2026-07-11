@@ -17,8 +17,8 @@ const errorMessages = {
 }
 
 const fieldErrorMessages = {
-  "year": "年は2024~2099の範囲で入力してください",
-  "month": "月は1~12の範囲で入力してください",
+  "INVALID_YEAR": "年は2024~2099の範囲で入力してください",
+  "INVALID_MONTH": "月は1~12の範囲で入力してください",
   "YEAR_REQUIRED_WHEN_MONTH_SPECIFIED": "月を指定する場合は年が必須です",
   "INVALID_VALUE": "不明なバリデーションエラーが発生しました",
   "EMPTY_LIST": "必要な値を指定してください"
@@ -41,7 +41,7 @@ export const parseError = (error, message) => {
     }
 
     // 一括活動登録の場合は日付ごとのメッセージを作成する
-    if (errorMessages[code]==="BULK_ACTIVITY_OPERATION_FAILED") {
+    if (code==="BULK_ACTIVITY_OPERATION_FAILED") {
       const results = error.response.data.results;
       const errorMessagesList = results.map(result => {
         if (result.result === "error") {

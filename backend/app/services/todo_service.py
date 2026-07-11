@@ -130,13 +130,13 @@ class TodoService():
     def finish_todos(self, params: TodoIdsRequest, username: str) -> TodosFinishResponse:
         ids = params.ids
         # 終了するTodoが存在するか確認
-        todos = self.repo.get_todos(username=username, ids=ids, status=False)
+        todos = self.repo.get_todos(username=username, ids=ids)
         if not todos:
             raise NotFound(code=NotFoundCode.TODO_NOT_FOUND)
-        can_finish_ids = [todo.todo_id for todo in todos if not todo.status]
+        can_finish_ids = set(todo.todo_id for todo in todos if todo.status is False)
         if len(can_finish_ids) == 0:
             raise Conflict(code=ConflictCode.TODO_ALREADY_FINISHED)
-        self.repo.finish_todos(can_finish_ids, username)
+        self.repo.finish_todos(list(can_finish_ids), username)
         results = [
             {
                 "title": todo.title,
@@ -145,7 +145,7 @@ class TodoService():
                 "result": "success",
                 "reason": None
             }
-            for todo in todos]
+            for todo in todos if todo.todo_id in can_finish_ids]
         logger.info(f"{username}が複数のTodoを完了 IDs:{ids}")
         return TodosFinishResponse(
             success_count=len(can_finish_ids),

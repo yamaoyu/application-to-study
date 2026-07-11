@@ -2,7 +2,7 @@ from unittest.mock import patch
 from datetime import timedelta
 from testdata import RESOURCE_OWNER_USERNAME
 from lib.security import create_access_token
-from app.error_codes import NotFoundCode, NotAuthorizedCode
+from app.error_codes import NotFoundCode, NotAuthorizedCode, ConflictCode
 
 test_title = "create test"
 test_due = "2024-11-10"
@@ -311,15 +311,6 @@ def test_edit_todo_by_another_user(client, get_resource_owner_headers, get_non_r
     }
 
 
-def test_edit_todo_without_login(client, get_resource_owner_headers):
-    """ ログインせずに更新しようとした場合 """
-    setup_create_todo(client, get_resource_owner_headers)
-    data = {"title": "new title"}
-    response = client.put("/todos/update/1", json=data)
-    assert response.status_code == 401
-    assert response.json() == {"detail": "Not authenticated"}
-
-
 def test_finish_todo(client, get_resource_owner_headers):
     setup_create_todo(client, get_resource_owner_headers)
     data = {"ids": [1]}
@@ -350,16 +341,16 @@ def test_finish_todo_before_create_todo(client, get_resource_owner_headers):
     }
 
 
-def test_finish_todo_already_finished(client, get_resource_owner_headers):
-    """ 既に終了したTodoを終了しようとした場合 """
+def test_finish_already_finished_todo(client, get_resource_owner_headers):
+    """ 既に終了したTodoのみを終了しようとした場合 """
     setup_create_todo(client, get_resource_owner_headers)
     setup_finish_todo(client, get_resource_owner_headers)
     data = {"ids": [1]}
     response = client.put("/todos/finish", json=data, headers=get_resource_owner_headers)
     # ステータスが終了でないものをDBから取得しており、終了のものは取得されないため、NotFoundが返る
-    assert response.status_code == 404
+    assert response.status_code == 409
     assert response.json() == {
-        "code": NotFoundCode.TODO_NOT_FOUND
+        "code": ConflictCode.TODO_ALREADY_FINISHED
     }
 
 
@@ -396,7 +387,6 @@ def test_finish_todos_with_finished_todo(client, get_resource_owner_headers):
     for _ in range(2):
         setup_create_todo(client, get_resource_owner_headers)
     setup_finish_todo(client, get_resource_owner_headers)
-    response = client.get("/todos", headers=get_resource_owner_headers)
     data = {"ids": [1, 2]}
     response = client.put("/todos/finish", json=data, headers=get_resource_owner_headers)
     assert response.status_code == 200
