@@ -273,7 +273,9 @@ describe('パスワード変更リクエストを送信', async () => {
         mockedPut.mockRejectedValue({
             response: {
                 status: 401,
-                code: "INVALID_CURRENT_PASSWORD"
+                data: {
+                    code: "INVALID_CURRENT_PASSWORD"
+                }
             }
         });
         await wrapper.find('[data-testid="password-change-button"]').trigger('submit');

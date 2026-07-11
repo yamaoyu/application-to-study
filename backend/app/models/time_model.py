@@ -105,6 +105,9 @@ class FinishActivityRequest(BaseModel):
 
     @field_validator("dates")
     def validate_dates(cls, dates):
+        if not dates:
+            raise ValueError("日付リストが空です")
+
         for date_str in dates:
             year, month, day = map(int, date_str.split("-"))
             CheckDate(year=year, month=month, day=day)

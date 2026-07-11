@@ -222,8 +222,8 @@ describe('登録処理', async () => {
         });
         wrapper = mountComponent(RegisterSalary);
 
-        await wrapper.find('[data-testid="selected-month"').setValue("2025-01");
-        await wrapper.find('[data-testid="income-form"').setValue(25);
+        await wrapper.find('[data-testid="selected-month"]').setValue("2025-01");
+        await wrapper.find('[data-testid="income-form"]').setValue(25);
         await wrapper.find('[data-testid="submit"]').trigger('submit');
         expect(wrapper.find('[data-testid="register-msg"]').text()).toEqual(expectedMessage);
     });

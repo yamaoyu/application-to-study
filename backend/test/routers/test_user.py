@@ -128,7 +128,10 @@ def test_login_not_registered_user(client):
     user_info = {"username": "test",
                  "password": password}
     response = client.post("/login", json=user_info)
-    assert response.status_code == 404
+    assert response.status_code == 401
+    assert response.json() == {
+        "code": NotAuthorizedCode.LOGIN_FAILED
+    }
 
 
 def test_logout(client, get_resource_owner_headers):

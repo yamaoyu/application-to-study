@@ -21,7 +21,7 @@ export const useRegisterTargets = () => {
         messages.push(resultMessageMap.success(r.date, r.target_time));
         continue;
       } else if (r.result === "error") {
-        const messageFn = resultMessageMap[r.reason] || resultMessageMap.unexpected_error;
+        const messageFn = resultMessageMap[r.reason] || resultMessageMap.UNEXPECTED_ERROR;
         messages.push(messageFn(r.date));
         continue;
       } else {

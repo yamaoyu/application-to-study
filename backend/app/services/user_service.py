@@ -24,12 +24,6 @@ class UserService():
         self.user_repo = UserRepository(db)
         self.token_repo = TokenRepository(db)
 
-    def get_user(self, username: str):
-        user = self.user_repo.get_user(username)
-        if not user:
-            raise NotFound(code=NotFoundCode.USER_NOT_FOUND)
-        return user
-
     def create_user(self,
                     username: str,
                     plain_password: str,
@@ -58,7 +52,9 @@ class UserService():
             リフレッシュトークンはセキュリティの観点からクッキーに保存する
             よって、LoginUserResponseとは別の辞書型で返す
         """
-        user = self.get_user(username)
+        user = self.user_repo.get_user(username)
+        if not user:
+            raise NotAuthorized(code=NotAuthorizedCode.LOGIN_FAILED)
         is_password = verify_password(plain_password, user.password)
         if not is_password:
             raise NotAuthorized(code=NotAuthorizedCode.LOGIN_FAILED)
@@ -82,7 +78,9 @@ class UserService():
     def regenerate_access_token(self, refresh_token: str, device_id: str) -> regenerateAccessTokenResponse:
         # アクセストークンは切れているため、リフレッシュトークンを使用してユーザーを取得する
         current_user = self.get_current_user_from_token(refresh_token)
-        user = self.get_user(current_user["username"])
+        user = self.user_repo.get_user(current_user["username"])
+        if not user:
+            raise NotFound(code=NotFoundCode.USER_NOT_FOUND)
         if self.verify_refresh_token(refresh_token, device_id=device_id):
             access_token = create_access_token({"sub": user.username, "role": user.role})
             return regenerateAccessTokenResponse(access_token=access_token, token_type="Bearer")
@@ -90,7 +88,9 @@ class UserService():
             raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
 
     def change_password(self, old_password: str, new_password: str, username: str) -> None:
-        user = self.get_user(username)
+        user = self.user_repo.get_user(username)
+        if not user:
+            raise NotFound(code=NotFoundCode.USER_NOT_FOUND)
         if not verify_password(old_password, user.password):
             raise NotAuthorized(code=NotAuthorizedCode.INVALID_CURRENT_PASSWORD)
         self.user_repo.update_password(user, get_password_hash(new_password))

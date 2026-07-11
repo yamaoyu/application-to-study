@@ -46,7 +46,7 @@ class TodoService():
                     "due": due,
                     "detail": detail,
                     "result": "error",
-                    "reason": None,
+                    "reason": BadRequestCode.UNEXPECTED_ERROR,
                 })
 
         if error_count == len(todos):

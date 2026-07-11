@@ -33,12 +33,31 @@ export const parseError = (error, message) => {
 
     const code = error.response.data?.code ?? error.response.code;
     if (code && code === "VALIDATION_ERROR") {
-      code = error.response.errors.code
-      return fieldErrorMessages[code] || "不明なバリデーションエラーが発生しました";
+      const validationErrorCode = error.response.data.errors[0].code;
+      return fieldErrorMessages[validationErrorCode] || "不明なバリデーションエラーが発生しました";
     }
-    if (code && errorMessages[code]) {
+    if (!code) {
+      return message;
+    }
+
+    // 一括活動登録の場合は日付ごとのメッセージを作成する
+    if (errorMessages[code]==="BULK_ACTIVITY_OPERATION_FAILED") {
+      const results = error.response.data.results;
+      const errorMessagesList = results.map(result => {
+        if (result.result === "error") {
+          const reason = result.reason || "UNEXPECTED_ERROR";
+          const errorMessageFn = errorMessages[reason] || errorMessages.UNEXPECTED_ERROR;
+          return `${result.date}の活動登録に失敗: ${errorMessageFn}`;
+        } else {
+          return `${result.date}の活動登録に成功`;
+        }
+      });
+      return errorMessagesList.join("\n");
+    } else {
       return errorMessages[code];
     }
+
+    return message;
   };
 
   if (error.request) {

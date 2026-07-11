@@ -272,7 +272,7 @@ def test_delete_todos_empty(client, get_resource_owner_headers):
         "code": "VALIDATION_ERROR",
         "errors": [
             {
-                "code": "INVALID_VALUE",
+                "code": "EMPTY_LIST",
                 "field": "ids"
             }
         ]

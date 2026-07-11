@@ -31,7 +31,7 @@ export const useFinishActivities = () => {
   };
 
   const makeErrorMessage = (date, reason) => {
-    const messageFn = resultMessageMap[reason] || resultMessageMap.unexpected_error;
+    const messageFn = resultMessageMap[reason] || resultMessageMap.UNEXPECTED_ERROR;
     return messageFn(date);
   };
 
@@ -49,7 +49,7 @@ export const useFinishActivities = () => {
       } else if (result.result === 'error') {
         msg += `${makeErrorMessage(result.date, result.reason)}\n`;
       } else {
-        msg += `${makeErrorMessage(result.date, 'unexpected_error')}\n`;
+        msg += `${makeErrorMessage(result.date, 'UNEXPECTED_ERROR')}\n`;
       }
     }
     return msg;
