@@ -347,7 +347,6 @@ def test_finish_already_finished_todo(client, get_resource_owner_headers):
     setup_finish_todo(client, get_resource_owner_headers)
     data = {"ids": [1]}
     response = client.put("/todos/finish", json=data, headers=get_resource_owner_headers)
-    # ステータスが終了でないものをDBから取得しており、終了のものは取得されないため、NotFoundが返る
     assert response.status_code == 409
     assert response.json() == {
         "code": ConflictCode.TODO_ALREADY_FINISHED
