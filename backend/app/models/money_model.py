@@ -13,8 +13,10 @@ class RegisterIncomeRequest(BaseModel):
         return salary
 
 
-class RegisterIncomeResponse(BaseModel):
-    message: str
+class RegisterSalaryResponse(BaseModel):
+    year: int
+    month: int
+    salary: float
 
 
 class GetIncomeResponse(BaseModel):

@@ -3,6 +3,7 @@ from datetime import timedelta
 from testdata import RESOURCE_OWNER_USERNAME
 from lib.security import create_access_token
 from app.domain.activity_calculator import round_money
+from app.error_codes import NotFoundCode, NotAuthorizedCode, BadRequestCode, ConflictCode
 
 # セットアップ用変数
 test_salary = 23.0
@@ -61,13 +62,14 @@ def test_register_multi_target_without_monthly_income(client, get_resource_owner
     response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 201
+    assert response.status_code == 400
     assert response.json() == {
+        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
         "results": [
             {
                 "date": test_date,
                 "result": "error",
-                "reason": "income_not_found",
+                "reason": NotFoundCode.SALARY_NOT_FOUND,
                 "target_time": None
             }
         ]
@@ -92,7 +94,9 @@ def test_register_target_with_expired_token(client, get_resource_owner_headers):
                                json=data,
                                headers=headers)
         assert response.status_code == 401
-        assert response.json() == {"detail": "再度ログインしてください"}
+        assert response.json() == {
+            "code": NotAuthorizedCode.NOT_AUTHORIZED
+        }
 
 
 def test_register_target_twice(client, get_resource_owner_headers):
@@ -107,13 +111,14 @@ def test_register_target_twice(client, get_resource_owner_headers):
     response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 201
+    assert response.status_code == 400
     assert response.json() == {
+        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
         "results": [
             {
                 "date": test_date,
                 "result": "error",
-                "reason": "target_time_already_registered",
+                "reason": ConflictCode.TARGET_TIME_ALREADY_REGISTERED,
                 "target_time": None
             }
         ]
@@ -132,7 +137,15 @@ def test_register_target_out_of_range(client, get_resource_owner_headers):
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
-    assert response.json() == {"detail": "目標時間は0.5~12.0の範囲で入力してください"}
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_VALUE",
+                "field": "target_time"
+            }
+        ]
+    }
 
 
 def test_register_target_with_incorrect_hour(client, get_resource_owner_headers):
@@ -147,7 +160,15 @@ def test_register_target_with_incorrect_hour(client, get_resource_owner_headers)
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
-    assert response.json() == {"detail": "目標時間は0.5時間単位で入力してください"}
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_VALUE",
+                "field": "target_time"
+            }
+        ]
+    }
 
 
 def test_register_target_with_invalid_year(client, get_resource_owner_headers):
@@ -162,7 +183,15 @@ def test_register_target_with_invalid_year(client, get_resource_owner_headers):
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
-    assert response.json() == {"detail": "年は2024~2099の範囲で入力してください"}
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_YEAR",
+                "field": "year"
+            }
+        ]
+    }
 
 
 def test_register_target_with_invalid_month(client, get_resource_owner_headers):
@@ -177,7 +206,15 @@ def test_register_target_with_invalid_month(client, get_resource_owner_headers):
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
-    assert response.json() == {"detail": "月は1~12の範囲で入力してください"}
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_MONTH",
+                "field": "month"
+            }
+        ]
+    }
 
 
 def test_register_target_with_invalid_date(client, get_resource_owner_headers):
@@ -192,7 +229,15 @@ def test_register_target_with_invalid_date(client, get_resource_owner_headers):
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
-    assert response.json() == {"detail": "日付が不正です"}
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_DATE",
+                "field": "date"
+            }
+        ]
+    }
 
 
 def test_register_multi_target(client, get_resource_owner_headers):
@@ -233,7 +278,7 @@ def test_register_multi_target(client, get_resource_owner_headers):
     }
 
 
-def test_register_multi_target_already_registered(client, get_resource_owner_headers):
+def test_register_multi_with_partial_error(client, get_resource_owner_headers):
     """ 既に目標時間が登録された日が含まれる場合 """
     setup_monthly_income_for_test(client, get_resource_owner_headers)
     setup_target_time_for_test(client, get_resource_owner_headers)
@@ -253,13 +298,44 @@ def test_register_multi_target_already_registered(client, get_resource_owner_hea
                 "date": "2024-5-5",
                 "result": "error",
                 "target_time": None,
-                "reason": "target_time_already_registered"
+                "reason": ConflictCode.TARGET_TIME_ALREADY_REGISTERED
             },
             {
                 "date": "2024-5-6",
                 "result": "success",
                 "target_time": 6.0,
                 "reason": None
+            }
+        ]
+    }
+
+
+def test_register_multi_target_with_all_errors(client, get_resource_owner_headers):
+    """ 月収が登録されておらず、全てがエラー """
+    data = {
+        "activities": [
+            {"date": test_date, "target_time": 5.0},
+            {"date": "2024-5-6", "target_time": 6.0}
+        ]
+    }
+    response = client.post("/activities/target",
+                           json=data,
+                           headers=get_resource_owner_headers)
+    assert response.status_code == 400
+    assert response.json() == {
+        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
+        "results": [
+            {
+                "date": "2024-5-5",
+                "result": "error",
+                "target_time": None,
+                "reason": NotFoundCode.SALARY_NOT_FOUND
+            },
+            {
+                "date": "2024-5-6",
+                "result": "error",
+                "target_time": None,
+                "reason": NotFoundCode.SALARY_NOT_FOUND
             }
         ]
     }
@@ -281,7 +357,17 @@ def test_register_multi_target_with_invalid_data(client, get_resource_owner_head
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
     assert response.json() == {
-        "detail": "目標時間は0.5時間単位で入力してください"
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_VALUE",
+                "field": "target_time"
+            },
+            {
+                "code": "INVALID_VALUE",
+                "field": "target_time"
+            }
+        ]
     }
 
     # 年が不正
@@ -295,7 +381,13 @@ def test_register_multi_target_with_invalid_data(client, get_resource_owner_head
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
     assert response.json() == {
-        'detail': "年は2024~2099の範囲で入力してください"
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_YEAR",
+                "field": "year"
+            }
+        ]
     }
 
     data = {
@@ -308,7 +400,13 @@ def test_register_multi_target_with_invalid_data(client, get_resource_owner_head
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
     assert response.json() == {
-        "detail": "月は1~12の範囲で入力してください"
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_MONTH",
+                "field": "month"
+            }
+        ]
     }
 
     # 日付が不正
@@ -322,7 +420,13 @@ def test_register_multi_target_with_invalid_data(client, get_resource_owner_head
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
     assert response.json() == {
-        'detail': '日付が不正です'
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_DATE",
+                "field": "date"
+            }
+        ]
     }
 
 
@@ -376,12 +480,13 @@ def test_register_multi_actual(client, get_resource_owner_headers):
     }
 
 
-def test_register_actual_before_register_target(client, get_resource_owner_headers):
-    """ 目標時間登録前に活動時間を登録した場合 """
+def test_register_actual_with_partial_error(client, get_resource_owner_headers):
+    """ 目標時間が登録されていないものが含まれる場合 """
     setup_monthly_income_for_test(client, get_resource_owner_headers)
+    setup_target_time_for_test(client, get_resource_owner_headers)
     data = {
         "activities": [
-            {"date": "2024-5-10", "actual_time": 5.0},
+            {"date": test_date, "actual_time": 5.0},
             {"date": "2024-5-11", "actual_time": 5.0}
         ]
     }
@@ -392,16 +497,47 @@ def test_register_actual_before_register_target(client, get_resource_owner_heade
     assert response.json() == {
         "results": [
             {
-                "date": "2024-5-10",
-                "result": "error",
-                "actual_time": None,
-                "reason": "activity_not_found"
+                "date": test_date,
+                "result": "success",
+                "actual_time": 5.0,
+                "reason": None
             },
             {
                 "date": "2024-5-11",
                 "result": "error",
                 "actual_time": None,
-                "reason": "activity_not_found"
+                "reason": NotFoundCode.ACTIVITY_NOT_FOUND
+            }
+        ]
+    }
+
+
+def test_register_actual_with_all_errors(client, get_resource_owner_headers):
+    """ 全てのリクエストがエラーになる場合 """
+    data = {
+        "activities": [
+            {"date": test_date, "actual_time": 5.0},
+            {"date": "2024-5-11", "actual_time": 5.0}
+        ]
+    }
+    response = client.put("/activities/actual",
+                          json=data,
+                          headers=get_resource_owner_headers)
+    assert response.status_code == 400
+    assert response.json() == {
+        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
+        "results": [
+            {
+                "date": test_date,
+                "result": "error",
+                "actual_time": None,
+                "reason": NotFoundCode.SALARY_NOT_FOUND
+            },
+            {
+                "date": "2024-5-11",
+                "result": "error",
+                "actual_time": None,
+                "reason": NotFoundCode.SALARY_NOT_FOUND
             }
         ]
     }
@@ -419,7 +555,15 @@ def test_register_actual_with_invalid_hour(client, get_resource_owner_headers):
                           json=data,
                           headers=get_resource_owner_headers)
     assert response.status_code == 422
-    assert response.json() == {"detail": "活動時間は0.5時間単位で入力してください"}
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_VALUE",
+                "field": "actual_time"
+            }
+        ]
+    }
 
 
 def test_register_actual_after_finish(client, get_resource_owner_headers):
@@ -436,14 +580,15 @@ def test_register_actual_after_finish(client, get_resource_owner_headers):
     response = client.put("/activities/actual",
                           json=data,
                           headers=get_resource_owner_headers)
-    assert response.status_code == 200
+    assert response.status_code == 400
     assert response.json() == {
+        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
         "results": [
             {
                 "date": test_date,
                 "result": "error",
                 "actual_time": None,
-                "reason": "activity_already_finished"
+                "reason": ConflictCode.ACTIVITY_ALREADY_FINISHED
             }
         ]
     }
@@ -463,9 +608,13 @@ def test_register_multi_actual_with_invalid_data(client, get_resource_owner_head
                           headers=get_resource_owner_headers)
     assert response.status_code == 422
     assert response.json() == {
-        "detail": (
-            "活動時間は0.0~12.0の範囲で入力してください"
-        )
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_VALUE",
+                "field": "actual_time"
+            }
+        ]
     }
 
     data = {
@@ -479,7 +628,13 @@ def test_register_multi_actual_with_invalid_data(client, get_resource_owner_head
                           headers=get_resource_owner_headers)
     assert response.status_code == 422
     assert response.json() == {
-        "detail": "年は2024~2099の範囲で入力してください"
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_YEAR",
+                "field": "year"
+            }
+        ]
     }
 
 
@@ -489,27 +644,6 @@ def test_update_already_finished_activity(client, get_resource_owner_headers):
     setup_target_time_for_test(client, get_resource_owner_headers)
     setup_actual_time_for_test(client, get_resource_owner_headers)
     setup_finish_activity_for_test(client, get_resource_owner_headers)
-    # 目標時間を登録する活動の中に既に終了した活動が含まれている場合
-    data = {
-        "activities": [
-            {"date": test_date, "target_time": 5.0}
-        ]
-    }
-    response = client.post("/activities/target",
-                           json=data,
-                           headers=get_resource_owner_headers)
-    assert response.status_code == 201
-    assert response.json() == {
-        "results": [
-            {
-                "date": test_date,
-                "result": "error",
-                "target_time": None,
-                "reason": "target_time_already_registered"
-            }
-        ]
-    }
-
     # 活動時間を登録する活動の中に既に終了した活動が含まれている場合
     data = {
         "activities": [
@@ -519,14 +653,15 @@ def test_update_already_finished_activity(client, get_resource_owner_headers):
     response = client.put("/activities/actual",
                           json=data,
                           headers=get_resource_owner_headers)
-    assert response.status_code == 200
+    assert response.status_code == 400
     assert response.json() == {
+        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
         "results": [
             {
                 "date": test_date,
                 "result": "error",
                 "actual_time": None,
-                "reason": "activity_already_finished"
+                "reason": ConflictCode.ACTIVITY_ALREADY_FINISHED
             }
         ]
     }
@@ -602,8 +737,8 @@ def test_finish_multi_activity(client, get_resource_owner_headers):
     }
 
 
-def test_finish_multi_activity_with_errors(client, get_resource_owner_headers):
-    """ 複数の活動を終了させた場合 """
+def test_finish_multi_activity_with_partial_errors(client, get_resource_owner_headers):
+    """ 複数の活動を終了させて一部のみエラーがある場合 """
     setup_monthly_income_for_test(client, get_resource_owner_headers)
     setup_target_time_for_test(client, get_resource_owner_headers)
     setup_actual_time_for_test(client, get_resource_owner_headers)
@@ -650,7 +785,7 @@ def test_finish_multi_activity_with_errors(client, get_resource_owner_headers):
             {
                 "date": test_date,
                 "result": "error",
-                "reason": "activity_already_finished",
+                "reason": ConflictCode.ACTIVITY_ALREADY_FINISHED,
                 "bonus": None,
                 "penalty": None,
                 "status": None
@@ -675,6 +810,47 @@ def test_finish_multi_activity_with_errors(client, get_resource_owner_headers):
     }
 
 
+def test_finish_multi_activity_with_all_errors(client, get_resource_owner_headers):
+    """ 複数の活動を終了させて全てエラー場合 """
+    # 活動を終了
+    data = {
+        "dates": [test_date, "2024-5-6", "2024-5-7"]
+    }
+    response = client.put("/activities/finish",
+                          json=data,
+                          headers=get_resource_owner_headers)
+    assert response.status_code == 400
+    assert response.json() == {
+        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
+        "results": [
+            {
+                "date": test_date,
+                "result": "error",
+                "reason": NotFoundCode.ACTIVITY_NOT_FOUND,
+                "bonus": None,
+                "penalty": None,
+                "status": None
+            },
+            {
+                "date": "2024-5-6",
+                "result": "error",
+                "reason": NotFoundCode.ACTIVITY_NOT_FOUND,
+                "bonus": None,
+                "penalty": None,
+                "status": None
+            },
+            {
+                "date": "2024-5-7",
+                "result": "error",
+                "reason": NotFoundCode.ACTIVITY_NOT_FOUND,
+                "bonus": None,
+                "penalty": None,
+                "status": None
+            },
+        ]
+    }
+
+
 def test_finish_multi_activity_with_invalid_data(client, get_resource_owner_headers):
     """ 複数の活動を終了させた場合に不正なデータが含まれている場合 """
     setup_monthly_income_for_test(client, get_resource_owner_headers)
@@ -688,7 +864,13 @@ def test_finish_multi_activity_with_invalid_data(client, get_resource_owner_head
                           headers=get_resource_owner_headers)
     assert response.status_code == 422
     assert response.json() == {
-        'detail': "年は2024~2099の範囲で入力してください"
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_YEAR",
+                "field": "year"
+            }
+        ]
     }
 
     # 月が不正
@@ -700,7 +882,13 @@ def test_finish_multi_activity_with_invalid_data(client, get_resource_owner_head
                           headers=get_resource_owner_headers)
     assert response.status_code == 422
     assert response.json() == {
-        "detail": "月は1~12の範囲で入力してください"
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_MONTH",
+                "field": "month"
+            }
+        ]
     }
 
     # 日付が不正
@@ -712,7 +900,13 @@ def test_finish_multi_activity_with_invalid_data(client, get_resource_owner_head
                           headers=get_resource_owner_headers)
     assert response.status_code == 422
     assert response.json() == {
-        'detail': '日付が不正です'
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_VALUE",
+                "field": "dates"
+            }
+        ]
     }
 
 
@@ -722,7 +916,15 @@ def test_finish_multi_acitivity_with_no_dates(client, get_resource_owner_headers
                           json={},
                           headers=get_resource_owner_headers)
     assert response.status_code == 422
-    assert response.json() == {"detail": "入力データが不足しています"}
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "REQUIRED",
+                "field": "dates"
+            }
+        ]
+    }
 
 
 def test_get_day_activities_registered_target(client, get_resource_owner_headers):
@@ -784,11 +986,12 @@ def test_get_day_activities(client, get_resource_owner_headers):
 
 def test_get_day_activities_before_register_activity(client, get_resource_owner_headers):
     """ 活動記録が未登録の日の情報を取得する場合 """
-    date = "2024-5-10"
     response = client.get("/activities/2024/5/10",
                           headers=get_resource_owner_headers)
     assert response.status_code == 404
-    assert response.json() == {"detail": f"{date}の活動記録は未登録です"}
+    assert response.json() == {
+        "code": NotFoundCode.ACTIVITY_NOT_FOUND
+    }
 
 
 def test_get_day_activities_with_expired_token(client, get_resource_owner_headers):
@@ -803,7 +1006,9 @@ def test_get_day_activities_with_expired_token(client, get_resource_owner_header
         response = client.get(f"/activities{test_date_path}",
                               headers=headers)
         assert response.status_code == 401
-        assert response.json() == {"detail": "再度ログインしてください"}
+        assert response.json() == {
+            "code": NotAuthorizedCode.NOT_AUTHORIZED
+        }
 
 
 def test_get_month_activities(client, get_resource_owner_headers):

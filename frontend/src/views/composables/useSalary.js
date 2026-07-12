@@ -42,7 +42,7 @@ export const useRegisterSalary = () => {
       const res = await postSalary(year, month, Number(salary));
       registerStatusCode.value = res.status
       if (res.status===201){
-          registerMsg.value = res.data.message
+          registerMsg.value = Number(year) + "-" + Number(month) + "の月収:" + salary + "万円" 
       }
     } catch (error) {
       registerMsg.value = parseError(error, "月収の登録に失敗しました");

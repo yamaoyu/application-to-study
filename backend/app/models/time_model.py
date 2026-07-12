@@ -91,17 +91,6 @@ class RegisterActualTimeResponse(BaseModel):
     results: list[RegisterActualTime]
 
 
-class MultiFinishActivityIn(BaseModel):
-    dates: list[str]
-
-    @field_validator("dates")
-    def validate_dates(cls, dates):
-        for date_str in dates:
-            year, month, day = map(int, date_str.split("-"))
-            CheckDate(year=year, month=month, day=day)
-        return dates
-
-
 class FinishActivity(BaseModel):
     date: str
     status: Optional[Status] = None
@@ -109,6 +98,20 @@ class FinishActivity(BaseModel):
     penalty: Optional[float] = None
     result: str
     reason: Optional[str] = None
+
+
+class FinishActivityRequest(BaseModel):
+    dates: list[str]
+
+    @field_validator("dates")
+    def validate_dates(cls, dates):
+        if not dates:
+            raise ValueError("日付リストが空です")
+
+        for date_str in dates:
+            year, month, day = map(int, date_str.split("-"))
+            CheckDate(year=year, month=month, day=day)
+        return dates
 
 
 class FinishActivityResponse(BaseModel):

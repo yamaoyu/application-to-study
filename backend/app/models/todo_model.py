@@ -1,6 +1,7 @@
 from pydantic import BaseModel, field_validator, ConfigDict
 from datetime import date
 from typing import Optional
+from pydantic_core import PydanticCustomError
 
 
 class Todo(BaseModel):
@@ -25,15 +26,30 @@ class TodosCreateRequest(BaseModel):
     todos: list[Todo]
 
 
-class TodosCreateResponse(BaseModel):
-    message: str
+class TodoManupulate(BaseModel):
+    success_count: int
+    error_count: int
+    results: list
+
+
+class TodosCreateResponse(TodoManupulate):
+    pass
 
 
 class TodoIdsRequest(BaseModel):
     ids: list[int]
 
+    @field_validator("ids")
+    def remove_duplicates(cls, ids):
+        if not ids:
+            raise PydanticCustomError(
+                "empty_list",
+                "idsは1件以上指定してください",
+            )
+        return list(set(ids))
 
-class TodosGetResponse(BaseModel):
+
+class TodoGetResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     todo_id: int
@@ -43,13 +59,13 @@ class TodosGetResponse(BaseModel):
     detail: Optional[str] = None
 
 
-class TodosFinishResponse(BaseModel):
-    message: str
-    titles: str
+class TodosFinishResponse(TodoManupulate):
+    pass
 
 
-class TodoEditResponse(BaseModel):
-    message: str
-    title: str
-    due: date
-    detail: Optional[str] = None
+class TodosDeleteResponse(TodoManupulate):
+    pass
+
+
+class TodoEditResponse(TodoManupulate):
+    pass

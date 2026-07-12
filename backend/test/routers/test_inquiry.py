@@ -1,4 +1,5 @@
 from datetime import datetime
+from app.error_codes import NotFoundCode, NotAuthorizedCode
 
 CATEGORY = "要望"
 DETAIL = "問い合わせ詳細"
@@ -15,8 +16,7 @@ def test_create_inquiry(client, get_resource_owner_headers):
     assert response.status_code == 201
     assert response.json() == {
         "category": CATEGORY,
-        "detail": DETAIL,
-        "message": "こちらの内容で受け付けました"
+        "detail": DETAIL
     }
 
 
@@ -25,7 +25,13 @@ def test_create_inquiry_with_invalid_category(client, get_resource_owner_headers
     response = client.post("/inquiries", json=data, headers=get_resource_owner_headers)
     assert response.status_code == 422
     assert response.json() == {
-        "detail": "カテゴリは要望・エラー報告・その他から選択してください"
+        "code": "VALIDATION_ERROR",
+        "errors": [
+                {
+                    "field": "category",
+                    "code": "INVALID_CATEGORY"
+                }
+        ]
     }
 
 
@@ -33,7 +39,7 @@ def test_get_inquiry_by_general_user(client, get_resource_owner_headers):
     response = client.get("/inquiries", headers=get_resource_owner_headers)
     assert response.status_code == 403
     assert response.json() == {
-        "detail": "管理者権限を持つユーザー以外はアクセスできません"
+        "code": NotAuthorizedCode.NOT_HAVE_PERMISSION
     }
 
 
@@ -53,12 +59,27 @@ def test_get_inquiries(client, get_admin_headers, get_resource_owner_headers):
     ]
 
 
+def test_get_inquiries_filter_by_month_without_year(client, get_admin_headers, get_resource_owner_headers):
+    setup_create_inquiry(client, get_resource_owner_headers)
+    response = client.get("/inquiries?month=1", headers=get_admin_headers)
+    assert response.status_code == 422
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "field": "year",
+                "code": "YEAR_REQUIRED_WHEN_MONTH_SPECIFIED"
+            }
+        ]
+    }
+
+
 def test_get_inquiries_filter_by_category(client, get_admin_headers, get_resource_owner_headers):
     setup_create_inquiry(client, get_resource_owner_headers)
     response = client.get("/inquiries?category=エラー報告", headers=get_admin_headers)
     assert response.status_code == 404
     assert response.json() == {
-        "detail": "カテゴリが「エラー報告」の問い合わせはありません"
+        "code": NotFoundCode.INQUIRY_NOT_FOUND
     }
 
 
@@ -67,7 +88,7 @@ def test_get_inquiries_filter_by_priority(client, get_admin_headers, get_resourc
     response = client.get("/inquiries?priority=高", headers=get_admin_headers)
     assert response.status_code == 404
     assert response.json() == {
-        "detail": "優先度が「高」の問い合わせはありません"
+        "code": NotFoundCode.INQUIRY_NOT_FOUND
     }
 
 

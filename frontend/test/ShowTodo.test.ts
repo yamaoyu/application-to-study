@@ -27,23 +27,31 @@ const defaultTodosData = [
 
 type TodosMock =
   | { type: 'resolve'; value: { status: number; data: Record<string, any> } }
-  | { type: 'reject'; value: { response: { status: number; data: { detail: string } } } };
+  | {
+    type: 'reject';
+    value: {
+      response: {
+        status: number;
+        data: {}
+      }
+    }
+  };
 
 const createResolvedMock = (data: Record<string, any>, status = 200) => ({
   type: "resolve",
   value: {
-    status: status,
-    data: data
+    status,
+    data
   }
 } as const);
 
-const createRejectedMock = (detail: string, status = 404) => ({
+const createRejectedMock = (code: string, status = 404) => ({
   type: "reject",
   value: {
     response: {
       status,
       data: {
-        detail: detail
+        code
       }
     }
   }
@@ -82,9 +90,9 @@ describe('フィルターなし', () => {
   });
 
   it("データなし", async () => {
-    const expectedMessage = "登録された情報はありません";
+    const expectedMessage = "登録されたTODOはありません";
     wrapper = await mountShowTodo({
-      todosMock: createRejectedMock(expectedMessage)
+      todosMock: createRejectedMock("TODO_NOT_FOUND")
     });
     expect(mockedGet).toBeCalledWith(
       "todos",
@@ -279,7 +287,12 @@ describe('タイトル名でフィルター', () => {
   it("データあり", async () => {
     wrapper = await mountShowTodo();
 
-    // フィルター適用前    expect(rows).toHaveLength(defaultTodosData.length);    expect(rows).toHaveLength(defaultTodosData.length);    expect(rows).toHaveLength(defaultTodosData.length);    expect(rows).toHaveLength(defaultTodosData.length);
+    // フィルター適用前    
+    const rows = wrapper.findAll('[data-testid="todo-row"]');
+    expect(rows).toHaveLength(defaultTodosData.length);
+    expect(rows).toHaveLength(defaultTodosData.length);
+    expect(rows).toHaveLength(defaultTodosData.length);
+    expect(rows).toHaveLength(defaultTodosData.length);
 
     // フィルター適用
     mockedGet.mockResolvedValue({

@@ -2,6 +2,32 @@ import { ref } from "vue";
 import { postTodos, getTodos, editTodo, finishTodos, deleteTodos } from "../api/todo";
 import { parseError } from "../utils/error";
 
+const resultMessageMap = {
+  success: (title, action) => `【Todo${action}成功】: ${title}`,
+  todo_not_found: (title, action) => `【Todo${action}失敗】${title}: 登録されていません`,
+  todo_already_finished: (title, action) => `【Todo${action}失敗】${title}: 終了したアクションは更新できません`,
+  unexpected_error: (title, action) => `【Todo${action}失敗】${title}: ${action}に失敗しました`,
+};
+
+const makeMessage = (results, action) => {
+  let messages = [];
+
+  for (const r of results) {
+    if (r.result === "success") {
+      messages.push(resultMessageMap.success(r.title, action))
+      continue;
+    } else if (r.result === "error") {
+      const messageFn = resultMessageMap[r.reason] || resultMessageMap.unexpected_error;
+      messages.push(messageFn(r.title, action));
+      continue;
+    } else {
+      messages.push(`【Todo${action}失敗】${r.title}: 不明なエラーが発生しました`);
+      continue;
+    }
+  }
+  return messages.join("\n");
+};
+
 export const useRegisterTodos = () =>{
   const todos = ref([]);
   const message = ref("");
@@ -12,7 +38,7 @@ export const useRegisterTodos = () =>{
       const res = await postTodos(todos.value);
       if (res.status===201) {
         statusCode.value = res.status;
-        message.value = res.data.message;
+        message.value = makeMessage(res.data.results, "作成");
         todos.value = [];
       }
     } catch(error) {
@@ -99,7 +125,7 @@ export const useTodoOperations = (todoMsg) => {
       };
       const res = await editTodo(id, params);
       if (res.status === 200) {
-        todoMsg.value = res.data.message;
+        todoMsg.value = makeMessage(res.data.results, "更新");
         if (onSuccess) {
           await onSuccess();
         }
@@ -114,7 +140,11 @@ export const useTodoOperations = (todoMsg) => {
       const params = { "ids": selectedTodoIDs.value }
       const res = await finishTodos(params);
       if (res.status === 200) {
-        todoMsg.value = `${res.data.message}\n${res.data.titles}`;
+        todoMsg.value = `${res.data.success_count}件のTodoを終了しました\n`;
+        todoMsg.value += makeMessage(res.data.results, "終了");
+        if (res.data.error_count > 0) {
+          todoMsg.value += "\n一部/全てのTodoの終了に失敗しました";
+        }
         if (onSuccess) {
           await onSuccess();
         }
@@ -128,8 +158,12 @@ export const useTodoOperations = (todoMsg) => {
     try {
       const params = { "ids": selectedTodoIDs.value };
       const res = await deleteTodos(params);
-      if (res.status === 204) {
-        todoMsg.value = "選択したTodoを削除しました";
+      if (res.status === 200) {
+        todoMsg.value = `${res.data.success_count}件のTodoを削除しました\n`;
+        todoMsg.value += makeMessage(res.data.results, "削除");
+        if (res.data.error_count > 0) {
+          todoMsg.value += "\n一部/全てのTodoの削除に失敗しました";
+        }
         if (onSuccess) {
           await onSuccess();
         }

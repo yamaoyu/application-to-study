@@ -36,9 +36,6 @@ describe('目標時間の登録(一括)', () => {
     });
 
     it('成功', async () => {
-        // タブの切り替え    
-        const expectedMessage = "2025/1/1の目標時間を3時間に登録しました";
-
         const insertDate = "2025-01-01";
         const insertTime = 3;
 
@@ -71,13 +68,10 @@ describe('目標時間の登録(一括)', () => {
                 ]
             }
         );
-        expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);
+        expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual("2025/1/1の目標時間を3時間に登録しました");
     });
 
     it('失敗', async () => {
-        // タブの切り替え    
-        const expectedMessage = "2025/1/1の目標時間登録に失敗: 既に登録されています\n2025/2/1の目標時間登録に失敗: 月収が未登録です";
-
         const insertData = [{ "date": "2025-01-01", "target_time": 3 }, { "date": "2025-02-01", "target_time": 4 }];
 
         await wrapper.find("[data-testid='increase-target-row']").trigger("click");
@@ -96,8 +90,8 @@ describe('目標時間の登録(一括)', () => {
             status: 201,
             data: {
                 results: [
-                    { result: "error", date: "2025/1/1", reason: "target_time_already_registered" },
-                    { result: "error", date: "2025/2/1", reason: "income_not_found" }
+                    { result: "error", date: "2025/1/1", reason: "TARGET_TIME_ALREADY_REGISTERED" },
+                    { result: "error", date: "2025/2/1", reason: "SALARY_NOT_FOUND" }
                 ]
             }
         });
@@ -115,6 +109,7 @@ describe('目標時間の登録(一括)', () => {
                 activities: insertData
             }
         );
+        const expectedMessage = "2025/1/1の目標時間登録に失敗: 既に登録されています\n2025/2/1の目標時間登録に失敗: 月収が未登録です";
         expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);
     });
 });

@@ -58,12 +58,11 @@ describe('問い合わせに失敗する', async () => {
 
     it('カテゴリを選択しないで送信した場合', async () => {
         const detail = "テスト";
-        const message = "カテゴリは要望・エラー報告・その他から選択してください";
 
         mockedPost.mockRejectedValue({
             response: {
                 status: 422,
-                data: { detail: message }
+                data: { code: "INVALID_CATEGORY" }
             }
         })
 
@@ -82,7 +81,7 @@ describe('問い合わせに失敗する', async () => {
             }
         )
         // エラーメッセージが表示されることを確認する
-        expect(wrapper.find('[data-testid="message"]').element.textContent).toBe(message)
+        expect(wrapper.find('[data-testid="message"]').element.textContent).toBe("カテゴリは要望・エラー報告・その他から選択してください")
     })
 })
 

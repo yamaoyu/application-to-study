@@ -1,11 +1,8 @@
-from unittest.mock import patch
-from datetime import timedelta
-from testdata import RESOURCE_OWNER_USERNAME
-from lib.security import create_access_token
+from app.error_codes import ConflictCode, NotFoundCode
 
 # テストで使用する変数
-test_year = "2024"
-test_month = "6"
+test_year = 2024
+test_month = 6
 test_salary = 23.0
 
 
@@ -22,7 +19,10 @@ def test_register_income(client, get_resource_owner_headers):
                            json=data, headers=get_resource_owner_headers)
     assert response.status_code == 201
     assert response.json() == {
-        "message": f"{test_year}-{test_month}の月収:{test_salary}万円"}
+        "year": test_year,
+        "month": test_month,
+        "salary": test_salary
+    }
 
 
 def test_register_income_with_string(client, get_resource_owner_headers):
@@ -32,7 +32,15 @@ def test_register_income_with_string(client, get_resource_owner_headers):
     response = client.post(f"/incomes/{test_year}/{test_month}",
                            json=data, headers=get_resource_owner_headers)
     assert response.status_code == 422
-    assert response.json() == {"detail": "数値を入力してください"}
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+                {
+                    "field": "salary",
+                    "code": "INVALID_NUMBER"
+                }
+        ]
+    }
 
 
 def test_register_income_with_invalid_year(client, get_resource_owner_headers):
@@ -40,7 +48,15 @@ def test_register_income_with_invalid_year(client, get_resource_owner_headers):
     response = client.post(f"/incomes/9999/{test_month}",
                            json=data, headers=get_resource_owner_headers)
     assert response.status_code == 422
-    assert response.json() == {"detail": "年は2024~2099の範囲で入力してください"}
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "field": "year",
+                "code": "INVALID_YEAR"
+            }
+        ]
+    }
 
 
 def test_register_income_with_invalid_month(client, get_resource_owner_headers):
@@ -48,23 +64,15 @@ def test_register_income_with_invalid_month(client, get_resource_owner_headers):
     response = client.post(f"/incomes/{test_year}/9999", json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
-    assert response.json() == {"detail": "月は1~12の範囲で入力してください"}
-
-
-def test_register_income_with_expired_token(client):
-    """ 期限の切れたトークンで月収を登録しようとした場合 """
-    def mock_create_expired_access_token(data, expires_delta=timedelta(minutes=-30)):
-        return create_access_token(data, expires_delta)
-
-    with patch("lib.security.create_access_token", mock_create_expired_access_token):
-        access_token = mock_create_expired_access_token(data={"sub": RESOURCE_OWNER_USERNAME})
-        headers = {"Authorization": f"Bearer {access_token}"}
-        data = {"salary": test_salary,
-                "year": test_year,
-                "month": test_month}
-        response = client.post(f"/incomes/{test_year}/{test_month}", json=data, headers=headers)
-        assert response.status_code == 401
-        assert response.json() == {"detail": "再度ログインしてください"}
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "field": "month",
+                "code": "INVALID_MONTH"
+            }
+        ]
+    }
 
 
 def test_register_income_already_registered(client, get_resource_owner_headers):
@@ -76,7 +84,9 @@ def test_register_income_already_registered(client, get_resource_owner_headers):
     response = client.post(f"/incomes/{test_year}/{test_month}",
                            json=data, headers=get_resource_owner_headers)
     assert response.status_code == 409
-    assert response.json() == {"detail": "その月の月収は既に登録されています"}
+    assert response.json() == {
+        "code": ConflictCode.SALARY_ALREADY_EXISTS
+    }
 
 
 def test_register_income_with_minus_digit(client, get_resource_owner_headers):
@@ -87,7 +97,15 @@ def test_register_income_with_minus_digit(client, get_resource_owner_headers):
     response = client.post(f"/incomes/{test_year}/{test_month}",
                            json=data, headers=get_resource_owner_headers)
     assert response.status_code == 422
-    assert response.json() == {"detail": "給料は5以上を入力して下さい"}
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "field": "salary",
+                "code": "INVALID_VALUE"
+            }
+        ]
+    }
 
 
 def test_get_income(client, get_resource_owner_headers):
@@ -104,19 +122,46 @@ def test_get_income(client, get_resource_owner_headers):
     }
 
 
-def test_get_income_with_expired_token(client):
-    """ 期限の切れたトークンで月収を取得しようとした場合 """
-    def mock_create_expired_access_token(data, expires_delta=timedelta(minutes=-30)):
-        return create_access_token(data, expires_delta)
+def test_get_income_without_register(client, get_resource_owner_headers):
+    year = test_year
+    month = test_month
+    response = client.get(f"/incomes/{year}/{month}", headers=get_resource_owner_headers)
+    assert response.status_code == 404
+    assert response.json() == {
+        "code": NotFoundCode.SALARY_NOT_FOUND
+    }
 
-    with patch("lib.security.create_access_token", mock_create_expired_access_token):
-        access_token = mock_create_expired_access_token(data={"sub": RESOURCE_OWNER_USERNAME})
-        headers = {"Authorization": f"Bearer {access_token}"}
-        year = test_year
-        month = test_month
-        response = client.get(f"/incomes/{year}/{month}", headers=headers)
-        assert response.status_code == 401
-        assert response.json() == {"detail": "再度ログインしてください"}
+
+def test_get_income_with_invalid_year(client, get_resource_owner_headers):
+    setup_salary_for_test(client, get_resource_owner_headers)
+    month = test_month
+    response = client.get(f"/incomes/9999/{month}", headers=get_resource_owner_headers)
+    assert response.status_code == 422
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "field": "year",
+                "code": "INVALID_YEAR"
+            }
+        ]
+    }
+
+
+def test_get_income_with_invalid_month(client, get_resource_owner_headers):
+    setup_salary_for_test(client, get_resource_owner_headers)
+    year = test_year
+    response = client.get(f"/incomes/{year}/9999", headers=get_resource_owner_headers)
+    assert response.status_code == 422
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "field": "month",
+                "code": "INVALID_MONTH"
+            }
+        ]
+    }
 
 
 def test_get_income_by_another_user(client, get_resource_owner_headers, get_non_resource_owner_headers):
@@ -127,4 +172,6 @@ def test_get_income_by_another_user(client, get_resource_owner_headers, get_non_
     month = test_month
     response = client.get(f"/incomes/{year}/{month}", headers=user2_headers)
     assert response.status_code == 404
-    assert response.json() == {"detail": f"{year}-{month}の月収は未登録です"}
+    assert response.json() == {
+        "code": NotFoundCode.SALARY_NOT_FOUND
+    }

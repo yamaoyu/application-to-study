@@ -9,9 +9,9 @@ export const useRegisterTargets = () => {
 
   const resultMessageMap = {
     success: (date, target_time) => `${date}の目標時間を${target_time}時間に登録しました`,
-    target_time_already_registered: (date) => `${date}の目標時間登録に失敗: 既に登録されています`,
-    income_not_found: (date) => `${date}の目標時間登録に失敗: 月収が未登録です`,
-    unexpected_error: (date) => `${date}の目標時間登録に失敗: 予期せぬエラーが発生しました`,
+    TARGET_TIME_ALREADY_REGISTERED: (date) => `${date}の目標時間登録に失敗: 既に登録されています`,
+    SALARY_NOT_FOUND: (date) => `${date}の目標時間登録に失敗: 月収が未登録です`,
+    UNEXPECTED_ERROR: (date) => `${date}の目標時間登録に失敗: 予期せぬエラーが発生しました`,
   };
 
   const makeMessage = (results) => {
@@ -21,7 +21,7 @@ export const useRegisterTargets = () => {
         messages.push(resultMessageMap.success(r.date, r.target_time));
         continue;
       } else if (r.result === "error") {
-        const messageFn = resultMessageMap[r.reason] || resultMessageMap.unexpected_error;
+        const messageFn = resultMessageMap[r.reason] || resultMessageMap.UNEXPECTED_ERROR;
         messages.push(messageFn(r.date));
         continue;
       } else {

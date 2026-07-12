@@ -18,7 +18,6 @@ describe('ユーザー作成', () => {
         const username = "test";
         const maskedPassword = "**********"
         const email = "test@example.com"
-        const expectedMessage = `${username}の作成に成功しました`
 
 
         mockedPost.mockResolvedValue({
@@ -27,7 +26,6 @@ describe('ユーザー作成', () => {
                 "username": username,
                 "password": maskedPassword,
                 "email": email,
-                "message": expectedMessage,
                 "role": "general"
             }
         });
@@ -39,8 +37,8 @@ describe('ユーザー作成', () => {
         wrapper = mountComponent(RegisterUser);
         // ユーザー名が正しく入力されていることを確認
         const usernameInput = wrapper.find('[data-testid="username"]') as DOMWrapper<HTMLInputElement>;
-        await usernameInput.setValue("testuser");
-        expect(usernameInput.element.value).toBe("testuser");
+        await usernameInput.setValue(username);
+        expect(usernameInput.element.value).toBe(username);
         // パスワードが正しく入力されていることを確認
         const passwordInput = wrapper.find('[data-testid="password"]') as DOMWrapper<HTMLInputElement>;
         await passwordInput.setValue("Test1234!");
@@ -61,13 +59,13 @@ describe('ユーザー作成', () => {
         expect(mockedPost).toHaveBeenCalledWith(
             "users",  // 正しいURL
             {
-                username: "testuser",    // 正しいパラメータ
+                username: username,    // 正しいパラメータ
                 password: "Test1234!",
                 email: "test@example.com"
             }
         );
         // メッセージが正しいか確認
-        expect(wrapper.find("[data-testid='message']").text()).toEqual(expectedMessage);
+        expect(wrapper.find("[data-testid='message']").text()).toEqual(`${username}を作成しました`);
     })
 })
 

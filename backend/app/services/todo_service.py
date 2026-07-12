@@ -1,11 +1,17 @@
 import traceback
 from lib.log_conf import logger
 from sqlalchemy.orm import Session
-from app.models.todo_model import Todo, TodoIdsRequest, TodosCreateResponse, TodosGetResponse
-from sqlalchemy.exc import IntegrityError
+from app.models.todo_model import (Todo,
+                                   TodoIdsRequest,
+                                   TodosCreateResponse,
+                                   TodoGetResponse,
+                                   TodosFinishResponse,
+                                   TodosDeleteResponse,
+                                   TodoEditResponse)
 from typing import Optional
 from app.repositories.todo_repository import TodoRepository
 from app.exceptions import NotFound, BadRequest, Conflict
+from app.error_codes import NotFoundCode, ConflictCode, BadRequestCode
 
 
 class TodoService():
@@ -13,98 +19,135 @@ class TodoService():
         self.repo = TodoRepository(db)
 
     def create_todos(self, todos: list[Todo], username: str) -> TodosCreateResponse:
+        success_count = 0
         error_count = 0
-        response_messages = ""
+        results = []
         for todo in todos:
             title = todo.title
             due = todo.due
             detail = todo.detail
             try:
-                self.repo.insert_todo(title, due, detail, username)
-                self.repo.flush()
-                response_messages += f"【Todo作成成功】{title}\n"
-            except IntegrityError as sqlalchemy_error:
-                error_count += 1
-                if "Duplicate entry" in str(sqlalchemy_error.orig):
-                    response_messages += f"【Todo作成失敗】{title} : 既に登録されている内容です\n"
-                else:
-                    response_messages += f"【Todo作成失敗】{title} : 内容を確認してください\n"
+                with self.repo.begin_nested():
+                    self.repo.insert_todo(title, due, detail, username)
+                    self.repo.flush()
+                    results.append({
+                        "title": title,
+                        "due": due,
+                        "detail": detail,
+                        "result": "success",
+                        "reason": None,
+                    })
+                success_count += 1
             except Exception:
                 error_count += 1
                 logger.error(f"todoの作成に失敗しました\n{traceback.format_exc()}")
-                response_messages += f"【Todo作成失敗】{title} : サーバーでエラーが発生しました。管理者にお問い合わせください\n"
+                results.append({
+                    "title": title,
+                    "due": due,
+                    "detail": detail,
+                    "result": "error",
+                    "reason": BadRequestCode.UNEXPECTED_ERROR,
+                })
 
-        if error_count > 0:
-            raise BadRequest(detail=response_messages[:-1])
-        return TodosCreateResponse(message=response_messages[:-1])  # 最後の改行を削除して返す
+        if error_count == len(todos):
+            raise BadRequest(code=BadRequestCode.UNEXPECTED_ERROR)
+        return TodosCreateResponse(
+            success_count=success_count,
+            error_count=error_count,
+            results=results
+        )
 
-    def get_todo(self, todo_id: int, username: str):
+    def get_todo(self, todo_id: int, username: str) -> TodoGetResponse:
         todo = self.repo.get_todo(todo_id, username)
         if not todo:
-            raise NotFound(detail=f"{todo_id}の情報は未登録です")
+            raise NotFound(code=NotFoundCode.TODO_NOT_FOUND)
         logger.info(f"Todoを取得:{username}:ID{todo.todo_id}")
-        return todo
+        return TodoGetResponse.model_validate(todo)
 
     def get_todos(self,
                   status: Optional[bool],
                   start_due: Optional[str],
                   end_due: Optional[str],
                   title: Optional[str],
-                  username: str) -> list[TodosGetResponse]:
+                  username: str) -> list[TodoGetResponse]:
         todos = self.repo.get_todos(username=username, status=status,
                                     start_due=start_due, end_due=end_due, title=title)
         if not todos:
-            raise NotFound(detail="登録された情報はありません")
+            raise NotFound(code=NotFoundCode.TODO_NOT_FOUND)
         logger.info(f"ユーザー名:{username}  Todoを全て取得")
-        return [TodosGetResponse.model_validate(todo) for todo in todos]
+        return [TodoGetResponse.model_validate(todo) for todo in todos]
 
-    def delete_todos(self, params: TodoIdsRequest, username: str):
+    def delete_todos(self, params: TodoIdsRequest, username: str) -> TodosDeleteResponse:
         ids = params.ids
         # 削除するTodoが存在するか確認
         todos = self.repo.get_todos(username=username, ids=ids)
         if not todos:
-            raise NotFound(detail="選択されたTodoは存在しません")
-        elif len(todos) < len(ids):
-            ids_can_delete = set(ids) & set(todo.todo_id for todo in todos)
-            title_can_delete = [todo.title for todo in todos]
-            self.repo.delete_todos(list(ids_can_delete), username)
-            msg = "登録のないTodoが含まれているため、一部のTodo削除処理をスキップしました\n" \
-                + f"削除したTodo:{len(ids_can_delete)}件\n" \
-                + "".join([f"タイトル:{title}\n" for title in title_can_delete])
-            raise BadRequest(detail=msg)
-        else:
-            self.repo.delete_todos(ids, username)
+            raise NotFound(code=NotFoundCode.TODO_NOT_FOUND)
+        ids_can_delete = [todo.todo_id for todo in todos]
+        self.repo.delete_todos(ids_can_delete, username)
+        results = []
+        # 削除できるのは存在するTodoのみなので、削除できたTodoの情報を返す
+        # 存在しないTodoの情報は返せないので、削除できなかったTodoの情報は返さない
+        for todo in todos:
+            results.append({
+                "title": todo.title,
+                "due": todo.due,
+                "detail": todo.detail,
+                "result": "success",
+                "reason": None
+            })
+        return TodosDeleteResponse(
+            success_count=len(ids_can_delete),
+            error_count=len(ids) - len(ids_can_delete),
+            results=results
+        )
 
-    def edit_todo(self, todo_id: int, new_todo: Todo, username: str):
+    def edit_todo(self, todo_id: int, new_todo: Todo, username: str) -> TodoEditResponse:
         new_title = new_todo.title
         new_detail = new_todo.detail
         new_due = new_todo.due
-        try:
-            todo = self.repo.get_todo(todo_id, username)
-            if not todo:
-                raise NotFound(detail=f"id:{todo_id}のデータは登録されていません")
-            if todo.status:
-                raise Conflict(detail="終了したアクションは更新できません")
-            self.repo.update_todo_content(todo, new_title, new_due, new_detail)
-            logger.info(f"{username}がTodoを編集 ID:{todo.todo_id}")
-            return {"message": "Todoを更新しました", "title": new_title, "due": new_due, "detail": new_detail}
-        except IntegrityError as sqlalchemy_error:
-            if "Duplicate entry" in str(sqlalchemy_error.orig):
-                raise Conflict(detail="既に登録されている内容です")
-            raise BadRequest(detail="データの整合性エラーが発生しました。入力データを確認してください")
+        todo = self.repo.get_todo(todo_id, username)
+        if not todo:
+            raise NotFound(code=NotFoundCode.TODO_NOT_FOUND)
+        if todo.status:
+            raise Conflict(code=ConflictCode.TODO_ALREADY_FINISHED)
+        self.repo.update_todo_content(todo, new_title, new_due, new_detail)
+        logger.info(f"{username}がTodoを編集 ID:{todo.todo_id}")
+        return TodoEditResponse(
+            success_count=1,
+            error_count=0,
+            results=[
+                {
+                    "title": new_title,
+                    "detail": new_detail,
+                    "due": new_due,
+                    "result": "success",
+                    "reason": None
+                }
+            ]
+        )
 
-    def finish_todos(self, params: TodoIdsRequest, username: str):
+    def finish_todos(self, params: TodoIdsRequest, username: str) -> TodosFinishResponse:
         ids = params.ids
-        msg = ""
         # 終了するTodoが存在するか確認
-        todos = self.repo.get_todos(username=username, status=False, ids=ids)
+        todos = self.repo.get_todos(username=username, ids=ids)
         if not todos:
-            raise NotFound(detail="終了リクエストされたTodoは存在しないか、既に終了しています")
-        can_finish_ids = [todo.todo_id for todo in todos if not todo.status]
-        finish_titles = [todo.title for todo in todos if not todo.status]
-        if len(can_finish_ids) < len(ids):
-            msg = "登録のない/削除済みTodoが含まれているため、一部のTodo終了処理をスキップしました\n"
-        self.repo.finish_todos(can_finish_ids, username)
+            raise NotFound(code=NotFoundCode.TODO_NOT_FOUND)
+        can_finish_ids = set(todo.todo_id for todo in todos if todo.status is False)
+        if len(can_finish_ids) == 0:
+            raise Conflict(code=ConflictCode.TODO_ALREADY_FINISHED)
+        self.repo.finish_todos(list(can_finish_ids), username)
+        results = [
+            {
+                "title": todo.title,
+                "detail": todo.detail,
+                "due": todo.due,
+                "result": "success",
+                "reason": None
+            }
+            for todo in todos if todo.todo_id in can_finish_ids]
         logger.info(f"{username}が複数のTodoを完了 IDs:{ids}")
-        return {"message": f"{msg}{len(can_finish_ids)}件のTodoを終了しました",
-                "titles": "\n".join(finish_titles)}
+        return TodosFinishResponse(
+            success_count=len(can_finish_ids),
+            error_count=len(ids) - len(can_finish_ids),
+            results=results)

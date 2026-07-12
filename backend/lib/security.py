@@ -7,18 +7,19 @@ from datetime import datetime, timedelta, timezone
 from app.exceptions import BadRequest, NotAuthorized
 from lib.log_conf import logger
 from jose import jwt
+from app.error_codes import NotAuthorizedCode, BadRequestCode
 
 # openssl rand -hex 32
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
+SECRET_KEY = os.environ["SECRET_KEY"]
+ALGORITHM = os.environ["ALGORITHM"]
 PEPPER = os.getenv("PEPPER")
 # .envに定義したものは文字列として読み込まれるようなのでint型へ変換する
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
-REFRESH_TOKEN_EXPIRE_WEEKS = int(os.getenv("REFRESH_TOKEN_EXPIRE_WEEKS"))
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 15))
+REFRESH_TOKEN_EXPIRE_WEEKS = int(os.getenv("REFRESH_TOKEN_EXPIRE_WEEKS", 1))
 ROUNDS = int(os.getenv("BCRYPT_ROUNDS", 12))
 special_characters = r"[!@#$%&*()+\-=[\]{};:<>,./?_~|]"
 
-credentials_exception = NotAuthorized(detail="証明書を認証できませんでした")
+credentials_exception = NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
 
 
 def verify_password(plain_password, hashed_password) -> bool:
@@ -63,7 +64,7 @@ def create_access_token(payload: dict,
         return access_token
     except Exception:
         logger.error(f"アクセストークンの作成中にエラーが発生しました\n{traceback.format_exc()}")
-        raise BadRequest(detail="トークンの作成に失敗しました")
+        raise BadRequest(code=BadRequestCode.UNEXPECTED_ERROR)
 
 
 def create_refresh_token_value(payload: dict, expires_delta: Union[timedelta, None] = None) -> tuple:

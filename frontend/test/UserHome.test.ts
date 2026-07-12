@@ -15,7 +15,7 @@ const expectedDate = today[2];
 
 type mock =
     | { type: 'resolve'; value: { status: number; data: Record<string, any> } }
-    | { type: 'reject'; value: { response: { status: number; data: { detail: string } } } };
+    | { type: 'reject'; value: { response: { status: number; data: { code: string } } } };
 
 const defaultActivityData = {
     date: `${expectedYear}-${expectedMonth}-${expectedDate}`,
@@ -56,13 +56,13 @@ const createResolvedMock = (data: Record<string, any>, status = 200): mock => ({
     }
 });
 
-const createRejectedMock = (detail: string, status = 404): mock => ({
+const createRejectedMock = (code: string, status = 404): mock => ({
     type: "reject",
     value: {
         response: {
             status,
             data: {
-                detail: detail
+                code
             }
         }
     }
@@ -134,13 +134,12 @@ describe('ユーザーホームの表示(データあり)', () => {
             bonus: 0,
             penalty: 0.38
         };
-        const expectedMessage = "目標失敗...\nペナルティ:0.38万円(3800円)";
 
         wrapper = await mountUserHome({ activityMock: createResolvedMock(expectedData) });
         expect(mockedGet).toBeCalledWith(
             `activities/${expectedYear}/${expectedMonth}/${expectedDate}`
         );
-        expect(wrapper.find("[data-testid='activity-msg']").text()).toEqual(expectedMessage);
+        expect(wrapper.find("[data-testid='activity-msg']").text()).toEqual("目標失敗...\nペナルティ:0.38万円(3800円)");
     });
 
     it('給料のデータがある', async () => {
@@ -170,31 +169,26 @@ describe('ユーザーホームの表示(データなし)', () => {
     );
 
     it('活動実績のデータがない', async () => {
-        const expectedMessage = `${getToday()}の活動実績は未登録です`;
         wrapper = await mountUserHome({
-            activityMock: createRejectedMock(expectedMessage)
+            activityMock: createRejectedMock("ACTIVITY_NOT_FOUND")
         });
-        expect(wrapper.find("[data-testid='activity-msg']").text()).toEqual(expectedMessage);
+        expect(wrapper.find("[data-testid='activity-msg']").text()).toEqual("活動は登録されていません");
     });
 
     it('給料のデータがない', async () => {
-        const expectedMessage = "2025-1の月収は未登録です";
-
         wrapper = await mountUserHome({
-            incomeMock: createRejectedMock(expectedMessage)
+            incomeMock: createRejectedMock("SALARY_NOT_FOUND")
         });
 
-        expect(wrapper.find("[data-testid='income-msg']").text()).toEqual(expectedMessage);
+        expect(wrapper.find("[data-testid='income-msg']").text()).toEqual("月収が登録されていません");
     });
 
     it('未完了Todoのデータがない', async () => {
-        const expectedMessage = "登録された情報はありません";
-
         wrapper = await mountUserHome({
-            todosMock: createRejectedMock(expectedMessage)
+            todosMock: createRejectedMock("TODO_NOT_FOUND")
         });
 
-        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual(expectedMessage);
+        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual("登録されたTODOはありません");
     });
 });
 
@@ -207,7 +201,6 @@ describe('Todoの操作', () => {
     );
 
     it('Todo編集', async () => {
-        const expectedMessage = "Todoを更新しました";
         const title = "new title";
         const detail = "new detail";
         const due = "new due";
@@ -216,10 +209,15 @@ describe('Todoの操作', () => {
         mockedPut.mockResolvedValue({
             status: 200,
             data: {
-                message: expectedMessage,
-                title: title,
-                detail: detail,
-                due: due
+                results: [
+                    {
+                        title: title,
+                        detail: detail,
+                        due: due,
+                        result: "success",
+                        reason: null
+                    }
+                ]
             }
         })
         wrapper = await mountUserHome();
@@ -257,21 +255,27 @@ describe('Todoの操作', () => {
             }
         );
         expect(mockedPut).toBeCalledTimes(1);
-        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual(expectedMessage);
+        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual("【Todo更新成功】: new title");
     });
 
-    it('Todo終了', async () => {
+    it('Todo終了に成功', async () => {
         const title = "Test Todo";
-        const status = true;
-        const expectedMessage = `1件のTodoを終了しました`;
 
         // finishTodo()のモック
         mockedPut.mockResolvedValue({
             status: 200,
             data: {
-                message: expectedMessage,
-                titles: title,
-                status: status
+                success_count: 1,
+                error_count: 0,
+                results: [
+                    {
+                        detail: "test detail",
+                        due: "2025-1-1",
+                        title: title,
+                        result: "success",
+                        reason: null
+                    }
+                ]
             }
         })
         wrapper = await mountUserHome();
@@ -307,13 +311,72 @@ describe('Todoの操作', () => {
                 ids: [1]
             }
         );
-        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual(`${expectedMessage}\n${title}`);
+        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual(`1件のTodoを終了しました\n【Todo終了成功】: ${title}`);
+    });
+
+    it('Todo終了に失敗', async () => {
+        wrapper = await mountUserHome();
+
+        // finishTodo()のモック
+        mockedPut.mockRejectedValue({
+            response:
+                { status: 404, data: { code: 'TODO_NOT_FOUND' } }
+        })
+        // finishTodo()後のtodo再取得処理のモック
+        mockedGet.mockResolvedValueOnce({
+            response: {
+                status: 200,
+                data: [
+                    {
+                        detail: "test detail",
+                        due: "2025-1-1",
+                        status: true,
+                        title: "test title",
+                        todo_id: 1,
+                        username: "test"
+                    }
+                ]
+            }
+        });
+        // 終了ボタンをクリックし、モーダルを開く
+        await wrapper.find("[data-testid='finish-0']").trigger("click");
+        // モーダルが開かれていることを確認
+        const modal = document.body.querySelector("[data-testid='modal-show']");
+        expect(modal).not.toBeNull();
+        expect((wrapper.vm as any).modalTitle).toEqual("Todo終了確認");
+        // 終了モードであることを確認してからOkボタンをクリック
+        const bModal = wrapper.findComponent({ name: 'BModal' });
+        expect(bModal.props("title")).toBe("Todo終了確認");
+        await bModal.vm.$emit('ok');
+        await flushPromises();
+
+        expect(mockedPut).toHaveBeenCalledWith(
+            "todos/finish",
+            {
+                ids: [1]
+            }
+        );
+        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual("登録されたTODOはありません");
     })
+
 
     it('Todo削除', async () => {
         // deleteTodo()のモック
         mockedPut.mockResolvedValue({
-            status: 204
+            status: 200,
+            data: {
+                success_count: 1,
+                error_count: 0,
+                results: [
+                    {
+                        detail: "test detail",
+                        due: "2025-1-1",
+                        title: "test title",
+                        result: "success",
+                        reason: null
+                    }
+                ]
+            }
         })
         wrapper = await mountUserHome();
         // deleteTodo()後のtodo再取得処理のモック
@@ -348,7 +411,7 @@ describe('Todoの操作', () => {
                 ids: [1]
             }
         );
-        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual("選択したTodoを削除しました");
+        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual("1件のTodoを削除しました\n【Todo削除成功】: test title");
     })
 })
 

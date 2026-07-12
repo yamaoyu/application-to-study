@@ -37,13 +37,13 @@ const createResolvedMock = (data: Record<string, any>, status = 200): mock => ({
   }
 });
 
-const createRejectedMock = (detail: string, status = 404): mock => ({
+const createRejectedMock = (code: string, status = 404): mock => ({
   type: "reject",
   value: {
     response: {
       status,
       data: {
-        detail: detail
+        code: code
       }
     }
   }
@@ -51,7 +51,7 @@ const createRejectedMock = (detail: string, status = 404): mock => ({
 
 type mock =
   | { type: 'resolve'; value: { status: number; data: Record<string, any> } }
-  | { type: 'reject'; value: { response: { status: number; data: { detail: string } } } };
+  | { type: 'reject'; value: { response: { status: number; data: { code: string } } } };
 
 
 const mountActivityHome = async ({
@@ -93,12 +93,11 @@ describe('選択した日の活動登録状況確認', () => {
   });
 
   it('データがない', async () => {
-    const expectedMessage = "2025-1-1の活動記録は未登録です";
     const wrapper = await mountActivityHome({
-      activityMock: createRejectedMock(expectedMessage),
-      pendingMock: createRejectedMock(expectedMessage)
+      activityMock: createRejectedMock("ACTIVITY_NOT_FOUND"),
+      pendingMock: createRejectedMock("ACTIVITY_NOT_FOUND")
     });
-    expect(wrapper.find("[data-testid='checkMsg']").text()).toEqual(expectedMessage);
+    expect(wrapper.find("[data-testid='checkMsg']").text()).toEqual("活動は登録されていません");
   });
 });
 
@@ -149,16 +148,14 @@ describe('月収の登録状況に応じたリダイレクト', async () => {
   });
 
   it('月収の登録がない→月収登録ページにリダイレクト', async () => {
-    const expectedMessage = "2025-1の月収は未登録です";
-
-    const wrapper = await mountActivityHome({
-      incomeMock: createRejectedMock(expectedMessage)
+    await mountActivityHome({
+      incomeMock: createRejectedMock("SALARY_NOT_FOUND")
     });
 
     expect(mockRouterPush).toHaveBeenCalledWith({
       path: '/register/salary',
       query: {
-        incomeMsg: `${expectedMessage}。先に月収を登録してください`
+        incomeMsg: "月収が登録されていません。先に月収を登録してください"
       }
     });
   });

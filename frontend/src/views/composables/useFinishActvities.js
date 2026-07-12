@@ -10,10 +10,10 @@ export const useFinishActivities = () => {
   const resultMessageMap = {
     success: (date, yen) => `${date}の活動を終了：ボーナス${yen}万円(${convert_ten_thousand_yen_to_yen(yen)}円)`,
     failure: (date, yen) => `${date}の活動を終了：ペナルティ${yen}万円(${convert_ten_thousand_yen_to_yen(yen)}円)`,
-    activity_not_found: (date) => `${date}の活動終了に失敗: 目標時間が未登録です`,
-    activity_already_finished: (date) => `${date}の活動終了に失敗: 既に確定されています`,
-    income_not_found: (date) => `${date}の活動終了に失敗: 月収が未登録です`,
-    unexpected_error: (date) => `${date}の活動終了に失敗: 予期せぬエラーが発生しました`,
+    ACTIVITY_NOT_FOUND: (date) => `${date}の活動終了に失敗: 目標時間が未登録です`,
+    ACTIVITY_ALREADY_FINISHED: (date) => `${date}の活動終了に失敗: 既に確定されています`,
+    SALARY_NOT_FOUND: (date) => `${date}の活動終了に失敗: 月収が未登録です`,
+    UNEXPECTED_ERROR: (date) => `${date}の活動終了に失敗: 予期せぬエラーが発生しました`,
   };
 
   const convert_ten_thousand_yen_to_yen = (amount) => {
@@ -31,7 +31,7 @@ export const useFinishActivities = () => {
   };
 
   const makeErrorMessage = (date, reason) => {
-    const messageFn = resultMessageMap[reason] || resultMessageMap.unexpected_error;
+    const messageFn = resultMessageMap[reason] || resultMessageMap.UNEXPECTED_ERROR;
     return messageFn(date);
   };
 
@@ -49,7 +49,7 @@ export const useFinishActivities = () => {
       } else if (result.result === 'error') {
         msg += `${makeErrorMessage(result.date, result.reason)}\n`;
       } else {
-        msg += `${makeErrorMessage(result.date, 'unexpected_error')}\n`;
+        msg += `${makeErrorMessage(result.date, 'UNEXPECTED_ERROR')}\n`;
       }
     }
     return msg;

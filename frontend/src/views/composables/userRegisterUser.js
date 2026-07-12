@@ -19,7 +19,7 @@ export const useRegisterUser = () => {
       })
 
       if (res.status === 201) {
-        message.value = res.data.message
+        message.value = `${username.value}を作成しました`;
         statusCode.value = res.status
       }
 
