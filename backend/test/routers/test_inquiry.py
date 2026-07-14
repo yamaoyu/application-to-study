@@ -35,6 +35,21 @@ def test_create_inquiry_with_invalid_category(client, get_resource_owner_headers
     }
 
 
+def test_create_inquiry_without_detail(client, get_resource_owner_headers):
+    data = {"category": CATEGORY, "detail": ""}
+    response = client.post("/inquiries", json=data, headers=get_resource_owner_headers)
+    assert response.status_code == 422
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+                {
+                    "field": "detail",
+                    "code": "INVALID_VALUE"
+                }
+        ]
+    }
+
+
 def test_get_inquiry_by_general_user(client, get_resource_owner_headers):
     response = client.get("/inquiries", headers=get_resource_owner_headers)
     assert response.status_code == 403
@@ -76,6 +91,22 @@ def test_get_inquiries_filter_by_month_without_year(client, get_admin_headers, g
 
 def test_get_inquiries_filter_by_category(client, get_admin_headers, get_resource_owner_headers):
     setup_create_inquiry(client, get_resource_owner_headers)
+    response = client.get("/inquiries?category=要望", headers=get_admin_headers)
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "id": 1,
+            "category": CATEGORY,
+            "detail": DETAIL,
+            "date": datetime.today().strftime("%Y-%m-%d"),
+            "is_checked": False,
+            "priority": "低"
+        }
+    ]
+
+
+def test_get_inquiries_filter_by_category_not_found(client, get_admin_headers, get_resource_owner_headers):
+    setup_create_inquiry(client, get_resource_owner_headers)
     response = client.get("/inquiries?category=エラー報告", headers=get_admin_headers)
     assert response.status_code == 404
     assert response.json() == {
@@ -84,6 +115,22 @@ def test_get_inquiries_filter_by_category(client, get_admin_headers, get_resourc
 
 
 def test_get_inquiries_filter_by_priority(client, get_admin_headers, get_resource_owner_headers):
+    setup_create_inquiry(client, get_resource_owner_headers)
+    response = client.get("/inquiries?priority=低", headers=get_admin_headers)
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "id": 1,
+            "category": CATEGORY,
+            "detail": DETAIL,
+            "date": datetime.today().strftime("%Y-%m-%d"),
+            "is_checked": False,
+            "priority": "低"
+        }
+    ]
+
+
+def test_get_inquiries_filter_by_priority_not_found(client, get_admin_headers, get_resource_owner_headers):
     setup_create_inquiry(client, get_resource_owner_headers)
     response = client.get("/inquiries?priority=高", headers=get_admin_headers)
     assert response.status_code == 404
@@ -119,4 +166,13 @@ def test_change_inquiry_priority(client, get_admin_headers, get_resource_owner_h
         "date": datetime.today().strftime("%Y-%m-%d"),
         "is_checked": False,
         "priority": "高"
+    }
+
+
+def test_edit_inquiry_not_found(client, get_admin_headers):
+    data = {"priority": "高"}
+    response = client.put("/inquiries/999", json=data, headers=get_admin_headers)
+    assert response.status_code == 404
+    assert response.json() == {
+        "code": NotFoundCode.INQUIRY_NOT_FOUND
     }
