@@ -155,8 +155,9 @@ describe('実績時間の登録(一括)', () => {
       status: 200,
       data: {
         results: [
-          { result: "error", date: "2025/1/1", actual_time: 3, reason: "ACTIVITY_NOT_FOUND" },
-          { result: "error", date: "2025/2/1", actual_time: 3.5, reason: "SALARY_NOT_FOUND" }
+          { result: "error", date: "2025/1/1", actual_time: null, reason: "ACTIVITY_NOT_FOUND" },
+          { result: "error", date: "2025/2/1", actual_time: null, reason: "SALARY_NOT_FOUND" },
+          { result: "error", date: "2025/1/2", actual_time: null, reason: "ACTIVITY_ALREADY_FINISHED" }
         ]
       }
     });
@@ -178,7 +179,7 @@ describe('実績時間の登録(一括)', () => {
         activities: pendingActivities
       }
     );
-    const expectedMessage = "2025/1/1の活動時間登録に失敗: 目標時間が未登録です\n2025/2/1の活動時間登録に失敗: 月収が未登録です";
+    const expectedMessage = "2025/1/1の活動時間登録に失敗: 目標時間が未登録です\n2025/2/1の活動時間登録に失敗: 月収が未登録です\n2025/1/2の活動時間登録に失敗: 既に確定されています";
     expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);
   })
 });
