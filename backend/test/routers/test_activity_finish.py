@@ -1,4 +1,4 @@
-from test.helpers.activity import (
+from helpers.activity import (
     test_date,
     test_bonus,
     setup_target_time,

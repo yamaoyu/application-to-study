@@ -29,7 +29,7 @@ class InquiryForm(BaseModel):
 
     @field_validator("detail")
     def check_detail_length(cls, detail):
-        if not detail:
+        if detail is None or not detail.strip():
             raise ValueError("詳細は必須です")
         if len(detail) > 256:
             raise ValueError("詳細は256文字以内で入力してください")

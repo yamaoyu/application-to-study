@@ -144,10 +144,10 @@ describe('活動の終了(一括)', () => {
         total_bonus: 0,
         total_penalty: 0,
         results: [
-          { "date": "2025/1/1", "result": "error", "reason": "ACTIVITY_NOT_FOUND" },
-          { "date": "2025/1/2", "result": "error", "reason": "SALARY_NOT_FOUND" },
-          { "date": "2025/1/3", "result": "error", "reason": "UNEXPECTED_ERROR" },
-          { "date": "2025/1/4", "result": "error", "reason": "ACTIVITY_ALREADY_FINISHED" }
+          { "date": "2025/1/1", "result": "error", "reason": "ACTIVITY_NOT_FOUND", "status": null, "bonus": null, "penalty": null },
+          { "date": "2025/1/2", "result": "error", "reason": "SALARY_NOT_FOUND", "status": null, "bonus": null, "penalty": null },
+          { "date": "2025/1/3", "result": "error", "reason": "UNEXPECTED_ERROR", "status": null, "bonus": null, "penalty": null },
+          { "date": "2025/1/4", "result": "error", "reason": "ACTIVITY_ALREADY_FINISHED", "status": null, "bonus": null, "penalty": null }
         ]
       }
     });

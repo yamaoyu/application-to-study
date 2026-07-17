@@ -2,7 +2,7 @@ from unittest.mock import patch
 from datetime import timedelta
 from testdata import RESOURCE_OWNER_USERNAME
 from lib.security import create_access_token
-from test.helpers.activity import (
+from helpers.activity import (
     test_date,
     setup_target_time,
     setup_monthly_income

@@ -1,4 +1,4 @@
-from test.helpers.activity import (
+from helpers.activity import (
     test_date,
     setup_target_time,
     setup_actual_time,
@@ -149,6 +149,7 @@ def test_register_actual_with_all_errors(client, get_resource_owner_headers):
 
 def test_register_actual_with_invalid_hour(client, get_resource_owner_headers):
     """ 時間を1x.0or5、もしくはx.0or5の形で入力していない場合 """
+    setup_monthly_income(client, get_resource_owner_headers)
     setup_target_time(client, get_resource_owner_headers)
     data = {
         "activities": [

@@ -155,9 +155,9 @@ describe('実績時間の登録(一括)', () => {
       status: 200,
       data: {
         results: [
-          { result: "error", date: "2025/1/1", actual_time: 3, reason: "ACTIVITY_NOT_FOUND" },
-          { result: "error", date: "2025/2/1", actual_time: 3.5, reason: "SALARY_NOT_FOUND" },
-          { result: "error", date: "2025/1/2", actual_time: 3.5, reason: "ACTIVITY_ALREADY_FINISHED" }
+          { result: "error", date: "2025/1/1", actual_time: null, reason: "ACTIVITY_NOT_FOUND" },
+          { result: "error", date: "2025/2/1", actual_time: null, reason: "SALARY_NOT_FOUND" },
+          { result: "error", date: "2025/1/2", actual_time: null, reason: "ACTIVITY_ALREADY_FINISHED" }
         ]
       }
     });
