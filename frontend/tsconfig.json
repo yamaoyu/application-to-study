@@ -13,6 +13,7 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "skipLibCheck": true,
+    "useUnknownInCatchVariables": true,
     "lib": [
       "ES2020",
       "DOM",
