@@ -2,29 +2,15 @@ import { ref } from 'vue';
 import { registerActuals } from '../api/activity';
 import { parseError } from '../utils/error';
 import axios from 'axios';
+import {
+  SendActualActivityParam,
+  RegisterActualResult,
+  RegisterActualResponse
+} from '../types/activity';
 
-type ErrorReason =
-  | "ACTIVITY_NOT_FOUND"
-  | "ACTIVITY_ALREADY_FINISHED"
-  | "SALARY_NOT_FOUND"
-  | "UNEXPECTED_ERROR";
-
-type RegisterActualResult =
-  | {
-    result: "success";
-    date: string;
-    actual_time: number;
-    reason: null;
-  }
-  | {
-    result: "error";
-    date: string;
-    actual_time: null;
-    reason: ErrorReason;
-  };
 
 export const useRegisterActuals = () => {
-  const selectedActivities = ref<string[]>([]);
+  const selectedActivities = ref<SendActualActivityParam[]>([]);
   const reqMsg = ref<string>(""); // リクエスト結果を表示するためのメッセージ
   const statusCode = ref<number | null>(null);
 

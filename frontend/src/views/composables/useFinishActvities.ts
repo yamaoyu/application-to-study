@@ -1,44 +1,16 @@
 import { ref } from 'vue';
 import { finishActivies } from '../api/activity';
 import { parseError } from '../utils/error';
+import {
+  OneActivity,
+  SendFinishActivityParam,
+  FinishActivityResponse,
+  FinishActivityErrorReason
+} from '../types/activity';
 
-type finishDetail =
-  | {
-    "date": string,
-    "reason": null,
-    "result": "success",
-    "bonus": number,
-    "penalty": number,
-    "status": "success" | "error"
-  }
-  | {
-    "date": string,
-    "reason": ErrorReason,
-    "result": "error",
-    "bonus": null,
-    "penalty": null,
-    "status": null
-  }
-
-type finishResult = {
-  "pay_adjustment": number,
-  "total_bonus": number,
-  "total_penalty": number,
-  "results": finishDetail[]
-}
-
-type activity = {
-  "date": string
-}
-
-type ErrorReason =
-  | "ACTIVITY_NOT_FOUND"
-  | "ACTIVITY_ALREADY_FINISHED"
-  | "SALARY_NOT_FOUND"
-  | "UNEXPECTED_ERROR";
 
 export const useFinishActivities = () => {
-  const selectedActivities = ref<activity[]>([]);
+  const selectedActivities = ref<OneActivity[]>([]);
   const reqMsg = ref<string>(""); // リクエスト結果を表示するためのメッセージ
   const payAdjustment = ref<number | null>(null);
 
@@ -63,12 +35,12 @@ export const useFinishActivities = () => {
     }
   };
 
-  const makeErrorMessage = (date: string, reason: ErrorReason) => {
+  const makeErrorMessage = (date: string, reason: FinishActivityErrorReason) => {
     const messageFn = resultMessageMap[reason] || resultMessageMap.UNEXPECTED_ERROR;
     return messageFn(date);
   };
 
-  const makeMsg = (data: finishResult) => {
+  const makeMsg = (data: FinishActivityResponse) => {
     let messages = [];
     const bonusAndPenalty = data.pay_adjustment;
     const totalBonus = data.total_bonus;

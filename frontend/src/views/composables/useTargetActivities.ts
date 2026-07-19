@@ -2,35 +2,12 @@ import { ref } from 'vue';
 import { registerTargets } from '../api/activity';
 import { parseError } from '../utils/error';
 import axios from 'axios';
-
-type sendParam = {
-  date: string,
-  target_time: number
-}
-
-type ErrorReason =
-  | "TARGET_TIME_ALREADY_REGISTERED"
-  | "SALARY_NOT_FOUND"
-  | "UNEXPECTED_ERROR";
-
-type registerTargetResult =
-  | {
-    result: "success";
-    date: string;
-    target_time: number;
-    reason: null;
-  }
-  | {
-    result: "error";
-    date: string;
-    target_time: null;
-    reason: ErrorReason;
-  };
+import { SendTargetActivityParam, registerTargetResult } from '../types/activity';
 
 
 export const useRegisterTargets = () => {
-  const targetActivities = ref<sendParam[]>([{ date: '', target_time: 0.5 }]);
-  const reqMsg = ref(""); // リクエスト結果を表示するためのメッセージ
+  const targetActivities = ref<SendTargetActivityParam[]>([{ date: '', target_time: 0.5 }]);
+  const reqMsg = ref<string>(""); // リクエスト結果を表示するためのメッセージ
   const statusCode = ref<number | null>(null);
 
   const resultMessageMap = {
@@ -81,11 +58,11 @@ export const useRegisterTargets = () => {
   };
 };
 
-export const addTargetActivity = (targetActivities: sendParam[]) => {
+export const addTargetActivity = (targetActivities: SendTargetActivityParam[]) => {
   targetActivities.push({ date: '', target_time: 0.5 });
 };
 
-export const removeTargetActivity = (targetActivities: sendParam[], index: number) => {
+export const removeTargetActivity = (targetActivities: SendTargetActivityParam[], index: number) => {
   if (targetActivities.length > 1) {
     targetActivities.splice(index, 1);
   } else {

@@ -205,7 +205,7 @@
         </div>
         <!-- メッセージは全てのタブで共通 -->
         <div class="container d-flex justify-content-center">
-            <p v-if="message" class="col-8 alert alert-warning" data-testid="message">{{ message }}</p>
+            <p v-if="currentMessage" class="col-8 alert alert-warning" data-testid="currentMessage">{{ currentMessage }}</p>
         </div>
     </div>
 
@@ -229,8 +229,6 @@ export default {
   setup() {
     const activeTab = ref('monthly');
     const response = ref();
-    const activities = ref([]);
-    const message = ref("");
     const minMonth = "2024-01";
     const maxMonth = getMaxMonth();
     const isAtMinMonth = computed(() => selectedMonth.value <= minMonth);
@@ -239,9 +237,19 @@ export default {
     const isAtMaxYear = computed(() => selectedMonth.value >= maxMonth.split("-")[0]);
     const minYear = "2024";
     const maxYear = getMaxYear();
-    const { selectedMonth, fetchActivitiesByMonth } = useFetchActivitiesByMonth(response, activities, message);
-    const { selectedYear, fetchActivitiesByYear } = useFetchActivitiesByYear(response, activities, message);
-    const { fetchAllActivities } = useFetchAllActivities(response, message)
+    const { 
+      selectedMonth, 
+      monthlyActivities, 
+      monthlyActivitiesMessage,
+      fetchActivitiesByMonth 
+    } = useFetchActivitiesByMonth(response);
+    const { 
+      selectedYear, 
+      yearlyActivities, 
+      yearlyActivitiesMessage,
+      fetchActivitiesByYear
+    } = useFetchActivitiesByYear(response);
+    const { allActivitiesMessage, fetchAllActivities } = useFetchAllActivities(response)
     const { increaseYear } = changeYear(selectedMonth);
     const { increaseMonth } = changeMonth(selectedMonth);
     const tabs = [
@@ -250,20 +258,26 @@ export default {
                 { value: 'all', label: '全期間' }
     ]; 
 
+    const currentMessage = computed(() => {
+      if (activeTab.value === "monthly") return monthlyActivitiesMessage.value;
+      if (activeTab.value === "yearly") return yearlyActivitiesMessage.value;
+      if (activeTab.value === "all") return allActivitiesMessage.value;
+      return "";
+    });
+
     const debouncedRequest = debounce(() => {
         if (activeTab.value==='monthly'){
             fetchActivitiesByMonth();
-            activities.value = [];
+            monthlyActivities.value = [];
             response.value = "";
         } else if(activeTab.value==='yearly'){
             fetchActivitiesByYear();
-            activities.value = [];
+            yearlyActivities.value = [];
             response.value = "";
         }
     }, 500);
 
     watch(activeTab, () => {
-      activities.value = [];
       response.value = null;
       if (activeTab.value==="all"){
           fetchAllActivities();
@@ -294,7 +308,7 @@ export default {
       selectedYear,
       response,
       activities,
-      message,
+      currentMessage,
       minMonth,
       maxMonth,
       isAtMinMonth,
