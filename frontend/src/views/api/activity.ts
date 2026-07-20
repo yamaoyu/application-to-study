@@ -6,36 +6,40 @@ import {
   RegisterTargetResponse,
   RegisterActualResponse,
   FinishActivityResponse,
-  GetOneActivityResponse
+  GetOneActivityResponse,
+  GetActivitiesByMonthResponse,
+  GetActivitiesByYearResponse,
+  ActivityStatus
 } from '../types/activity';
 import type { AxiosResponse } from "axios";
 
-type Status =
-  | "pending"
-  | "success"
-  | "failure"
 
-export const getActivitiesByStatus = (status: Status) => {
+
+export const getActivitiesByStatus = (status: ActivityStatus) => {
   return apiClient.get(
     `activities?status=${status}`
   )
 };
 
 export const getActivityByDay = (
-  year: number, month: number, day: number
-): Promise<GetOneActivityResponse> => {
+  year: string, month: string, day: string
+): Promise<AxiosResponse<GetOneActivityResponse>> => {
   return apiClient.get(
     `activities/${year}/${month}/${day}`
   )
 };
 
-export const getActivitiesByMonth = (year: number, month: number) => {
+export const getActivitiesByMonth = (
+  year: number, month: number
+): Promise<AxiosResponse<GetActivitiesByMonthResponse>> => {
   return apiClient.get(
     `activities/${year}/${month}`
   )
 };
 
-export const getActivitiesByYear = (year: number) => {
+export const getActivitiesByYear = (
+  year: number
+): Promise<AxiosResponse<GetActivitiesByYearResponse>> => {
   return apiClient.get(
     `activities/${year}`
   )

@@ -3,8 +3,15 @@ export type OneActivity = {
     date: string;
     target_time: number;
     actual_time: number;
-    status: string;
+    status: ActivityStatus;
+    bonus: number,
+    penalty: number
 };
+
+export type ActivityStatus =
+    | "pending"
+    | "success"
+    | "failure"
 
 export type SendTargetActivityParam = {
     date: string,
@@ -109,8 +116,8 @@ export type GetOneActivityResponse = {
     penalty: number
 }
 
-type ActivitySummary = {
-    totalincome: number;
+export type ActivitySummary = {
+    total_income: number;
     salary: number;
     pay_adjustment: number;
     bonus: number;
@@ -121,7 +128,7 @@ type ActivitySummary = {
 
 export type GetAllActivitiesResponse = ActivitySummary;
 
-type MonthlyActivity = {
+export type MonthlyActivity = {
     date: string;
     target_time: number;
     actual_time: number;
@@ -135,7 +142,7 @@ export type GetActivitiesByMonthResponse = ActivitySummary & {
 };
 
 // 年ごとの情報取得時の各月の情報
-type YearlyMonthlyInfo = {
+export type YearlyMonthlyInfo = {
     month: number;
     total_income: number;
     salary: number;

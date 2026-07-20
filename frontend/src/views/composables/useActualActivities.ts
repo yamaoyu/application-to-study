@@ -5,7 +5,6 @@ import axios from 'axios';
 import {
   SendActualActivityParam,
   RegisterActualResult,
-  RegisterActualResponse
 } from '../types/activity';
 
 

@@ -72,7 +72,7 @@
             </div>
         </div>
 
-        <div class="container mt-3" v-if="response">
+        <div class="container mt-3" v-if="currentSummary">
             <div>
                 <h2 v-if="activeTab==='monthly'">{{ selectedMonth }}の活動実績</h2>
                 <h2 v-if="activeTab==='yearly'">{{ selectedYear }}の活動実績</h2>
@@ -83,7 +83,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">合計</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span :class="getSalaryColors(response.data.pay_adjustment)" class="h3 fw-bold text-center" data-testid="total-income">{{ response.data.total_income }}</span>
+                            <span :class="getSalaryColors(currentSummary.pay_adjustment)" class="h3 fw-bold text-center" data-testid="total-income">{{ currentSummary.total_income }}</span>
                             万円
                         </div>
                     </div>
@@ -94,7 +94,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">月収(ベース)</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold" data-testid="salary">{{ response.data.salary }}</span>
+                            <span class="h3 fw-bold" data-testid="salary">{{ currentSummary.salary }}</span>
                             <span class="small">万円</span>
                         </div>
                     </div>
@@ -103,7 +103,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">ボーナス+ペナルティ</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span :class="getSalaryColors(response.data.pay_adjustment)" class="h3 fw-bold" data-testid="pay-adjustment">{{ response.data.pay_adjustment }}</span>
+                            <span :class="getSalaryColors(currentSummary.pay_adjustment)" class="h3 fw-bold" data-testid="pay-adjustment">{{ currentSummary.pay_adjustment }}</span>
                             <span class="small">万円</span>
                         </div>
                     </div>
@@ -112,7 +112,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">ボーナス</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold text-success" data-testid="bonus">{{ response.data.bonus }}</span>
+                            <span class="h3 fw-bold text-success" data-testid="bonus">{{ currentSummary.bonus }}</span>
                             <span class="small">万円</span>
                         </div>
                     </div>
@@ -121,7 +121,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">ペナルティ</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold text-danger" data-testid="penalty">{{ response.data.penalty }}</span>
+                            <span class="h3 fw-bold text-danger" data-testid="penalty">{{ currentSummary.penalty }}</span>
                             <span class="small">万円</span>
                         </div>
                     </div>
@@ -130,7 +130,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">達成日数</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold text-success" data-testid="success-days">{{ response.data.success_days }}</span>
+                            <span class="h3 fw-bold text-success" data-testid="success-days">{{ currentSummary.success_days }}</span>
                             <span class="small">日</span>
                         </div>
                     </div>
@@ -139,7 +139,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">未達成日数</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold text-danger" data-testid="fail-days">{{ response.data.fail_days }}</span>
+                            <span class="h3 fw-bold text-danger" data-testid="fail-days">{{ currentSummary.fail_days }}</span>
                             <span class="small">日</span>
                         </div>
                     </div>
@@ -151,7 +151,7 @@
 
     <div class="container mt-5">
         <div v-show="activeTab === 'monthly'">
-            <div v-if="activities.length > 0" class="activities">
+            <div v-if="hasCurrentActivities" class="activities">
                 <table class="table table-striped table-responsive">
                 <thead class="table-dark">
                     <tr>
@@ -162,7 +162,7 @@
                     </tr>
                 </thead>
                     <tbody>
-                        <tr v-for="(activity, index) in activities" :key="index" data-testid="monthly-activity-row">
+                        <tr v-for="(activity, index) in currentActivities" :key="index" data-testid="monthly-activity-row">
                             <td :data-testid="`activity-date-${index}`">{{ activity.date }}</td>
                             <td :data-testid="`activity-target-time-${index}`">{{ activity.target_time }}時間</td>
                             <td :data-testid="`activity-actual-time-${index}`">{{ activity.actual_time }}時間</td>
@@ -173,7 +173,7 @@
             </div>
         </div>
         <div v-show="activeTab === 'yearly'">
-            <div v-if="Object.keys(activities).length > 0" class="activities mt-5">
+            <div v-if="hasCurrentActivities" class="activities mt-5">
                 <table class="table table-striped table-responsive">
                 <thead class="table-dark">
                     <tr>
@@ -186,7 +186,7 @@
                     </tr>
                 </thead>
                     <tbody>
-                        <tr v-for="(activity, index) in activities" :key="index" data-testid="year-activity-row">
+                        <tr v-for="(activity, index) in currentActivities" :key="index" data-testid="year-activity-row">
                             <td class="fw-bold">{{ MONTH_DICT[index] }}</td>
                             <td v-if="activity.salary" class="fw-bold" :data-testid="`activity-salary-${index}`">{{ activity.salary }}万円</td>
                             <td v-else>ー</td>
@@ -208,8 +208,6 @@
             <p v-if="currentMessage" class="col-8 alert alert-warning" data-testid="currentMessage">{{ currentMessage }}</p>
         </div>
     </div>
-
-
 </template>
 
 <script>
@@ -228,7 +226,6 @@ export default {
 
   setup() {
     const activeTab = ref('monthly');
-    const response = ref();
     const minMonth = "2024-01";
     const maxMonth = getMaxMonth();
     const isAtMinMonth = computed(() => selectedMonth.value <= minMonth);
@@ -241,15 +238,21 @@ export default {
       selectedMonth, 
       monthlyActivities, 
       monthlyActivitiesMessage,
+      monthlySummary,
       fetchActivitiesByMonth 
-    } = useFetchActivitiesByMonth(response);
+    } = useFetchActivitiesByMonth();
     const { 
       selectedYear, 
       yearlyActivities, 
       yearlyActivitiesMessage,
+      yearlySummary,
       fetchActivitiesByYear
-    } = useFetchActivitiesByYear(response);
-    const { allActivitiesMessage, fetchAllActivities } = useFetchAllActivities(response)
+    } = useFetchActivitiesByYear();
+    const { 
+      allActivitiesMessage,
+      allActivitiesSummary,
+      fetchAllActivities 
+    } = useFetchAllActivities()
     const { increaseYear } = changeYear(selectedMonth);
     const { increaseMonth } = changeMonth(selectedMonth);
     const tabs = [
@@ -265,26 +268,43 @@ export default {
       return "";
     });
 
-    const debouncedRequest = debounce(() => {
+    const debouncedRequest = debounce(async () => {
         if (activeTab.value==='monthly'){
-            fetchActivitiesByMonth();
             monthlyActivities.value = [];
-            response.value = "";
+            monthlySummary.value = undefined;
+            await fetchActivitiesByMonth();
         } else if(activeTab.value==='yearly'){
-            fetchActivitiesByYear();
             yearlyActivities.value = [];
-            response.value = "";
+            yearlySummary.value = undefined;
+            await fetchActivitiesByYear();
         }
     }, 500);
 
-    watch(activeTab, () => {
-      response.value = null;
+    const currentSummary = computed(() => {
+      if (activeTab.value === "monthly") return monthlySummary.value;
+      if (activeTab.value === "yearly") return yearlySummary.value;
+      return allActivitiesSummary.value;
+    });
+
+    const currentActivities = computed(() => {
+      if (activeTab.value === "monthly") return monthlyActivities.value ?? [];
+      if (activeTab.value === "yearly") return yearlyActivities.value ?? [];
+      return [];
+    })
+
+    const hasCurrentActivities = computed(() => {
+      const activities = currentActivities.value;
+      if (Array.isArray(activities)) return activities.length > 0;
+      return Object.keys(activities ?? {}).length > 0;
+    })
+
+    watch(activeTab, async () => {
       if (activeTab.value==="all"){
-          fetchAllActivities();
+          await fetchAllActivities();
       } else if (activeTab.value==='monthly'){
-          fetchActivitiesByMonth();
+          await fetchActivitiesByMonth();
       } else if(activeTab.value==='yearly'){
-          fetchActivitiesByYear();
+          await fetchActivitiesByYear();
       }
     })
 
@@ -296,19 +316,19 @@ export default {
         debouncedRequest()
     })
 
-    onMounted(()=>{
-        fetchActivitiesByMonth();
+    onMounted(async () => {
+        await fetchActivitiesByMonth();
     })
-
 
   return {
       activeTab,
       tabs,
       selectedMonth,
       selectedYear,
-      response,
-      activities,
+      currentSummary,
       currentMessage,
+      currentActivities,
+      hasCurrentActivities,
       minMonth,
       maxMonth,
       isAtMinMonth,

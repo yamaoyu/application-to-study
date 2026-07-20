@@ -16,12 +16,12 @@
 
         <div class="container">
             <h3 class="mt-5">{{ date }}の実績</h3>
-            <div class="row mt-3" v-if="activityRes">
+            <div class="row mt-3" v-if="activityByDay">
                 <div class="col-4">
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">目標時間</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold text-center" data-testid="show-target-time">{{ activityRes.data.target_time }}</span>
+                            <span class="h3 fw-bold text-center" data-testid="show-target-time">{{ activityByDay.target_time }}</span>
                             時間
                         </div>
                     </div>
@@ -30,7 +30,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">活動時間</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold text-center" data-testid="show-actual-time">{{ activityRes.data.actual_time }}</span>
+                            <span class="h3 fw-bold text-center" data-testid="show-actual-time">{{ activityByDay.actual_time }}</span>
                             時間
                         </div>
                     </div>
@@ -39,7 +39,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">ステータス</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold text-center" :class="getStatusColors[activityRes.data.status]"  data-testid="show-status">{{ STATUS_DICT[activityRes.data.status] }}</span>
+                            <span class="h3 fw-bold text-center" :class="getStatusColors[activityByDay.status]"  data-testid="show-status">{{ STATUS_DICT[activityByDay.status] }}</span>
                         </div>
                     </div>
                 </div>
@@ -163,7 +163,7 @@ export default {
 
       const router = useRouter();
       const isFormVisible = ref(false);
-      const { date, checkMsg, activityRes, fetchActivityByDay } = useFetchActivtyByDay();
+      const { date, checkMsg, activityByDay, fetchActivityByDay } = useFetchActivtyByDay();
       const { increaseDay } = changeDate(date, checkMsg);
       const { pendingMsg, pendingActivities, pendingStatus, fetchActivitiesByStatus } = useFetchActivtiesByStatus();
       const { fetchMsg: incomeMsg, fetchRes: incomeRes, fetchMonthlySalary } = useFetchMonthlySalary();
@@ -202,7 +202,7 @@ export default {
         tabs,
         date,
         checkMsg,
-        activityRes,
+        activityByDay,
         pendingActivities,
         pendingStatus,
         pendingMsg,

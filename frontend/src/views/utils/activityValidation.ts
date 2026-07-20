@@ -1,4 +1,6 @@
-export const validateTargetTime = (time) => {
+import { OneActivity } from "../types/activity";
+
+export const validateTargetTime = (time: number) => {
   if (time === null || time === undefined) {
     return "時間を入力してください";
   }
@@ -14,15 +16,15 @@ export const validateTargetTime = (time) => {
   return null
 };
 
-export const hasDuplicateDate = (dates, date) => {
-  return dates.filter(d=>d && d===date).length > 1;
+export const hasDuplicateDate = (dates: string[], date: string) => {
+  return dates.filter(d => d && d === date).length > 1;
 };
 
-export const isValidActivities = (activities) => {
+export const isValidActivities = (activities: OneActivity[]) => {
   return !activities.some(a => !a.date || !a.target_time)
 };
 
-export const validateActualTime = (time) => {
+export const validateActualTime = (time: number) => {
   if (time === null || time === undefined) {
     return "時間を入力してください";
   }
