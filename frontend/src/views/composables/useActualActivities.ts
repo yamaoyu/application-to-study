@@ -5,6 +5,7 @@ import axios from 'axios';
 import {
   SendActualActivityParam,
   RegisterActualResult,
+  RegisterActualErrorReason,
 } from '../types/activity';
 
 
@@ -13,8 +14,7 @@ export const useRegisterActuals = () => {
   const reqMsg = ref<string>(""); // リクエスト結果を表示するためのメッセージ
   const statusCode = ref<number | null>(null);
 
-  const resultMessageMap = {
-    success: (date: string, actual_time: number) => `${date}の活動時間を${actual_time}時間に登録しました`,
+  const errorMessageMap: Record<RegisterActualErrorReason, (date: string) => string> = {
     ACTIVITY_NOT_FOUND: (date: string) => `${date}の活動時間登録に失敗: 目標時間が未登録です`,
     ACTIVITY_ALREADY_FINISHED: (date: string) => `${date}の活動時間登録に失敗: 既に確定されています`,
     SALARY_NOT_FOUND: (date: string) => `${date}の活動時間登録に失敗: 月収が未登録です`,
@@ -25,10 +25,10 @@ export const useRegisterActuals = () => {
     let messages = [];
     for (const r of results) {
       if (r.result === "success") {
-        messages.push(resultMessageMap.success(r.date, r.actual_time));
+        messages.push(`${r.date}の活動時間を${r.actual_time}時間に登録しました`);
         continue;
       } else {
-        const messageFn = resultMessageMap[r.reason] || resultMessageMap.UNEXPECTED_ERROR;
+        const messageFn = errorMessageMap[r.reason] || errorMessageMap.UNEXPECTED_ERROR;
         messages.push(messageFn(r.date));
         continue;
       }

@@ -3,7 +3,6 @@ import { finishActivies } from '../api/activity';
 import { parseError } from '../utils/error';
 import {
   OneActivity,
-  SendFinishActivityParam,
   FinishActivityResponse,
   FinishActivityErrorReason
 } from '../types/activity';
@@ -14,7 +13,7 @@ export const useFinishActivities = () => {
   const reqMsg = ref<string>(""); // リクエスト結果を表示するためのメッセージ
   const payAdjustment = ref<number | null>(null);
 
-  const resultMessageMap = {
+  const resultMessageMap: Record<FinishActivityErrorReason, (date: string) => string> = {
     ACTIVITY_NOT_FOUND: (date: string) => `${date}の活動終了に失敗: 目標時間が未登録です`,
     ACTIVITY_ALREADY_FINISHED: (date: string) => `${date}の活動終了に失敗: 既に確定されています`,
     SALARY_NOT_FOUND: (date: string) => `${date}の活動終了に失敗: 月収が未登録です`,
@@ -41,10 +40,10 @@ export const useFinishActivities = () => {
   };
 
   const makeMsg = (data: FinishActivityResponse) => {
-    let messages = [];
-    const bonusAndPenalty = data.pay_adjustment;
-    const totalBonus = data.total_bonus;
-    const totalPenalty = data.total_penalty;
+    const messages: string[] = [];
+    const bonusAndPenalty: number = data.pay_adjustment;
+    const totalBonus: number = data.total_bonus;
+    const totalPenalty: number = data.total_penalty;
     if (data.pay_adjustment) messages.push(`ボーナス-ペナルティ：${bonusAndPenalty}万円(${convert_ten_thousand_yen_to_yen(bonusAndPenalty)}円)`);
     if (data.total_bonus) messages.push(`ボーナス：${totalBonus}万円(${convert_ten_thousand_yen_to_yen(totalBonus)}円)`);
     if (data.total_penalty) messages.push(`ペナルティ：${totalPenalty}万円(${convert_ten_thousand_yen_to_yen(totalPenalty)}円)`);

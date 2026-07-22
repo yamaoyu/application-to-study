@@ -1,13 +1,3 @@
-export type OneActivity = {
-    activity_id: number;
-    date: string;
-    target_time: number;
-    actual_time: number;
-    status: ActivityStatus;
-    bonus: number,
-    penalty: number
-};
-
 export type ActivityStatus =
     | "pending"
     | "success"
@@ -18,13 +8,13 @@ export type SendTargetActivityParam = {
     target_time: number
 }
 
-type RegisterTargetErrorReason =
+export type RegisterTargetErrorReason =
     | "TARGET_TIME_ALREADY_REGISTERED"
     | "SALARY_NOT_FOUND"
     | "UNEXPECTED_ERROR";
 
 
-export type registerTargetResult =
+export type RegisterTargetResult =
     | {
         result: "success";
         date: string;
@@ -39,7 +29,7 @@ export type registerTargetResult =
     };
 
 export type RegisterTargetResponse = {
-    results: registerTargetResult[]
+    results: RegisterTargetResult[]
 }
 
 export type SendActualActivityParam = {
@@ -47,7 +37,7 @@ export type SendActualActivityParam = {
     actual_time: number
 }
 
-type RegisterActualErrorReason =
+export type RegisterActualErrorReason =
     | "ACTIVITY_NOT_FOUND"
     | "ACTIVITY_ALREADY_FINISHED"
     | "SALARY_NOT_FOUND"
@@ -79,14 +69,14 @@ export type FinishActivityErrorReason =
     | "SALARY_NOT_FOUND"
     | "UNEXPECTED_ERROR";
 
-type finishDetail =
+type FinishDetail =
     | {
         "date": string,
         "reason": null,
         "result": "success",
         "bonus": number,
         "penalty": number,
-        "status": "success" | "error"
+        "status": ActivityStatus
     }
     | {
         "date": string,
@@ -102,18 +92,23 @@ export type FinishActivityResponse = {
     "pay_adjustment": number,
     "total_bonus": number,
     "total_penalty": number,
-    "results": finishDetail[]
+    "results": FinishDetail[]
 }
 
-
-export type GetOneActivityResponse = {
-    activity_id: number,
-    date: string,
-    target_time: number,
-    actual_time: number,
-    status: "success" | "failure" | "pending",
+export type OneActivity = {
+    activity_id: number;
+    date: string;
+    target_time: number;
+    actual_time: number;
+    status: ActivityStatus;
     bonus: number,
     penalty: number
+};
+
+export type GetOneActivityResponse = OneActivity
+
+export type GetActivitiesByStatus = {
+    activities: OneActivity[]
 }
 
 export type ActivitySummary = {
@@ -153,6 +148,11 @@ export type YearlyMonthlyInfo = {
     fail_days: number;
 };
 
+export type MonthKey =
+    | "jan" | "feb" | "mar" | "apr"
+    | "may" | "jun" | "jul" | "aug"
+    | "sep" | "oct" | "nov" | "dec";
+
 export type GetActivitiesByYearResponse = ActivitySummary & {
-    monthly_info: YearlyMonthlyInfo[];
+    monthly_info: Record<MonthKey, Partial<YearlyMonthlyInfo>>;
 };

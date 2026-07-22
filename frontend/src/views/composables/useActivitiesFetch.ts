@@ -6,6 +6,8 @@ import {
   OneActivity,
   ActivitySummary,
   MonthlyActivity,
+  MonthKey,
+  GetOneActivityResponse,
   YearlyMonthlyInfo,
   ActivityStatus
 } from "../types/activity";
@@ -14,20 +16,18 @@ import {
 export const useFetchActivtiesByStatus = () => {
   const pendingMsg = ref<string>("");
   const pendingActivities = ref<OneActivity[]>([]);
-  const pendingStatus = ref<string | null>(null);
+  const pendingStatus = ref<number>();
 
   const fetchActivitiesByStatus = async (status: ActivityStatus) => {
     try {
       const res = await getActivitiesByStatus(status);
-      if (res.status === 200) {
-        pendingActivities.value = res.data.activities;
-        pendingMsg.value = "";
-      }
-      pendingStatus.value = res.data.status;
+      pendingActivities.value = res.data.activities;
+      pendingMsg.value = "";
+      pendingStatus.value = res.status;
     } catch (error) {
       pendingMsg.value = parseError(error, "月収の取得に失敗しました");
       pendingActivities.value = [];
-      pendingStatus.value = null;
+      pendingStatus.value = undefined;
     }
   }
 
@@ -39,10 +39,10 @@ export const useFetchActivtiesByStatus = () => {
   }
 };
 
-export const useFetchActivtyByDay = () => {
+export const useFetchActivityByDay = () => {
   const date = ref<string>(getToday());
   const checkMsg = ref<string>("");
-  const activityByDay = ref<OneActivity | null>(null);
+  const activityByDay = ref<GetOneActivityResponse>();
 
   const fetchActivityByDay = async () => {
     try {
@@ -69,7 +69,7 @@ export const useFetchActivtyByDay = () => {
       }
     } catch (error) {
       checkMsg.value = parseError(error, "活動記録の取得に失敗しました");
-      activityByDay.value = null;
+      activityByDay.value = undefined;
     }
   }
 
@@ -83,7 +83,7 @@ export const useFetchActivtyByDay = () => {
 
 export const useFetchActivitiesByMonth = () => {
   const selectedMonth = ref<string>(getThisMonth());
-  const monthlyActivities = ref<MonthlyActivity[]>();
+  const monthlyActivities = ref<MonthlyActivity[]>([]);
   const monthlyActivitiesMessage = ref<string>("");
   const monthlySummary = ref<ActivitySummary>();
 
@@ -105,6 +105,7 @@ export const useFetchActivitiesByMonth = () => {
     } catch (error) {
       monthlyActivitiesMessage.value = parseError(error, `${selectedMonth.value}の活動取得に失敗しました`);
       monthlyActivities.value = [];
+      monthlySummary.value = undefined;
     }
   };
 
@@ -119,7 +120,7 @@ export const useFetchActivitiesByMonth = () => {
 
 export const useFetchActivitiesByYear = () => {
   const selectedYear = ref<number>(getThisYear());
-  const yearlyActivities = ref<YearlyMonthlyInfo[]>([]);
+  const yearlyActivities = ref<Record<MonthKey, Partial<YearlyMonthlyInfo>>>();
   const yearlyActivitiesMessage = ref<string>("");
   const yearlySummary = ref<ActivitySummary>();
 
@@ -139,7 +140,8 @@ export const useFetchActivitiesByYear = () => {
       }
     } catch (error) {
       yearlyActivitiesMessage.value = parseError(error, `${selectedYear.value}の活動取得に失敗しました`);
-      yearlyActivities.value = [];
+      yearlyActivities.value = undefined;
+      yearlySummary.value = undefined;
     }
   };
 
@@ -159,7 +161,7 @@ export const useFetchAllActivities = () => {
   const fetchAllActivities = async () => {
     try {
       const res = await getAllActivities();
-      if (res.status == 200) {
+      if (res.status === 200) {
         allActivitiesMessage.value = "";
         allActivitiesSummary.value = {
           total_income: res.data.total_income,
@@ -172,7 +174,8 @@ export const useFetchAllActivities = () => {
         }
       }
     } catch (error) {
-      allActivitiesMessage.value = parseError(error, "全期間の活動記録取得に失敗しました")
+      allActivitiesMessage.value = parseError(error, "全期間の活動記録取得に失敗しました");
+      allActivitiesSummary.value = undefined;
     }
   }
 

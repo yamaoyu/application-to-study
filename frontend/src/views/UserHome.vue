@@ -255,7 +255,7 @@
 import { onMounted, ref } from 'vue';
 import { BButton, BModal } from 'bootstrap-vue-next';
 import { usePage } from './composables/usePage';
-import { useFetchActivtyByDay } from './composables/useActivitesFetch';
+import { useFetchActivityByDay } from './composables/useActivitiesFetch';
 import { useGetTodos, useTodoOperations, useSortTodos } from './composables/useTodo';
 import { useFetchMonthlySalary } from './composables/useSalary';
 import { STATUS_DICT, getAdjustmentColors, getStatusColors, getActivityAlert, getSalaryColors } from './utils/ui';
@@ -281,7 +281,7 @@ export default {
     const { selectedTodoIDs, newTodoTitle, newTodoDetail, newTodoDue, updateTodo, completeTodos, removeTodos } = useTodoOperations(todoMsg);
     const { totalItems, totalPages, currentPage, visiblePages, paginatedTodos, goToPage } = usePage(todos, 5);
     const { sortType, sortTodos } = useSortTodos(todos);
-    const { date, checkMsg: activityMsg, activityRes, fetchActivityByDay } = useFetchActivtyByDay();
+    const { date, checkMsg: activityMsg, activityRes, fetchActivityByDay } = useFetchActivityByDay();
 
 
     const validateParams = () => {

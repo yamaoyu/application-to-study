@@ -124,18 +124,22 @@
   </BModal>
 </template>
 
-<script>
-import { ref, computed, watch } from 'vue';
+<script lang="ts">
+import { ref, computed, watch, type PropType } from 'vue';
 import { validateActualTime } from './utils/activityValidation';
 import { useRegisterActuals } from './composables/useActualActivities';
 import { getMaxDate, getToday } from './utils/date';
 import { BModal, BCard, BCardText } from 'bootstrap-vue-next';
 import { getResponseAlert } from './utils/ui';
 import { useSelection } from './composables/useSelection';
+import { OneActivity } from './types/activity';
+
+type Mode = "all"| "edited"
 
 export default {
   props: {
     pendingActivities: {
+      type: Array as PropType<OneActivity[]>,
       default: () => []
     }
   },
@@ -149,20 +153,21 @@ export default {
   emits: ['registered'],
 
   setup(props, { emit }) {
-    const date = ref(getToday());
-    const showModal = ref(false);
-    const pendingActivities = ref([]);
+    const date = ref<string>(getToday());
+    const showModal = ref<boolean>(false);
+    const pendingActivities = ref<OneActivity[]>([]);
     const { selectedActivities, reqMsg, statusCode, sendRequest } = useRegisterActuals();
     const { isSelected, toggle, clear } = useSelection(selectedActivities);
 
-    const onValidate = (event, time) => {
+    const onValidate = (event: Event, time:number) => {
+      const input = event.target as HTMLInputElement;
       const error = validateActualTime(time)
 
       if (error) {
-        event.target.setCustomValidity(error)
-        event.target.reportValidity()
+        input.setCustomValidity(error)
+        input.reportValidity()
       } else {
-        event.target.setCustomValidity("")
+        input.setCustomValidity("")
       }
     };
 
@@ -174,7 +179,7 @@ export default {
       return new Map(props.pendingActivities.map(a => [a.activity_id, a]));
     });
 
-    const isEditedActual = (activity) => {
+    const isEditedActual = (activity: OneActivity) => {
       const originalActivity = pendingById.value.get(activity.activity_id);
       if (originalActivity) {
         return activity.actual_time !== originalActivity.actual_time;
@@ -183,7 +188,7 @@ export default {
     };
 
 
-    const applySelection = (mode) => {
+    const applySelection = (mode: Mode) => {
       if (mode === "all") {
         selectedActivities.value = [...pendingActivities.value];
       } else if (mode === "edited") {

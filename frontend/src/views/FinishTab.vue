@@ -71,16 +71,18 @@
   </BModal>
 </template>
 
-<script>
-import { ref, watch } from 'vue';
+<script lang="ts">
+import { ref, watch, type PropType } from 'vue';
 import { BModal, BCard, BCardText } from 'bootstrap-vue-next';
 import { useFinishActivities } from './composables/useFinishActvities';
 import { getAdjustmentColors } from './utils/ui';
 import { useSelection } from './composables/useSelection';
+import { OneActivity } from './types/activity';
 
 export default {
   props: {
     pendingActivities: {
+      type: Array as PropType<OneActivity[]>,
       default: () => []
     }
   },
@@ -94,8 +96,8 @@ export default {
   emits: ['registered'],
 
   setup(props, { emit }) {
-    const pendingActivities = ref([]);
-    const showModal = ref(false);
+    const pendingActivities = ref<OneActivity[]>([]);
+    const showModal = ref<boolean>(false);
     const { selectedActivities, reqMsg, payAdjustment, sendRequest } = useFinishActivities();
     const { isSelected, toggle, clear, toggleAll } = useSelection(selectedActivities);
 

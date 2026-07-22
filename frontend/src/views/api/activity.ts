@@ -7,6 +7,7 @@ import {
   RegisterActualResponse,
   FinishActivityResponse,
   GetOneActivityResponse,
+  GetActivitiesByStatus,
   GetActivitiesByMonthResponse,
   GetActivitiesByYearResponse,
   ActivityStatus
@@ -14,8 +15,9 @@ import {
 import type { AxiosResponse } from "axios";
 
 
-
-export const getActivitiesByStatus = (status: ActivityStatus) => {
+export const getActivitiesByStatus = (
+  status: ActivityStatus
+): Promise<AxiosResponse<GetActivitiesByStatus>> => {
   return apiClient.get(
     `activities?status=${status}`
   )

@@ -1,4 +1,4 @@
-import { OneActivity } from "../types/activity";
+import { SendTargetActivityParam } from "../types/activity";
 
 export const validateTargetTime = (time: number) => {
   if (time === null || time === undefined) {
@@ -20,7 +20,7 @@ export const hasDuplicateDate = (dates: string[], date: string) => {
   return dates.filter(d => d && d === date).length > 1;
 };
 
-export const isValidActivities = (activities: OneActivity[]) => {
+export const isValidActivities = (activities: SendTargetActivityParam[]) => {
   return !activities.some(a => !a.date || !a.target_time)
 };
 

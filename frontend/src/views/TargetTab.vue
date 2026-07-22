@@ -94,7 +94,7 @@
   </BModal>
 </template>
 
-<script>
+<script lang="ts">
 import { ref, computed } from 'vue';
 import { validateTargetTime, hasDuplicateDate, isValidActivities } from './utils/activityValidation';
 import { getMaxDate, getToday } from './utils/date';
@@ -113,21 +113,22 @@ export default {
   
   setup({}, { emit }) {
     const { targetActivities, reqMsg, statusCode, sendRequest } = useRegisterTargets();
-    const date = ref(getToday());
-    const showModal = ref(false);
+    const date = ref<string>(getToday());
+    const showModal = ref<boolean>(false);
 
-    const onValidate = (event, time) => {
+    const onValidate = (event: Event, time: number) => {
+      const input = event.target as HTMLInputElement;
       const error = validateTargetTime(time)
 
       if (error) {
-        event.target.setCustomValidity(error)
-        event.target.reportValidity()
+        input.setCustomValidity(error)
+        input.reportValidity()
       } else {
-        event.target.setCustomValidity("")
+        input.setCustomValidity("")
       }
     };
 
-    const checkDuplicateDate = (date, index) => {
+    const checkDuplicateDate = (date: string, index: number) => {
       if (hasDuplicateDate(targetActivities.value.map(a => a.date), date)) {
         targetActivities.value[index].date = "";
         reqMsg.value = `${date}は既に選択されています`;

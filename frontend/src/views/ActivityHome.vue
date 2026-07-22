@@ -131,14 +131,14 @@
     </div>
 </template>
 
-<script>
+<script lang="ts">
 import { ref, watch, onMounted } from 'vue';
 import { BButton, BCard, BCardText } from 'bootstrap-vue-next';
 import { useRouter } from 'vue-router';
 import TargetTab from './TargetTab.vue';
 import ActualTab from './ActualTab.vue';
 import FinishTab from './FinishTab.vue';
-import { useFetchActivtiesByStatus, useFetchActivtyByDay } from './composables/useActivitesFetch';
+import { useFetchActivtiesByStatus, useFetchActivityByDay } from './composables/useActivitiesFetch.js';
 import { useFetchMonthlySalary } from './composables/useSalary';
 import { getResponseAlert, getStatusColors, STATUS_DICT } from './utils/ui';
 import { changeDate, getThisMonth, getMaxDate } from './utils/date';
@@ -163,7 +163,7 @@ export default {
 
       const router = useRouter();
       const isFormVisible = ref(false);
-      const { date, checkMsg, activityByDay, fetchActivityByDay } = useFetchActivtyByDay();
+      const { date, checkMsg, activityByDay, fetchActivityByDay } = useFetchActivityByDay();
       const { increaseDay } = changeDate(date, checkMsg);
       const { pendingMsg, pendingActivities, pendingStatus, fetchActivitiesByStatus } = useFetchActivtiesByStatus();
       const { fetchMsg: incomeMsg, fetchRes: incomeRes, fetchMonthlySalary } = useFetchMonthlySalary();

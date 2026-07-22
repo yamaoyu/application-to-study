@@ -162,7 +162,7 @@
                     </tr>
                 </thead>
                     <tbody>
-                        <tr v-for="(activity, index) in currentActivities" :key="index" data-testid="monthly-activity-row">
+                        <tr v-for="(activity, index) in monthlyActivities" :key="index" data-testid="monthly-activity-row">
                             <td :data-testid="`activity-date-${index}`">{{ activity.date }}</td>
                             <td :data-testid="`activity-target-time-${index}`">{{ activity.target_time }}時間</td>
                             <td :data-testid="`activity-actual-time-${index}`">{{ activity.actual_time }}時間</td>
@@ -186,7 +186,7 @@
                     </tr>
                 </thead>
                     <tbody>
-                        <tr v-for="(activity, index) in currentActivities" :key="index" data-testid="year-activity-row">
+                        <tr v-for="(activity, index) in yearlyActivities" :key="index" data-testid="year-activity-row">
                             <td class="fw-bold">{{ MONTH_DICT[index] }}</td>
                             <td v-if="activity.salary" class="fw-bold" :data-testid="`activity-salary-${index}`">{{ activity.salary }}万円</td>
                             <td v-else>ー</td>
@@ -210,13 +210,13 @@
     </div>
 </template>
 
-<script>
+<script lang="ts">
 import { ref, watch, computed, onMounted } from 'vue';
 import { debounce } from 'lodash';
 import { BButton } from 'bootstrap-vue-next';
 import { STATUS_DICT, getSalaryColors, getStatusColors } from './utils/ui';
 import { getMaxMonth, getMaxYear, changeMonth, changeYear, MONTH_DICT } from './utils/date';
-import { useFetchActivitiesByMonth, useFetchActivitiesByYear, useFetchAllActivities } from './composables/useActivitesFetch';
+import { useFetchActivitiesByMonth, useFetchActivitiesByYear, useFetchAllActivities } from './composables/useActivitiesFetch';
 
 
 export default {
@@ -274,7 +274,7 @@ export default {
             monthlySummary.value = undefined;
             await fetchActivitiesByMonth();
         } else if(activeTab.value==='yearly'){
-            yearlyActivities.value = [];
+            yearlyActivities.value = undefined;
             yearlySummary.value = undefined;
             await fetchActivitiesByYear();
         }
@@ -327,7 +327,8 @@ export default {
       selectedYear,
       currentSummary,
       currentMessage,
-      currentActivities,
+      monthlyActivities,
+      yearlyActivities,
       hasCurrentActivities,
       minMonth,
       maxMonth,

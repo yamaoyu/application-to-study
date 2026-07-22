@@ -2,7 +2,11 @@ import { ref } from 'vue';
 import { registerTargets } from '../api/activity';
 import { parseError } from '../utils/error';
 import axios from 'axios';
-import { SendTargetActivityParam, registerTargetResult } from '../types/activity';
+import {
+  SendTargetActivityParam,
+  RegisterTargetResult,
+  RegisterTargetErrorReason
+} from '../types/activity';
 
 
 export const useRegisterTargets = () => {
@@ -10,18 +14,17 @@ export const useRegisterTargets = () => {
   const reqMsg = ref<string>(""); // リクエスト結果を表示するためのメッセージ
   const statusCode = ref<number | null>(null);
 
-  const resultMessageMap = {
-    success: (date: string, target_time: number) => `${date}の目標時間を${target_time}時間に登録しました`,
+  const resultMessageMap: Record<RegisterTargetErrorReason, (date: string) => string> = {
     TARGET_TIME_ALREADY_REGISTERED: (date: string) => `${date}の目標時間登録に失敗: 既に登録されています`,
     SALARY_NOT_FOUND: (date: string) => `${date}の目標時間登録に失敗: 月収が未登録です`,
     UNEXPECTED_ERROR: (date: string) => `${date}の目標時間登録に失敗: 予期せぬエラーが発生しました`,
   };
 
-  const makeMessage = (results: registerTargetResult[]) => {
+  const makeMessage = (results: RegisterTargetResult[]) => {
     let messages = [];
     for (const r of results) {
       if (r.result === "success") {
-        messages.push(resultMessageMap.success(r.date, r.target_time));
+        messages.push(`${r.date}の目標時間を${r.target_time}時間に登録しました`);
         continue;
       } else {
         const messageFn = resultMessageMap[r.reason] || resultMessageMap.UNEXPECTED_ERROR;
