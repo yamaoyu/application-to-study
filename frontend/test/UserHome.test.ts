@@ -9,9 +9,9 @@ const mockedGet = vi.mocked(apiClient.get);
 const mockedPut = vi.mocked(apiClient.put);
 
 const today = getToday().split("-");
-const expectedYear = today[0];
-const expectedMonth = today[1];
-const expectedDate = today[2];
+const expectedYear = Number(today[0]);
+const expectedMonth = Number(today[1]);
+const expectedDate = Number(today[2]);
 
 type mock =
     | { type: 'resolve'; value: { status: number; data: Record<string, any> } }

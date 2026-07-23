@@ -24,7 +24,7 @@ export const getActivitiesByStatus = (
 };
 
 export const getActivityByDay = (
-  year: string, month: string, day: string
+  year: number, month: number, day: number
 ): Promise<AxiosResponse<GetOneActivityResponse>> => {
   return apiClient.get(
     `activities/${year}/${month}/${day}`

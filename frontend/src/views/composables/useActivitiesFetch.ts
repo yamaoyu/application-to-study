@@ -46,7 +46,7 @@ export const useFetchActivityByDay = () => {
 
   const fetchActivityByDay = async () => {
     try {
-      const dateParts = date.value.split('-');
+      const dateParts = date.value.split('-').map(Number);
       const year = dateParts[0];
       const month = dateParts[1];
       const day = dateParts[2];
