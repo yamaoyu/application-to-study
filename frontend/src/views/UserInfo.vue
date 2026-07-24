@@ -72,11 +72,11 @@
   </div>
 </template>
   
-<script>
+<script lang="ts">
 import { ref, watch } from 'vue'
 import { BForm, BFormInput, BFormInvalidFeedback, BFormValidFeedback } from 'bootstrap-vue-next';
 import { getResponseAlert } from './utils/ui';
-import { useChangePassword, useUserInfoCheck } from './composables/useUserInfo';
+import { useChangePassword, usePasswordValidation } from './composables/useUserInfo';
 
 export default {
   components: {
@@ -88,12 +88,12 @@ export default {
 
   setup() {
     const { oldPassword, newPassword, newPasswordCheck, message, statusCode, changePassword } = useChangePassword();
-    const isPasswordChangeEnabled = ref(false);
-    const isFormVisible = ref(false);
-    const showOldPassword = ref(false);
-    const showNewPassword = ref(false);
-    const showNewPasswordCheck = ref(false);
-    const { passwordValidateResult, passwordEqualResult } = useUserInfoCheck('', newPassword, newPasswordCheck, '');
+    const isPasswordChangeEnabled = ref<boolean>(false);
+    const isFormVisible = ref<boolean>(false);
+    const showOldPassword = ref<boolean>(false);
+    const showNewPassword = ref<boolean>(false);
+    const showNewPasswordCheck = ref<boolean>(false);
+    const { passwordValidateResult, passwordEqualResult } = usePasswordValidation(newPassword, newPasswordCheck);
 
     watch(isPasswordChangeEnabled, () => {
       oldPassword.value = ''

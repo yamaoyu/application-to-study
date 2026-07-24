@@ -4,13 +4,14 @@ import { parseError } from '../utils/error';
 import { jwtDecode } from 'jwt-decode';
 import { useRouter } from 'vue-router';
 import { useAuthStore, useRoleStore } from '@/store/authenticate';
+import axios from 'axios';
 
 
 export const useLogin = () => {
-  const username = ref("");
-  const password = ref("");
-  const message = ref("");
-  const statusCode = ref(null);
+  const username = ref<string>("");
+  const password = ref<string>("");
+  const message = ref<string>("");
+  const statusCode = ref<number>();
   const router = useRouter();
   const authStore = useAuthStore();
   const roleStore = useRoleStore();
@@ -32,9 +33,9 @@ export const useLogin = () => {
       const response = await login(username.value, password.value);
       if (response.status === 200) {
         authStore.setAuthData(
-        response.data.access_token,
-        response.data.token_type,
-        jwtDecode(response.data.access_token).exp
+          response.data.access_token,
+          response.data.token_type,
+          jwtDecode(response.data.access_token).exp
         )
 
         roleStore.setRole(response.data.role)
@@ -47,7 +48,11 @@ export const useLogin = () => {
       }
     } catch (error) {
       message.value = parseError(error, "ログインに失敗しました")
-      statusCode.value = error.response?.status ?? null
+      if (axios.isAxiosError(error)) {
+        statusCode.value = error.response?.status;
+      } else {
+        statusCode.value = undefined;
+      }
     }
   };
 
@@ -67,16 +72,17 @@ export const useLogout = () => {
   const authStore = useAuthStore();
   const roleStore = useRoleStore();
 
-  const userLogout = async() => {
+  const userLogout = async () => {
     try {
       const res = await logout();
-      if (res.status===200){
+      if (res.status === 200) {
         authStore.clearAuthData();
         roleStore.clearRole();
         router.push(
-                { path : "/login",
-                  query : {message:"ログアウトしました"}
-                })
+          {
+            path: "/login",
+            query: { message: "ログアウトしました" }
+          })
       }
     } catch (error) {
       message.value = parseError(error, "ログアウトに失敗しました");

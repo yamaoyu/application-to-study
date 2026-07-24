@@ -23,7 +23,7 @@
   </div>
 </template>
   
-  <script>
+  <script lang="ts">
   import { ref, onMounted, computed } from 'vue';
   import { useRoute } from 'vue-router';
   import { getResponseAlert } from './utils/ui';
@@ -32,15 +32,15 @@
   export default {
     setup() {
       const route = useRoute();
-      const showPassword = ref(false);
-      const { username, password, message, statusCode, router,userLogin } = useLogin();
+      const showPassword = ref<boolean>(false);
+      const { username, password, message, statusCode, router, userLogin } = useLogin();
 
       const inputType = computed(() =>
         showPassword.value ? 'text' : 'password'
       );
 
       onMounted(() => {
-      if (route.query.message) {
+      if (typeof route.query.message === 'string') {
         message.value = route.query.message;
         // オプション: メッセージを表示後、URLからパラメータを削除
         router.replace({ query: {} })

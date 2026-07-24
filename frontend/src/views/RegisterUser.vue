@@ -62,12 +62,16 @@
   </div>
 </template>
   
-  <script>
+  <script lang="ts">
   import { ref } from 'vue'
   import { getResponseAlert } from './utils/ui';
   import { BForm, BFormInput, BFormInvalidFeedback, BFormValidFeedback } from 'bootstrap-vue-next';
   import { useRegisterUser } from './composables/userRegisterUser';
-  import { useUserInfoCheck } from './composables/useUserInfo';
+  import { 
+    useUsernameValidation, 
+    usePasswordValidation,
+    useEmailValidation
+  } from './composables/useUserInfo';
 
   export default {
     components: {
@@ -91,12 +95,9 @@
         submit
       } = useRegisterUser();
       
-      const { 
-        usernameValidateResult, 
-        passwordValidateResult, 
-        passwordEqualResult, 
-        emailValidateResult
-      } = useUserInfoCheck(username, password, passwordCheck, email);
+      const { usernameValidateResult } = useUsernameValidation(username);
+      const { passwordValidateResult, passwordEqualResult } = usePasswordValidation(password, passwordCheck);
+      const { emailValidateResult } = useEmailValidation(email);
   
       return {
         username,

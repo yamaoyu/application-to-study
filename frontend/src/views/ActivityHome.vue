@@ -166,7 +166,7 @@ export default {
       const { date, checkMsg, activityByDay, fetchActivityByDay } = useFetchActivityByDay();
       const { increaseDay } = changeDate(date, checkMsg);
       const { pendingMsg, pendingActivities, pendingStatus, fetchActivitiesByStatus } = useFetchActivtiesByStatus();
-      const { fetchMsg: incomeMsg, fetchRes: incomeRes, fetchMonthlySalary } = useFetchMonthlySalary();
+      const { fetchMsg: incomeMsg, fetchSalaryStatus, fetchMonthlySalary } = useFetchMonthlySalary();
 
       const renewActivities = async() => {
           await fetchActivityByDay();
@@ -183,9 +183,9 @@ export default {
           await fetchActivityByDay();
           await fetchActivitiesByStatus("pending");
           const thisMonth = getThisMonth();
-          const dateParts = thisMonth.split("-");
+          const dateParts = thisMonth.split("-").map(Number);
           await fetchMonthlySalary(dateParts[0], dateParts[1]);
-          if (incomeRes.value?.status!==200){
+          if (fetchSalaryStatus.value!==200){
             router.push(
               {"path":"/register/salary",
                 "query":{incomeMsg:`${incomeMsg.value}。先に月収を登録してください`}
