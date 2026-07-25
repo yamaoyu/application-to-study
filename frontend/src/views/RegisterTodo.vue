@@ -134,12 +134,12 @@
   </BModal>
 </template>
 
-<script>
+<script lang="ts">
 import { ref, watch } from 'vue';
 import { getToday } from './utils/date';
 import { getResponseAlert } from './utils/ui';
 import { useRegisterTodos } from './composables/useTodo';
-import { validateTodo } from './utils/todoValidation';
+import { validateTodo } from './utils/todoUtils';
 import { BModal } from 'bootstrap-vue-next';
 import { useTodoModal } from './composables/useTodoModal';
 
@@ -149,8 +149,8 @@ export default {
   },
 
   setup() {
-    const titleError = ref(""); // todo編集時、タイトルに入力がない場合のメッセージを表示
-    const dueError = ref(""); // todo編集時、期限に入力がない場合のメッセージを表示
+    const titleError = ref<boolean>(false); // todo編集時、タイトルに入力がない場合のメッセージを表示
+    const dueError = ref<boolean>(false); // todo編集時、期限に入力がない場合のメッセージを表示
     const today = getToday();
     const { showModal, modalTitle, todoAction, todo, openModal, closeModal } = useTodoModal();
     const { todos, message, statusCode, regitserTodos } = useRegisterTodos();

@@ -11,8 +11,8 @@ const mockedGet = vi.mocked(apiClient.get);
 
 const today = new Date();
 const expectedYear = today.getFullYear();
-const expectedMonth = `${today.getMonth() + 1}`.padStart(2, '0');
-const expectedDate = `${today.getDate()}`.padStart(2, '0');
+const expectedMonth = `${today.getMonth() + 1}`;
+const expectedDate = `${today.getDate()}`;
 
 const defaultActivityData = {
   date: `${expectedYear}-${expectedMonth}-${expectedDate}`,

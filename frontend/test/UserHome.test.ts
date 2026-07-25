@@ -153,7 +153,15 @@ describe('ユーザーホームの表示(データあり)', () => {
     it('未完了Todoのデータがある', async () => {
         wrapper = await mountUserHome();
         expect(mockedGet).toBeCalledWith(
-            "todos?status=false"
+            "todos",
+            {
+                "params": {
+                    "end_due": undefined,
+                    "start_due": undefined,
+                    "status": "false",
+                    "title": undefined,
+                },
+            }
         );
         const rows = wrapper.findAll('[data-testid="todo-row"]');
         expect(rows).toHaveLength(defaultTodosData.length);

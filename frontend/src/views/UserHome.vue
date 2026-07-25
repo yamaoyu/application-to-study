@@ -1,12 +1,12 @@
 <template>
   <div class="container">
     <h2 class="mt-2 mb-4">{{ date }}の活動実績</h2>
-    <div class="row" v-if="activityRes?.status === 200">
+    <div class="row" v-if="activityByDay">
       <div class="col-4">
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">目標時間</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center">{{ activityRes.data.target_time }}</span>
+            <span class="h3 fw-bold text-center">{{ activityByDay.target_time }}</span>
             時間
           </div>
         </div>
@@ -15,7 +15,7 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">活動時間</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center">{{ activityRes.data.actual_time }}</span>
+            <span class="h3 fw-bold text-center">{{ activityByDay.actual_time }}</span>
             時間
           </div>
         </div>
@@ -24,7 +24,7 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">ステータス</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span :class="getStatusColors[activityRes.data.status]" class="h3 fw-bold text-center">{{ STATUS_DICT[activityRes.data.status] }}</span>
+            <span :class="getStatusColors[activityByDay.status]" class="h3 fw-bold text-center">{{ STATUS_DICT[activityByDay.status] }}</span>
           </div>
         </div>
       </div>
@@ -37,13 +37,13 @@
   </div>
   <div class="container">
     <h2>今月の給料</h2>
-    <div class="row justify-content-center mb-4" v-if="incomeRes?.status === 200">
+    <div class="row justify-content-center mb-4" v-if="fetchSalarySummary">
       <div class="col-8 mb-4">
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">合計</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span :class="getSalaryColors(incomeRes.data.total_income-incomeRes.data.base_income)" class="h3 fw-bold text-center" data-testid="total-income">
-              {{ incomeRes.data.total_income }}
+            <span :class="getSalaryColors(fetchSalarySummary.total_income-fetchSalarySummary.base_income)" class="h3 fw-bold text-center" data-testid="total-income">
+              {{ fetchSalarySummary.total_income }}
             </span>
             万円
           </div>
@@ -53,7 +53,7 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">月収</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center">{{ incomeRes.data.base_income }}</span>
+            <span class="h3 fw-bold text-center">{{ fetchSalarySummary.base_income }}</span>
             万円
           </div>
         </div>
@@ -62,7 +62,7 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">ボーナス-ペナルティ</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span :class="getSalaryColors(incomeRes.data.pay_adjustment)" class="h3 fw-bold text-center">{{ incomeRes.data.pay_adjustment }}</span>
+            <span :class="getSalaryColors(fetchSalarySummary.pay_adjustment)" class="h3 fw-bold text-center">{{ fetchSalarySummary.pay_adjustment }}</span>
             万円
           </div>
         </div>
@@ -71,7 +71,7 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">ボーナス</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center text-success">{{ incomeRes.data.total_bonus }}</span>
+            <span class="h3 fw-bold text-center text-success">{{ fetchSalarySummary.total_bonus }}</span>
             万円
           </div>
         </div>
@@ -80,7 +80,7 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">ペナルティ</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center text-danger">{{ incomeRes.data.total_penalty }}</span>
+            <span class="h3 fw-bold text-center text-danger">{{ fetchSalarySummary.total_penalty }}</span>
             万円
           </div>
         </div>
@@ -98,10 +98,21 @@
       <h2 class="text-center">未完了のTodo</h2>
       <!-- 右側に絶対配置でボタンを配置 -->
       <div class="btn-group position-absolute top-50 end-0 translate-middle-y" v-if="todos.length">
-        <BButton class="btn btn-outline-secondary bi-sort-down btn-sm" :variant="sortType === 'id' ? 'secondary text-white' : 'outline-secondary'" @click="sortTodos('id')" data-testid="sort-todos-id">
+        <BButton 
+          class="btn btn-outline-secondary bi-sort-down btn-sm" 
+          :variant="sortType === 'id' ? 'secondary' : 'outline-secondary'" 
+          @click="sortTodos('id')" 
+          :class="{ 'text-white': sortType === 'id' }"
+          data-testid="sort-todos-id">
           登録順
         </BButton>
-        <BButton class="btn btn-outline-secondary bi-sort-down btn-sm" :variant="sortType === 'due' ? 'secondary text-white' : 'outline-secondary'" @click="sortTodos('due')" data-testid="sort-todos-due">
+        <BButton 
+          class="btn btn-outline-secondary bi-sort-down btn-sm" 
+          :variant="sortType === 'due' ? 'secondary' : 'outline-secondary'" 
+          @click="sortTodos('due')" 
+          data-testid="sort-todos-due"
+          :class="{ 'text-white': sortType === 'due' }"
+        >
           期限順
         </BButton>
       </div>
@@ -120,11 +131,11 @@
       <tbody v-for="(todo, index) in paginatedTodos" :key="index">
         <tr data-testid="todo-row">
           <td class="text-center align-middle">{{ index + 1 }}</td>
-          <td class="text-center align-middle todo-title" @click="confirmRequest(todo, 'show')">{{ todo.title }}</td>
+          <td class="text-center align-middle todo-title" @click="confirmSingleTodoRequest(todo, 'show')">{{ todo.title }}</td>
           <td class="text-center align-middle">{{ todo.due }}</td>
-          <td><input class="btn btn-outline-primary btn-sm" :data-testid="`edit-${index}`" type="button" value="編集" @click="confirmRequest(todo, 'edit')"></td>
-          <td><input class="btn btn-outline-success btn-sm" :data-testid="`finish-${index}`" type="button" value="終了" @click="confirmRequest(todo, 'finish')"></td>
-          <td><input class="btn btn-outline-danger btn-sm" :data-testid="`delete-${index}`" type="button" value="削除" @click="confirmRequest(todo, 'delete')"></td>
+          <td><input class="btn btn-outline-primary btn-sm" :data-testid="`edit-${index}`" type="button" value="編集" @click="confirmSingleTodoRequest(todo, 'edit')"></td>
+          <td><input class="btn btn-outline-success btn-sm" :data-testid="`finish-${index}`" type="button" value="終了" @click="confirmSingleTodoRequest(todo, 'finish')"></td>
+          <td><input class="btn btn-outline-danger btn-sm" :data-testid="`delete-${index}`" type="button" value="削除" @click="confirmSingleTodoRequest(todo, 'delete')"></td>
         </tr>
       </tbody>
     </table>
@@ -176,7 +187,7 @@
     data-testid="modal-show"
   >
     <div v-if="todoAction==='finish' || todoAction==='delete'" class="text-danger">確定後は取り消せません</div>
-    <div v-else-if="todoAction==='show'">
+    <div v-else-if="todoAction==='show' && todo">
       <div class="todo-detail">
         <p><strong>期限:</strong> {{ todo.due }}</p>
         <p><strong>タイトル:</strong>{{ todo.title }}</p>
@@ -184,7 +195,7 @@
         <p v-else class="text-muted">Todoの詳細はありません</p>
       </div>
     </div>
-    <div v-else-if="todoAction==='edit'">
+    <div v-else-if="todoAction==='edit' && todo">
       <div class="input-group">
         <label class="mt-3">
           タイトル
@@ -251,7 +262,7 @@
 </template>
 
 
-<script>
+<script lang="ts">
 import { onMounted, ref } from 'vue';
 import { BButton, BModal } from 'bootstrap-vue-next';
 import { usePage } from './composables/usePage';
@@ -260,6 +271,8 @@ import { useGetTodos, useTodoOperations, useSortTodos } from './composables/useT
 import { useFetchMonthlySalary } from './composables/useSalary';
 import { STATUS_DICT, getAdjustmentColors, getStatusColors, getActivityAlert, getSalaryColors } from './utils/ui';
 import { getThisMonth } from './utils/date';
+import { ConfirmTodoRequest } from './utils/todoUtils';
+import { TodoInfo } from './types/todo';
 
 export default {
   components:{
@@ -268,48 +281,30 @@ export default {
   },
 
   setup() {
-    const activityStatus = ref("");
-    const todoMsg = ref("");
-    const showModal = ref(false);
-    const modalTitle = ref("");
-    const todoAction = ref(); // todoに対して行う操作名(閲覧、編集、終了、削除)
-    const todo = ref(); // todoの情報を保持し、Todoの閲覧、編集時に使用する
-    const titleError = ref(""); // todo編集時、タイトルに入力がない場合のメッセージを表示
-    const dueError = ref(""); // todo編集時、期限に入力がない場合のメッセージを表示
-    const { fetchMsg: incomeMsg, fetchRes: incomeRes, fetchMonthlySalary } = useFetchMonthlySalary();
+    const activityStatus = ref<number>();
+    const todoMsg = ref<string>("");
+    const todo = ref<TodoInfo>();
+    const { fetchMsg: incomeMsg, fetchSalarySummary, fetchMonthlySalary } = useFetchMonthlySalary();
     const { todos, statusFilter, fetchTodos } = useGetTodos(todoMsg);
     const { selectedTodoIDs, newTodoTitle, newTodoDetail, newTodoDue, updateTodo, completeTodos, removeTodos } = useTodoOperations(todoMsg);
     const { totalItems, totalPages, currentPage, visiblePages, paginatedTodos, goToPage } = usePage(todos, 5);
     const { sortType, sortTodos } = useSortTodos(todos);
-    const { date, checkMsg: activityMsg, activityRes, fetchActivityByDay } = useFetchActivityByDay();
-
+    const { date, checkMsg: activityMsg, activityByDay, fetchActivityByDay } = useFetchActivityByDay();
+    const { 
+      showModal,
+      titleError,
+      dueError,
+      todoAction,
+      modalTitle,
+      confirmSingleTodoRequest
+    } = ConfirmTodoRequest(todo, selectedTodoIDs, newTodoTitle, newTodoDetail, newTodoDue);
 
     const validateParams = () => {
       if (["show", "finish", "delete"].includes(todoAction.value)) {
           return true;
         }
-      return !!(newTodoTitle.value && newTodoDue.value);
-    };
 
-    const confirmRequest = async(content, action) =>{
-      titleError.value = null;
-      dueError.value = null;
-      selectedTodoIDs.value = [content.todo_id];
-      todoAction.value = action;
-      todo.value = content;
-      if (todoAction.value==='finish'){
-        modalTitle.value = "Todo終了確認"
-      } else if (todoAction.value==='delete') {
-        modalTitle.value = "Todo削除確認"
-      } else if (todoAction.value==='show') {
-        modalTitle.value = "Todo閲覧"
-      } else if (todoAction.value==='edit') {
-        modalTitle.value = "Todo編集"
-        newTodoTitle.value = content.title
-        newTodoDetail.value = content.detail
-        newTodoDue.value = content.due
-      }
-      showModal.value = true;
+      return !!(newTodoTitle.value && newTodoDue.value);
     };
 
     const sendTodoRequest = async() =>{
@@ -321,11 +316,11 @@ export default {
             currentPage.value = totalPages.value;
         };
       } else if (todoAction.value==='edit'){
-        await updateTodo(todo.value.todo_id);
+        await updateTodo(selectedTodoIDs.value[0]);
       }
       // データを初期化
-      todoAction.value = null;
-      todo.value = null;
+      todoAction.value = "show";
+      todo.value = undefined;
       selectedTodoIDs.value = [];
       await fetchTodos();
     };
@@ -335,7 +330,7 @@ export default {
       await fetchActivityByDay();
 
       // その月の月収を取得
-      const [year, month] = getThisMonth().split("-");
+      const [year, month] = getThisMonth().split("-").map(Number);
       await fetchMonthlySalary(year, month);
 
       // そのユーザーの未完了のtodoを取得、このページでは未完了のTodoのみを表示
@@ -346,10 +341,10 @@ export default {
 
     return {
       activityMsg,
-      activityRes,
+      activityByDay,
       activityStatus,
       incomeMsg,
-      incomeRes,
+      fetchSalarySummary,
       todos,
       todoMsg,
       showModal,
@@ -360,7 +355,7 @@ export default {
       titleError,
       dueError,
       validateParams,
-      confirmRequest,
+      confirmSingleTodoRequest,
       sendTodoRequest,
       sortTodos,
       sortType,

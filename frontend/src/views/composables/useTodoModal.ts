@@ -1,12 +1,13 @@
 import { ref } from "vue";
+import { UpsertTodoParam, SingleTodoAction } from "../types/todo";
 
 export const useTodoModal = () => {
-  const showModal = ref(false);
-  const modalTitle = ref("");
-  const todoAction = ref("show");
-  const todo = ref({ title: "", detail: "", due: "" });
+  const showModal = ref<boolean>(false);
+  const modalTitle = ref<string>("");
+  const todoAction = ref<SingleTodoAction>("show");
+  const todo = ref<UpsertTodoParam>({ title: "", detail: "", due: "" });
 
-  const openModal = (content, action) => {
+  const openModal = (content: UpsertTodoParam, action: SingleTodoAction) => {
     todoAction.value = action;
     showModal.value = true;
     todo.value = content;
@@ -19,7 +20,7 @@ export const useTodoModal = () => {
     }
   };
 
-  const closeModal = (todos) => {
+  const closeModal = (todos: UpsertTodoParam[]) => {
     showModal.value = false;
     if (todoAction.value === "create") {
       todos.push(todo.value);

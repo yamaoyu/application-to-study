@@ -84,6 +84,14 @@ describe('フィルターなし', () => {
     wrapper = await mountShowTodo();
     expect(mockedGet).toBeCalledWith(
       "todos",
+      {
+        "params": {
+          "end_due": undefined,
+          "start_due": undefined,
+          "status": undefined,
+          "title": undefined
+        }
+      }
     );
     const rows = wrapper.findAll('[data-testid="todo-row"]');
     expect(rows).toHaveLength(defaultTodosData.length);
@@ -96,6 +104,14 @@ describe('フィルターなし', () => {
     });
     expect(mockedGet).toBeCalledWith(
       "todos",
+      {
+        "params": {
+          "end_due": undefined,
+          "start_due": undefined,
+          "status": undefined,
+          "title": undefined
+        }
+      }
     )
     expect(wrapper.find('[data-testid="message"]').text()).toBe(expectedMessage);
   });
@@ -185,7 +201,15 @@ describe('ステータスでフィルター', () => {
     await statusSelect.setValue("true");
     await wrapper.find("[data-testid='apply']").trigger("click");
     expect(mockedGet).toBeCalledWith(
-      "todos?status=true",
+      "todos",
+      {
+        "params": {
+          "end_due": undefined,
+          "start_due": undefined,
+          "status": "true",
+          "title": undefined
+        }
+      }
     );
     const newRows = wrapper.findAll('[data-testid="todo-row"]');
     expect(newRows).toHaveLength(1);
@@ -207,7 +231,15 @@ describe('ステータスでフィルター', () => {
     await statusSelect.setValue("false");
     await wrapper.find("[data-testid='apply']").trigger("click");
     expect(mockedGet).toBeCalledWith(
-      "todos?status=false",
+      "todos",
+      {
+        "params": {
+          "end_due": undefined,
+          "start_due": undefined,
+          "status": "false",
+          "title": undefined
+        }
+      }
     );
     const newRows = wrapper.findAll('[data-testid="todo-row"]');
     expect(newRows).toHaveLength(1);
@@ -238,7 +270,15 @@ describe('期限(以前)でフィルター', () => {
     await startDueInput.setValue("2025-01-01");
     await wrapper.find("[data-testid='apply']").trigger("click");
     expect(mockedGet).toBeCalledWith(
-      "todos?start_due=2025-01-01",
+      "todos",
+      {
+        "params": {
+          "end_due": undefined,
+          "start_due": "2025-01-01",
+          "status": undefined,
+          "title": undefined
+        }
+      }
     );
     const newRows = wrapper.findAll('[data-testid="todo-row"]');
     expect(newRows).toHaveLength(1);
@@ -269,7 +309,15 @@ describe('期限(以降)でフィルター', () => {
     await endDueInput.setValue("2025-01-02");
     await wrapper.find("[data-testid='apply']").trigger("click");
     expect(mockedGet).toBeCalledWith(
-      "todos?end_due=2025-01-02",
+      "todos",
+      {
+        "params": {
+          "end_due": "2025-01-02",
+          "start_due": undefined,
+          "status": undefined,
+          "title": undefined
+        }
+      }
     );
     const newRows = wrapper.findAll('[data-testid="todo-row"]');
     expect(newRows).toHaveLength(1);
@@ -303,7 +351,15 @@ describe('タイトル名でフィルター', () => {
     titleInput.setValue("title1");
     await wrapper.find("[data-testid='apply']").trigger("click");
     expect(mockedGet).toBeCalledWith(
-      "todos?title=title1",
+      "todos",
+      {
+        "params": {
+          "end_due": undefined,
+          "start_due": undefined,
+          "status": undefined,
+          "title": "title1"
+        }
+      }
     );
     const newRows = wrapper.findAll('[data-testid="todo-row"]');
     expect(newRows).toHaveLength(1);
