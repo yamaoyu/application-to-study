@@ -25,22 +25,22 @@
   </div>
 </template>
   
-  <script>
-  import { useSendInquiry } from './composables/useInquiry';
-  import { getResponseAlert } from './utils/ui';
-  
-  export default {
-    setup() {
-      const { category, detail, statusCode, message, sendRequest } = useSendInquiry();
-  
-      return {
-        category,
-        detail,
-        message,
-        statusCode,
-        getResponseAlert,
-        sendRequest
-      }
+<script lang="ts">
+import { useSendInquiry } from './composables/useInquiry';
+import { getResponseAlert } from './utils/ui';
+
+export default {
+  setup() {
+    const { category, detail, statusCode, message, sendRequest } = useSendInquiry();
+
+    return {
+      category,
+      detail,
+      message,
+      statusCode,
+      getResponseAlert,
+      sendRequest
     }
   }
-  </script>
+}
+</script>

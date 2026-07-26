@@ -1,34 +1,40 @@
 import { ref } from 'vue';
 import { registerInquiry, getInquiries } from '../api/inquiry';
 import { parseError } from '../utils/error';
+import { InquiryCategoryType, GetInquiryInfo, DEFAULT_INQUIRY_CATEGORY } from '../types/inquiry';
+import axios from 'axios';
 
 export const useSendInquiry = () => {
-  const category = ref("");
-  const detail = ref("");
-  const statusCode = ref(null);
-  const message = ref("");
+  const category = ref<InquiryCategoryType>(DEFAULT_INQUIRY_CATEGORY); // 初期値は要望
+  const detail = ref<string>("");
+  const statusCode = ref<number | null>(null);
+  const message = ref<string>("");
 
-  const sendRequest = async() => {
+  const sendRequest = async () => {
     try {
       const res = await registerInquiry(category.value, detail.value);
-      if (res.status===201){
+      if (res.status === 201) {
         statusCode.value = res.status
         message.value = ["以下の内容で受け付けました\n",
-                        `カテゴリ:${res.data.category}\n`,
-                        `内容:${res.data.detail}`].join('');
+          `カテゴリ:${res.data.category}\n`,
+          `内容:${res.data.detail}`].join('');
         // 内容をリセット
-        category.value = "";
+        category.value = "要望";
         detail.value = "";
       }
-    } catch(error) {
+    } catch (error) {
       message.value = parseError(error, "問い合わせの送信処理に失敗しました");
-      statusCode.value = error.response?.status ?? null;
+      if (axios.isAxiosError(error)) {
+        statusCode.value = error.response?.status ?? null;
+      } else {
+        statusCode.value = null;
+      }
     }
   }
 
   return {
     category,
-    detail, 
+    detail,
     statusCode,
     message,
     sendRequest
@@ -36,10 +42,10 @@ export const useSendInquiry = () => {
 };
 
 export const useGetInquiries = () => {
-  const inquiries = ref([]);
-  const message = ref("");
-  
-  const fetchInquries = async() => {
+  const inquiries = ref<GetInquiryInfo[]>([]);
+  const message = ref<string>("");
+
+  const fetchInquiries = async () => {
     try {
       const res = await getInquiries();
       inquiries.value = res.data;
@@ -52,6 +58,6 @@ export const useGetInquiries = () => {
   return {
     inquiries,
     message,
-    fetchInquries
+    fetchInquiries
   }
 };

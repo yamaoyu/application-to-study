@@ -48,7 +48,7 @@ describe('問い合わせに成功する', async () => {
     })
 })
 
-describe('問い合わせに失敗する', async () => {
+describe('フォームの動作確認', async () => {
     let wrapper: VueWrapper;
 
     beforeEach(() => {
@@ -56,49 +56,13 @@ describe('問い合わせに失敗する', async () => {
         wrapper = mountComponent(InquiryForm)
     })
 
-    it('カテゴリを選択しないで送信した場合', async () => {
-        const detail = "テスト";
-
-        mockedPost.mockRejectedValue({
-            response: {
-                status: 422,
-                data: { code: "INVALID_CATEGORY" }
-            }
-        })
-
-        // 詳細を入力し、詳細が入力されていることを確認する
-        const detailInput = wrapper.find('[data-testid="detail"]') as DOMWrapper<HTMLInputElement>;
-        await detailInput.setValue(detail);
-        expect(detailInput.element.value).toBe(detail);
-        // 送信ボタンをクリックし、正しくリクエストが送信されることを確認する
-        await wrapper.find('[data-testid="submit-button"]').trigger('submit');
-        expect(mockedPost).toHaveBeenCalledTimes(1);
-        expect(mockedPost).toHaveBeenCalledWith(
-            'inquiries',
-            {
-                category: "",
-                detail: detail
-            }
-        )
-        // エラーメッセージが表示されることを確認する
-        expect(wrapper.find('[data-testid="message"]').element.textContent).toBe("カテゴリは要望・エラー報告・その他から選択してください")
-    })
-})
-
-describe('カテゴリ選択の動作確認', async () => {
-    let wrapper: VueWrapper;
-
-    beforeEach(() => {
-        vi.resetAllMocks() // 呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-        wrapper = mountComponent(InquiryForm)
-    })
-
+    // TODO: radio の切り替え操作は Playwright 側に寄せる
     it('カテゴリの選択を切り替える', async () => {
         // 初期はカテゴリが空であることを確認
         const requestRadio = wrapper.find('[data-testid="request"]') as DOMWrapper<HTMLInputElement>;
         const errorRadio = wrapper.find('[data-testid="error"]') as DOMWrapper<HTMLInputElement>;
         const otherRadio = wrapper.find('[data-testid="other"]') as DOMWrapper<HTMLInputElement>;
-        expect(requestRadio.element.checked).toBe(false);
+        expect(requestRadio.element.checked).toBe(true); // 初期値は要望
         expect(errorRadio.element.checked).toBe(false);
         expect(otherRadio.element.checked).toBe(false);
         // 要望を選択し、カテゴリが要望になっていることを確認
@@ -112,5 +76,9 @@ describe('カテゴリ選択の動作確認', async () => {
         await otherRadio.setValue(true);
         expect(otherRadio.element.checked).toBe(true);
         expect(errorRadio.element.checked).toBe(false);
+    })
+
+    it('詳細は必須入力である', () => {
+        expect(wrapper.find('[data-testid="detail"]').attributes('required')).toBeDefined()
     })
 })
