@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-import router from './router'
+import router from './router/index'
 import { createPinia } from 'pinia';
 import { createPersistedState } from 'pinia-plugin-persistedstate';
 import { useAuthStore } from '@/store/authenticate';
@@ -9,7 +9,7 @@ import { createBootstrap } from 'bootstrap-vue-next';
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue-next/dist/bootstrap-vue-next.css";
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
-import { verifyRefreshToken } from './views/api/auth';
+import { verifyRefreshToken } from './views/api/auth.js';
 
 const pinia = createPinia();
 pinia.use(createPersistedState());
@@ -22,7 +22,7 @@ const ALLOWED_ROUTES = ['Login', 'RegisterUser']
 
 router.beforeEach(async (to) => {
   // ルートに飛ぶとユーザーホームへ遷移するようにする
-  if (to.name===undefined){
+  if (to.name === undefined) {
     return { name: 'Home' }
   }
   // 遷移先がログインページとユーザー登録ページ以外の場合
@@ -35,14 +35,14 @@ router.beforeEach(async (to) => {
       }
       // トークンがなければそのまま
       return
-    } catch(error) {
+    } catch (error) {
       return
     }
   }
   // トークンがない、もしくは期限切れの場合
   if (!authStore.isToken || authStore.isExpired()) {
     // リフレッシュトークンの検証
-    try{
+    try {
       const response = await verifyRefreshToken()
       if (response.status === 200) {
         // トークンの更新
@@ -51,7 +51,7 @@ router.beforeEach(async (to) => {
           response.data.token_type,
           jwtDecode(response.data.access_token).exp)
       }
-    } catch(error){
+    } catch (error) {
       authStore.setRedirectPath(to.path)
       return { name: 'Login', message: '再度ログインしてください' }
     }

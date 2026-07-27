@@ -23,10 +23,9 @@
       "vite/client",
       "vitest/globals"
     ],
-    "baseUrl": ".", // ts移行が完了したら消す
     "paths": {
       "@/*": [
-        "src/*"
+        "./src/*"
       ]
     }
   },

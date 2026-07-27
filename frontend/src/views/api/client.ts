@@ -3,7 +3,6 @@ import { backendUrl } from '../config/env';
 import { useAuthStore } from '@/store/authenticate';
 import { verifyRefreshToken } from './auth';
 import { jwtDecode } from 'jwt-decode';
-import { config } from '@vue/test-utils';
 
 export const apiClient = axios.create({
   baseURL: backendUrl
@@ -12,6 +11,10 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use((config) => {
   const authStore = useAuthStore();
   const url = config.url;
+
+  if (!url) {
+    return config
+  }
 
   if (
     url.includes('token') ||
@@ -53,7 +56,7 @@ apiClient.interceptors.response.use(
         );
         originalRequest.headers.Authorization = authStore.getAuthHeader;
         return apiClient(originalRequest);
-      } catch(error) {
+      } catch (error) {
         return Promise.reject(error);
       }
     }

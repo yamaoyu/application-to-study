@@ -1,12 +1,15 @@
-export const useSelection = (selectedActivities) => {
+import { type Ref } from "vue";
+import { OneActivity } from '../types/activity';
 
-  const isSelected = (activity) => {
+export const useSelection = (selectedActivities: Ref<OneActivity[]>) => {
+
+  const isSelected = (activity: OneActivity) => {
     return selectedActivities.value.some(
       (selectedActivity) => selectedActivity.activity_id === activity.activity_id
     );
   };
 
-  const toggle = (activity) => {
+  const toggle = (activity: OneActivity) => {
     const index = selectedActivities.value.findIndex(
       (selectedActivity) => selectedActivity.activity_id === activity.activity_id
     );
@@ -22,7 +25,7 @@ export const useSelection = (selectedActivities) => {
     selectedActivities.value = [];
   };
 
-  const toggleAll = (activities) => {
+  const toggleAll = (activities: OneActivity[]) => {
     if (selectedActivities.value.length === activities.length) {
       selectedActivities.value = [];
     } else {

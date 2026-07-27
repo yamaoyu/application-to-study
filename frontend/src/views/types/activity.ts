@@ -127,7 +127,7 @@ export type MonthlyActivity = {
     date: string;
     target_time: number;
     actual_time: number;
-    status: "pending" | "success" | "failure",
+    status: ActivityStatus,
     bonus: number,
     penalty: number
 };
