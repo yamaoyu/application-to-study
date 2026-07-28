@@ -11,7 +11,7 @@ export const useLogin = () => {
   const username = ref<string>("");
   const password = ref<string>("");
   const message = ref<string>("");
-  const statusCode = ref<number>();
+  const statusCode = ref<number | null>(null);
   const router = useRouter();
   const authStore = useAuthStore();
   const roleStore = useRoleStore();
@@ -49,9 +49,9 @@ export const useLogin = () => {
     } catch (error) {
       message.value = parseError(error, "ログインに失敗しました")
       if (axios.isAxiosError(error)) {
-        statusCode.value = error.response?.status;
+        statusCode.value = error.response?.status || null;
       } else {
-        statusCode.value = undefined;
+        statusCode.value = null;
       }
     }
   };

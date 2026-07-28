@@ -33,7 +33,7 @@ const makeMessage = (results: TodoResult[], action: string) => {
 export const useRegisterTodos = () => {
   const todos = ref<UpsertTodoParam[]>([]);
   const message = ref<string>("");
-  const statusCode = ref<number>();
+  const statusCode = ref<number | null>(null);
 
   const regitserTodos = async () => {
     try {
@@ -44,6 +44,7 @@ export const useRegisterTodos = () => {
         todos.value = [];
       }
     } catch (error) {
+      statusCode.value = null;
       message.value = parseError(error, "Todoの登録に失敗しました");
     }
   }

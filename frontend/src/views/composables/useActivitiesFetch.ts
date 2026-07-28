@@ -16,7 +16,7 @@ import {
 export const useFetchActivtiesByStatus = () => {
   const pendingMsg = ref<string>("");
   const pendingActivities = ref<OneActivity[]>([]);
-  const pendingStatus = ref<number>();
+  const pendingStatus = ref<number | null>(null);
 
   const fetchActivitiesByStatus = async (status: ActivityStatus) => {
     try {
@@ -27,7 +27,7 @@ export const useFetchActivtiesByStatus = () => {
     } catch (error) {
       pendingMsg.value = parseError(error, "月収の取得に失敗しました");
       pendingActivities.value = [];
-      pendingStatus.value = undefined;
+      pendingStatus.value = null;
     }
   }
 

@@ -1,26 +1,27 @@
 import { ActivityStatus } from "../types/activity";
 
-export const getResponseAlert = (status: number) => {
+export const getResponseAlert = (status: number | null) => {
   // レスポンスのステータスコードに応じたアラートクラスを返す
-  if (status >= 200 && status < 300) {
+  if (typeof status == "number" && status >= 200 && status < 300) {
     return 'alert alert-success';
   } else {
     return 'alert alert-warning';
   }
 };
 
-export const getActivityAlert = (status: ActivityStatus) => {
+export const getActivityAlert = (status: ActivityStatus | null) => {
   // アクティビティのステータスに応じたアラートクラスを返す
-  if (!status) {
-    // 未登録の場合
-    return 'alert alert-warning';
-  } else if (status === 'success') {
-    return 'alert alert-success';
-  } else if (status === 'failure') {
-    return 'alert alert-danger';
-  } else {
-    // 登録はあるがステータスが未確定(pending)の場合
-    return 'alert alert-warning';
+  if (status === null) {
+    return "alert alert-warning";
+  }
+
+  switch (status) {
+    case "success":
+      return "alert alert-success";
+    case "failure":
+      return "alert alert-danger";
+    case "pending":
+      return "alert alert-warning";
   }
 };
 
@@ -43,10 +44,10 @@ export const STATUS_DICT = {
   'pending': '未確定'
 };
 
-export const getAdjustmentColors = (payAdjustment: number) => {
+export const getAdjustmentColors = (payAdjustment: number | null) => {
   // TODO: 仮実装でメッセージに「ボーナス」や「ペナルティ」が含まれているかで色を変えているが、将来的にはAPIからのレスポンスでボーナスとペナルティを分けて受け取るようにする
   // ボーナス-ペナルティの結果に応じた文字の色のクラスを返す
-  if (payAdjustment >= 0) {
+  if (typeof payAdjustment == "number" && payAdjustment >= 0) {
     return 'alert alert-success';
   } else {
     return 'alert alert-danger';

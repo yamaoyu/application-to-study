@@ -73,6 +73,9 @@ jobs:
       run: |
         mkdir -p results/backend
         mkdir -p results/frontend
+
+    - name: type check
+      run: npm run typecheck
     
     - name: Test
       run: |

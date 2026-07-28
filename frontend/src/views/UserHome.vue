@@ -29,8 +29,8 @@
         </div>
       </div>
     </div>
-    <div class="row d-flex align-items-center justify-content-center my-3">
-      <p v-if="activityMsg" class="col-8" :class="getActivityAlert(activityStatus)" data-testid="activity-msg">
+    <div v-if="activityMsg" class="row d-flex align-items-center justify-content-center my-3">
+      <p class="col-8" :class="getActivityAlert(activityByDay?.status || null)"  data-testid="activity-msg">
           {{ activityMsg }}
       </p>
     </div>
@@ -269,7 +269,13 @@ import { usePage } from './composables/usePage';
 import { useFetchActivityByDay } from './composables/useActivitiesFetch';
 import { useGetTodos, useTodoOperations, useSortTodos } from './composables/useTodo';
 import { useFetchMonthlySalary } from './composables/useSalary';
-import { STATUS_DICT, getAdjustmentColors, getStatusColors, getActivityAlert, getSalaryColors } from './utils/ui';
+import { 
+  STATUS_DICT, 
+  getAdjustmentColors, 
+  getStatusColors, 
+  getSalaryColors,
+  getActivityAlert
+} from './utils/ui';
 import { getThisMonth } from './utils/date';
 import { ConfirmTodoRequest } from './utils/todoUtils';
 import { TodoInfo } from './types/todo';
@@ -281,7 +287,6 @@ export default {
   },
 
   setup() {
-    const activityStatus = ref<number>();
     const todoMsg = ref<string>("");
     const todo = ref<TodoInfo>();
     const { fetchMsg: incomeMsg, fetchSalarySummary, fetchMonthlySalary } = useFetchMonthlySalary();
@@ -342,7 +347,6 @@ export default {
     return {
       activityMsg,
       activityByDay,
-      activityStatus,
       incomeMsg,
       fetchSalarySummary,
       todos,

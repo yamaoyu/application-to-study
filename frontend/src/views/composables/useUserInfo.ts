@@ -8,7 +8,7 @@ export const useChangePassword = () => {
   const newPassword = ref<string>('');
   const newPasswordCheck = ref<string>('');
   const message = ref<string>('');
-  const statusCode = ref<number>();
+  const statusCode = ref<number | null>(null);
 
   const changePassword = async () => {
     try {
@@ -22,7 +22,7 @@ export const useChangePassword = () => {
       }
     } catch (error) {
       message.value = parseError(error, "パスワードの変更に失敗しました");
-      statusCode.value = undefined;
+      statusCode.value = null;
     }
   }
 

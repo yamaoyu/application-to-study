@@ -56,7 +56,7 @@ export const useFinishActivities = () => {
       };
     } catch (error) {
       reqMsg.value = parseError(error, "活動時間の登録に失敗しました");
-      payAdjustment.value = 0;
+      payAdjustment.value = null;
     }
   }
 

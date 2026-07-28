@@ -9,7 +9,7 @@ export const useRegisterUser = () => {
   const passwordCheck = ref<string>('');
   const email = ref<string>('');
   const message = ref<string>('');
-  const statusCode = ref<number>();
+  const statusCode = ref<number | null>(null);
 
   const submit = async () => {
     try {
@@ -21,9 +21,9 @@ export const useRegisterUser = () => {
     } catch (error) {
       message.value = parseError(error, "ユーザー作成に失敗しました");
       if (axios.isAxiosError(error)) {
-        statusCode.value = error.response?.status;
+        statusCode.value = error.response?.status || null;
       } else {
-        statusCode.value = undefined;
+        statusCode.value = null;
       }
     }
   }

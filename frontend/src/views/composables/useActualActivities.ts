@@ -3,13 +3,13 @@ import { registerActuals } from '../api/activity';
 import { parseError, getErrorMessageByCode } from '../utils/error';
 import axios from 'axios';
 import {
-  SendActualActivityParam,
+  OneActivity,
   RegisterActualResult,
 } from '../types/activity';
 
 
 export const useRegisterActuals = () => {
-  const selectedActivities = ref<SendActualActivityParam[]>([]);
+  const selectedActivities = ref<OneActivity[]>([]);
   const reqMsg = ref<string>(""); // リクエスト結果を表示するためのメッセージ
   const statusCode = ref<number | null>(null);
 

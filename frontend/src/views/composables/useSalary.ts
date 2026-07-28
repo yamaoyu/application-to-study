@@ -8,7 +8,7 @@ import axios from 'axios';
 export const useFetchMonthlySalary = () => {
   const fetchMsg = ref<string>('');
   const fetchSalarySummary = ref<MonthlySalarySummary>();
-  const fetchSalaryStatus = ref<number>();
+  const fetchSalaryStatus = ref<number | null>(null);
 
   const fetchMonthlySalary = async (year: number, month: number) => {
     try {
@@ -25,9 +25,9 @@ export const useFetchMonthlySalary = () => {
       fetchMsg.value = parseError(error, "月収の取得に失敗しました");
       fetchSalarySummary.value = undefined;
       if (axios.isAxiosError(error)) {
-        fetchSalaryStatus.value = error.response?.status;
+        fetchSalaryStatus.value = error.response?.status || null;
       } else {
-        fetchSalaryStatus.value = undefined;
+        fetchSalaryStatus.value = null;
       }
     }
   };
@@ -43,7 +43,7 @@ export const useFetchMonthlySalary = () => {
 export const useRegisterSalary = () => {
   const registerMsg = ref<string>('');
   const selectedMonth = ref<string>(getThisMonth());
-  const registerStatusCode = ref<number>();
+  const registerStatusCode = ref<number | null>(null);
 
   const registerSalary = async (salary: number) => {
     try {
@@ -57,9 +57,9 @@ export const useRegisterSalary = () => {
     } catch (error: unknown) {
       registerMsg.value = parseError(error, "月収の登録に失敗しました");
       if (axios.isAxiosError(error)) {
-        registerStatusCode.value = error.response?.status ?? undefined;
+        registerStatusCode.value = error.response?.status ?? null;
       } else {
-        registerStatusCode.value = undefined;
+        registerStatusCode.value = null;
       }
     }
   };
