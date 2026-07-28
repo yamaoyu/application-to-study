@@ -169,7 +169,8 @@ describe('活動の終了(一括)', () => {
         dates: expectedDates
       }
     );
-    const expectedMessage = "2025/1/1の活動終了に失敗: 目標時間が未登録です\n2025/1/2の活動終了に失敗: 月収が未登録です\n2025/1/3の活動終了に失敗: 予期せぬエラーが発生しました\n2025/1/4の活動終了に失敗: 既に確定されています";
+    const expectedMessage = "2025/1/1の活動終了に失敗: 活動が登録されていません\n2025/1/2の活動終了に失敗: 月収が登録されていません\n2025/1/3の活動終了に失敗: 予期せぬエラーが発生しました\n2025/1/4の活動終了に失敗: 既に確定されています";
+    console.log(wrapper.find("[data-testid='reqMsg']").text())
     expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);
   })
 });

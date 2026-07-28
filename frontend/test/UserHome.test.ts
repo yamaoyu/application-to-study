@@ -180,7 +180,7 @@ describe('ユーザーホームの表示(データなし)', () => {
         wrapper = await mountUserHome({
             activityMock: createRejectedMock("ACTIVITY_NOT_FOUND")
         });
-        expect(wrapper.find("[data-testid='activity-msg']").text()).toEqual("活動は登録されていません");
+        expect(wrapper.find("[data-testid='activity-msg']").text()).toEqual("活動が登録されていません");
     });
 
     it('給料のデータがない', async () => {

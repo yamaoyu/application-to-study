@@ -66,22 +66,6 @@ export const parseError = (error: unknown, message: string) => {
       return message;
     }
 
-    // 一括活動登録の場合は日付ごとのメッセージを作成する
-    if (code === "BULK_ACTIVITY_OPERATION_FAILED") {
-      const results = error.response.data?.results ?? [];
-      const errorMessagesList = results.map(result => {
-        if (result.result === "error") {
-          const reason = result.reason || "UNEXPECTED_ERROR";
-          const errorMessage = isErrorCode(reason)
-            ? getErrorMessageByCode(reason)
-            : getErrorMessageByCode("UNEXPECTED_ERROR");
-          return `${result.date}の活動登録に失敗: ${errorMessage}`;
-        } else {
-          return `${result.date}の活動登録に成功`;
-        }
-      });
-      return errorMessagesList.join("\n");
-    }
     return getErrorMessageByCode(code)
   };
 

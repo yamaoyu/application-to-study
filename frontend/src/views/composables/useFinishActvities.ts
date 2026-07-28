@@ -1,10 +1,9 @@
 import { ref } from 'vue';
 import { finishActivies } from '../api/activity';
-import { parseError } from '../utils/error';
+import { parseError, getErrorMessageByCode } from '../utils/error';
 import {
   OneActivity,
-  FinishActivityResponse,
-  FinishActivityErrorReason
+  FinishActivityResponse
 } from '../types/activity';
 
 
@@ -12,13 +11,6 @@ export const useFinishActivities = () => {
   const selectedActivities = ref<OneActivity[]>([]);
   const reqMsg = ref<string>(""); // リクエスト結果を表示するためのメッセージ
   const payAdjustment = ref<number | null>(null);
-
-  const resultMessageMap: Record<FinishActivityErrorReason, (date: string) => string> = {
-    ACTIVITY_NOT_FOUND: (date: string) => `${date}の活動終了に失敗: 目標時間が未登録です`,
-    ACTIVITY_ALREADY_FINISHED: (date: string) => `${date}の活動終了に失敗: 既に確定されています`,
-    SALARY_NOT_FOUND: (date: string) => `${date}の活動終了に失敗: 月収が未登録です`,
-    UNEXPECTED_ERROR: (date: string) => `${date}の活動終了に失敗: 予期せぬエラーが発生しました`,
-  };
 
   const convert_ten_thousand_yen_to_yen = (amount: number) => {
     // 金額を万円から円に変換する関数
@@ -34,11 +26,6 @@ export const useFinishActivities = () => {
     }
   };
 
-  const makeErrorMessage = (date: string, reason: FinishActivityErrorReason) => {
-    const messageFn = resultMessageMap[reason] || resultMessageMap.UNEXPECTED_ERROR;
-    return messageFn(date);
-  };
-
   const makeMsg = (data: FinishActivityResponse) => {
     const messages: string[] = [];
     const bonusAndPenalty: number = data.pay_adjustment;
@@ -51,8 +38,8 @@ export const useFinishActivities = () => {
       if (result.result === 'success') {
         messages.push(`${makeSuccessMessage(result.date, result.status, result.bonus, result.penalty)}`);
       } else {
-        const message = makeErrorMessage(result.date, result.reason)
-        messages.push(message);
+        const message = getErrorMessageByCode(result.reason);
+        messages.push(`${result.date}の活動終了に失敗: ${message}`);
       }
     }
     return messages.join("\n");

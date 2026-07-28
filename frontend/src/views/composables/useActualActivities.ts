@@ -1,11 +1,10 @@
 import { ref } from 'vue';
 import { registerActuals } from '../api/activity';
-import { parseError } from '../utils/error';
+import { parseError, getErrorMessageByCode } from '../utils/error';
 import axios from 'axios';
 import {
   SendActualActivityParam,
   RegisterActualResult,
-  RegisterActualErrorReason,
 } from '../types/activity';
 
 
@@ -14,13 +13,6 @@ export const useRegisterActuals = () => {
   const reqMsg = ref<string>(""); // リクエスト結果を表示するためのメッセージ
   const statusCode = ref<number | null>(null);
 
-  const errorMessageMap: Record<RegisterActualErrorReason, (date: string) => string> = {
-    ACTIVITY_NOT_FOUND: (date: string) => `${date}の活動時間登録に失敗: 目標時間が未登録です`,
-    ACTIVITY_ALREADY_FINISHED: (date: string) => `${date}の活動時間登録に失敗: 既に確定されています`,
-    SALARY_NOT_FOUND: (date: string) => `${date}の活動時間登録に失敗: 月収が未登録です`,
-    UNEXPECTED_ERROR: (date: string) => `${date}の活動時間登録に失敗: 予期せぬエラーが発生しました`,
-  };
-
   const makeMessage = (results: RegisterActualResult[]) => {
     let messages = [];
     for (const r of results) {
@@ -28,8 +20,8 @@ export const useRegisterActuals = () => {
         messages.push(`${r.date}の活動時間を${r.actual_time}時間に登録しました`);
         continue;
       } else {
-        const messageFn = errorMessageMap[r.reason] || errorMessageMap.UNEXPECTED_ERROR;
-        messages.push(messageFn(r.date));
+        const message = getErrorMessageByCode(r.reason);
+        messages.push(`${r.date}の活動時間登録に失敗: ${message}`);
         continue;
       }
     }

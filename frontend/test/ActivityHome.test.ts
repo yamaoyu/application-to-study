@@ -97,7 +97,7 @@ describe('選択した日の活動登録状況確認', () => {
       activityMock: createRejectedMock("ACTIVITY_NOT_FOUND"),
       pendingMock: createRejectedMock("ACTIVITY_NOT_FOUND")
     });
-    expect(wrapper.find("[data-testid='checkMsg']").text()).toEqual("活動は登録されていません");
+    expect(wrapper.find("[data-testid='checkMsg']").text()).toEqual("活動が登録されていません");
   });
 });
 
