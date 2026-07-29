@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="Object.keys(pendingActivities).length > 0" class="mt-3">
+    <div v-if="Object.keys(finishableActivities).length > 0" class="mt-3">
       <BCard class="border-0 shadow-sm mt-3" bg-variant="light">
         <div class="text-center">
           <h5 class="card-title text-primary fw-bold mb-2">
@@ -15,9 +15,9 @@
           class="btn btn-primary btn-sm position-absolute"
           style="top: 1rem; right: 1rem;"
           data-testid="select-all-activities"
-          @click="toggleAll(pendingActivities)"
+          @click="toggleAll(finishableActivities)"
         >
-          {{ Object.keys(pendingActivities).length===Object.keys(selectedActivities).length ? '全て解除' : '全て選択' }}
+          {{ Object.keys(finishableActivities).length===Object.keys(selectedActivities).length ? '全て解除' : '全て選択' }}
         </button>
       </BCard>
       <table class="table table-striped table-responsive">
@@ -30,17 +30,18 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(activity, index) in pendingActivities" 
+          <tr 
+            v-for="(activity, index) in finishableActivities" 
             :key="index" 
-            @click="toggle(activity)"
             :class="{ 'table-active': isSelected(activity) }"
+            @click="toggle(activity)"
           >
           <td :data-testid="`is-selected-finish-${index}`">
             <input 
+              v-model="selectedActivities"
               class="form-check-input" 
               type="checkbox"
               :value="activity"
-              v-model="selectedActivities"
             >
           </td>
           <td>{{ activity.date }}</td>
@@ -52,21 +53,21 @@
       <button 
           type="button" 
           class="btn btn-outline-secondary mt-3"
-          @click="showModal = true"
           :disabled="selectedActivities.length === 0"
           data-testid="finish-multi"
+          @click="showModal = true"
       >
           まとめて終了
       </button>
     </div>
     <div v-else class="mt-3 alert alert-warning">確定可能な活動がありません</div>
   </div>
-  <div class="container d-flex justify-content-center" v-if="reqMsg" data-testid="reqMsg">
+  <div v-if="reqMsg" class="container d-flex justify-content-center" data-testid="reqMsg">
       <p class="mt-3 col-12" :class="getAdjustmentColors(payAdjustment)">{{ reqMsg }}</p>
   </div>
 
   <!-- モーダルコンポーネントで登録前の確認 -->
-  <BModal v-model="showModal" title="活動時間の確定" ok-title="はい" cancel-title="いいえ" @ok="onSubmit" data-testid="modal-show">
+  <BModal v-model="showModal" title="活動時間の確定" ok-title="はい" cancel-title="いいえ" data-testid="modal-show" @ok="onSubmit">
     <p>選択した日の活動を終了しますか？</p>
   </BModal>
 </template>
@@ -80,6 +81,12 @@ import { useSelection } from './composables/useSelection';
 import { OneActivity } from './types/activity';
 
 export default {
+  components: {
+    BModal,
+    BCard,
+    BCardText
+  },
+
   props: {
     pendingActivities: {
       type: Array as PropType<OneActivity[]>,
@@ -87,16 +94,10 @@ export default {
     }
   },
 
-  components: {
-    BModal,
-    BCard,
-    BCardText
-  },
-
   emits: ['registered'],
 
   setup(props, { emit }) {
-    const pendingActivities = ref<OneActivity[]>([]);
+    const finishableActivities = ref<OneActivity[]>([]);
     const showModal = ref<boolean>(false);
     const { selectedActivities, reqMsg, payAdjustment, sendRequest } = useFinishActivities();
     const { isSelected, toggle, clear, toggleAll } = useSelection(selectedActivities);
@@ -104,7 +105,7 @@ export default {
     watch(
       () => props.pendingActivities,
       (activities) => {
-        pendingActivities.value = activities.map(activity => ({ ...activity }));
+        finishableActivities.value = activities.map(activity => ({ ...activity }));
       },
       { immediate: true }
     );
@@ -120,7 +121,7 @@ export default {
       reqMsg,
       payAdjustment,
       sendRequest,
-      pendingActivities,
+      finishableActivities,
       showModal,
       onSubmit,
       getAdjustmentColors,

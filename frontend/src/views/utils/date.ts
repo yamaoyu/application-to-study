@@ -57,7 +57,7 @@ export function changeYear(selectedMonth: Ref<string>) {
     const increaseYear = async (step: number) => {
         // YYYY-MMの形を受け取り、年にstepを足す
         const [year, month] = selectedMonth.value.split('-').map(Number)
-        let newDate = new Date(year + step, month)
+        const newDate = new Date(year + step, month)
         selectedMonth.value = newDate.toISOString().slice(0, 7)
     }
 
@@ -69,7 +69,7 @@ export function changeYear(selectedMonth: Ref<string>) {
 export function changeMonth(selectedMonth: Ref<string>) {
     const increaseMonth = async (step: number) => {
         const [year, month] = selectedMonth.value.split('-').map(Number)
-        let newDate = new Date(year, month + step)
+        const newDate = new Date(year, month + step)
         selectedMonth.value = newDate.toISOString().slice(0, 7)
     }
 

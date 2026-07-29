@@ -30,7 +30,11 @@ export const useRegisterActuals = () => {
 
   const sendRequest = async () => {
     try {
-      const res = await registerActuals(selectedActivities.value);
+      const activities = selectedActivities.value.map(({ date, actual_time }) => ({
+        date,
+        actual_time,
+      }));
+      const res = await registerActuals(activities);
       statusCode.value = res.status;
       if (res.status === 200) {
         reqMsg.value = makeMessage(res.data.results);

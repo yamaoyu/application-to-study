@@ -3,10 +3,10 @@
         <BButton 
             v-for="tab in tabs" 
             :key="tab.value"
-            @click="activeTab = tab.value"
             :variant="activeTab === tab.value ? 'primary' : 'outline-secondary'"
             class="me-2"
             :data-testid="`tab-${tab.value}`"
+            @click="activeTab = tab.value"
         >
             {{ tab.label }}
         </BButton>
@@ -17,8 +17,8 @@
             <div class="container col-8 d-flex justify-content-center">
                 <div class="input-group">
                     <input
-                    type="month"
                     v-model="selectedMonth"
+                    type="month"
                     :min="minMonth"
                     :max="maxMonth"
                     class="form-control col-2  border-secondary"
@@ -26,32 +26,32 @@
                     <button 
                     type="button" 
                     class="btn btn-outline-secondary" 
-                    @click="increaseYear(-1)"
                     :disabled="isAtMinYear"
+                    @click="increaseYear(-1)"
                     >
                     前年
                     </button>
                     <button 
                     type="button" 
                     class="btn btn-outline-secondary" 
-                    @click="increaseMonth(-1)"
                     :disabled="isAtMinMonth"
+                    @click="increaseMonth(-1)"
                     >
                     前月
                     </button>
                     <button 
                     type="button" 
                     class="btn btn-outline-secondary" 
-                    @click="increaseMonth(1)"
                     :disabled="isAtMaxMonth"
+                    @click="increaseMonth(1)"
                     >
                     翌月
                     </button>
                     <button 
                     type="button" 
                     class="btn btn-outline-secondary" 
-                    @click="increaseYear(1)"
                     :disabled="isAtMaxYear"
+                    @click="increaseYear(1)"
                     >
                     翌年
                     </button>
@@ -62,8 +62,8 @@
             <div class="container col-8 d-flex justify-content-center">
                 <div class="input-group">
                     <input
-                    type="number"
                     v-model="selectedYear"
+                    type="number"
                     :min="minYear"
                     :max="maxYear"
                     class="form-control col-2 text-center border-secondary"
@@ -72,7 +72,7 @@
             </div>
         </div>
 
-        <div class="container mt-3" v-if="currentSummary">
+        <div v-if="currentSummary" class="container mt-3">
             <div>
                 <h2 v-if="activeTab==='monthly'">{{ selectedMonth }}の活動実績</h2>
                 <h2 v-if="activeTab==='yearly'">{{ selectedYear }}の活動実績</h2>

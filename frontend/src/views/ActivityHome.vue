@@ -4,11 +4,11 @@
             <BButton 
                 v-for="tab in tabs" 
                 :key="tab.value"
-                @click="activeTab = tab.value"
                 :variant="activeTab === tab.value ? 'primary' : 'outline-secondary'"
                 class="me-2"
                 :title="`${tab.label}登録フォームへ切り替え`"
                 :data-testid="tab.value"
+                @click="activeTab = tab.value"
             >
                 {{ tab.label }}
             </BButton>
@@ -16,7 +16,7 @@
 
         <div class="container">
             <h3 class="mt-5">{{ date }}の実績</h3>
-            <div class="row mt-3" v-if="activityByDay">
+            <div v-if="activityByDay" class="row mt-3" >
                 <div class="col-4">
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">目標時間</h3>
@@ -54,8 +54,8 @@
                 <div class="input-group">
                     <span class="col-2 p-2 input-group-text">日付</span>
                     <input
-                        type="date"
                         v-model="date"
+                        type="date"
                         min="2024-01-01"
                         :max="getMaxDate()"
                         class="form-control"
@@ -104,7 +104,7 @@
             </h5>
             <hr class="divider">
             <div class="collapse" :class="{ 'show': isFormVisible }">
-                <div class="text-start mt-3" v-if="pendingActivities?.length > 0">
+                <div v-if="pendingActivities?.length > 0" class="text-start mt-3">
                     <table class="table table-striped table-responsive">
                     <thead class="table-dark">
                         <tr>
@@ -133,7 +133,7 @@
 
 <script lang="ts">
 import { ref, watch, onMounted } from 'vue';
-import { BButton, BCard, BCardText } from 'bootstrap-vue-next';
+import { BButton } from 'bootstrap-vue-next';
 import { useRouter } from 'vue-router';
 import TargetTab from './TargetTab.vue';
 import ActualTab from './ActualTab.vue';
@@ -142,12 +142,11 @@ import { useFetchActivtiesByStatus, useFetchActivityByDay } from './composables/
 import { useFetchMonthlySalary } from './composables/useSalary';
 import { getResponseAlert, getStatusColors, STATUS_DICT } from './utils/ui';
 import { changeDate, getThisMonth, getMaxDate } from './utils/date';
+import { parseError } from './utils/error.js';
 
 export default {
     components: {
         BButton,
-        BCard,
-        BCardText,
         TargetTab,
         ActualTab,
         FinishTab
@@ -193,7 +192,7 @@ export default {
           };
         }
         catch (error){
-          checkMsg.value = "ページ情報の取得に失敗しました";
+          checkMsg.value = parseError(error, "ページ情報の取得に失敗しました");
         }
       });
 

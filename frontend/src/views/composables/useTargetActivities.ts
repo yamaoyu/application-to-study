@@ -14,7 +14,7 @@ export const useRegisterTargets = () => {
   const statusCode = ref<number | null>(null);
 
   const makeMessage = (results: RegisterTargetResult[]) => {
-    let messages = [];
+    const messages = [];
     for (const r of results) {
       if (r.result === "success") {
         messages.push(`${r.date}の目標時間を${r.target_time}時間に登録しました`);

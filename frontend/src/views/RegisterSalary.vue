@@ -1,11 +1,11 @@
 <template>
   <h3>月収の登録</h3>
-  <form @submit.prevent="registerSalary(monthlyIncome)" class="form-inline">
+  <form class="form-inline" @submit.prevent="registerSalary(monthlyIncome)">
     <div class="container col-8 d-flex justify-content-center">
       <div class="input-group">
         <input
-          type="month"
           v-model="selectedMonth"
+          type="month"
           :min="minMonth"
           :max="maxMonth"
           class="form-control col-2"
@@ -13,37 +13,37 @@
         />
         <button 
           type="button" 
-          class="btn btn-outline-secondary" 
-          @click="increaseYear(-1)"
           :disabled="isAtMinYear"
           data-testid="previousYear"
+          class="btn btn-outline-secondary" 
+          @click="increaseYear(-1)"
         >
           前年
         </button>
         <button 
           type="button" 
-          class="btn btn-outline-secondary" 
-          @click="increaseMonth(-1)"
           :disabled="isAtMinMonth"
           data-testid="previousMonth"
+          class="btn btn-outline-secondary" 
+          @click="increaseMonth(-1)"
         >
           前月
         </button>
         <button 
           type="button" 
-          class="btn btn-outline-secondary" 
-          @click="increaseMonth(1)"
           :disabled="isAtMaxMonth"
           data-testid="nextMonth"
+          class="btn btn-outline-secondary" 
+          @click="increaseMonth(1)"
         >
           翌月
         </button>
         <button 
           type="button" 
-          class="btn btn-outline-secondary" 
-          @click="increaseYear(1)"
           :disabled="isAtMaxYear"
           data-testid="nextYear"
+          class="btn btn-outline-secondary" 
+          @click="increaseYear(1)"
         >
           翌年
         </button>
@@ -52,8 +52,8 @@
     <div class="container col-8 d-flex justify-content-center mt-3">
       <div class="input-group">
         <input
-          type="number"
           v-model="monthlyIncome"
+          type="number"
           class="form-control"
           placeholder="月収(万円)"
           max="2000"
@@ -63,37 +63,37 @@
         <span class="input-group-text">万円</span>
         <button 
           type="button" 
-          class="btn btn-outline-secondary" 
-          @click="updateSalary(-10)"
           :disabled="isMinIncome"
           data-testid="minus10"
+          class="btn btn-outline-secondary" 
+          @click="updateSalary(-10)"
         >
           -10万
         </button>
         <button 
           type="button" 
-          class="btn btn-outline-secondary" 
-          @click="updateSalary(-5)"
           :disabled="isMinIncome"
           data-testid="minus5"
+          class="btn btn-outline-secondary" 
+          @click="updateSalary(-5)"
         >
           -5万
         </button>
         <button 
           type="button" 
-          class="btn btn-outline-secondary" 
-          @click="updateSalary(5)"
           :disabled="isMaxIncome"
           data-testid="plus5"
+          class="btn btn-outline-secondary" 
+          @click="updateSalary(5)"
         >
           +5万
         </button>
         <button 
           type="button" 
-          class="btn btn-outline-secondary" 
-          @click="updateSalary(10)"
           :disabled="isMaxIncome"
           data-testid="plus10"
+          class="btn btn-outline-secondary" 
+          @click="updateSalary(10)"
         >
           +10万
         </button>

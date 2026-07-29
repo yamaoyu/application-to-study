@@ -15,8 +15,7 @@ const errorMessageMap = {
 };
 
 const makeMessage = (results: TodoResult[], action: string) => {
-  let messages = [];
-
+  const messages = [];
   for (const r of results) {
     if (r.result === "success") {
       messages.push(`【Todo${action}成功】: ${r.title}`)

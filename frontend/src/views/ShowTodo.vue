@@ -33,7 +33,7 @@
             <div class="row g-3">
                 <div class="col-md-4">
                   <label class="form-label">ステータス</label>
-                  <select class="form-select" v-model="statusFilter" data-testid="status-filter">
+                  <select v-model="statusFilter" class="form-select" data-testid="status-filter">
                     <option value="">すべて</option>
                     <option value="true">完了</option>
                     <option value="false">未完了</option>
@@ -41,16 +41,16 @@
                 </div>
                 <div class="col-md-4">
                   <label class="form-label">期限(以降)</label>
-                  <input type="date" class="form-control" v-model="startDue" data-testid="start-due">
+                  <input v-model="startDue" type="date" class="form-control" data-testid="start-due">
                 </div>
                 <div class="col-md-4">
                   <label class="form-label">期限(以前)</label>
-                  <input type="date" class="form-control" v-model="endDue" data-testid="end-due">
+                  <input v-model="endDue" type="date" class="form-control" data-testid="end-due">
                 </div>
             </div>
             <div class="mt-3">
               <label>タイトル</label>
-              <input type="text" class="form-control" v-model="title" data-testid="title">
+              <input v-model="title" type="text" class="form-control" data-testid="title">
             </div>
             <div class="d-flex justify-content-end mt-3">
               <BButton variant="secondary" class="me-2" data-testid="reset" @click="resetFilter">リセット</BButton>
@@ -62,28 +62,28 @@
           <div class="btn-group">
             <button
             type="button"
-            @click="isSelectMode = !isSelectMode"
             class="btn btn-outline-dark"
+            @click="isSelectMode = !isSelectMode"
             >
             {{ isSelectMode ? '一括操作OFF' : '一括操作ON' }}
             </button>
 
             <button
             type="button"
-            @click="confirmMultiTodoRequest('delete-multi')"
             :disabled="!isSelectMode || !selectedTodoIDs.length"
             class="btn"
             :class="isSelectMode && selectedTodoIDs.length ? 'btn-outline-dark' : 'btn-outline-secondary'"
+            @click="confirmMultiTodoRequest('delete-multi')"
             >
             一括削除
             </button>
 
             <button
             type="button"
-            @click="confirmMultiTodoRequest('finish-multi')"
             :disabled="!isSelectMode || !selectedTodoIDs.length"
             class="btn"
             :class="isSelectMode && selectedTodoIDs.length ? 'btn-outline-dark' : 'btn-outline-secondary'"
+            @click="confirmMultiTodoRequest('finish-multi')"
             >
             一括終了
             </button>
@@ -109,23 +109,23 @@
                 <th style="width: 8%;"></th>
               </tr>
             </thead>
-            <tbody v-for="(todo, index) in paginatedTodos" :key="index">
+            <tbody v-for="(row, index) in paginatedTodos" :key="index">
               <tr data-testid="todo-row">
                 <td v-if="isSelectMode">
                   <input 
+                    v-model="selectedTodoIDs"
                     class="form-check-input" 
                     type="checkbox"
-                    :value="todo.todo_id"
-                    v-model="selectedTodoIDs"
+                    :value="row.todo_id"
                   >
                 </td>
                 <td class="text-center align-middle">{{ index + currentPage * 10 - 10 + 1 }}</td>
-                <td class="text-center align-middle todo-title" @click="confirmSingleTodoRequest(todo, 'show')">{{ todo.title }}</td>
-                <td class="text-center align-middle">{{ todo.due }}</td>
-                <td class="text-center align-middle fw-bold" :class="todo.status===true ? 'text-success' : 'text-danger' ">{{ BOOL_TO_STATUS[`${todo.status}`] }}</td>
-                <td><input class="btn btn-outline-primary btn-sm" type="button" value="編集" @click="confirmSingleTodoRequest(todo, 'edit')"></td>
-                <td><input class="btn btn-outline-success btn-sm" type="button" value="終了" :disabled="todo.status===true" @click="todo.status===true ? null : confirmSingleTodoRequest(todo, 'finish')"></td>
-                <td><input class="btn btn-outline-danger btn-sm" type="button" value="削除" @click="confirmSingleTodoRequest(todo, 'delete')"></td>
+                <td class="text-center align-middle todo-title" @click="confirmSingleTodoRequest(row, 'show')">{{ row.title }}</td>
+                <td class="text-center align-middle">{{ row.due }}</td>
+                <td class="text-center align-middle fw-bold" :class="row.status===true ? 'text-success' : 'text-danger' ">{{ BOOL_TO_STATUS[`${row.status}`] }}</td>
+                <td><input class="btn btn-outline-primary btn-sm" type="button" value="編集" @click="confirmSingleTodoRequest(row, 'edit')"></td>
+                <td><input class="btn btn-outline-success btn-sm" type="button" value="終了" :disabled="row.status===true" @click="row.status===true ? null : confirmSingleTodoRequest(row, 'finish')"></td>
+                <td><input class="btn btn-outline-danger btn-sm" type="button" value="削除" @click="confirmSingleTodoRequest(row, 'delete')"></td>
               </tr>
             </tbody>
           </table>
@@ -135,12 +135,12 @@
       <nav>
         <ul class="pagination justify-content-center">
           <li class="page-item" :class="{ disabled: currentPage === 1 }">
-            <button class="page-link" @click="goToPage(1)" :disabled="currentPage === 1">
+            <button :disabled="currentPage === 1" class="page-link" @click="goToPage(1)">
               最初
             </button>
           </li>
           <li class="page-item" :class="{ disabled: currentPage === 1 }">
-            <button class="page-link" @click="goToPage(currentPage - 1)" :disabled="currentPage === 1">
+            <button :disabled="currentPage === 1" class="page-link" @click="goToPage(currentPage - 1)">
               前へ
             </button>
           </li>
@@ -152,12 +152,12 @@
           </li>
           
           <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-            <button class="page-link" @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages">
+            <button :disabled="currentPage === totalPages" class="page-link" @click="goToPage(currentPage + 1)">
               次へ
             </button>
           </li>
           <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-            <button class="page-link" @click="goToPage(totalPages)" :disabled="currentPage === totalPages">
+            <button :disabled="currentPage === totalPages" class="page-link" @click="goToPage(totalPages)">
               最後
             </button>
           </li>
@@ -171,15 +171,15 @@
 
     <BModal 
       v-model="showModal" 
+      :ok-disabled="!validateParams()"
       :title="modalTitle" 
       :ok-title="todoAction==='show' ? 'OK' : '送信'" 
       :cancel-title="todoAction==='show' ? '閉じる' : 'いいえ'" 
       @ok="sendTodoRequest"
-      :ok-disabled="!validateParams()"
     >
     <div v-if="todoAction==='finish' || todoAction==='delete'" class="text-danger">確定後は取り消せません</div>
       <div v-else-if="todoAction==='show'">
-        <div class="todo-detail" v-if="todo">
+        <div v-if="todo" class="todo-detail">
           <p><strong>期限:</strong> {{ todo.due }}</p>
           <p><strong>タイトル:</strong>{{ todo.title }}</p>
           <p v-if="todo.detail"><strong>詳細:</strong> {{ todo.detail }}</p>
@@ -234,8 +234,8 @@
           <div class="container d-flex justify-content-center">
             <div class="input-group">
               <input
-              type="date"
               v-model="newTodoDue"
+              type="date"
               class="form-control col-2"
               min="2024-01-01"
               @input="dueError = !newTodoDue"
@@ -250,8 +250,11 @@
         <div>
           <span style="font-weight: bold">選択したTodoのタイトル</span>
           <ul>
-            <li v-for="id in selectedTodoIDs" :key="id" 
-              style="display: list-item; list-style-type: disc;">
+            <li 
+              v-for="id in selectedTodoIDs"
+              :key="id" 
+              style="display: list-item; list-style-type: disc;"
+            >
               {{ todos.find(todo => todo.todo_id === id)?.title }}
             </li>
           </ul>
@@ -262,8 +265,11 @@
         <div>
           <span style="font-weight: bold">選択したTodoのタイトル</span>
           <ul>
-            <li v-for="id in selectedTodoIDs" :key="id" 
-              style="display: list-item; list-style-type: disc;">
+            <li 
+              v-for="id in selectedTodoIDs"
+              :key="id" 
+              style="display: list-item; list-style-type: disc;"
+            >
               {{ todos.find(todo => todo.todo_id === id)?.title }}
             </li>
           </ul>

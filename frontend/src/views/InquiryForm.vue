@@ -1,22 +1,22 @@
 <template>
-  <form @submit.prevent="sendRequest" class="container d-flex flex-column align-items-center">
+  <form class="container d-flex flex-column align-items-center" @submit.prevent="sendRequest">
     <div class="mt-3 col-8">
       <p class="fw-bold">カテゴリ</p>
       <div class="mt-2">
         <label class="me-2">
-          <input type="radio" value="要望" v-model="category" data-testid="request" required>要望
+          <input v-model="category" type="radio" value="要望" data-testid="request" required>要望
         </label>
         <label class="me-2">
-          <input type="radio" value="エラー報告" v-model="category" data-testid="error" required>エラー報告
+          <input v-model="category" type="radio" value="エラー報告" data-testid="error" required>エラー報告
         </label>
         <label class="me-2">
-          <input type="radio" value="その他" v-model="category" data-testid="other" required>その他
+          <input v-model="category" type="radio" value="その他" data-testid="other" required>その他
         </label>
       </div>
     </div>
     <div class="mt-3 col-8">
       <label class="fw-bold">詳細(最大256文字):</label>
-      <textarea id="detail" maxlength="256" v-model="detail" class="form-control mt-2" data-testid="detail" required></textarea>
+      <textarea id="detail" v-model="detail" maxlength="256" class="form-control mt-2" data-testid="detail" required></textarea>
     </div>
     <button type="submit" class="btn btn-outline-secondary mt-3" data-testid="submit-button">送信</button>
   </form>

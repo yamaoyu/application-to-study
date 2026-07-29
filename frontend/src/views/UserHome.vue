@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <h2 class="mt-2 mb-4">{{ date }}の活動実績</h2>
-    <div class="row" v-if="activityByDay">
+    <div v-if="activityByDay" class="row">
       <div class="col-4">
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">目標時間</h3>
@@ -37,7 +37,7 @@
   </div>
   <div class="container">
     <h2>今月の給料</h2>
-    <div class="row justify-content-center mb-4" v-if="fetchSalarySummary">
+    <div v-if="fetchSalarySummary" class="row justify-content-center mb-4">
       <div class="col-8 mb-4">
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">合計</h3>
@@ -97,27 +97,28 @@
       <!-- 中央に配置するためのコンテナ -->
       <h2 class="text-center">未完了のTodo</h2>
       <!-- 右側に絶対配置でボタンを配置 -->
-      <div class="btn-group position-absolute top-50 end-0 translate-middle-y" v-if="todos.length">
+      <div v-if="todos.length" class="btn-group position-absolute top-50 end-0 translate-middle-y">
         <BButton 
           class="btn btn-outline-secondary bi-sort-down btn-sm" 
+          :class="{ 'text-white': sortType === 'id' }"
+          data-testid="sort-todos-id"
           :variant="sortType === 'id' ? 'secondary' : 'outline-secondary'" 
           @click="sortTodos('id')" 
-          :class="{ 'text-white': sortType === 'id' }"
-          data-testid="sort-todos-id">
+        >
           登録順
         </BButton>
         <BButton 
           class="btn btn-outline-secondary bi-sort-down btn-sm" 
-          :variant="sortType === 'due' ? 'secondary' : 'outline-secondary'" 
-          @click="sortTodos('due')" 
           data-testid="sort-todos-due"
           :class="{ 'text-white': sortType === 'due' }"
+          :variant="sortType === 'due' ? 'secondary' : 'outline-secondary'" 
+          @click="sortTodos('due')" 
         >
           期限順
         </BButton>
       </div>
     </div>
-    <table class="table table-striped table-responsive" v-if="todos.length">
+    <table v-if="todos.length" class="table table-striped table-responsive">
       <thead class="table-dark">
         <tr>
           <th style="width: 5%;">No.</th>
@@ -128,26 +129,26 @@
           <th style="width: 8%;"></th>
         </tr>
       </thead>
-      <tbody v-for="(todo, index) in paginatedTodos" :key="index">
+      <tbody v-for="(row, index) in paginatedTodos" :key="index">
         <tr data-testid="todo-row">
           <td class="text-center align-middle">{{ index + 1 }}</td>
-          <td class="text-center align-middle todo-title" @click="confirmSingleTodoRequest(todo, 'show')">{{ todo.title }}</td>
-          <td class="text-center align-middle">{{ todo.due }}</td>
-          <td><input class="btn btn-outline-primary btn-sm" :data-testid="`edit-${index}`" type="button" value="編集" @click="confirmSingleTodoRequest(todo, 'edit')"></td>
-          <td><input class="btn btn-outline-success btn-sm" :data-testid="`finish-${index}`" type="button" value="終了" @click="confirmSingleTodoRequest(todo, 'finish')"></td>
-          <td><input class="btn btn-outline-danger btn-sm" :data-testid="`delete-${index}`" type="button" value="削除" @click="confirmSingleTodoRequest(todo, 'delete')"></td>
+          <td class="text-center align-middle todo-title" @click="confirmSingleTodoRequest(row, 'show')">{{ row.title }}</td>
+          <td class="text-center align-middle">{{ row.due }}</td>
+          <td><input class="btn btn-outline-primary btn-sm" :data-testid="`edit-${index}`" type="button" value="編集" @click="confirmSingleTodoRequest(row, 'edit')"></td>
+          <td><input class="btn btn-outline-success btn-sm" :data-testid="`finish-${index}`" type="button" value="終了" @click="confirmSingleTodoRequest(row, 'finish')"></td>
+          <td><input class="btn btn-outline-danger btn-sm" :data-testid="`delete-${index}`" type="button" value="削除" @click="confirmSingleTodoRequest(row, 'delete')"></td>
         </tr>
       </tbody>
     </table>
     <nav v-if="Object.keys(paginatedTodos).length > 0">
       <ul class="pagination justify-content-center">
           <li class="page-item" :class="{ disabled: currentPage === 1 }">
-              <button class="page-link" @click="goToPage(1)" :disabled="currentPage === 1">
+              <button :disabled="currentPage === 1" class="page-link" @click="goToPage(1)">
                   最初
               </button>
           </li>
           <li class="page-item" :class="{ disabled: currentPage === 1 }">
-              <button class="page-link" @click="goToPage(currentPage - 1)" :disabled="currentPage === 1">
+              <button :disabled="currentPage === 1" class="page-link" @click="goToPage(currentPage - 1)">
                   前へ
               </button>
           </li>
@@ -159,12 +160,12 @@
           </li>
           
           <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-              <button class="page-link" @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages">
+              <button :disabled="currentPage === totalPages" class="page-link" @click="goToPage(currentPage + 1)">
                   次へ
               </button>
           </li>
           <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-              <button class="page-link" @click="goToPage(totalPages)" :disabled="currentPage === totalPages">
+              <button :disabled="currentPage === totalPages" class="page-link" @click="goToPage(totalPages)">
                   最後
               </button>
           </li>
@@ -182,9 +183,9 @@
     :title="modalTitle" 
     :ok-title="todoAction==='show' ? 'OK' : '送信'" 
     :cancel-title="todoAction==='show' ? '閉じる' : 'いいえ'" 
-    @ok="sendTodoRequest"
     :ok-disabled="!validateParams()"
     data-testid="modal-show"
+    @ok="sendTodoRequest"
   >
     <div v-if="todoAction==='finish' || todoAction==='delete'" class="text-danger">確定後は取り消せません</div>
     <div v-else-if="todoAction==='show' && todo">
@@ -208,8 +209,8 @@
               class="form-control"
               :placeholder=todo.title
               maxlength="32"
-              @input="titleError = !newTodoTitle"
               data-testid="new-title"
+              @input="titleError = !newTodoTitle"
               />
             <small class="form-text text-muted position-absolute" style="right: 8px; bottom: -20px;">
               {{ (newTodoTitle || '').length }}/32
@@ -245,12 +246,12 @@
         <div class="container d-flex justify-content-center">
           <div class="input-group">
             <input
-              type="date"
               v-model="newTodoDue"
+              type="date"
               class="form-control col-2"
               min="2024-01-01"
-              @input="dueError = !newTodoDue"
               data-testid="new-due"
+              @input="dueError = !newTodoDue"
             />
           </div>
         </div>

@@ -1,14 +1,19 @@
 <template>
   <h3>ログイン</h3>
-  <form @submit.prevent="userLogin" class="container d-flex flex-column align-items-center" data-testid="login-form">
+  <form 
+    class="container d-flex flex-column align-items-center" 
+    data-testid="login-form"
+    @submit.prevent="userLogin" 
+  >
     <div class="mt-3 col-6">
-      <input type="text" placeholder="username" class="form-control" v-model="username" data-testid="username" required>
+      <input v-model="username" type="text" placeholder="username" class="form-control" data-testid="username" required>
     </div>
     <div class="mt-3 col-6">
       <div class="input-group">
-        <input :type="inputType" placeholder="password" class="form-control" v-model="password" data-testid="password" required>
-        <button class="btn btn-outline-secondary" type="button"
-                    @click="showPassword = !showPassword">
+        <input v-model="password" :type="inputType" placeholder="password" class="form-control" data-testid="password" required>
+        <button 
+          class="btn btn-outline-secondary" type="button"
+          @click="showPassword = !showPassword">
           <i :class="['bi', showPassword ? 'bi-eye-slash' : 'bi-eye']"></i>
         </button>
       </div>

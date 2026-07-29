@@ -25,7 +25,7 @@ export const usePage = (todos: Ref<GetTodoResponse[]>, itemNum: number) => {
     const pages = [];
     const maxVisiblePages = 5;
     let start = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2))
-    let end = Math.min(totalPages.value, start + maxVisiblePages - 1)
+    const end = Math.min(totalPages.value, start + maxVisiblePages - 1)
 
     // 最後のページが表示範囲に入るように調整
     if (end - start + 1 < maxVisiblePages) {

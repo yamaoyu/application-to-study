@@ -11,7 +11,7 @@
     <div class="collapse" :class="{ 'show': isFormVisible }">
       <div class="text-start mt-3">
         <div class="form-check form-check-inline">
-          <input class="form-check-input" type="checkbox" v-model="isPasswordChangeEnabled" data-testid="isPasswordChangeEnabled">
+          <input v-model="isPasswordChangeEnabled" class="form-check-input" type="checkbox" data-testid="isPasswordChangeEnabled">
           <label class="form-check-label" for="changePassword">パスワードを変更する</label>
         </div>
       </div>
@@ -19,20 +19,24 @@
       <BForm @submit.prevent="changePassword">
         <div class="form-group mt-3">
           <div class="input-group">
-            <BFormInput :type="!showOldPassword ? 'password':'text'" placeholder="現在のパスワード(必須)" v-model="oldPassword" :disabled="!isPasswordChangeEnabled" required data-testid="oldPassword"/>
-            <button class="btn btn-outline-secondary" type="button" 
-                    @click="showOldPassword = !showOldPassword"
-                    :disabled="!isPasswordChangeEnabled">
+            <BFormInput v-model="oldPassword" :type="!showOldPassword ? 'password':'text'" placeholder="現在のパスワード(必須)" :disabled="!isPasswordChangeEnabled" required data-testid="oldPassword"/>
+            <button 
+                class="btn btn-outline-secondary" type="button" 
+                :disabled="!isPasswordChangeEnabled"
+                @click="showOldPassword = !showOldPassword"
+              >
               <i :class="['bi', showOldPassword ? 'bi-eye-slash' : 'bi-eye']"></i>
             </button>
           </div>
         </div>
         <div class="form-group mt-3">
           <div class="input-group">
-            <BFormInput :type="!showNewPassword ? 'password':'text'" placeholder="新しいパスワード(必須)" v-model="newPassword" :disabled="!isPasswordChangeEnabled" :state="passwordValidateResult.valid" required data-testid="newPassword"/>
-            <button class="btn btn-outline-secondary" type="button"
-                    @click="showNewPassword = !showNewPassword"
-                    :disabled="!isPasswordChangeEnabled">
+            <BFormInput v-model="newPassword" :type="!showNewPassword ? 'password':'text'" placeholder="新しいパスワード(必須)" :disabled="!isPasswordChangeEnabled" :state="passwordValidateResult.valid" required data-testid="newPassword"/>
+            <button 
+                class="btn btn-outline-secondary" type="button"
+                :disabled="!isPasswordChangeEnabled"
+                @click="showNewPassword = !showNewPassword"
+              >
               <i :class="['bi', showNewPassword ? 'bi-eye-slash' : 'bi-eye']"></i>
             </button>
           </div>
@@ -47,10 +51,12 @@
         </div>
         <div class="form-group mt-3">
           <div class="input-group">
-            <BFormInput :type="!showNewPasswordCheck ? 'password':'text'" placeholder="新しいパスワード確認(必須)" v-model="newPasswordCheck" :disabled="!isPasswordChangeEnabled" :state="passwordEqualResult.valid" required data-testid="newPasswordCheck"/>
-            <button class="btn btn-outline-secondary" type="button"
-                    @click="showNewPasswordCheck = !showNewPasswordCheck"
-                    :disabled="!isPasswordChangeEnabled">
+            <BFormInput v-model="newPasswordCheck" :type="!showNewPasswordCheck ? 'password':'text'" placeholder="新しいパスワード確認(必須)" :disabled="!isPasswordChangeEnabled" :state="passwordEqualResult.valid" required data-testid="newPasswordCheck"/>
+            <button 
+                class="btn btn-outline-secondary" type="button"
+                :disabled="!isPasswordChangeEnabled"
+                @click="showNewPasswordCheck = !showNewPasswordCheck"
+              >
               <i :class="['bi', showNewPasswordCheck ? 'bi-eye-slash' : 'bi-eye']"></i>
             </button>
           </div>
