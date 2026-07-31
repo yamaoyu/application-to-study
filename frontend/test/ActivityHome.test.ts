@@ -5,7 +5,7 @@ import ActualTab from '@/views/ActualTab.vue';
 import FinishTab from '@/views/FinishTab.vue';
 import { mountComponent, mockRouterPush } from './vitest.setup';
 import { apiClient } from '@/views/api/client';
-import { flushPromises, VueWrapper } from '@vue/test-utils';
+import { flushPromises } from '@vue/test-utils';
 
 const mockedGet = vi.mocked(apiClient.get);
 
@@ -29,7 +29,11 @@ const defaultIncomeData = {
   pay_adjustment: 0.38
 };
 
-const createResolvedMock = (data: Record<string, any>, status = 200): mock => ({
+type Mock<T = unknown> =
+  | { type: 'resolve'; value: { status: number; data: T } }
+  | { type: 'reject'; value: { response: { status: number; data: { code: string } } } };
+
+const createResolvedMock = <T>(data: T, status = 200): Mock<T> => ({
   type: "resolve",
   value: {
     status: status,
@@ -50,7 +54,7 @@ const createRejectedMock = (code: string, status = 404): mock => ({
 });
 
 type mock =
-  | { type: 'resolve'; value: { status: number; data: Record<string, any> } }
+  | { type: 'resolve'; value: { status: number; data: Record<string, string> } }
   | { type: 'reject'; value: { response: { status: number; data: { code: string } } } };
 
 
@@ -58,7 +62,7 @@ const mountActivityHome = async ({
   activityMock = createResolvedMock(defaultActivityData),
   pendingMock = createResolvedMock(defaultActivityData),
   incomeMock = createResolvedMock(defaultIncomeData),
-}: { activityMock?: mock, pendingMock?: mock, incomeMock?: mock } = {}) => {
+}: { activityMock?: Mock, pendingMock?: Mock, incomeMock?: Mock } = {}) => {
   [activityMock, pendingMock, incomeMock].forEach((mock) => {
     if (mock.type === "reject") {
       mockedGet.mockRejectedValueOnce(mock.value);
@@ -73,11 +77,9 @@ const mountActivityHome = async ({
 }
 
 describe('選択した日の活動登録状況確認', () => {
-  let wrapper: VueWrapper;
 
   beforeEach(() => {
     vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-    wrapper = mountComponent(ActivityHome);
   }
   );
 
@@ -103,8 +105,6 @@ describe('選択した日の活動登録状況確認', () => {
 
 
 describe('タブの切り替え', () => {
-  let wrapper: VueWrapper;
-
   beforeEach(() => {
     vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
   }
@@ -134,8 +134,6 @@ describe('タブの切り替え', () => {
 });
 
 describe('月収の登録状況に応じたリダイレクト', async () => {
-  let wrapper: VueWrapper;
-
   beforeEach(() => {
     vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
   });

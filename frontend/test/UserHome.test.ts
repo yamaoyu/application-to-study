@@ -13,9 +13,6 @@ const expectedYear = Number(today[0]);
 const expectedMonth = Number(today[1]);
 const expectedDate = Number(today[2]);
 
-type mock =
-    | { type: 'resolve'; value: { status: number; data: Record<string, any> } }
-    | { type: 'reject'; value: { response: { status: number; data: { code: string } } } };
 
 const defaultActivityData = {
     date: `${expectedYear}-${expectedMonth}-${expectedDate}`,
@@ -48,31 +45,45 @@ const defaultTodosData = [
     }
 ];
 
-const createResolvedMock = (data: Record<string, any>, status = 200): mock => ({
+type ApiMock<ResponseData> =
+    | { type: 'resolve'; value: { status: number; data: ResponseData } }
+    | { type: 'reject'; value: { response: { status: number; data: { code: string } } } };
+
+type ActivityData = typeof defaultActivityData;
+type IncomeData = typeof defaultIncomeData;
+type TodosData = typeof defaultTodosData;
+
+const createResolvedMock = <ResponseData>(
+    data: ResponseData,
+    status = 200,
+): ApiMock<ResponseData> => ({
     type: "resolve",
     value: {
-        status: status,
-        data: data
-    }
+        status,
+        data,
+    },
 });
 
-const createRejectedMock = (code: string, status = 404): mock => ({
+const createRejectedMock = <ResponseData = unknown>(
+    code: string,
+    status = 404,
+): ApiMock<ResponseData> => ({
     type: "reject",
     value: {
         response: {
             status,
             data: {
-                code
-            }
-        }
-    }
+                code,
+            },
+        },
+    },
 });
 
 const mountUserHome = async ({
     activityMock = createResolvedMock(defaultActivityData),
     incomeMock = createResolvedMock(defaultIncomeData),
     todosMock = createResolvedMock(defaultTodosData),
-}: { activityMock?: mock, incomeMock?: mock, todosMock?: mock } = {}) => {
+}: { activityMock?: ApiMock<ActivityData>, incomeMock?: ApiMock<IncomeData>, todosMock?: ApiMock<TodosData> } = {}) => {
     [activityMock, incomeMock, todosMock].forEach((mock) => {
         if (mock.type === "reject") {
             mockedGet.mockRejectedValueOnce(mock.value);
@@ -248,7 +259,6 @@ describe('Todoの操作', () => {
         // モーダルが開かれていることを確認
         const modal = document.body.querySelector("[data-testid='modal-show']");
         expect(modal).not.toBeNull();
-        expect((wrapper.vm as any).modalTitle).toEqual("Todo編集");
         // 編集モードであることを確認してからOkボタンをクリック
         const bModal = wrapper.findComponent({ name: 'BModal' });
         expect(bModal.props("title")).toBe("Todo編集");
@@ -306,7 +316,6 @@ describe('Todoの操作', () => {
         // モーダルが開かれていることを確認
         const modal = document.body.querySelector("[data-testid='modal-show']");
         expect(modal).not.toBeNull();
-        expect((wrapper.vm as any).modalTitle).toEqual("Todo終了確認");
         // 終了モードであることを確認してからOkボタンをクリック
         const bModal = wrapper.findComponent({ name: 'BModal' });
         expect(bModal.props("title")).toBe("Todo終了確認");
@@ -351,7 +360,6 @@ describe('Todoの操作', () => {
         // モーダルが開かれていることを確認
         const modal = document.body.querySelector("[data-testid='modal-show']");
         expect(modal).not.toBeNull();
-        expect((wrapper.vm as any).modalTitle).toEqual("Todo終了確認");
         // 終了モードであることを確認してからOkボタンをクリック
         const bModal = wrapper.findComponent({ name: 'BModal' });
         expect(bModal.props("title")).toBe("Todo終了確認");
@@ -406,7 +414,6 @@ describe('Todoの操作', () => {
         // モーダルが開かれていることを確認
         const modal = document.body.querySelector("[data-testid='modal-show']");
         expect(modal).not.toBeNull();
-        expect((wrapper.vm as any).modalTitle).toEqual("Todo削除確認");
         // 削除モードであることを確認してからOkボタンをクリック
         const bModal = wrapper.findComponent({ name: 'BModal' });
         expect(bModal.props("title")).toBe("Todo削除確認");
@@ -449,8 +456,6 @@ describe('Todoのソート', () => {
 });
 
 describe('Todoリストページ', () => {
-    let wrapper: VueWrapper;
-
     beforeEach(() => {
         vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
     }

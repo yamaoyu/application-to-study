@@ -25,19 +25,23 @@ const defaultTodosData = [
   },
 ];
 
+type TodoData = typeof defaultTodosData;
+
 type TodosMock =
-  | { type: 'resolve'; value: { status: number; data: Record<string, any> } }
+  | { type: 'resolve'; value: { status: number; data: TodoData } }
   | {
     type: 'reject';
     value: {
       response: {
         status: number;
-        data: {}
+        data: {
+          code: string;
+        };
       }
     }
   };
 
-const createResolvedMock = (data: Record<string, any>, status = 200) => ({
+const createResolvedMock = (data: TodoData, status = 200) => ({
   type: "resolve",
   value: {
     status,
