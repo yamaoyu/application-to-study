@@ -10,7 +10,7 @@ export const validateTodo = (todoAction: SingleTodoAction, todo: UpsertTodoParam
 };
 
 export const ConfirmTodoRequest = (
-  todo: Ref,
+  todo: Ref<TodoInfo | undefined>,
   selectedTodoIDs: Ref<number[]>,
   newTodoTitle: Ref<string>,
   newTodoDetail: Ref<string>,

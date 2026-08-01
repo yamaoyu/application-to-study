@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { UserRole } from '@/views/types/auth'
 
 export const useAuthStore = defineStore('authStore', {
   state: () => ({
@@ -51,8 +52,13 @@ export const useAuthStore = defineStore('authStore', {
   },
 })
 
+type RoleState = {
+  role: UserRole | "";
+};
+
+
 export const useRoleStore = defineStore('roleStore', {
-  state: () => ({
+  state: (): RoleState => ({
     role: ""
   }),
   getters: {
@@ -61,7 +67,7 @@ export const useRoleStore = defineStore('roleStore', {
     }
   },
   actions: {
-    setRole(role: string) {
+    setRole(role: UserRole) {
       this.role = role;
     },
     clearRole() {

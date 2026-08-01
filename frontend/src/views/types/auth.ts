@@ -1,4 +1,4 @@
-export type UserRole = "general" | "role"
+export type UserRole = "general" | "admin"
 
 export type LoginResponse = {
     access_token: string,

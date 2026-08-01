@@ -20,7 +20,7 @@
               <input class="btn btn-outline-primary btn-sm" type="button" value="編集" @click="openModal(row, 'edit')">
             </td>
             <td>
-              <input class="btn btn-outline-danger btn-sm" type="button" value="削除" :data-testid="`del-todo-${index}`" @click="openModal(todo, 'delete')">
+              <input class="btn btn-outline-danger btn-sm" type="button" value="削除" :data-testid="`del-todo-${index}`" @click="openModal(row, 'delete')">
             </td>
         </tr>
         <tr class="table-secondary">

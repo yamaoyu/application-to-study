@@ -14,7 +14,7 @@ export const useRegisterActuals = () => {
   const statusCode = ref<number | null>(null);
 
   const makeMessage = (results: RegisterActualResult[]) => {
-    let messages = [];
+    const messages = [];
     for (const r of results) {
       if (r.result === "success") {
         messages.push(`${r.date}の活動時間を${r.actual_time}時間に登録しました`);
