@@ -5,6 +5,20 @@ import { jwtDecode } from 'jwt-decode';
 import { useRouter } from 'vue-router';
 import { useAuthStore, useRoleStore } from '@/store/authenticate';
 import axios from 'axios';
+import { AuthTokenResponse } from '../types/auth';
+
+export const setAuthDataFromToken = (
+  authStore: ReturnType<typeof useAuthStore>,
+  response: AuthTokenResponse
+) => {
+  const decoded = jwtDecode(response.access_token);
+
+  if (!decoded.exp) {
+    throw new Error("トークンの有効期限がありません");
+  }
+
+  authStore.setAuthData(response.access_token, response.token_type, decoded.exp);
+};
 
 
 export const useLogin = () => {
@@ -32,11 +46,7 @@ export const useLogin = () => {
     try {
       const response = await login(username.value, password.value);
       if (response.status === 200) {
-        authStore.setAuthData(
-          response.data.access_token,
-          response.data.token_type,
-          jwtDecode(response.data.access_token).exp
-        )
+        await setAuthDataFromToken(authStore, response.data)
 
         roleStore.setRole(response.data.role)
 
