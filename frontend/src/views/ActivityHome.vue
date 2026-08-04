@@ -138,11 +138,11 @@ import { useRouter } from 'vue-router';
 import TargetTab from './TargetTab.vue';
 import ActualTab from './ActualTab.vue';
 import FinishTab from './FinishTab.vue';
-import { useFetchActivtiesByStatus, useFetchActivityByDay } from './composables/useActivitiesFetch.js';
+import { useFetchActivtiesByStatus, useFetchActivityByDay } from './composables/useActivitiesFetch';
 import { useFetchMonthlySalary } from './composables/useSalary';
 import { getResponseAlert, getStatusColors, STATUS_DICT } from './utils/ui';
 import { changeDate, getThisMonth, getMaxDate } from './utils/date';
-import { parseError } from './utils/error.js';
+import { parseError } from './utils/error';
 
 export default {
     components: {

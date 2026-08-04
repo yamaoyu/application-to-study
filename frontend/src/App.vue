@@ -3,7 +3,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   </head>
   <nav 
-    v-if="(!MENU_SHOW_ROUTES.includes(String(route.name)))" 
+    v-if="(!MENU_SHOW_ROUTES.includes($router.currentRoute.value.name))" 
     class="navbar navbar-expand-lg bd-navbar fixed-top bg-dark navbar-dark"
   >
     <div class="container-fluid">

@@ -73,5 +73,5 @@ export const parseError = (error: unknown, message: string) => {
     return "リクエストがサーバーに到達できませんでした";
   };
 
-  return "不明なエラーが発生しました";
+  return message;
 };

@@ -335,9 +335,9 @@ export default{
     };
 
     const sendTodoRequest = async() =>{
-      if (todoAction.value==='finish'){
+      if (todoAction.value.includes("finish")){
         await completeTodos();
-      } else if (todoAction.value==='delete') {
+      } else if (todoAction.value.includes('delete')) {
         await removeTodos();
         if (currentPage.value > totalPages.value) {
           currentPage.value = totalPages.value;

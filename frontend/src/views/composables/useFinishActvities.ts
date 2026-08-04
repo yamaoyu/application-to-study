@@ -31,9 +31,9 @@ export const useFinishActivities = () => {
     const bonusAndPenalty: number = data.pay_adjustment;
     const totalBonus: number = data.total_bonus;
     const totalPenalty: number = data.total_penalty;
-    if (data.pay_adjustment) messages.push(`ボーナス-ペナルティ：${bonusAndPenalty}万円(${convert_ten_thousand_yen_to_yen(bonusAndPenalty)}円)`);
-    if (data.total_bonus) messages.push(`ボーナス：${totalBonus}万円(${convert_ten_thousand_yen_to_yen(totalBonus)}円)`);
-    if (data.total_penalty) messages.push(`ペナルティ：${totalPenalty}万円(${convert_ten_thousand_yen_to_yen(totalPenalty)}円)`);
+    messages.push(`ボーナス-ペナルティ：${bonusAndPenalty}万円(${convert_ten_thousand_yen_to_yen(bonusAndPenalty)}円)`);
+    messages.push(`ボーナス：${totalBonus}万円(${convert_ten_thousand_yen_to_yen(totalBonus)}円)`);
+    messages.push(`ペナルティ：${totalPenalty}万円(${convert_ten_thousand_yen_to_yen(totalPenalty)}円)`);
     for (const result of data.results) {
       if (result.result === 'success') {
         messages.push(`${makeSuccessMessage(result.date, result.status, result.bonus, result.penalty)}`);

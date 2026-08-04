@@ -19,7 +19,7 @@ export const useSendInquiry = () => {
           `カテゴリ:${res.data.category}\n`,
           `内容:${res.data.detail}`].join('');
         // 内容をリセット
-        category.value = "要望";
+        category.value = DEFAULT_INQUIRY_CATEGORY;
         detail.value = "";
       }
     } catch (error) {

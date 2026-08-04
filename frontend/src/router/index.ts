@@ -18,54 +18,54 @@ const routes = [
     component: RegisterUser
   },
   {
-    path:'/login',
-    name:'Login',
+    path: '/login',
+    name: 'Login',
     component: LoginView
   },
   {
-    path:'/home',
-    name:'Home',
+    path: '/home',
+    name: 'Home',
     component: UserHome
   },
   {
-    path:'/register/salary',
-    name:'RegisterSalary',
+    path: '/register/salary',
+    name: 'RegisterSalary',
     component: RegisterSalary
   },
   {
-    path:"/register/todo",
-    name:"RegisterTodo",
-    component:RegisterTodo
+    path: "/register/todo",
+    name: "RegisterTodo",
+    component: RegisterTodo
   },
   {
-    path:"/register/inquiry",
-    name:"InquiryForm",
-    component:InquiryForm
+    path: "/register/inquiry",
+    name: "InquiryForm",
+    component: InquiryForm
   },
   {
-    path:"/user/info",
-    name:"UserInfo",
-    component:UserInfo
+    path: "/user/info",
+    name: "UserInfo",
+    component: UserInfo
   },
   {
-    path:"/register/activity",
-    name:"ActivityHomw",
-    component:ActivityHome
+    path: "/register/activity",
+    name: "ActivityHome",
+    component: ActivityHome
   },
   {
-    path:"/view/activity",
-    name:"ActivityInfo",
-    component:ActivityInfo
+    path: "/view/activity",
+    name: "ActivityInfo",
+    component: ActivityInfo
   },
   {
-    path:"/view/todo",
-    name:"ShowTodo",
-    component:ShowTodo
+    path: "/view/todo",
+    name: "ShowTodo",
+    component: ShowTodo
   },
   {
-    path:"/show/inquiry",
-    name:"ShowInquiry",
-    component:ShowInquiry
+    path: "/show/inquiry",
+    name: "ShowInquiry",
+    component: ShowInquiry
   }
 ]
 

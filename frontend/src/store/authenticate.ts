@@ -13,9 +13,9 @@ export const useAuthStore = defineStore('authStore', {
     isToken(): boolean {
       return Boolean(this.accessToken)
     },
-    getAuthHeader(): string {
+    getAuthHeader(): string | null {
       if (!this.accessToken && !this.tokenType) {
-        return '登録なし'
+        return null
       }
       return `${this.tokenType} ${this.accessToken}`
     },

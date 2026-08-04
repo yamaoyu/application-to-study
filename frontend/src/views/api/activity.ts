@@ -10,7 +10,8 @@ import {
   GetActivitiesByStatus,
   GetActivitiesByMonthResponse,
   GetActivitiesByYearResponse,
-  ActivityStatus
+  ActivityStatus,
+  ActivitySummary
 } from '../types/activity';
 import type { AxiosResponse } from "axios";
 
@@ -47,7 +48,7 @@ export const getActivitiesByYear = (
   )
 };
 
-export const getAllActivities = () => {
+export const getAllActivities = (): Promise<AxiosResponse<ActivitySummary>> => {
   return apiClient.get(
     "activities/total"
   )

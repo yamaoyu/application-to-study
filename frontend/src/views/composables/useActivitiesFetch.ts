@@ -25,7 +25,7 @@ export const useFetchActivtiesByStatus = () => {
       pendingMsg.value = "";
       pendingStatus.value = res.status;
     } catch (error) {
-      pendingMsg.value = parseError(error, "月収の取得に失敗しました");
+      pendingMsg.value = parseError(error, "活動記録の取得に失敗しました");
       pendingActivities.value = [];
       pendingStatus.value = null;
     }
