@@ -96,7 +96,7 @@
 
 <script lang="ts">
 import { ref, computed } from 'vue';
-import { validateTargetTime, hasDuplicateDate, isValidActivities } from './utils/activityValidation';
+import { validateTargetTime, hasDuplicateDate, isValidActivities } from './utils/activity';
 import { getMaxDate, getToday } from './utils/date';
 import { useRegisterTargets, addTargetActivity, removeTargetActivity } from './composables/useTargetActivities';
 import { BModal, BCard, BCardText } from 'bootstrap-vue-next';

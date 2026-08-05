@@ -73,6 +73,10 @@ def get_validation_error_code(error_type: str, field) -> str:
                 return "INVALID_EMAIL"
             case "category":
                 return "INVALID_CATEGORY"
+            case "username":
+                return "INVALID_USERNAME"
+            case "new_password" | "password":
+                return "INVALID_PASSWORD"
             case _:
                 return "INVALID_VALUE"
 

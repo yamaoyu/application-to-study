@@ -140,7 +140,7 @@
         </tr>
       </tbody>
     </table>
-    <nav v-if="Object.keys(paginatedTodos).length > 0">
+    <nav v-if="paginatedTodos.length > 0">
       <ul class="pagination justify-content-center">
           <li class="page-item" :class="{ disabled: currentPage === 1 }">
               <button :disabled="currentPage === 1" class="page-link" @click="goToPage(1)">

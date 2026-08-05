@@ -72,7 +72,7 @@ export const registerActuals = (
   )
 };
 
-export const finishActivies = (
+export const finishActivities = (
   dates: SendFinishActivityParam
 ): Promise<AxiosResponse<FinishActivityResponse>> => {
   return apiClient.put(

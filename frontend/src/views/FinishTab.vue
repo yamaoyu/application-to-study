@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="Object.keys(finishableActivities).length > 0" class="mt-3">
+    <div v-if="finishableActivities.length > 0" class="mt-3">
       <BCard class="border-0 shadow-sm mt-3" bg-variant="light">
         <div class="text-center">
           <h5 class="card-title text-primary fw-bold mb-2">
@@ -17,7 +17,7 @@
           data-testid="select-all-activities"
           @click="toggleAll(finishableActivities)"
         >
-          {{ Object.keys(finishableActivities).length===Object.keys(selectedActivities).length ? '全て解除' : '全て選択' }}
+          {{ finishableActivities.length===selectedActivities.length ? '全て解除' : '全て選択' }}
         </button>
       </BCard>
       <table class="table table-striped table-responsive">
@@ -75,7 +75,7 @@
 <script lang="ts">
 import { ref, watch, type PropType } from 'vue';
 import { BModal, BCard, BCardText } from 'bootstrap-vue-next';
-import { useFinishActivities } from './composables/useFinishActvities';
+import { useFinishActivities } from './composables/useFinishActivities';
 import { getAdjustmentColors } from './utils/ui';
 import { useSelection } from './composables/useSelection';
 import { OneActivity } from './types/activity';

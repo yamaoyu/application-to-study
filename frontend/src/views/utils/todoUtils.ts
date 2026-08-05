@@ -56,12 +56,23 @@ export const ConfirmTodoRequest = (
       modalTitle.value = "Todo一括削除確認";
     }
   };
+
+  const canSubmit = (): boolean => {
+    if (["show", "finish", "delete"].includes(todoAction.value)) {
+      return true;
+    } else if (todoAction.value === "delete-multi" || todoAction.value === "finish-multi") {
+      return !!(selectedTodoIDs.value.length);
+    }
+    return !!(newTodoTitle.value && newTodoDue.value);
+  };
+
   return {
     showModal,
     titleError,
     dueError,
     todoAction,
     modalTitle,
+    canSubmit,
     confirmSingleTodoRequest,
     confirmMultiTodoRequest
   }

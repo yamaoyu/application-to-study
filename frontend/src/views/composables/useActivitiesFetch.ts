@@ -13,7 +13,7 @@ import {
 } from "../types/activity";
 
 
-export const useFetchActivtiesByStatus = () => {
+export const useFetchActivitiesByStatus = () => {
   const pendingMsg = ref<string>("");
   const pendingActivities = ref<OneActivity[]>([]);
   const pendingStatus = ref<number | null>(null);
@@ -92,15 +92,7 @@ export const useFetchActivitiesByMonth = () => {
       const [year, month] = selectedMonth.value.split('-').map(Number)
       const res = await getActivitiesByMonth(year, month);
       monthlyActivities.value = res.data.activity_list;
-      monthlySummary.value = {
-        total_income: res.data.total_income,
-        salary: res.data.salary,
-        pay_adjustment: res.data.pay_adjustment,
-        bonus: res.data.bonus,
-        penalty: res.data.penalty,
-        success_days: res.data.success_days,
-        fail_days: res.data.fail_days
-      }
+      monthlySummary.value = res.data
       monthlyActivitiesMessage.value = ""
     } catch (error) {
       monthlyActivitiesMessage.value = parseError(error, `${selectedMonth.value}の活動取得に失敗しました`);
@@ -129,15 +121,7 @@ export const useFetchActivitiesByYear = () => {
       const res = await getActivitiesByYear(selectedYear.value);
       yearlyActivities.value = res.data.monthly_info;
       yearlyActivitiesMessage.value = "";
-      yearlySummary.value = {
-        total_income: res.data.total_income,
-        salary: res.data.salary,
-        pay_adjustment: res.data.pay_adjustment,
-        bonus: res.data.bonus,
-        penalty: res.data.penalty,
-        success_days: res.data.success_days,
-        fail_days: res.data.fail_days
-      }
+      yearlySummary.value = res.data
     } catch (error) {
       yearlyActivitiesMessage.value = parseError(error, `${selectedYear.value}の活動取得に失敗しました`);
       yearlyActivities.value = undefined;
@@ -163,15 +147,7 @@ export const useFetchAllActivities = () => {
       const res = await getAllActivities();
       if (res.status === 200) {
         allActivitiesMessage.value = "";
-        allActivitiesSummary.value = {
-          total_income: res.data.total_income,
-          salary: res.data.salary,
-          pay_adjustment: res.data.pay_adjustment,
-          bonus: res.data.bonus,
-          penalty: res.data.penalty,
-          success_days: res.data.success_days,
-          fail_days: res.data.fail_days
-        }
+        allActivitiesSummary.value = res.data
       }
     } catch (error) {
       allActivitiesMessage.value = parseError(error, "全期間の活動記録取得に失敗しました");

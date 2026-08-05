@@ -8,8 +8,8 @@ import { createBootstrap } from 'bootstrap-vue-next';
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue-next/dist/bootstrap-vue-next.css";
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
-import { verifyRefreshToken } from './views/api/auth.js';
-import { setAuthDataFromToken } from './views/composables/useAuth.js';
+import { verifyRefreshToken } from './views/api/auth';
+import { setAuthDataFromToken } from './views/composables/useAuth';
 
 const pinia = createPinia();
 pinia.use(createPersistedState());

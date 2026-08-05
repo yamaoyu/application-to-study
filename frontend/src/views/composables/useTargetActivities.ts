@@ -1,6 +1,7 @@
 import { ref } from 'vue';
 import { registerTargets } from '../api/activity';
-import { parseError, getErrorMessageByCode } from '../utils/error';
+import { parseError } from '../utils/error';
+import { formatFailureMessage } from '../utils/activity';
 import axios from 'axios';
 import {
   SendTargetActivityParam,
@@ -14,18 +15,15 @@ export const useRegisterTargets = () => {
   const statusCode = ref<number | null>(null);
 
   const makeMessage = (results: RegisterTargetResult[]) => {
-    const messages = [];
-    for (const r of results) {
-      if (r.result === "success") {
-        messages.push(`${r.date}の目標時間を${r.target_time}時間に登録しました`);
-        continue;
-      } else {
-        const message = getErrorMessageByCode(r.reason);
-        messages.push(`${r.date}の目標時間登録に失敗: ${message}`);
-        continue;
-      }
-    }
-    return messages.join("\n");
+    return results
+      .map((r) => {
+        if (r.result === "success") {
+          return `${r.date}の目標時間を${r.target_time}時間に登録しました`;
+        }
+
+        return formatFailureMessage(r.date, "目標時間登録", r.reason);
+      })
+      .join("\n");
   };
 
   const sendRequest = async () => {

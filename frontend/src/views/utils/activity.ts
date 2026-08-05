@@ -1,4 +1,10 @@
-import { SendTargetActivityParam } from "../types/activity";
+import {
+  SendTargetActivityParam,
+  RegisterTargetErrorReason,
+  RegisterActualErrorReason,
+  FinishActivityErrorReason
+} from "../types/activity";
+import { getErrorMessageByCode } from "./error";
 
 export const validateTargetTime = (time: number) => {
   if (time === null || time === undefined) {
@@ -34,4 +40,12 @@ export const validateActualTime = (time: number) => {
   }
 
   return null
+};
+
+export const formatFailureMessage = (
+  date: string,
+  actionLabel: "目標時間登録" | "活動時間登録",
+  reason: RegisterTargetErrorReason | RegisterActualErrorReason | FinishActivityErrorReason
+) => {
+  return `${date}の${actionLabel}に失敗: ${getErrorMessageByCode(reason)}`;
 };

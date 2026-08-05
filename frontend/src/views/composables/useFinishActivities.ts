@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import { finishActivies } from '../api/activity';
+import { finishActivities } from '../api/activity';
 import { parseError, getErrorMessageByCode } from '../utils/error';
 import {
   OneActivity,
@@ -48,7 +48,7 @@ export const useFinishActivities = () => {
   const sendRequest = async () => {
     try {
       const dates = selectedActivities.value.map(activity => activity.date);
-      const res = await finishActivies(dates);
+      const res = await finishActivities(dates);
       if (res.status === 200) {
         reqMsg.value = makeMsg(res.data);
         selectedActivities.value = [];

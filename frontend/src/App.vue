@@ -3,7 +3,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   </head>
   <nav 
-    v-if="(!MENU_SHOW_ROUTES.includes($router.currentRoute.value.name))" 
+    v-if="(!MENU_SHOW_ROUTES.includes(`{$router.currentRoute.value.name}`))" 
     class="navbar navbar-expand-lg bd-navbar fixed-top bg-dark navbar-dark"
   >
     <div class="container-fluid">
@@ -93,8 +93,8 @@
   </BContainer>
 </template>
 
-<script>
-import { computed } from 'vue';
+<script lang="ts">
+import { computed, type ComputedRef } from 'vue';
 import { BContainer } from 'bootstrap-vue-next';
 import { useLogout } from './views/composables/useAuth';
 
@@ -105,8 +105,8 @@ export default {
 
   setup() {
     const { message, userLogout, roleStore } = useLogout();
-    const MENU_SHOW_ROUTES = ["Login", "RegisterUser"];
-    const isAdmin = computed(() => {
+    const MENU_SHOW_ROUTES: string[] = ["Login", "RegisterUser"];
+    const isAdmin: ComputedRef<boolean> = computed(() => {
       return roleStore.getRole === "admin"
     });;
 

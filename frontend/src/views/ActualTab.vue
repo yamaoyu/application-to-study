@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="Object.keys(editableActivities).length > 0" class="mt-3">
+    <div v-if="editableActivities.length > 0" class="mt-3">
       <BCard class="border-0 shadow-sm mt-3" bg-variant="light">
         <div class="text-center">
           <h5 class="card-title text-primary fw-bold mb-2">
@@ -137,7 +137,7 @@
 
 <script lang="ts">
 import { ref, computed, watch, type PropType } from 'vue';
-import { validateActualTime } from './utils/activityValidation';
+import { validateActualTime } from './utils/activity';
 import { useRegisterActuals } from './composables/useActualActivities';
 import { getMaxDate, getToday } from './utils/date';
 import { BModal, BCard, BCardText } from 'bootstrap-vue-next';

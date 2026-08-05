@@ -1,6 +1,6 @@
 <template>
   <h3>Todoの登録</h3>
-  <form @submit.prevent="regitserTodos">
+  <form @submit.prevent="registerTodos">
     <table class="table table-striped table-responsive">
       <thead class="table-dark">
         <tr>
@@ -153,7 +153,7 @@ export default {
     const dueError = ref<boolean>(false); // todo編集時、期限に入力がない場合のメッセージを表示
     const today = getToday();
     const { showModal, modalTitle, todoAction, todo, openModal, closeModal } = useTodoModal();
-    const { todos, message, statusCode, regitserTodos } = useRegisterTodos();
+    const { todos, message, statusCode, registerTodos } = useRegisterTodos();
 
     watch(() => todos.value.length, () => {
       if (todos.value.length>=10){
@@ -174,7 +174,7 @@ export default {
       titleError,
       dueError,
       today,
-      regitserTodos,
+      registerTodos,
       getResponseAlert,
       openModal,
       validateTodo,

@@ -171,7 +171,7 @@
 
     <BModal 
       v-model="showModal" 
-      :ok-disabled="!validateParams()"
+      :ok-disabled="!canSubmit()"
       :title="modalTitle" 
       :ok-title="todoAction==='show' ? 'OK' : '送信'" 
       :cancel-title="todoAction==='show' ? '閉じる' : 'いいえ'" 
@@ -310,17 +310,9 @@ export default{
       todoAction,
       modalTitle,
       confirmSingleTodoRequest, 
-      confirmMultiTodoRequest 
+      confirmMultiTodoRequest,
+      canSubmit,
     } = ConfirmTodoRequest(todo, selectedTodoIDs, newTodoTitle, newTodoDetail, newTodoDue);
-
-    const validateParams = () => {
-      if (["show", "finish", "delete"].includes(todoAction.value)) {
-        return true;
-      } else if (todoAction.value === "delete-multi"|| todoAction.value === "finish-multi"){
-        return !!(selectedTodoIDs.value.length);
-      }
-      return !!(newTodoTitle.value && newTodoDue.value);
-    };
 
     const toggleFormVisibility = () => {
       isFormVisible.value = !isFormVisible.value;
@@ -376,7 +368,7 @@ export default{
       todoAction,
       titleError,
       dueError,
-      validateParams,
+      canSubmit,
       toggleFormVisibility,
       resetFilter,
       confirmSingleTodoRequest,

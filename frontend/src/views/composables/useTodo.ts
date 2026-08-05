@@ -34,7 +34,7 @@ export const useRegisterTodos = () => {
   const message = ref<string>("");
   const statusCode = ref<number | null>(null);
 
-  const regitserTodos = async () => {
+  const registerTodos = async () => {
     try {
       const res = await postTodos(todos.value);
       if (res.status === 201) {
@@ -52,7 +52,7 @@ export const useRegisterTodos = () => {
     todos,
     message,
     statusCode,
-    regitserTodos
+    registerTodos
   }
 };
 

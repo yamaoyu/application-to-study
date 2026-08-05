@@ -188,15 +188,15 @@
                     <tbody>
                         <tr v-for="(activity, index) in yearlyActivities" :key="index" data-testid="year-activity-row">
                             <td class="fw-bold">{{ MONTH_DICT[index] }}</td>
-                            <td v-if="activity.salary" class="fw-bold" :data-testid="`activity-salary-${index}`">{{ activity.salary }}万円</td>
+                            <td v-if="activity.salary !== undefined" class="fw-bold" :data-testid="`activity-salary-${index}`">{{ activity.salary }}万円</td>
                             <td v-else>ー</td>
-                            <td v-if="activity.bonus" class="fw-bold text-center text-success" :data-testid="`activity-bonus-${index}`">{{ activity.bonus }}万円</td>
+                            <td v-if="activity.bonus !== undefined" class="fw-bold text-center text-success" :data-testid="`activity-bonus-${index}`">{{ activity.bonus }}万円</td>
                             <td v-else>ー</td>
-                            <td v-if="activity.penalty" class="fw-bold text-center text-danger" :data-testid="`activity-penalty-${index}`">{{ activity.penalty }}万円</td>
+                            <td v-if="activity.penalty !== undefined" class="fw-bold text-center text-danger" :data-testid="`activity-penalty-${index}`">{{ activity.penalty }}万円</td>
                             <td v-else>ー</td>
-                            <td v-if="activity.success_days" class="fw-bold text-center text-success" :data-testid="`activity-success-days-${index}`">{{ activity.success_days }}日</td>
+                            <td v-if="activity.success_days !== undefined" class="fw-bold text-center text-success" :data-testid="`activity-success-days-${index}`">{{ activity.success_days }}日</td>
                             <td v-else>ー</td>
-                            <td v-if="activity.fail_days" class="fw-bold text-center text-danger" :data-testid="`activity-fail-days-${index}`">{{ activity.fail_days }}日</td>
+                            <td v-if="activity.fail_days !== undefined" class="fw-bold text-center text-danger" :data-testid="`activity-fail-days-${index}`">{{ activity.fail_days }}日</td>
                             <td v-else>ー</td>
                         </tr>
                     </tbody>
@@ -286,17 +286,17 @@ export default {
       return allActivitiesSummary.value;
     });
 
-    const currentActivities = computed(() => {
-      if (activeTab.value === "monthly") return monthlyActivities.value ?? [];
-      if (activeTab.value === "yearly") return yearlyActivities.value ?? [];
-      return [];
-    })
+  const hasCurrentActivities = computed(() => {
+    if (activeTab.value === "monthly") {
+      return monthlyActivities.value.length > 0;
+    }
 
-    const hasCurrentActivities = computed(() => {
-      const activities = currentActivities.value;
-      if (Array.isArray(activities)) return activities.length > 0;
-      return Object.keys(activities ?? {}).length > 0;
-    })
+    if (activeTab.value === "yearly") {
+      return Object.keys(yearlyActivities.value ?? {}).length > 0;
+    }
+
+    return false;
+  });
 
     watch(activeTab, async () => {
       if (activeTab.value==="all"){

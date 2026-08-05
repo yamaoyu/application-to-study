@@ -23,7 +23,9 @@ export const fieldErrorMessages = {
     "INVALID_MONTH": "月は1~12の範囲で入力してください",
     "YEAR_REQUIRED_WHEN_MONTH_SPECIFIED": "月を指定する場合は年が必須です",
     "INVALID_VALUE": "不明なバリデーションエラーが発生しました",
-    "EMPTY_LIST": "必要な値を指定してください"
+    "EMPTY_LIST": "必要な値を指定してください",
+    "INVALID_PASSWORD": "パスワードは大文字、小文字、数字、記号を含めた8-16文字としてください",
+    "INVALID_USERNAME": "ユーザー名は3文字以上、16文字以下としてください"
 } as const;
 
 export type ErrorCode = keyof typeof errorMessages;
