@@ -112,6 +112,15 @@ def test_login(client, create_resource_owner):
         pytest.fail(f"Invalid JWT token {str(e)}")
 
 
+def test_login_with_form_data_for_swagger_ui(client, create_resource_owner):
+    user_info = {"username": RESOURCE_OWNER_USERNAME,
+                 "password": RESOURCE_OWNER_PLAIN_PASSWORD}
+    response = client.post("/login", data=user_info)
+    assert response.status_code == 200
+    assert response.json()["token_type"] == "Bearer"
+    assert "access_token" in response.json()
+
+
 def test_login_with_invalid_password(client, create_resource_owner):
     """パスワードを間違えた場合"""
     user_info = {"username": RESOURCE_OWNER_USERNAME,
