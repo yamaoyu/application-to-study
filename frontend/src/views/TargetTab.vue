@@ -23,8 +23,8 @@
           <td data-testid="target-row">
             <div class="input-group">
               <input 
-                type="date" 
                 v-model="activity.date" 
+                type="date" 
                 class="form-control" 
                 min="2024-01-01"
                 :max="getMaxDate()"
@@ -36,14 +36,14 @@
           <td>
             <div class="input-group">
               <input
-                type="number"
                 v-model="activity.target_time"
+                type="number"
                 class="form-control text-center"
                 min="0.5"
                 max="12"
                 step="0.5"
-                @input="onValidate($event, activity.target_time)"
                 :data-testid="`target-time-row-${index}`"
+                @input="onValidate($event, activity.target_time)"
               />
               <span class="input-group-text small">時間</span>
             </div>
@@ -52,8 +52,8 @@
             <button 
               type="button" 
               class="btn btn-outline-danger btn-sm"
-              @click="removeTargetActivity(targetActivities, index)"
               :data-testid="`decrease-target-row-${index}`"
+              @click="removeTargetActivity(targetActivities, index)"
             >
               削除
             </button>
@@ -64,8 +64,8 @@
             <button 
               type="button" 
               class="btn btn-outline-primary"
-              @click="addTargetActivity(targetActivities)"
               data-testid="increase-target-row"
+              @click="addTargetActivity(targetActivities)"
             >
               + 行を追加
             </button>
@@ -75,28 +75,28 @@
     </table>
     <button 
       type="button" 
-      class="btn btn-outline-secondary mt-3"
-      @click="showModal = true"
       :disabled="!isValid"
       data-testid="submit-multi-target"
+      class="btn btn-outline-secondary mt-3"
+      @click="showModal = true"
     >
       まとめて登録
     </button>
   </div>
 
-  <div class="container d-flex justify-content-center" v-if="reqMsg" data-testid="reqMsg">
+  <div v-if="reqMsg" class="container d-flex justify-content-center" data-testid="reqMsg">
     <p class="mt-3 col-12" :class="getResponseAlert(statusCode)">{{ reqMsg }}</p>
   </div>
 
   <!-- モーダルコンポーネントで登録前の確認 -->
-  <BModal v-model="showModal" title="目標時間の登録" ok-title="はい" cancel-title="いいえ" @ok="onSubmit" data-testid="modal-show">
+  <BModal v-model="showModal" title="目標時間の登録" ok-title="はい" cancel-title="いいえ" data-testid="modal-show" @ok="onSubmit">
     <p>入力した日の目標時間を登録しますか？</p>
   </BModal>
 </template>
 
-<script>
+<script lang="ts">
 import { ref, computed } from 'vue';
-import { validateTargetTime, hasDuplicateDate, isValidActivities } from './utils/activityValidation';
+import { validateTargetTime, hasDuplicateDate, isValidActivities } from './utils/activity';
 import { getMaxDate, getToday } from './utils/date';
 import { useRegisterTargets, addTargetActivity, removeTargetActivity } from './composables/useTargetActivities';
 import { BModal, BCard, BCardText } from 'bootstrap-vue-next';
@@ -111,23 +111,24 @@ export default {
 
   emits: ['registered'],
   
-  setup({}, { emit }) {
+  setup(_props, { emit }) {
     const { targetActivities, reqMsg, statusCode, sendRequest } = useRegisterTargets();
-    const date = ref(getToday());
-    const showModal = ref(false);
+    const date = ref<string>(getToday());
+    const showModal = ref<boolean>(false);
 
-    const onValidate = (event, time) => {
+    const onValidate = (event: Event, time: number) => {
+      const input = event.target as HTMLInputElement;
       const error = validateTargetTime(time)
 
       if (error) {
-        event.target.setCustomValidity(error)
-        event.target.reportValidity()
+        input.setCustomValidity(error)
+        input.reportValidity()
       } else {
-        event.target.setCustomValidity("")
+        input.setCustomValidity("")
       }
     };
 
-    const checkDuplicateDate = (date, index) => {
+    const checkDuplicateDate = (date: string, index: number) => {
       if (hasDuplicateDate(targetActivities.value.map(a => a.date), date)) {
         targetActivities.value[index].date = "";
         reqMsg.value = `${date}は既に選択されています`;

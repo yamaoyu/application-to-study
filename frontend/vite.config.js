@@ -9,8 +9,13 @@ export default defineConfig({
         },
     },
     test:{
-        environment: 'jsdom',
-        setupFiles: ['./test/vitest.setup.js'],
+      environment: 'jsdom',
+      setupFiles: ['./test/vitest.setup.js'],
+      exclude: [
+        'node_modules/**',
+        'dist/**',
+        'e2e/**',
+      ],
     },
     server: {
         port: process.env.FRONTEND_PORT,

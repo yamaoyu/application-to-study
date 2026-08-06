@@ -109,7 +109,7 @@ describe('目標時間の登録(一括)', () => {
                 activities: insertData
             }
         );
-        const expectedMessage = "2025/1/1の目標時間登録に失敗: 既に登録されています\n2025/2/1の目標時間登録に失敗: 月収が未登録です";
+        const expectedMessage = "2025/1/1の目標時間登録に失敗: 既に登録されています\n2025/2/1の目標時間登録に失敗: 月収が登録されていません";
         expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);
     });
 });

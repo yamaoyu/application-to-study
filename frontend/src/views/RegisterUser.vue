@@ -9,9 +9,9 @@
     </div>
   </nav>
   <h2>ユーザー登録</h2>
-  <BForm @submit.prevent="submit" class="container d-flex flex-column align-items-center">
+  <BForm class="container d-flex flex-column align-items-center" @submit.prevent="submit">
     <div class="form-group mt-3 col-8">
-      <BFormInput placeholder="ユーザー名(必須)" v-model="username" :state="usernameValidateResult.valid" data-testid="username" required/>
+      <BFormInput v-model="username" placeholder="ユーザー名(必須)" :state="usernameValidateResult.valid" data-testid="username" required/>
       <BFormInvalidFeedback :state="usernameValidateResult.valid">
         {{ usernameValidateResult.message }}
       </BFormInvalidFeedback>
@@ -19,7 +19,7 @@
     </div>
     <div class="form-group mt-3 col-8">
       <div class="input-group">
-        <BFormInput :type="!showPassword ? 'password':'text'" placeholder="パスワード(必須)" v-model="password" :state="passwordValidateResult.valid" data-testid="password" required/>
+        <BFormInput v-model="password" :type="!showPassword ? 'password':'text'" placeholder="パスワード(必須)" :state="passwordValidateResult.valid" data-testid="password" required/>
         <button class="btn btn-outline-secondary" type="button" @click="showPassword = !showPassword">
           <i :class="['bi', showPassword ? 'bi-eye-slash' : 'bi-eye']"></i>
         </button>
@@ -33,7 +33,12 @@
     </div>
     <div class="form-group mt-3 col-8">
       <div class="input-group">
-        <BFormInput :type="!showPasswordCheck ? 'password':'text'" placeholder="パスワード確認(必須)" v-model="passwordCheck" :state="passwordEqualResult.valid" data-testid="passwordCheck" required/>
+        <BFormInput 
+          v-model="passwordCheck" 
+          :type="!showPasswordCheck ? 'password':'text'" 
+          placeholder="パスワード確認(必須)" 
+          :state="passwordEqualResult.valid" 
+          data-testid="passwordCheck" required/>
         <button class="btn btn-outline-secondary" type="button" @click="showPasswordCheck = !showPasswordCheck">
           <i :class="['bi', showPasswordCheck ? 'bi-eye-slash' : 'bi-eye']"></i>
         </button>
@@ -45,8 +50,8 @@
         <BFormValidFeedback :state="passwordEqualResult.valid"> OK </BFormValidFeedback>
       </div>
     </div>
-    <div class="form-group mt-3 col-8" v-if="showMailForm">
-      <BFormInput placeholder="メールアドレス(任意)" type="email" v-model="email" :state="emailValidateResult.valid" data-testid="email"/>
+    <div v-if="showMailForm" class="form-group mt-3 col-8">
+      <BFormInput v-model="email" placeholder="メールアドレス(任意)" type="email" :state="emailValidateResult.valid" data-testid="email"/>
       <BFormInvalidFeedback :state="emailValidateResult.valid">
         {{ emailValidateResult.message }}
       </BFormInvalidFeedback>
@@ -62,12 +67,16 @@
   </div>
 </template>
   
-  <script>
+  <script lang="ts">
   import { ref } from 'vue'
   import { getResponseAlert } from './utils/ui';
   import { BForm, BFormInput, BFormInvalidFeedback, BFormValidFeedback } from 'bootstrap-vue-next';
   import { useRegisterUser } from './composables/userRegisterUser';
-  import { useUserInfoCheck } from './composables/useUserInfo';
+  import { 
+    useUsernameValidation, 
+    usePasswordValidation,
+    useEmailValidation
+  } from './composables/useUserInfo';
 
   export default {
     components: {
@@ -91,12 +100,9 @@
         submit
       } = useRegisterUser();
       
-      const { 
-        usernameValidateResult, 
-        passwordValidateResult, 
-        passwordEqualResult, 
-        emailValidateResult
-      } = useUserInfoCheck(username, password, passwordCheck, email);
+      const { usernameValidateResult } = useUsernameValidation(username);
+      const { passwordValidateResult, passwordEqualResult } = usePasswordValidation(password, passwordCheck);
+      const { emailValidateResult } = useEmailValidation(email);
   
       return {
         username,

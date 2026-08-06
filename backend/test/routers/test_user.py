@@ -32,7 +32,7 @@ def test_register_user_with_short_username(client):
         "code": "VALIDATION_ERROR",
         "errors": [
             {
-                "code": "INVALID_VALUE",
+                "code": "INVALID_USERNAME",
                 "field": "username"
             }
         ]
@@ -49,7 +49,7 @@ def test_register_user_with_invalid_password(client):
         "code": "VALIDATION_ERROR",
         "errors": [
             {
-                "code": "INVALID_VALUE",
+                "code": "INVALID_PASSWORD",
                 "field": "password"
             }
         ]
@@ -178,7 +178,7 @@ def test_change_password_with_invalid_password(client, get_resource_owner_header
         "code": "VALIDATION_ERROR",
         "errors": [
             {
-                "code": "INVALID_VALUE",
+                "code": "INVALID_PASSWORD",
                 "field": "new_password"
             }
         ]

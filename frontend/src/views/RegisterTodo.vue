@@ -1,6 +1,6 @@
 <template>
   <h3>Todoの登録</h3>
-  <form @submit.prevent="regitserTodos">
+  <form @submit.prevent="registerTodos">
     <table class="table table-striped table-responsive">
       <thead class="table-dark">
         <tr>
@@ -12,25 +12,25 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(todo, index) in todos" :key="index" data-testid="todo-row">
+        <tr v-for="(row, index) in todos" :key="index" data-testid="todo-row">
             <td class="text-center align-middle">{{ index + 1 }}</td>
-            <td class="text-center align-middle todo-title" @click="openModal(todo, 'show')">{{ todo.title }}</td>
-            <td class="text-center align-middle">{{ todo.due }}</td>
+            <td class="text-center align-middle todo-title" @click="openModal(row, 'show')">{{ row.title }}</td>
+            <td class="text-center align-middle">{{ row.due }}</td>
             <td>
-              <input class="btn btn-outline-primary btn-sm" type="button" value="編集" @click="openModal(todo, 'edit')">
+              <input class="btn btn-outline-primary btn-sm" type="button" value="編集" @click="openModal(row, 'edit')">
             </td>
             <td>
-              <input class="btn btn-outline-danger btn-sm" type="button" value="削除" :data-testid="`del-todo-${index}`" @click="openModal(todo, 'delete')">
+              <input class="btn btn-outline-danger btn-sm" type="button" value="削除" :data-testid="`del-todo-${index}`" @click="openModal(row, 'delete')">
             </td>
         </tr>
         <tr class="table-secondary">
           <td colspan="5" class="text-center">
             <button 
               type="button" 
-              class="btn btn-outline-primary"
-              @click="openModal(todo, 'create')"
               :disabled="todos.length>=10"
               data-testid="add-todo"
+              class="btn btn-outline-primary"
+              @click="openModal(todo, 'create')"
             >
               + Todoを追加
             </button>
@@ -51,12 +51,12 @@
 
   <BModal 
     v-model="showModal" 
+    :ok-disabled="!validateTodo(todoAction, todo)"
+    data-testid="modal-show"
     :title="modalTitle" 
     ok-title="OK" 
     cancel-title="閉じる" 
     @ok="closeModal(todos)"
-    :ok-disabled="!validateTodo(todoAction, todo)"
-    data-testid="modal-show"
   >
     <div v-if="todoAction==='show'||todoAction==='delete'">
       <div class="todo-detail">
@@ -82,8 +82,8 @@
                 class="form-control"
                 :placeholder=todo.title
                 maxlength="32"
-                @input="titleError = !todo.title"
                 data-testid="title"
+                @input="titleError = !todo.title"
                 />
                 <small class="form-text text-muted position-absolute" style="right: 8px; bottom: -20px;">
                 {{ (todo.title || '').length }}/32
@@ -119,12 +119,12 @@
         <div class="container d-flex justify-content-center">
           <div class="input-group">
               <input
-              type="date"
               v-model="todo.due"
+              type="date"
               class="form-control col-2"
               :min="today"
-              @input="dueError = !todo.due"
               data-testid="due"
+              @input="dueError = !todo.due"
               />
           </div>
         </div>
@@ -134,12 +134,12 @@
   </BModal>
 </template>
 
-<script>
+<script lang="ts">
 import { ref, watch } from 'vue';
 import { getToday } from './utils/date';
 import { getResponseAlert } from './utils/ui';
 import { useRegisterTodos } from './composables/useTodo';
-import { validateTodo } from './utils/todoValidation';
+import { validateTodo } from './utils/todoUtils';
 import { BModal } from 'bootstrap-vue-next';
 import { useTodoModal } from './composables/useTodoModal';
 
@@ -149,11 +149,11 @@ export default {
   },
 
   setup() {
-    const titleError = ref(""); // todo編集時、タイトルに入力がない場合のメッセージを表示
-    const dueError = ref(""); // todo編集時、期限に入力がない場合のメッセージを表示
+    const titleError = ref<boolean>(false); // todo編集時、タイトルに入力がない場合のメッセージを表示
+    const dueError = ref<boolean>(false); // todo編集時、期限に入力がない場合のメッセージを表示
     const today = getToday();
     const { showModal, modalTitle, todoAction, todo, openModal, closeModal } = useTodoModal();
-    const { todos, message, statusCode, regitserTodos } = useRegisterTodos();
+    const { todos, message, statusCode, registerTodos } = useRegisterTodos();
 
     watch(() => todos.value.length, () => {
       if (todos.value.length>=10){
@@ -174,7 +174,7 @@ export default {
       titleError,
       dueError,
       today,
-      regitserTodos,
+      registerTodos,
       getResponseAlert,
       openModal,
       validateTodo,

@@ -30,7 +30,11 @@ const defaultMonthlyActivities = {
   activity_list: expectedActivities
 };
 
-const createResolvedMock = (data: Record<string, any>, status = 200): mock => ({
+type Mock<T = unknown> =
+  | { type: 'resolve'; value: { status: number; data: T } }
+  | { type: 'reject'; value: { response: { status: number; data: { code: string } } } };
+
+const createResolvedMock = <T>(data: T, status = 200): Mock<T> => ({
   type: "resolve",
   value: {
     status: status,
@@ -51,12 +55,12 @@ const createRejectedMock = (code: string, status = 404): mock => ({
 });
 
 type mock =
-  | { type: 'resolve'; value: { status: number; data: Record<string, any> } }
+  | { type: 'resolve'; value: { status: number; data: Record<string, string> } }
   | { type: 'reject'; value: { response: { status: number; data: { code: string } } } };
 
 const mountActivityInfo = async ({
   activitiesMock = createResolvedMock(defaultMonthlyActivities)
-}: { activitiesMock?: mock } = {}) => {
+}: { activitiesMock?: Mock } = {}) => {
   if (activitiesMock.type === "reject") {
     mockedGet.mockRejectedValueOnce(activitiesMock.value);
   } else {
@@ -106,7 +110,7 @@ describe('月ごとのアクティビティ情報の表示', () => {
     wrapper = await mountActivityInfo({
       activitiesMock: createRejectedMock("ACTIVITY_NOT_FOUND")
     });
-    expect(wrapper.find('[data-testid="message"]').text()).toBe("活動は登録されていません");
+    expect(wrapper.find('[data-testid="currentMessage"]').text()).toBe("活動が登録されていません");
   })
 });
 
@@ -187,7 +191,7 @@ describe('年ごとのアクティビティ情報の表示', () => {
     await wrapper.find("[data-testid='tab-yearly']").trigger("click");
     await flushPromises();
 
-    expect(wrapper.find('[data-testid="message"]').text()).toBe("活動は登録されていません");
+    expect(wrapper.find('[data-testid="currentMessage"]').text()).toBe("活動が登録されていません");
   })
 })
 
@@ -247,6 +251,6 @@ describe('全期間のアクティビティ情報の表示', async () => {
     await wrapper.find("[data-testid='tab-yearly']").trigger('click');
     await flushPromises();
 
-    expect(wrapper.find('[data-testid="message"]').text()).toBe("活動は登録されていません");
+    expect(wrapper.find('[data-testid="currentMessage"]').text()).toBe("活動が登録されていません");
   })
 });

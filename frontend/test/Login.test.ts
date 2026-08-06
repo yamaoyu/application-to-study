@@ -45,44 +45,44 @@ describe('Login', () => {
                 withCredentials: true
             }
         )
-    }),
+    })
 
-        it('ログインに失敗', async () => {
-            mockedPost.mockRejectedValue({
-                response: {
-                    status: 401,
-                    data: {
-                        code: "LOGIN_FAILED",
-                        message: "ユーザー名またはパスワードが正しくありません"
-                    }
+    it('ログインに失敗', async () => {
+        mockedPost.mockRejectedValue({
+            response: {
+                status: 401,
+                data: {
+                    code: "LOGIN_FAILED",
+                    message: "ユーザー名またはパスワードが正しくありません"
                 }
-            });
-            // ユーザー名入力
-            const usernameInput = wrapper.find('[data-testid="username"]') as DOMWrapper<HTMLInputElement>;
-            await usernameInput.setValue("testuser");
-            expect(usernameInput.element.value).toBe("testuser");
+            }
+        });
+        // ユーザー名入力
+        const usernameInput = wrapper.find('[data-testid="username"]') as DOMWrapper<HTMLInputElement>;
+        await usernameInput.setValue("testuser");
+        expect(usernameInput.element.value).toBe("testuser");
 
-            // パスワード入力
-            const passwordInput = wrapper.find('[data-testid="password"]') as DOMWrapper<HTMLInputElement>;
-            await passwordInput.setValue("WrongPassword!");
-            expect(passwordInput.element.value).toBe("WrongPassword!");
-            expect(wrapper.find('[data-testid="login-button"]').exists()).toBe(true);
-            await wrapper.find('[data-testid="login-button"]').trigger('submit');
-            // リクエストが正しく行われたことを確認
-            expect(apiClient.post).toHaveBeenCalledTimes(1)
-            expect(apiClient.post).toHaveBeenCalledWith(
-                "login",
-                {
-                    username: "testuser",
-                    password: "WrongPassword!"
-                },
-                {
-                    withCredentials: true
-                }
-            )
-            // エラーメッセージが表示されることを確認
-            expect(wrapper.find('[data-testid="message"]').text()).toBe("ユーザー名またはパスワードが正しくありません");
-        })
+        // パスワード入力
+        const passwordInput = wrapper.find('[data-testid="password"]') as DOMWrapper<HTMLInputElement>;
+        await passwordInput.setValue("WrongPassword!");
+        expect(passwordInput.element.value).toBe("WrongPassword!");
+        expect(wrapper.find('[data-testid="login-button"]').exists()).toBe(true);
+        await wrapper.find('[data-testid="login-button"]').trigger('submit');
+        // リクエストが正しく行われたことを確認
+        expect(apiClient.post).toHaveBeenCalledTimes(1)
+        expect(apiClient.post).toHaveBeenCalledWith(
+            "login",
+            {
+                username: "testuser",
+                password: "WrongPassword!"
+            },
+            {
+                withCredentials: true
+            }
+        )
+        // エラーメッセージが表示されることを確認
+        expect(wrapper.find('[data-testid="message"]').text()).toBe("ユーザー名またはパスワードが正しくありません");
+    })
 })
 
 describe('ユーザー名を入力せずにログインしようとする', () => {

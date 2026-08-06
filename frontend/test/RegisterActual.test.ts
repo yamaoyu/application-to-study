@@ -21,6 +21,17 @@ const pendingActivities = [
   }
 ];
 
+const sendActivities = [
+  {
+    date: "2025/1/1",
+    actual_time: 3
+  },
+  {
+    date: "2025/1/2",
+    actual_time: 3.5
+  }
+];
+
 describe('実績時間の登録(一括)', () => {
   let wrapper: VueWrapper;
 
@@ -144,7 +155,7 @@ describe('実績時間の登録(一括)', () => {
     expect(mockedPut).toBeCalledWith(
       `activities/actual`,
       {
-        activities: pendingActivities
+        activities: sendActivities
       }
     );
     expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);
@@ -176,10 +187,10 @@ describe('実績時間の登録(一括)', () => {
     expect(mockedPut).toBeCalledWith(
       `activities/actual`,
       {
-        activities: pendingActivities
+        activities: sendActivities
       }
     );
-    const expectedMessage = "2025/1/1の活動時間登録に失敗: 目標時間が未登録です\n2025/2/1の活動時間登録に失敗: 月収が未登録です\n2025/1/2の活動時間登録に失敗: 既に確定されています";
+    const expectedMessage = "2025/1/1の活動時間登録に失敗: 活動が登録されていません\n2025/2/1の活動時間登録に失敗: 月収が登録されていません\n2025/1/2の活動時間登録に失敗: 既に確定されています";
     expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);
   })
 });

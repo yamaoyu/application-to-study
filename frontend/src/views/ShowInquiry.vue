@@ -18,7 +18,7 @@
                         <td class="text-center align-middle inquiry-title" :data-testid="`category-${index}`">{{ inquiry.category }}</td>
                         <td class="text-center align-middle" :data-testid="`detail-${index}`">{{ inquiry.detail }}</td>
                         <td class="text-center align-middle" :data-testid="`date-${index}`">{{ inquiry.date }}</td>
-                        <td class="text-center align-middle fw-bold" :class="inquiry.is_checked===true ? 'text-success' : 'text-danger' " :data-testid="`is_checked-${index}`">{{ BOOL_TO_STATUS[inquiry.is_checked] }}</td>
+                        <td class="text-center align-middle fw-bold" :class="inquiry.is_checked===true ? 'text-success' : 'text-danger' " :data-testid="`is_checked-${index}`">{{ getInquiryStatus(inquiry.is_checked) }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -30,25 +30,24 @@
     </div>
 </template>
 
-<script>
+<script lang="ts">
 import { onMounted } from 'vue';
 import { useGetInquiries } from './composables/useInquiry';
 
 export default{
     setup() {
-        const BOOL_TO_STATUS = { "true":"確認済", "false":"未確認" };
-        const { inquiries, message, fetchInquries } = useGetInquiries();
+        const { inquiries, message, fetchInquiries } = useGetInquiries();
+        const getInquiryStatus = (isChecked: boolean) => isChecked ? "確認済" : "未確認";
 
         onMounted( async()=>{
-            await fetchInquries();
+            await fetchInquiries();
         });
 
         return {
             inquiries,
             message,
-            BOOL_TO_STATUS,
-            message,
-            fetchInquries
+            getInquiryStatus, 
+            fetchInquiries
         }
     }
 }

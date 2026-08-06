@@ -4,11 +4,11 @@
             <BButton 
                 v-for="tab in tabs" 
                 :key="tab.value"
-                @click="activeTab = tab.value"
                 :variant="activeTab === tab.value ? 'primary' : 'outline-secondary'"
                 class="me-2"
                 :title="`${tab.label}登録フォームへ切り替え`"
                 :data-testid="tab.value"
+                @click="activeTab = tab.value"
             >
                 {{ tab.label }}
             </BButton>
@@ -16,12 +16,12 @@
 
         <div class="container">
             <h3 class="mt-5">{{ date }}の実績</h3>
-            <div class="row mt-3" v-if="activityRes">
+            <div v-if="activityByDay" class="row mt-3" >
                 <div class="col-4">
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">目標時間</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold text-center" data-testid="show-target-time">{{ activityRes.data.target_time }}</span>
+                            <span class="h3 fw-bold text-center" data-testid="show-target-time">{{ activityByDay.target_time }}</span>
                             時間
                         </div>
                     </div>
@@ -30,7 +30,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">活動時間</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold text-center" data-testid="show-actual-time">{{ activityRes.data.actual_time }}</span>
+                            <span class="h3 fw-bold text-center" data-testid="show-actual-time">{{ activityByDay.actual_time }}</span>
                             時間
                         </div>
                     </div>
@@ -39,7 +39,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">ステータス</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold text-center" :class="getStatusColors[activityRes.data.status]"  data-testid="show-status">{{ STATUS_DICT[activityRes.data.status] }}</span>
+                            <span class="h3 fw-bold text-center" :class="getStatusColors[activityByDay.status]"  data-testid="show-status">{{ STATUS_DICT[activityByDay.status] }}</span>
                         </div>
                     </div>
                 </div>
@@ -54,8 +54,8 @@
                 <div class="input-group">
                     <span class="col-2 p-2 input-group-text">日付</span>
                     <input
-                        type="date"
                         v-model="date"
+                        type="date"
                         min="2024-01-01"
                         :max="getMaxDate()"
                         class="form-control"
@@ -104,7 +104,7 @@
             </h5>
             <hr class="divider">
             <div class="collapse" :class="{ 'show': isFormVisible }">
-                <div class="text-start mt-3" v-if="pendingActivities?.length > 0">
+                <div v-if="pendingActivities?.length > 0" class="text-start mt-3">
                     <table class="table table-striped table-responsive">
                     <thead class="table-dark">
                         <tr>
@@ -131,23 +131,22 @@
     </div>
 </template>
 
-<script>
+<script lang="ts">
 import { ref, watch, onMounted } from 'vue';
-import { BButton, BCard, BCardText } from 'bootstrap-vue-next';
+import { BButton } from 'bootstrap-vue-next';
 import { useRouter } from 'vue-router';
 import TargetTab from './TargetTab.vue';
 import ActualTab from './ActualTab.vue';
 import FinishTab from './FinishTab.vue';
-import { useFetchActivtiesByStatus, useFetchActivtyByDay } from './composables/useActivitesFetch';
+import { useFetchActivitiesByStatus, useFetchActivityByDay } from './composables/useActivitiesFetch';
 import { useFetchMonthlySalary } from './composables/useSalary';
 import { getResponseAlert, getStatusColors, STATUS_DICT } from './utils/ui';
 import { changeDate, getThisMonth, getMaxDate } from './utils/date';
+import { parseError } from './utils/error';
 
 export default {
     components: {
         BButton,
-        BCard,
-        BCardText,
         TargetTab,
         ActualTab,
         FinishTab
@@ -163,10 +162,10 @@ export default {
 
       const router = useRouter();
       const isFormVisible = ref(false);
-      const { date, checkMsg, activityRes, fetchActivityByDay } = useFetchActivtyByDay();
+      const { date, checkMsg, activityByDay, fetchActivityByDay } = useFetchActivityByDay();
       const { increaseDay } = changeDate(date, checkMsg);
-      const { pendingMsg, pendingActivities, pendingStatus, fetchActivitiesByStatus } = useFetchActivtiesByStatus();
-      const { fetchMsg: incomeMsg, fetchRes: incomeRes, fetchMonthlySalary } = useFetchMonthlySalary();
+      const { pendingMsg, pendingActivities, pendingStatus, fetchActivitiesByStatus } = useFetchActivitiesByStatus();
+      const { fetchMsg: incomeMsg, fetchSalaryStatus, fetchMonthlySalary } = useFetchMonthlySalary();
 
       const renewActivities = async() => {
           await fetchActivityByDay();
@@ -183,9 +182,9 @@ export default {
           await fetchActivityByDay();
           await fetchActivitiesByStatus("pending");
           const thisMonth = getThisMonth();
-          const dateParts = thisMonth.split("-");
+          const dateParts = thisMonth.split("-").map(Number);
           await fetchMonthlySalary(dateParts[0], dateParts[1]);
-          if (incomeRes.value?.status!==200){
+          if (fetchSalaryStatus.value!==200){
             router.push(
               {"path":"/register/salary",
                 "query":{incomeMsg:`${incomeMsg.value}。先に月収を登録してください`}
@@ -193,7 +192,7 @@ export default {
           };
         }
         catch (error){
-          checkMsg.value = "ページ情報の取得に失敗しました";
+          checkMsg.value = parseError(error, "ページ情報の取得に失敗しました");
         }
       });
 
@@ -202,7 +201,7 @@ export default {
         tabs,
         date,
         checkMsg,
-        activityRes,
+        activityByDay,
         pendingActivities,
         pendingStatus,
         pendingMsg,

@@ -30,9 +30,9 @@ vi.mock('@/views/api/client', () => ({
     }
 }))
 
-export const mountComponent = (
+export const mountComponent = <Props extends object = Record<string, unknown>>(
     component: Component,
-    options: MountingOptions<any> = {}) => {
+    options: MountingOptions<Props> = {}) => {
     return mount(component, {
         global: {
             plugins: [createPinia(), createBootstrap()]

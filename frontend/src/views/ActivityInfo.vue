@@ -3,10 +3,10 @@
         <BButton 
             v-for="tab in tabs" 
             :key="tab.value"
-            @click="activeTab = tab.value"
             :variant="activeTab === tab.value ? 'primary' : 'outline-secondary'"
             class="me-2"
             :data-testid="`tab-${tab.value}`"
+            @click="activeTab = tab.value"
         >
             {{ tab.label }}
         </BButton>
@@ -17,8 +17,8 @@
             <div class="container col-8 d-flex justify-content-center">
                 <div class="input-group">
                     <input
-                    type="month"
                     v-model="selectedMonth"
+                    type="month"
                     :min="minMonth"
                     :max="maxMonth"
                     class="form-control col-2  border-secondary"
@@ -26,32 +26,32 @@
                     <button 
                     type="button" 
                     class="btn btn-outline-secondary" 
-                    @click="increaseYear(-1)"
                     :disabled="isAtMinYear"
+                    @click="increaseYear(-1)"
                     >
                     前年
                     </button>
                     <button 
                     type="button" 
                     class="btn btn-outline-secondary" 
-                    @click="increaseMonth(-1)"
                     :disabled="isAtMinMonth"
+                    @click="increaseMonth(-1)"
                     >
                     前月
                     </button>
                     <button 
                     type="button" 
                     class="btn btn-outline-secondary" 
-                    @click="increaseMonth(1)"
                     :disabled="isAtMaxMonth"
+                    @click="increaseMonth(1)"
                     >
                     翌月
                     </button>
                     <button 
                     type="button" 
                     class="btn btn-outline-secondary" 
-                    @click="increaseYear(1)"
                     :disabled="isAtMaxYear"
+                    @click="increaseYear(1)"
                     >
                     翌年
                     </button>
@@ -62,8 +62,8 @@
             <div class="container col-8 d-flex justify-content-center">
                 <div class="input-group">
                     <input
-                    type="number"
                     v-model="selectedYear"
+                    type="number"
                     :min="minYear"
                     :max="maxYear"
                     class="form-control col-2 text-center border-secondary"
@@ -72,7 +72,7 @@
             </div>
         </div>
 
-        <div class="container mt-3" v-if="response">
+        <div v-if="currentSummary" class="container mt-3">
             <div>
                 <h2 v-if="activeTab==='monthly'">{{ selectedMonth }}の活動実績</h2>
                 <h2 v-if="activeTab==='yearly'">{{ selectedYear }}の活動実績</h2>
@@ -83,7 +83,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">合計</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span :class="getSalaryColors(response.data.pay_adjustment)" class="h3 fw-bold text-center" data-testid="total-income">{{ response.data.total_income }}</span>
+                            <span :class="getSalaryColors(currentSummary.pay_adjustment)" class="h3 fw-bold text-center" data-testid="total-income">{{ currentSummary.total_income }}</span>
                             万円
                         </div>
                     </div>
@@ -94,7 +94,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">月収(ベース)</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold" data-testid="salary">{{ response.data.salary }}</span>
+                            <span class="h3 fw-bold" data-testid="salary">{{ currentSummary.salary }}</span>
                             <span class="small">万円</span>
                         </div>
                     </div>
@@ -103,7 +103,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">ボーナス+ペナルティ</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span :class="getSalaryColors(response.data.pay_adjustment)" class="h3 fw-bold" data-testid="pay-adjustment">{{ response.data.pay_adjustment }}</span>
+                            <span :class="getSalaryColors(currentSummary.pay_adjustment)" class="h3 fw-bold" data-testid="pay-adjustment">{{ currentSummary.pay_adjustment }}</span>
                             <span class="small">万円</span>
                         </div>
                     </div>
@@ -112,7 +112,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">ボーナス</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold text-success" data-testid="bonus">{{ response.data.bonus }}</span>
+                            <span class="h3 fw-bold text-success" data-testid="bonus">{{ currentSummary.bonus }}</span>
                             <span class="small">万円</span>
                         </div>
                     </div>
@@ -121,7 +121,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">ペナルティ</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold text-danger" data-testid="penalty">{{ response.data.penalty }}</span>
+                            <span class="h3 fw-bold text-danger" data-testid="penalty">{{ currentSummary.penalty }}</span>
                             <span class="small">万円</span>
                         </div>
                     </div>
@@ -130,7 +130,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">達成日数</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold text-success" data-testid="success-days">{{ response.data.success_days }}</span>
+                            <span class="h3 fw-bold text-success" data-testid="success-days">{{ currentSummary.success_days }}</span>
                             <span class="small">日</span>
                         </div>
                     </div>
@@ -139,7 +139,7 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="small">未達成日数</h3>
                         <div class="d-flex align-items-baseline justify-content-center">
-                            <span class="h3 fw-bold text-danger" data-testid="fail-days">{{ response.data.fail_days }}</span>
+                            <span class="h3 fw-bold text-danger" data-testid="fail-days">{{ currentSummary.fail_days }}</span>
                             <span class="small">日</span>
                         </div>
                     </div>
@@ -151,7 +151,7 @@
 
     <div class="container mt-5">
         <div v-show="activeTab === 'monthly'">
-            <div v-if="activities.length > 0" class="activities">
+            <div v-if="hasCurrentActivities" class="activities">
                 <table class="table table-striped table-responsive">
                 <thead class="table-dark">
                     <tr>
@@ -162,7 +162,7 @@
                     </tr>
                 </thead>
                     <tbody>
-                        <tr v-for="(activity, index) in activities" :key="index" data-testid="monthly-activity-row">
+                        <tr v-for="(activity, index) in monthlyActivities" :key="index" data-testid="monthly-activity-row">
                             <td :data-testid="`activity-date-${index}`">{{ activity.date }}</td>
                             <td :data-testid="`activity-target-time-${index}`">{{ activity.target_time }}時間</td>
                             <td :data-testid="`activity-actual-time-${index}`">{{ activity.actual_time }}時間</td>
@@ -173,7 +173,7 @@
             </div>
         </div>
         <div v-show="activeTab === 'yearly'">
-            <div v-if="Object.keys(activities).length > 0" class="activities mt-5">
+            <div v-if="hasCurrentActivities" class="activities mt-5">
                 <table class="table table-striped table-responsive">
                 <thead class="table-dark">
                     <tr>
@@ -186,17 +186,17 @@
                     </tr>
                 </thead>
                     <tbody>
-                        <tr v-for="(activity, index) in activities" :key="index" data-testid="year-activity-row">
+                        <tr v-for="(activity, index) in yearlyActivities" :key="index" data-testid="year-activity-row">
                             <td class="fw-bold">{{ MONTH_DICT[index] }}</td>
-                            <td v-if="activity.salary" class="fw-bold" :data-testid="`activity-salary-${index}`">{{ activity.salary }}万円</td>
+                            <td v-if="activity.salary !== undefined" class="fw-bold" :data-testid="`activity-salary-${index}`">{{ activity.salary }}万円</td>
                             <td v-else>ー</td>
-                            <td v-if="activity.bonus" class="fw-bold text-center text-success" :data-testid="`activity-bonus-${index}`">{{ activity.bonus }}万円</td>
+                            <td v-if="activity.bonus !== undefined" class="fw-bold text-center text-success" :data-testid="`activity-bonus-${index}`">{{ activity.bonus }}万円</td>
                             <td v-else>ー</td>
-                            <td v-if="activity.penalty" class="fw-bold text-center text-danger" :data-testid="`activity-penalty-${index}`">{{ activity.penalty }}万円</td>
+                            <td v-if="activity.penalty !== undefined" class="fw-bold text-center text-danger" :data-testid="`activity-penalty-${index}`">{{ activity.penalty }}万円</td>
                             <td v-else>ー</td>
-                            <td v-if="activity.success_days" class="fw-bold text-center text-success" :data-testid="`activity-success-days-${index}`">{{ activity.success_days }}日</td>
+                            <td v-if="activity.success_days !== undefined" class="fw-bold text-center text-success" :data-testid="`activity-success-days-${index}`">{{ activity.success_days }}日</td>
                             <td v-else>ー</td>
-                            <td v-if="activity.fail_days" class="fw-bold text-center text-danger" :data-testid="`activity-fail-days-${index}`">{{ activity.fail_days }}日</td>
+                            <td v-if="activity.fail_days !== undefined" class="fw-bold text-center text-danger" :data-testid="`activity-fail-days-${index}`">{{ activity.fail_days }}日</td>
                             <td v-else>ー</td>
                         </tr>
                     </tbody>
@@ -205,20 +205,18 @@
         </div>
         <!-- メッセージは全てのタブで共通 -->
         <div class="container d-flex justify-content-center">
-            <p v-if="message" class="col-8 alert alert-warning" data-testid="message">{{ message }}</p>
+            <p v-if="currentMessage" class="col-8 alert alert-warning" data-testid="currentMessage">{{ currentMessage }}</p>
         </div>
     </div>
-
-
 </template>
 
-<script>
+<script lang="ts">
 import { ref, watch, computed, onMounted } from 'vue';
 import { debounce } from 'lodash';
 import { BButton } from 'bootstrap-vue-next';
 import { STATUS_DICT, getSalaryColors, getStatusColors } from './utils/ui';
 import { getMaxMonth, getMaxYear, changeMonth, changeYear, MONTH_DICT } from './utils/date';
-import { useFetchActivitiesByMonth, useFetchActivitiesByYear, useFetchAllActivities } from './composables/useActivitesFetch';
+import { useFetchActivitiesByMonth, useFetchActivitiesByYear, useFetchAllActivities } from './composables/useActivitiesFetch';
 
 
 export default {
@@ -228,9 +226,6 @@ export default {
 
   setup() {
     const activeTab = ref('monthly');
-    const response = ref();
-    const activities = ref([]);
-    const message = ref("");
     const minMonth = "2024-01";
     const maxMonth = getMaxMonth();
     const isAtMinMonth = computed(() => selectedMonth.value <= minMonth);
@@ -239,9 +234,25 @@ export default {
     const isAtMaxYear = computed(() => selectedMonth.value >= maxMonth.split("-")[0]);
     const minYear = "2024";
     const maxYear = getMaxYear();
-    const { selectedMonth, fetchActivitiesByMonth } = useFetchActivitiesByMonth(response, activities, message);
-    const { selectedYear, fetchActivitiesByYear } = useFetchActivitiesByYear(response, activities, message);
-    const { fetchAllActivities } = useFetchAllActivities(response, message)
+    const { 
+      selectedMonth, 
+      monthlyActivities, 
+      monthlyActivitiesMessage,
+      monthlySummary,
+      fetchActivitiesByMonth 
+    } = useFetchActivitiesByMonth();
+    const { 
+      selectedYear, 
+      yearlyActivities, 
+      yearlyActivitiesMessage,
+      yearlySummary,
+      fetchActivitiesByYear
+    } = useFetchActivitiesByYear();
+    const { 
+      allActivitiesMessage,
+      allActivitiesSummary,
+      fetchAllActivities 
+    } = useFetchAllActivities()
     const { increaseYear } = changeYear(selectedMonth);
     const { increaseMonth } = changeMonth(selectedMonth);
     const tabs = [
@@ -250,27 +261,50 @@ export default {
                 { value: 'all', label: '全期間' }
     ]; 
 
-    const debouncedRequest = debounce(() => {
+    const currentMessage = computed(() => {
+      if (activeTab.value === "monthly") return monthlyActivitiesMessage.value;
+      if (activeTab.value === "yearly") return yearlyActivitiesMessage.value;
+      if (activeTab.value === "all") return allActivitiesMessage.value;
+      return "";
+    });
+
+    const debouncedRequest = debounce(async () => {
         if (activeTab.value==='monthly'){
-            fetchActivitiesByMonth();
-            activities.value = [];
-            response.value = "";
+            monthlyActivities.value = [];
+            monthlySummary.value = undefined;
+            await fetchActivitiesByMonth();
         } else if(activeTab.value==='yearly'){
-            fetchActivitiesByYear();
-            activities.value = [];
-            response.value = "";
+            yearlyActivities.value = undefined;
+            yearlySummary.value = undefined;
+            await fetchActivitiesByYear();
         }
     }, 500);
 
-    watch(activeTab, () => {
-      activities.value = [];
-      response.value = null;
+    const currentSummary = computed(() => {
+      if (activeTab.value === "monthly") return monthlySummary.value;
+      if (activeTab.value === "yearly") return yearlySummary.value;
+      return allActivitiesSummary.value;
+    });
+
+  const hasCurrentActivities = computed(() => {
+    if (activeTab.value === "monthly") {
+      return monthlyActivities.value.length > 0;
+    }
+
+    if (activeTab.value === "yearly") {
+      return Object.keys(yearlyActivities.value ?? {}).length > 0;
+    }
+
+    return false;
+  });
+
+    watch(activeTab, async () => {
       if (activeTab.value==="all"){
-          fetchAllActivities();
+          await fetchAllActivities();
       } else if (activeTab.value==='monthly'){
-          fetchActivitiesByMonth();
+          await fetchActivitiesByMonth();
       } else if(activeTab.value==='yearly'){
-          fetchActivitiesByYear();
+          await fetchActivitiesByYear();
       }
     })
 
@@ -282,19 +316,20 @@ export default {
         debouncedRequest()
     })
 
-    onMounted(()=>{
-        fetchActivitiesByMonth();
+    onMounted(async () => {
+        await fetchActivitiesByMonth();
     })
-
 
   return {
       activeTab,
       tabs,
       selectedMonth,
       selectedYear,
-      response,
-      activities,
-      message,
+      currentSummary,
+      currentMessage,
+      monthlyActivities,
+      yearlyActivities,
+      hasCurrentActivities,
       minMonth,
       maxMonth,
       isAtMinMonth,

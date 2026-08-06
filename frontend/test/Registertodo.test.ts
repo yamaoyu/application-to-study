@@ -4,6 +4,7 @@ import { mountComponent } from './vitest.setup';
 import { apiClient } from '@/views/api/client';
 import { nextTick } from 'vue';
 import { flushPromises, VueWrapper } from '@vue/test-utils';
+import { validateTodo } from '@/views/utils/todoUtils';
 
 const mockedPost = vi.mocked(apiClient.post);
 
@@ -43,7 +44,9 @@ describe('Todoを送信', () => {
         // モーダルが表示されることを確認
         const modal = document.body.querySelector("[data-testid='modal-show']") as HTMLDivElement;
         expect(modal).not.toBeNull();
-        expect((wrapper.vm as any).modalTitle).toEqual("Todo作成");
+        const bModal = wrapper.findComponent({ name: 'BModal' });
+        await flushPromises();
+        expect(bModal.props("title")).toBe("Todo作成");
         await nextTick(); // DOM要素(今回はモーダル)の更新を待つ
         // フォームにデータを入力
         // タイトル
@@ -66,7 +69,6 @@ describe('Todoを送信', () => {
         dueInput.dispatchEvent(new Event('input', { bubbles: true }));
 
         // todoをリストに追加
-        const bModal = wrapper.findComponent({ name: 'BModal' });
         await bModal.vm.$emit('ok');
         const rows = wrapper.findAll('[data-testid="todo-row"]');
         expect(rows).toHaveLength([expectedTodo].length);
@@ -191,7 +193,8 @@ describe('必須項目を入力せずリストにtodoを追加できないパタ
         // モーダルが表示されることを確認
         const modal = document.body.querySelector("[data-testid='modal-show']") as HTMLDivElement;
         expect(modal).not.toBeNull();
-        expect((wrapper.vm as any).modalTitle).toEqual("Todo作成");
+        const bModal = wrapper.findComponent({ name: 'BModal' });
+        expect(bModal.props("title")).toBe("Todo作成");
         await nextTick(); // DOM要素(今回はモーダル)の更新を待つ
         // フォームにデータを入力
         // 期限
@@ -202,7 +205,7 @@ describe('必須項目を入力せずリストにtodoを追加できないパタ
         dueInput.dispatchEvent(new Event('input', { bubbles: true }));
 
         // クリックできるか確認
-        expect((wrapper.vm as any).validateTodo("create", { title: "", due: "" })).toBe(false);
+        expect(validateTodo("create", { title: "", due: "", detail: "" })).toBe(false);
     });
 
     it('期限の入力がない場合は送信ボタンをクリックできない', async () => {
@@ -212,7 +215,9 @@ describe('必須項目を入力せずリストにtodoを追加できないパタ
         // モーダルが表示されることを確認
         const modal = document.body.querySelector("[data-testid='modal-show']") as HTMLDivElement;
         expect(modal).not.toBeNull();
-        expect((wrapper.vm as any).modalTitle).toEqual("Todo作成");
+        const bModal = wrapper.findComponent({ name: 'BModal' });
+        await flushPromises();
+        expect(bModal.props("title")).toBe("Todo作成");
         await nextTick(); // DOM要素(今回はモーダル)の更新を待つ
         // フォームにデータを入力
         // タイトル
@@ -223,7 +228,7 @@ describe('必須項目を入力せずリストにtodoを追加できないパタ
         titleInput.dispatchEvent(new Event('input', { bubbles: true }));
 
         // クリックできるか確認
-        expect((wrapper.vm as any).validateTodo("create", { title: "", due: "" })).toBe(false);
+        expect(validateTodo("create", { title: "", due: "", detail: "" })).toBe(false);
     });
 });
 
@@ -254,10 +259,10 @@ describe('リストからtodo削除', () => {
         // モーダルが表示されることを確認
         const modal = document.body.querySelector("[data-testid='modal-show']") as HTMLDivElement;
         expect(modal).not.toBeNull();
-        expect((wrapper.vm as any).modalTitle).toEqual("Todo削除確認");
-        await nextTick(); // DOM要素(今回はモーダル)の更新を待つ
-
         const bModal = wrapper.findComponent({ name: 'BModal' });
+        await flushPromises();
+        expect(bModal.props("title")).toBe("Todo削除確認");
+        await nextTick(); // DOM要素(今回はモーダル)の更新を待つ
         await bModal.vm.$emit('ok');
         await flushPromises();
         const newRows = wrapper.findAll('[data-testid="todo-row"]');

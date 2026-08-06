@@ -1,11 +1,11 @@
 <template>
   <h3>月収の登録</h3>
-  <form @submit.prevent="registerSalary(monthlyIncome)" class="form-inline">
+  <form class="form-inline" @submit.prevent="registerSalary(monthlyIncome)">
     <div class="container col-8 d-flex justify-content-center">
       <div class="input-group">
         <input
-          type="month"
           v-model="selectedMonth"
+          type="month"
           :min="minMonth"
           :max="maxMonth"
           class="form-control col-2"
@@ -13,37 +13,37 @@
         />
         <button 
           type="button" 
-          class="btn btn-outline-secondary" 
-          @click="increaseYear(-1)"
           :disabled="isAtMinYear"
           data-testid="previousYear"
+          class="btn btn-outline-secondary" 
+          @click="increaseYear(-1)"
         >
           前年
         </button>
         <button 
           type="button" 
-          class="btn btn-outline-secondary" 
-          @click="increaseMonth(-1)"
           :disabled="isAtMinMonth"
           data-testid="previousMonth"
+          class="btn btn-outline-secondary" 
+          @click="increaseMonth(-1)"
         >
           前月
         </button>
         <button 
           type="button" 
-          class="btn btn-outline-secondary" 
-          @click="increaseMonth(1)"
           :disabled="isAtMaxMonth"
           data-testid="nextMonth"
+          class="btn btn-outline-secondary" 
+          @click="increaseMonth(1)"
         >
           翌月
         </button>
         <button 
           type="button" 
-          class="btn btn-outline-secondary" 
-          @click="increaseYear(1)"
           :disabled="isAtMaxYear"
           data-testid="nextYear"
+          class="btn btn-outline-secondary" 
+          @click="increaseYear(1)"
         >
           翌年
         </button>
@@ -52,8 +52,8 @@
     <div class="container col-8 d-flex justify-content-center mt-3">
       <div class="input-group">
         <input
-          type="number"
           v-model="monthlyIncome"
+          type="number"
           class="form-control"
           placeholder="月収(万円)"
           max="2000"
@@ -63,37 +63,37 @@
         <span class="input-group-text">万円</span>
         <button 
           type="button" 
-          class="btn btn-outline-secondary" 
-          @click="updateSalary(-10)"
           :disabled="isMinIncome"
           data-testid="minus10"
+          class="btn btn-outline-secondary" 
+          @click="updateSalary(-10)"
         >
           -10万
         </button>
         <button 
           type="button" 
-          class="btn btn-outline-secondary" 
-          @click="updateSalary(-5)"
           :disabled="isMinIncome"
           data-testid="minus5"
+          class="btn btn-outline-secondary" 
+          @click="updateSalary(-5)"
         >
           -5万
         </button>
         <button 
           type="button" 
-          class="btn btn-outline-secondary" 
-          @click="updateSalary(5)"
           :disabled="isMaxIncome"
           data-testid="plus5"
+          class="btn btn-outline-secondary" 
+          @click="updateSalary(5)"
         >
           +5万
         </button>
         <button 
           type="button" 
-          class="btn btn-outline-secondary" 
-          @click="updateSalary(10)"
           :disabled="isMaxIncome"
           data-testid="plus10"
+          class="btn btn-outline-secondary" 
+          @click="updateSalary(10)"
         >
           +10万
         </button>
@@ -108,7 +108,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { getMaxMonth, changeMonth, changeYear } from '@/views/utils/date';
@@ -118,11 +118,11 @@ import { useFetchMonthlySalary, useRegisterSalary } from './composables/useSalar
 export default {
   setup() {
     const route = useRoute();
-    const queryMsg = ref("");
-    const minMonth = "2024-01";
-    const maxMonth = getMaxMonth();
-    const monthlyIncome = ref(null);
-    const { fetchRes, fetchMonthlySalary } = useFetchMonthlySalary();
+    const queryMsg = ref<string>("");
+    const minMonth: string = "2024-01";
+    const maxMonth: string = getMaxMonth();
+    const monthlyIncome = ref<number>(0);
+    const { fetchSalarySummary, fetchSalaryStatus, fetchMonthlySalary } = useFetchMonthlySalary();
     const { registerMsg, selectedMonth, registerStatusCode, registerSalary } = useRegisterSalary();
     const isAtMinMonth = computed(() => selectedMonth.value <= minMonth);
     const isAtMaxMonth = computed(() => selectedMonth.value >= maxMonth);
@@ -133,7 +133,7 @@ export default {
     const { increaseYear } = changeYear(selectedMonth);
     const { increaseMonth } = changeMonth(selectedMonth);
 
-    const updateSalary = async(step) =>{
+    const updateSalary = async(step: number) =>{
       // 画面に表示される給料を更新する関数
       if (step > 0){
         monthlyIncome.value = Math.min(monthlyIncome.value + step, 2000)
@@ -153,8 +153,8 @@ export default {
         month = 12
       }
       await fetchMonthlySalary(year, month);
-      if (fetchRes.value?.status === 200) {
-        monthlyIncome.value = fetchRes.value.data.base_income;
+      if (fetchSalaryStatus.value === 200 && fetchSalarySummary.value) {
+        monthlyIncome.value = fetchSalarySummary.value.base_income;
       } else {
         monthlyIncome.value = 5;
       };

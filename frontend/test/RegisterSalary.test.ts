@@ -50,7 +50,7 @@ describe('月の入力', () => {
     it('翌年にする', async () => {
         const selectedMonth = wrapper.find('[data-testid="selected-month"]').element as HTMLInputElement;
         const [year, month] = selectedMonth.value.split('-').map(Number);
-        let newDate = new Date(year + 1, month);
+        const newDate = new Date(year + 1, month);
         const newSelectedMonth = newDate.toISOString().slice(0, 7);
         await wrapper.find('[data-testid="nextYear"]').trigger('click');
         expect(selectedMonth.value).toEqual(`${newSelectedMonth}`);
@@ -59,7 +59,7 @@ describe('月の入力', () => {
     it('翌月にする', async () => {
         const selectedMonth = wrapper.find('[data-testid="selected-month"]').element as HTMLInputElement;
         const [year, month] = selectedMonth.value.split('-').map(Number);
-        let newDate = new Date(year, month + 1);
+        const newDate = new Date(year, month + 1);
         const newSelectedMonth = newDate.toISOString().slice(0, 7);
         await wrapper.find('[data-testid="nextMonth"]').trigger('click');
         expect(selectedMonth.value).toEqual(`${newSelectedMonth}`);
@@ -69,14 +69,6 @@ describe('月の入力', () => {
 describe('月収の入力', () => {
     let wrapper: VueWrapper;
     // 取得する月の設定(前月)
-    const date = new Date();
-    let expectedYear = date.getFullYear();
-    let expectedMonth = date.getMonth();
-    if (date.getMonth() == 0) {
-        expectedYear = date.getFullYear() - 1
-        expectedMonth = 12
-    };
-
     beforeEach(() => {
         vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
     }

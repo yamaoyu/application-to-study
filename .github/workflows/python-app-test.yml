@@ -39,6 +39,10 @@ jobs:
 
     - name: create env
       run: cp .env.test .env
+
+    - name: Install frontend dependencies
+      working-directory: frontend
+      run: npm ci
         
     - name: Start Docker
       run: |
@@ -73,6 +77,10 @@ jobs:
       run: |
         mkdir -p results/backend
         mkdir -p results/frontend
+
+    - name: type check
+      working-directory: frontend
+      run: npm run typecheck
     
     - name: Test
       run: |

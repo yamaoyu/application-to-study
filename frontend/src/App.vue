@@ -2,10 +2,13 @@
   <head>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   </head>
-  <nav class="navbar navbar-expand-lg bd-navbar fixed-top bg-dark navbar-dark" v-if="(!MENU_SHOW_ROUTES.includes(this.$route.name))">
+  <nav 
+    v-if="(!MENU_SHOW_ROUTES.includes(`{$router.currentRoute.value.name}`))" 
+    class="navbar navbar-expand-lg bd-navbar fixed-top bg-dark navbar-dark"
+  >
     <div class="container-fluid">
       <ul class="navbar-nav me-2" style="color: white;">
-        <li class="nav-item" v-if="$router.currentRoute.value.name != 'Home'">
+        <li v-if="$router.currentRoute.value.name != 'Home'" class="nav-item">
           <router-link class="nav-link bi-house" to="/home">HOME</router-link>
         </li>
       </ul>
@@ -32,10 +35,10 @@
           <li class="nav-item">
             <router-link class="nav-link" to="/user/info">ユーザー情報</router-link>
           </li>
-          <li class="nav-item" v-if="!isAdmin">
+          <li v-if="!isAdmin" class="nav-item">
             <router-link class="nav-link" to="/register/inquiry">問い合わせ</router-link>
           </li>
-          <li class="nav-item" v-if="isAdmin">
+          <li v-if="isAdmin" class="nav-item">
             <router-link class="nav-link" to="/show/inquiry">問い合わせ確認</router-link>
           </li>
           <li class="nav-item">
@@ -45,12 +48,12 @@
       </div>
     </div>
     <!-- 小さい画面用メニュー -->
-    <div class="offcanvas offcanvas-start bg-dark" id="offcanvasNavbar">
+    <div id="offcanvasNavbar" class="offcanvas offcanvas-start bg-dark">
       <div class="offcanvas-header" style="color: white;">
           <h5 class="offcanvas-title">MENU</h5>
       </div>
       <ul class="offcanvas-body" style="color: white;">
-        <li class="nav-item" v-if="$router.currentRoute.value.name != 'Home'" data-bs-dismiss="offcanvas">
+        <li v-if="$router.currentRoute.value.name != 'Home'" class="nav-item" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/home">ホーム</router-link>
         </li>
         <li class="nav-item" data-bs-dismiss="offcanvas">
@@ -71,10 +74,10 @@
         <li class="nav-item" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/user/info">ユーザー情報</router-link>
         </li>
-        <li class="nav-item" v-if="!isAdmin" data-bs-dismiss="offcanvas">
+        <li v-if="!isAdmin" class="nav-item" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/register/inquiry">問い合わせ</router-link>
         </li>
-        <li class="nav-item" v-if="isAdmin" data-bs-dismiss="offcanvas">
+        <li v-if="isAdmin" class="nav-item" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/show/inquiry">問い合わせ確認</router-link>
         </li>
         <li class="nav-item">
@@ -90,8 +93,8 @@
   </BContainer>
 </template>
 
-<script>
-import { computed } from 'vue';
+<script lang="ts">
+import { computed, type ComputedRef } from 'vue';
 import { BContainer } from 'bootstrap-vue-next';
 import { useLogout } from './views/composables/useAuth';
 
@@ -102,8 +105,8 @@ export default {
 
   setup() {
     const { message, userLogout, roleStore } = useLogout();
-    const MENU_SHOW_ROUTES = ["Login", "RegisterUser"];
-    const isAdmin = computed(() => {
+    const MENU_SHOW_ROUTES: string[] = ["Login", "RegisterUser"];
+    const isAdmin: ComputedRef<boolean> = computed(() => {
       return roleStore.getRole === "admin"
     });;
 
