@@ -8,7 +8,7 @@ from app.models.user_model import (RegisterUserInfo,
                                    LoginUserResponse,
                                    regenerateAccessTokenResponse,
                                    ChangePasswordInfo)
-from fastapi import APIRouter, Depends, Response, Cookie
+from fastapi import APIRouter, Depends, Response, Cookie, Request
 from app.services.user_service import UserService
 from typing import Literal
 
@@ -32,6 +32,19 @@ def get_user_service(db: Session = Depends(get_db)) -> UserService:
     return UserService(db)
 
 
+async def get_login_user_info(request: Request) -> LoginUserInfo:
+    content_type = request.headers.get("content-type", "")
+    if content_type.startswith(("application/x-www-form-urlencoded", "multipart/form-data")):
+        form = await request.form()
+        return LoginUserInfo.model_validate({
+            "username": form.get("username"),
+            "password": form.get("password"),
+        })
+
+    payload = await request.json()
+    return LoginUserInfo.model_validate(payload)
+
+
 @router.post("/users", response_model=RegisterUserResponse, status_code=201)
 def create_user(user: RegisterUserInfo, db: Session = Depends(get_db)):
     service = get_user_service(db)
@@ -47,8 +60,8 @@ def create_admin_user(user: RegisterUserInfo,
 
 
 @router.post("/login", status_code=200, response_model=LoginUserResponse)
-def login(user_info: LoginUserInfo,
-          response: Response,
+def login(response: Response,
+          user_info: LoginUserInfo = Depends(get_login_user_info),
           db: Session = Depends(get_db),
           device_id: str = Cookie(default=None)):
     service = get_user_service(db)
