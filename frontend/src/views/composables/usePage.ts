@@ -1,7 +1,7 @@
 import { ref, computed, type Ref } from "vue";
-import { GetTodoResponse } from "../types/todo";
+import { TodoInfo } from "../types/todo";
 
-export const usePage = (todos: Ref<GetTodoResponse[]>, itemNum: number) => {
+export const usePage = (todos: Ref<TodoInfo[]>, itemNum: number) => {
   // ページネーション用の変数
   const currentPage = ref<number>(1);
   const itemsPerPage = ref<number>(itemNum);

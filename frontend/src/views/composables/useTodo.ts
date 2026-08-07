@@ -4,7 +4,6 @@ import { parseError } from "../utils/error";
 import {
   TodoResult,
   UpsertTodoParam,
-  GetTodoResponse,
   TodoInfo
 } from "../types/todo";
 
@@ -57,7 +56,7 @@ export const useRegisterTodos = () => {
 };
 
 export const useGetTodos = (todoMsg: Ref<string>) => {
-  const todos = ref<GetTodoResponse[]>([]);
+  const todos = ref<TodoInfo[]>([]);
   const statusFilter = ref<string>();
   const startDue = ref<string>();
   const endDue = ref<string>();
@@ -74,7 +73,7 @@ export const useGetTodos = (todoMsg: Ref<string>) => {
     try {
       const res = await getTodos(makeParams());
       if (res.status === 200) {
-        todos.value = res.data;
+        todos.value = res.data.todos;
       }
     } catch (error) {
       todoMsg.value = parseError(error, "Todoの取得に失敗しました");

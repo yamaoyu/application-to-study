@@ -30,20 +30,22 @@ const defaultIncomeData = {
 };
 
 
-const defaultTodosData = [
-    {
-        todo_id: 1,
-        title: "title1",
-        detail: "detail1",
-        due: "2025-1-1"
-    },
-    {
-        todo_id: 2,
-        title: "title2",
-        detail: "detail2",
-        due: "2025-1-2"
-    }
-];
+const defaultTodosData = {
+    todos: [
+        {
+            todo_id: 1,
+            title: "title1",
+            detail: "detail1",
+            due: "2025-1-1"
+        },
+        {
+            todo_id: 2,
+            title: "title2",
+            detail: "detail2",
+            due: "2025-1-2"
+        }
+    ]
+};
 
 type ApiMock<ResponseData> =
     | { type: 'resolve'; value: { status: number; data: ResponseData } }
@@ -175,7 +177,7 @@ describe('ユーザーホームの表示(データあり)', () => {
             }
         );
         const rows = wrapper.findAll('[data-testid="todo-row"]');
-        expect(rows).toHaveLength(defaultTodosData.length);
+        expect(rows).toHaveLength(defaultTodosData.todos.length);
     });
 });
 
@@ -267,9 +269,9 @@ describe('Todoの操作', () => {
         expect(mockedPut).toHaveBeenCalledWith(
             "todos/update/1",
             {
-                title: defaultTodosData[0].title,
-                detail: defaultTodosData[0].detail,
-                due: defaultTodosData[0].due
+                title: defaultTodosData.todos[0].title,
+                detail: defaultTodosData.todos[0].detail,
+                due: defaultTodosData.todos[0].due
             }
         );
         expect(mockedPut).toBeCalledTimes(1);
@@ -443,7 +445,7 @@ describe('Todoのソート', () => {
         await wrapper.find("[data-testid='sort-todos-id']").trigger("click");
         await flushPromises();
         const rows = wrapper.findAll('[data-testid="todo-row"]');
-        expect(rows).toHaveLength(defaultTodosData.length);
+        expect(rows).toHaveLength(defaultTodosData.todos.length);
     })
 
     it('期限順', async () => {
@@ -451,7 +453,7 @@ describe('Todoのソート', () => {
         await wrapper.find("[data-testid='sort-todos-due']").trigger("click");
         await flushPromises();
         const rows = wrapper.findAll('[data-testid="todo-row"]');
-        expect(rows).toHaveLength(defaultTodosData.length);
+        expect(rows).toHaveLength(defaultTodosData.todos.length);
     })
 });
 
@@ -463,60 +465,62 @@ describe('Todoリストページ', () => {
 
     it('ページの移動', async () => {
         let currentPage = 1;
-        const todos = [
-            {
-                detail: "test detail1",
-                due: "2025-1-2",
-                status: true,
-                title: "test title1",
-                todo_id: 1,
-                username: "test"
-            },
-            {
-                detail: "test detail2",
-                due: "2025-1-1",
-                status: true,
-                title: "test title2",
-                todo_id: 1,
-                username: "test"
-            },
-            {
-                detail: "test detail3",
-                due: "2025-1-2",
-                status: true,
-                title: "test title3",
-                todo_id: 1,
-                username: "test"
-            },
-            {
-                detail: "test detail4",
-                due: "2025-1-1",
-                status: true,
-                title: "test title4",
-                todo_id: 1,
-                username: "test"
-            },
-            {
-                detail: "test detail5",
-                due: "2025-1-2",
-                status: true,
-                title: "test title5",
-                todo_id: 1,
-                username: "test"
-            },
-            {
-                detail: "test detail6",
-                due: "2025-1-1",
-                status: true,
-                title: "test title6",
-                todo_id: 1,
-                username: "test"
-            },
-        ];
-        const wrapper = await mountUserHome({ todosMock: createResolvedMock(todos) });
+        const mockDate = {
+            todos: [
+                {
+                    detail: "test detail1",
+                    due: "2025-1-2",
+                    status: true,
+                    title: "test title1",
+                    todo_id: 1,
+                    username: "test"
+                },
+                {
+                    detail: "test detail2",
+                    due: "2025-1-1",
+                    status: true,
+                    title: "test title2",
+                    todo_id: 1,
+                    username: "test"
+                },
+                {
+                    detail: "test detail3",
+                    due: "2025-1-2",
+                    status: true,
+                    title: "test title3",
+                    todo_id: 1,
+                    username: "test"
+                },
+                {
+                    detail: "test detail4",
+                    due: "2025-1-1",
+                    status: true,
+                    title: "test title4",
+                    todo_id: 1,
+                    username: "test"
+                },
+                {
+                    detail: "test detail5",
+                    due: "2025-1-2",
+                    status: true,
+                    title: "test title5",
+                    todo_id: 1,
+                    username: "test"
+                },
+                {
+                    detail: "test detail6",
+                    due: "2025-1-1",
+                    status: true,
+                    title: "test title6",
+                    todo_id: 1,
+                    username: "test"
+                },
+            ]
+        }
+        const wrapper = await mountUserHome({ todosMock: createResolvedMock(mockDate) });
 
         // 1ページ目のTodoの内容確認
-        expect(wrapper.vm.paginatedTodos).toEqual(todos.slice(0, 5));
+        expect(wrapper.vm.paginatedTodos).toEqual(mockDate.todos.slice(0, 5));
         expect(wrapper.vm.currentPage).toBe(currentPage);
 
         // 2ページ目へ移動
@@ -525,6 +529,6 @@ describe('Todoリストページ', () => {
         expect(wrapper.vm.currentPage).toBe(currentPage);
 
         // 2ページ目のTodoの内容確認
-        expect(wrapper.vm.paginatedTodos).toEqual(todos.slice(-1))
+        expect(wrapper.vm.paginatedTodos).toEqual(mockDate.todos.slice(-1))
     })
 });

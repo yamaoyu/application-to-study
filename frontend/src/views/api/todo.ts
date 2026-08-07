@@ -20,7 +20,7 @@ export const postTodos =
 
 export const getTodos = (
   params: GetTodosParam
-): Promise<AxiosResponse<GetTodoResponse[]>> => {
+): Promise<AxiosResponse<GetTodoResponse>> => {
   return apiClient.get("todos", { params }
   );
 };

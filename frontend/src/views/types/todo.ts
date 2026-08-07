@@ -38,7 +38,9 @@ export type TodoInfo = {
     "status": boolean
 }
 
-export type GetTodoResponse = TodoInfo
+export type GetTodoResponse = {
+    todos: TodoInfo[]
+}
 
 export type FinishTodoParam = {
     "ids": number[]

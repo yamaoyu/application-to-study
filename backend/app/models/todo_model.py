@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic_core import PydanticCustomError
 
 
-class Todo(BaseModel):
+class UpsertTodoParams(BaseModel):
     title: str
     due: date
     detail: Optional[str] = None
@@ -23,7 +23,7 @@ class Todo(BaseModel):
 
 
 class TodosCreateRequest(BaseModel):
-    todos: list[Todo]
+    todos: list[UpsertTodoParams]
 
 
 class TodoManupulate(BaseModel):
@@ -49,7 +49,7 @@ class TodoIdsRequest(BaseModel):
         return list(set(ids))
 
 
-class TodoGetResponse(BaseModel):
+class Todo(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     todo_id: int
@@ -57,6 +57,11 @@ class TodoGetResponse(BaseModel):
     status: bool
     due: date
     detail: Optional[str] = None
+
+
+class TodoGetResponse(BaseModel):
+    # TODO: 将来的にサーバーサイドページングにするときはtotalを追加する
+    todos: list[Todo] | list
 
 
 class TodosFinishResponse(TodoManupulate):

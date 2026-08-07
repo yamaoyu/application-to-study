@@ -116,11 +116,15 @@ def test_get_all_todos(client, get_resource_owner_headers):
     setup_create_todo(client, get_resource_owner_headers)
     response = client.get("/todos", headers=get_resource_owner_headers)
     assert response.status_code == 200
-    assert response.json() == [{"todo_id": 1,
-                                "title": test_title,
-                                "status": False,
-                                "due": test_due,
-                                "detail": test_detail}]
+    assert response.json() == {
+        "todos": [
+            {"todo_id": 1,
+             "title": test_title,
+             "status": False,
+             "due": test_due,
+             "detail": test_detail}
+        ]
+    }
 
 
 def test_get_todos_with_query_parameters(client, get_resource_owner_headers):
@@ -132,9 +136,9 @@ def test_get_todos_with_query_parameters(client, get_resource_owner_headers):
     # 期限で絞る(期限外は表示されない)
     response = client.get("/todos?status=false&start_due=2024/11/11",
                           headers=get_resource_owner_headers)
-    assert response.status_code == 404
+    assert response.status_code == 200
     assert response.json() == {
-        "code": NotFoundCode.TODO_NOT_FOUND
+        "todos": []
     }
 
 
@@ -147,11 +151,13 @@ def test_get_all_incomplete_todo(client, get_resource_owner_headers):
     client.post("/todos", json=data, headers=get_resource_owner_headers)
     response = client.get("/todos?status=False", headers=get_resource_owner_headers)
     assert response.status_code == 200
-    assert response.json() == [{"todo_id": 2,
-                                "title": "test_2",
-                                "status": False,
-                                "due": test_due,
-                                "detail": test_detail}]
+    assert response.json() == {
+        "todos": [{"todo_id": 2,
+                   "title": "test_2",
+                   "status": False,
+                   "due": test_due,
+                   "detail": test_detail}]
+    }
 
 
 def test_get_complete_todo(client, get_resource_owner_headers):
@@ -162,11 +168,13 @@ def test_get_complete_todo(client, get_resource_owner_headers):
     client.post("/todos", json={}, headers=get_resource_owner_headers)
     response = client.get("/todos?status=True", headers=get_resource_owner_headers)
     assert response.status_code == 200
-    assert response.json() == [{"todo_id": 1,
-                                "title": "create test",
-                                "status": True,
-                                "due": test_due,
-                                "detail": test_detail}]
+    assert response.json() == {
+        "todos": [{"todo_id": 1,
+                   "title": "create test",
+                   "status": True,
+                   "due": test_due,
+                   "detail": test_detail}]
+    }
 
 
 def test_get_todo_with_expired_token(client, get_resource_owner_headers):
@@ -190,9 +198,9 @@ def test_get_todo_with_expired_token(client, get_resource_owner_headers):
 def test_get_all_todo_without_register(client, get_resource_owner_headers):
     """ 作成したTodoが1つもない状態でget """
     response = client.get("/todos", headers=get_resource_owner_headers)
-    assert response.status_code == 404
+    assert response.status_code == 200
     assert response.json() == {
-        "code": NotFoundCode.TODO_NOT_FOUND
+        "todos": []
     }
 
 

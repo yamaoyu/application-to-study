@@ -2,6 +2,7 @@ import traceback
 from lib.log_conf import logger
 from sqlalchemy.orm import Session
 from app.models.todo_model import (Todo,
+                                   UpsertTodoParams,
                                    TodoIdsRequest,
                                    TodosCreateResponse,
                                    TodoGetResponse,
@@ -18,7 +19,7 @@ class TodoService():
     def __init__(self, db: Session):
         self.repo = TodoRepository(db)
 
-    def create_todos(self, todos: list[Todo], username: str) -> TodosCreateResponse:
+    def create_todos(self, todos: list[UpsertTodoParams], username: str) -> TodosCreateResponse:
         success_count = 0
         error_count = 0
         results = []
@@ -57,25 +58,27 @@ class TodoService():
             results=results
         )
 
-    def get_todo(self, todo_id: int, username: str) -> TodoGetResponse:
+    def get_todo(self, todo_id: int, username: str) -> Todo:
         todo = self.repo.get_todo(todo_id, username)
         if not todo:
             raise NotFound(code=NotFoundCode.TODO_NOT_FOUND)
         logger.info(f"Todoを取得:{username}:ID{todo.todo_id}")
-        return TodoGetResponse.model_validate(todo)
+        return Todo.model_validate(todo)
 
     def get_todos(self,
                   status: Optional[bool],
                   start_due: Optional[str],
                   end_due: Optional[str],
                   title: Optional[str],
-                  username: str) -> list[TodoGetResponse]:
+                  username: str) -> TodoGetResponse:
         todos = self.repo.get_todos(username=username, status=status,
                                     start_due=start_due, end_due=end_due, title=title)
-        if not todos:
-            raise NotFound(code=NotFoundCode.TODO_NOT_FOUND)
         logger.info(f"ユーザー名:{username}  Todoを全て取得")
-        return [TodoGetResponse.model_validate(todo) for todo in todos]
+        if not todos:
+            return TodoGetResponse(todos=[])
+        # dbから取得したままでは「db.db_model.Todo」なので整形する
+        converted_todos = [Todo.model_validate(todo) for todo in todos]
+        return TodoGetResponse(todos=converted_todos)
 
     def delete_todos(self, params: TodoIdsRequest, username: str) -> TodosDeleteResponse:
         ids = params.ids
@@ -102,7 +105,7 @@ class TodoService():
             results=results
         )
 
-    def edit_todo(self, todo_id: int, new_todo: Todo, username: str) -> TodoEditResponse:
+    def edit_todo(self, todo_id: int, new_todo: UpsertTodoParams, username: str) -> TodoEditResponse:
         new_title = new_todo.title
         new_detail = new_todo.detail
         new_due = new_todo.due
