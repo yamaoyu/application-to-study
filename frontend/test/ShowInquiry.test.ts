@@ -15,18 +15,20 @@ describe('データあり', () => {
     );
 
     it('ページを開いて問い合わせ一覧が表示される', async () => {
-        const inquiries = [
-            {
-                "category": "要望",
-                "detail": "新しい機能を追加",
-                "is_checked": false,
-                "date": "2025-01-01"
-            }
-        ]
+        const mockInquiries = {
+            inquiries: [
+                {
+                    "category": "要望",
+                    "detail": "新しい機能を追加",
+                    "is_checked": false,
+                    "date": "2025-01-01"
+                }
+            ]
+        }
 
         mockedGet.mockResolvedValue({
             status: 200,
-            data: inquiries
+            data: mockInquiries
         });
         wrapper = mountComponent(ShowInquiry);
 

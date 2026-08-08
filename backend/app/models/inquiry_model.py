@@ -17,7 +17,7 @@ class Priority(str, Enum):
     low = "低"
 
 
-class InquiryForm(BaseModel):
+class CreateInquiryInput(BaseModel):
     category: str
     detail: str
 
@@ -36,11 +36,11 @@ class InquiryForm(BaseModel):
         return detail
 
 
-class ResponseCreateInquiry(InquiryForm):
+class CreateInquiryResponse(CreateInquiryInput):
     pass
 
 
-class InquiryResponse(BaseModel):
+class InquiryItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     detail: str
@@ -50,7 +50,11 @@ class InquiryResponse(BaseModel):
     is_checked: Optional[bool] = None
 
 
-class EditInquiry(BaseModel):
+class GetInquiryResponse(BaseModel):
+    inquiries: list[InquiryItem] | list
+
+
+class EditInquiryInput(BaseModel):
     priority: Optional[Priority] = None
     is_checked: Optional[bool] = None
 

@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 import { registerInquiry, getInquiries } from '../api/inquiry';
 import { parseError } from '../utils/error';
-import { InquiryCategoryType, GetInquiryInfo, DEFAULT_INQUIRY_CATEGORY } from '../types/inquiry';
+import { InquiryCategoryType, InquiryItem, DEFAULT_INQUIRY_CATEGORY } from '../types/inquiry';
 import axios from 'axios';
 
 export const useSendInquiry = () => {
@@ -42,13 +42,13 @@ export const useSendInquiry = () => {
 };
 
 export const useGetInquiries = () => {
-  const inquiries = ref<GetInquiryInfo[]>([]);
+  const inquiries = ref<InquiryItem[]>([]);
   const message = ref<string>("");
 
   const fetchInquiries = async () => {
     try {
       const res = await getInquiries();
-      inquiries.value = res.data;
+      inquiries.value = res.data.inquiries;
       message.value = "";
     } catch (error) {
       message.value = parseError(error, "問い合わせの取得に失敗しました");
