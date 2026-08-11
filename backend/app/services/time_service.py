@@ -45,8 +45,6 @@ def fetch_monthly_activities(year: int,
     start_date = datetime(year, month, 1).date()
     end_date = get_next_month_start(start_date)
     activities = time_repo.get_monthly_activities(start_date, end_date, username)
-    if not activities:
-        raise NotFound(code=NotFoundCode.ACTIVITY_NOT_FOUND)
     return activities
 
 
@@ -152,9 +150,6 @@ class TimeService():
                              month: int,
                              username: str
                              ) -> getMonthActivityResponse:
-        activities = fetch_monthly_activities(year, month, username, self.time_repo)
-        if not activities:
-            raise NotFound(code=NotFoundCode.ACTIVITY_NOT_FOUND)
         income_month = date(year, month, 1)
         income = fetch_one_income(income_month, username, self.money_repo)
         if not income:
@@ -162,11 +157,14 @@ class TimeService():
         end_date = get_next_month_start(income_month)
         summary = self.time_repo.get_activity_summary(
             username, income_month, end_date)
+
         total_bonus = round_money(summary["bonus"])
         total_penalty = round_money(summary["penalty"])
         total_monthly_income = round_money(income.salary + total_bonus - total_penalty)
         pay_adjustment = round_money(total_bonus - total_penalty)
+
         logger.info(f"{username}が{income_month.year}-{income_month.month}の活動実績を取得")
+        activities = fetch_monthly_activities(year, month, username, self.time_repo)
         activity_list = []
         # 日付を0埋めしない形式で作成
         for act in activities:
@@ -195,15 +193,12 @@ class TimeService():
                             ) -> getYearActivityResponse:
         start_date = date(year, 1, 1)
         end_date = date(year, 12, 31)
-        activities = self.time_repo.get_yearly_activities(start_date, end_date, username)
-        if not activities:
-            raise NotFound(code=NotFoundCode.ACTIVITY_NOT_FOUND)
         incomes = self.money_repo.get_yearly_salaries(year, username)
         if not incomes:
             raise NotFound(code=NotFoundCode.SALARY_NOT_FOUND)
+
         summary_year = self.time_repo.get_activity_summary(
             username, start_date, end_date)
-
         total_bonus = round_money(summary_year["bonus"])
         total_penalty = round_money(summary_year["penalty"])
         salary = round_money(sum(income.salary for income in incomes))
@@ -212,9 +207,11 @@ class TimeService():
 
         summary_each_month = self.time_repo.get_monthly_activity_summary(
             username, start_date, end_date)
-        monthly_info = get_month_info(activities, incomes, summary_each_month)
 
+        activities = self.time_repo.get_yearly_activities(start_date, end_date, username)
+        monthly_info = get_month_info(activities, incomes, summary_each_month)
         logger.info(f"{username}が{year}年の活動実績を取得")
+
         return getYearActivityResponse(
             total_income=total_income,
             salary=salary,
@@ -227,9 +224,6 @@ class TimeService():
         )
 
     def get_all_activities(self, username: str) -> getAllActivitiesResponse:
-        activities = self.time_repo.get_all_activities(username)
-        if not activities:
-            raise NotFound(code=NotFoundCode.ACTIVITY_NOT_FOUND)
         incomes = self.money_repo.get_all_salaries(username)
         if not incomes:
             raise NotFound(code=NotFoundCode.SALARY_NOT_FOUND)
@@ -241,6 +235,7 @@ class TimeService():
         total_income = round_money(salary + total_bonus - total_penalty)
         success_days = summary["success_days"]
         logger.info(f"{username}が全期間の活動実績を取得")
+        activities = self.time_repo.get_all_activities(username)
         return getAllActivitiesResponse(
             total_income=total_income,
             salary=salary,

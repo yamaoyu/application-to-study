@@ -155,7 +155,7 @@ class ActivitySummary(BaseModel):
 
 
 class getMonthActivityResponse(ActivitySummary):
-    activity_list: list[OneActivity]
+    activity_list: list[OneActivity] | list
 
 
 class MonthlyInfo(BaseModel):
