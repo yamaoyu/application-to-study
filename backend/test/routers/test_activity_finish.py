@@ -6,7 +6,7 @@ from helpers.activity import (
     setup_finish_activity,
     setup_monthly_income
 )
-from app.error_codes import NotFoundCode, BadRequestCode, ConflictCode
+from app.error_codes import NotFoundCode, ConflictCode
 from app.domain.activity_calculator import round_money
 
 
@@ -24,6 +24,8 @@ def test_finish_activity(client, get_resource_owner_headers):
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
+        "success_count": 1,
+        "error_count": 0,
         "pay_adjustment": test_bonus,
         "total_bonus": test_bonus,
         "total_penalty": 0,
@@ -78,6 +80,8 @@ def test_finish_multi_activities(client, get_resource_owner_headers):
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
+        "success_count": 3,
+        "error_count": 0,
         "pay_adjustment": pay_adjustment,
         "total_bonus": total_bonus,
         "total_penalty": total_penalty,
@@ -151,6 +155,8 @@ def test_finish_multi_activity_with_partial_errors(client, get_resource_owner_he
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
+        "success_count": 2,
+        "error_count": 1,
         "pay_adjustment": pay_adjustment,
         "total_bonus": total_bonus,
         "total_penalty": total_penalty,
@@ -192,9 +198,13 @@ def test_finish_multi_activity_with_all_errors(client, get_resource_owner_header
     response = client.put("/activities/finish",
                           json=data,
                           headers=get_resource_owner_headers)
-    assert response.status_code == 400
+    assert response.status_code == 200
     assert response.json() == {
-        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
+        "success_count": 0,
+        "error_count": 3,
+        "pay_adjustment": 0,
+        "total_bonus": 0,
+        "total_penalty": 0,
         "results": [
             {
                 "date": test_date,

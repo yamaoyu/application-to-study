@@ -7,7 +7,7 @@ from helpers.activity import (
     setup_target_time,
     setup_monthly_income
 )
-from app.error_codes import NotFoundCode, NotAuthorizedCode, BadRequestCode, ConflictCode
+from app.error_codes import NotFoundCode, NotAuthorizedCode, ConflictCode
 
 
 def test_register_target(client, get_resource_owner_headers):
@@ -23,6 +23,8 @@ def test_register_target(client, get_resource_owner_headers):
                            headers=get_resource_owner_headers)
     assert response.status_code == 201
     assert response.json() == {
+        "success_count": 1,
+        "error_count": 0,
         "results": [
             {
                 "date": test_date,
@@ -44,9 +46,10 @@ def test_register_target_without_monthly_income(client, get_resource_owner_heade
     response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 400
+    assert response.status_code == 201
     assert response.json() == {
-        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
+        "success_count": 0,
+        "error_count": 1,
         "results": [
             {
                 "date": test_date,
@@ -93,9 +96,10 @@ def test_register_target_twice(client, get_resource_owner_headers):
     response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 400
+    assert response.status_code == 201
     assert response.json() == {
-        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
+        "success_count": 0,
+        "error_count": 1,
         "results": [
             {
                 "date": test_date,
@@ -273,6 +277,8 @@ def test_register_multi_target(client, get_resource_owner_headers):
                            headers=get_resource_owner_headers)
     assert response.status_code == 201
     assert response.json() == {
+        "success_count": 3,
+        "error_count": 0,
         "results": [
             {
                 "date": test_date,
@@ -311,6 +317,8 @@ def test_register_multi_target_with_partial_error(client, get_resource_owner_hea
                            headers=get_resource_owner_headers)
     assert response.status_code == 201
     assert response.json() == {
+        "success_count": 1,
+        "error_count": 1,
         "results": [
             {
                 "date": "2024-5-5",
@@ -339,9 +347,10 @@ def test_register_multi_target_with_all_errors(client, get_resource_owner_header
     response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 400
+    assert response.status_code == 201
     assert response.json() == {
-        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
+        "success_count": 0,
+        "error_count": 2,
         "results": [
             {
                 "date": "2024-5-5",

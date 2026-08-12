@@ -5,7 +5,7 @@ from helpers.activity import (
     setup_finish_activity,
     setup_monthly_income
 )
-from app.error_codes import NotFoundCode, BadRequestCode, ConflictCode
+from app.error_codes import NotFoundCode, ConflictCode
 
 
 def test_register_actual(client, get_resource_owner_headers):
@@ -23,6 +23,8 @@ def test_register_actual(client, get_resource_owner_headers):
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
+        "success_count": 1,
+        "error_count": 0,
         "results": [
             {
                 "date": test_date,
@@ -61,6 +63,8 @@ def test_register_multi_actual(client, get_resource_owner_headers):
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
+        "success_count": 3,
+        "error_count": 0,
         "results": [
             {
                 "date": test_date,
@@ -99,6 +103,8 @@ def test_register_actual_with_partial_error(client, get_resource_owner_headers):
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
+        "success_count": 1,
+        "error_count": 1,
         "results": [
             {
                 "date": test_date,
@@ -127,9 +133,10 @@ def test_register_actual_with_all_errors(client, get_resource_owner_headers):
     response = client.put("/activities/actual",
                           json=data,
                           headers=get_resource_owner_headers)
-    assert response.status_code == 400
+    assert response.status_code == 200
     assert response.json() == {
-        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
+        "success_count": 0,
+        "error_count": 2,
         "results": [
             {
                 "date": test_date,
@@ -185,9 +192,10 @@ def test_register_actual_after_finish(client, get_resource_owner_headers):
     response = client.put("/activities/actual",
                           json=data,
                           headers=get_resource_owner_headers)
-    assert response.status_code == 400
+    assert response.status_code == 200
     assert response.json() == {
-        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
+        "success_count": 0,
+        "error_count": 1,
         "results": [
             {
                 "date": test_date,

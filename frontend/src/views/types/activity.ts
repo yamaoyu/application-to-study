@@ -29,6 +29,8 @@ export type RegisterTargetResult =
     };
 
 export type RegisterTargetResponse = {
+    success_count: number,
+    error_count: number,
     results: RegisterTargetResult[]
 }
 
@@ -58,6 +60,8 @@ export type RegisterActualResult =
     };
 
 export type RegisterActualResponse = {
+    success_count: number,
+    error_count: number,
     results: RegisterActualResult[]
 }
 
@@ -71,28 +75,30 @@ export type FinishActivityErrorReason =
 
 type FinishDetail =
     | {
-        "date": string,
-        "reason": null,
-        "result": "success",
-        "bonus": number,
-        "penalty": number,
-        "status": ActivityStatus
+        date: string,
+        reason: null,
+        result: "success",
+        bonus: number,
+        penalty: number,
+        status: ActivityStatus
     }
     | {
-        "date": string,
-        "reason": FinishActivityErrorReason,
-        "result": "error",
-        "bonus": null,
-        "penalty": null,
-        "status": null
+        date: string,
+        reason: FinishActivityErrorReason,
+        result: "error",
+        bonus: null,
+        penalty: null,
+        status: null
     }
 
 
 export type FinishActivityResponse = {
-    "pay_adjustment": number,
-    "total_bonus": number,
-    "total_penalty": number,
-    "results": FinishDetail[]
+    success_count: number,
+    error_count: number,
+    pay_adjustment: number,
+    total_bonus: number,
+    total_penalty: number,
+    results: FinishDetail[]
 }
 
 export type OneActivity = {

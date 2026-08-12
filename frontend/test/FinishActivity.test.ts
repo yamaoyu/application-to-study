@@ -101,6 +101,8 @@ describe('活動の終了(一括)', () => {
     mockedPut.mockResolvedValue({
       status: 200,
       data: {
+        success_count: 3,
+        error_count: 0,
         pay_adjustment: payAdjustment,
         total_bonus: totalBonus,
         total_penalty: totalPenalty,
@@ -129,7 +131,7 @@ describe('活動の終了(一括)', () => {
         dates: expectedDates
       }
     );
-    const expectedMessage = "ボーナス-ペナルティ：0.3万円(3000円)\n" + "ボーナス：0.5万円(5000円)\nペナルティ：0.2万円(2000円)\n2025/1/1の活動を終了：ボーナス3万円(30000円)\n2025/1/2の活動を終了：ボーナス3.5万円(35000円)\n2025/1/3の活動を終了：ペナルティ3万円(30000円)";
+    const expectedMessage = "【活動終了】終了済み3件、エラー0件\nボーナス-ペナルティ：0.3万円(3000円)\n" + "ボーナス：0.5万円(5000円)\nペナルティ：0.2万円(2000円)\n2025/1/1の活動を終了：ボーナス3万円(30000円)\n2025/1/2の活動を終了：ボーナス3.5万円(35000円)\n2025/1/3の活動を終了：ペナルティ3万円(30000円)";
     expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);
   })
 
@@ -140,6 +142,8 @@ describe('活動の終了(一括)', () => {
     mockedPut.mockResolvedValue({
       status: 200,
       data: {
+        success_count: 0,
+        error_count: 4,
         pay_adjustment: 0,
         total_bonus: 0,
         total_penalty: 0,
@@ -170,6 +174,7 @@ describe('活動の終了(一括)', () => {
       }
     );
     const expectedMessage = [
+      "【活動終了】終了済み0件、エラー4件",
       "ボーナス-ペナルティ：0万円(0円)",
       "ボーナス：0万円(0円)",
       "ペナルティ：0万円(0円)",

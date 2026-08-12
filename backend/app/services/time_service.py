@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.repositories.time_repository import TimeRepository
 from app.repositories.money_repository import MoneyRepository
-from app.exceptions import NotFound, BulkOperationFailed
+from app.exceptions import NotFound
 from collections import defaultdict
 from lib.common import get_next_month_start
 from app.domain.activity_calculator import calc_bonus_penalty, calc_activity_result, round_money
@@ -270,6 +270,7 @@ class TimeService():
                                   username: str
                                   ) -> RegisterTargetTimeResponse:
         results = []
+        success_count = 0
         error_count = 0
         for activity in activities:
             target_time = activity["target_time"]
@@ -299,6 +300,7 @@ class TimeService():
                     "target_time": target_time,
                     "reason": None
                 })
+                success_count += 1
             except IntegrityError:
                 results.append({
                     "date": f"{year}-{month}-{day}",
@@ -316,19 +318,20 @@ class TimeService():
                 })
                 error_count += 1
                 logger.error(f"Error registering target time for {date_str}: {str(e)}")
-        if error_count == len(activities):
-            raise BulkOperationFailed(
-                results=results, code=BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED)
-        return RegisterTargetTimeResponse(results=results)
+        return RegisterTargetTimeResponse(
+            success_count=success_count,
+            error_count=error_count,
+            results=results
+        )
 
     def register_actual_time_bulk(self,
                                   params: list[dict],
                                   username: str
                                   ) -> RegisterActualTimeResponse:
         results = []
+        success_count = 0
         error_count = 0
         for param in params:
-            actual_time = param["actual_time"]
             date_str = param["date"]
             year, month, day = map(int, date_str.split("-"))
             # 目標時間を登録する前に、その日の活動実績が存在するか確認
@@ -364,6 +367,7 @@ class TimeService():
                     })
                     error_count += 1
                 else:
+                    actual_time = param["actual_time"]
                     with self.time_repo.begin_nested():
                         self.time_repo.update_actual_time(activity, actual_time)
                         self.time_repo.flush()
@@ -373,6 +377,7 @@ class TimeService():
                         "actual_time": actual_time,
                         "reason": None
                     })
+                    success_count += 1
                     logger.info(f"{username}が複数日の活動時間を登録")
             except Exception as e:
                 results.append({
@@ -383,10 +388,11 @@ class TimeService():
                 })
                 error_count += 1
                 logger.error(f"Error registering actual time for {date_str}: {str(e)}")
-        if error_count == len(params):
-            raise BulkOperationFailed(
-                results=results, code=BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED)
-        return RegisterActualTimeResponse(results=results)
+        return RegisterActualTimeResponse(
+            success_count=success_count,
+            error_count=error_count,
+            results=results
+        )
 
     def finish_activities(self,
                           dates: list,
@@ -396,6 +402,7 @@ class TimeService():
         bonus_sum = 0
         penalty_sum = 0
         results = []
+        success_count = 0
         error_count = 0
         for date_str in dates:
             year, month, day = map(int, date_str.split("-"))
@@ -461,6 +468,7 @@ class TimeService():
                     "reason": None
                 }
                 results.append(result)
+                success_count += 1
             except Exception as e:
                 results.append({
                     "date": f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
@@ -472,10 +480,11 @@ class TimeService():
                 })
                 error_count += 1
                 logger.error(f"Error finishing activity for {date_str}: {str(e)}")
-        if error_count == len(dates):
-            raise BulkOperationFailed(
-                results=results, code=BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED)
-        return FinishActivityResponse(pay_adjustment=round_money(bonus_sum - penalty_sum),
-                                      total_bonus=round_money(bonus_sum),
-                                      total_penalty=round_money(penalty_sum),
-                                      results=results)
+        return FinishActivityResponse(
+            success_count=success_count,
+            error_count=error_count,
+            pay_adjustment=round_money(bonus_sum - penalty_sum),
+            total_bonus=round_money(bonus_sum),
+            total_penalty=round_money(penalty_sum),
+            results=results
+        )

@@ -52,6 +52,8 @@ class RegisterTargetTime(BaseModel):
 
 
 class RegisterTargetTimeResponse(BaseModel):
+    success_count: int
+    error_count: int
     results: list[RegisterTargetTime]
 
 
@@ -88,6 +90,8 @@ class RegisterActualTime(BaseModel):
 
 
 class RegisterActualTimeResponse(BaseModel):
+    success_count: int
+    error_count: int
     results: list[RegisterActualTime]
 
 
@@ -115,6 +119,8 @@ class FinishActivityRequest(BaseModel):
 
 
 class FinishActivityResponse(BaseModel):
+    success_count: int
+    error_count: int
     pay_adjustment: float
     total_bonus: float
     total_penalty: float
