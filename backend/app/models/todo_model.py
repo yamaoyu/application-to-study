@@ -17,13 +17,15 @@ class UpsertTodoParams(BaseModel):
 
     @field_validator("detail")
     def check_detail_length(cls, detail):
+        if detail is None:
+            return detail
         if len(detail) > 200:
             raise ValueError("詳細は200字以下で入力してください")
         return detail
 
 
 class TodosCreateRequest(BaseModel):
-    todos: list[UpsertTodoParams]
+    todos: list
 
 
 class TodoManupulate(BaseModel):

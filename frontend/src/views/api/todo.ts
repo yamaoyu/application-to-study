@@ -1,6 +1,8 @@
 import { apiClient } from "./client";
 import {
   UpsertTodoResponse,
+  DeleteTodoResponse,
+  FinishTodoResponse,
   UpsertTodoParam,
   GetTodoResponse,
   GetTodosParam,
@@ -36,7 +38,7 @@ export const editTodo =
 
 export const finishTodos = (
   ids: FinishTodoParam
-): Promise<AxiosResponse<UpsertTodoResponse>> => {
+): Promise<AxiosResponse<DeleteTodoResponse>> => {
   return apiClient.put(
     `todos/finish`,
     ids
@@ -45,7 +47,7 @@ export const finishTodos = (
 
 export const deleteTodos = (
   ids: DeleteTodoParam
-): Promise<AxiosResponse<UpsertTodoResponse>> => {
+): Promise<AxiosResponse<FinishTodoResponse>> => {
   return apiClient.put(
     `todos/delete`,
     ids
