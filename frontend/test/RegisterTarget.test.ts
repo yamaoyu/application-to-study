@@ -46,7 +46,7 @@ describe('目標時間の登録(一括)', () => {
         await flushPromises();
 
         mockedPost.mockResolvedValue({
-            status: 201,
+            status: 200,
             data: {
                 success_count: 1,
                 error_count: 0,

@@ -23,7 +23,7 @@ describe('Todoを送信', () => {
 
     it('登録に成功', async () => {
         mockedPost.mockResolvedValue({
-            status: 201,
+            status: 200,
             data: {
                 success_count: 1,
                 error_count: 0,

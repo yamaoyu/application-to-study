@@ -21,7 +21,7 @@ def test_register_target(client, get_resource_owner_headers):
     response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 201
+    assert response.status_code == 200
     assert response.json() == {
         "success_count": 1,
         "error_count": 0,
@@ -46,7 +46,7 @@ def test_register_target_without_monthly_income(client, get_resource_owner_heade
     response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 201
+    assert response.status_code == 200
     assert response.json() == {
         "success_count": 0,
         "error_count": 1,
@@ -96,7 +96,7 @@ def test_register_target_twice(client, get_resource_owner_headers):
     response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 201
+    assert response.status_code == 200
     assert response.json() == {
         "success_count": 0,
         "error_count": 1,
@@ -275,7 +275,7 @@ def test_register_multi_target(client, get_resource_owner_headers):
     response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 201
+    assert response.status_code == 200
     assert response.json() == {
         "success_count": 3,
         "error_count": 0,
@@ -315,7 +315,7 @@ def test_register_multi_target_with_partial_error(client, get_resource_owner_hea
     response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 201
+    assert response.status_code == 200
     assert response.json() == {
         "success_count": 1,
         "error_count": 1,
@@ -347,7 +347,7 @@ def test_register_multi_target_with_all_errors(client, get_resource_owner_header
     response = client.post("/activities/target",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 201
+    assert response.status_code == 200
     assert response.json() == {
         "success_count": 0,
         "error_count": 2,

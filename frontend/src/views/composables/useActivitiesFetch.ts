@@ -145,10 +145,8 @@ export const useFetchAllActivities = () => {
   const fetchAllActivities = async () => {
     try {
       const res = await getAllActivities();
-      if (res.status === 200) {
-        allActivitiesMessage.value = "";
-        allActivitiesSummary.value = res.data
-      }
+      allActivitiesMessage.value = "";
+      allActivitiesSummary.value = res.data;
     } catch (error) {
       allActivitiesMessage.value = parseError(error, "全期間の活動記録取得に失敗しました");
       allActivitiesSummary.value = undefined;

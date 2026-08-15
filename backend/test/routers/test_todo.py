@@ -27,7 +27,7 @@ def test_create_todo(client, get_resource_owner_headers):
         "todos": [{"title": test_title, "due": test_due, "detail": test_detail}]
     }
     response = client.post("/todos", json=data, headers=get_resource_owner_headers)
-    assert response.status_code == 201
+    assert response.status_code == 200
     assert response.json() == {
         "success_count": 1,
         "error_count": 0,
@@ -51,7 +51,7 @@ def test_create_todo_with_invalid_date(client, get_resource_owner_headers):
     response = client.post("/todos",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 201
+    assert response.status_code == 200
     assert response.json() == {
         "success_count": 0,
         "error_count": 1,
@@ -74,7 +74,7 @@ def test_create_todos(client, get_resource_owner_headers):
                   {"title": test_title + "2", "due": test_due, "detail": test_detail + "2"}]
     }
     response = client.post("/todos", json=data, headers=get_resource_owner_headers)
-    assert response.status_code == 201
+    assert response.status_code == 200
     assert response.json() == {
         "success_count": 2,
         "error_count": 0,
@@ -104,7 +104,7 @@ def test_create_todos_with_invalid_date(client, get_resource_owner_headers):
                   {"title": test_title + "2", "due": "2026-6-31", "detail": test_detail + "2"}]
     }
     response = client.post("/todos", json=data, headers=get_resource_owner_headers)
-    assert response.status_code == 201
+    assert response.status_code == 200
     assert response.json() == {
         "success_count": 1,
         "error_count": 1,

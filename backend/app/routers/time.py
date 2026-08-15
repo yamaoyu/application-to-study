@@ -40,7 +40,7 @@ def get_day_activity(params: CheckDate = Depends(),
 
 
 @router.post("/activities/target",
-             status_code=201,
+             status_code=200,
              response_model=RegisterTargetTimeResponse)
 def register_multi_target_time(activities: MultiTargetTimeIn,
                                db: Session = Depends(get_db),

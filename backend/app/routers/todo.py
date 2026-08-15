@@ -22,7 +22,7 @@ def get_todo_service(db: Session = Depends(get_db)) -> TodoService:
     return TodoService(db)
 
 
-@router.post("/todos", status_code=201, response_model=TodosCreateResponse)
+@router.post("/todos", status_code=200, response_model=TodosCreateResponse)
 def create_todos(params: TodosCreateRequest,
                  service: TodoService = Depends(get_todo_service),
                  current_user: dict = Depends(get_current_user)):

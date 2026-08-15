@@ -49,12 +49,10 @@ export const useFinishActivities = () => {
     try {
       const dates = selectedActivities.value.map(activity => activity.date);
       const res = await finishActivities(dates);
-      if (res.status === 200) {
-        reqMsg.value = `【活動終了】終了済み${res.data.success_count}件、エラー${res.data.error_count}件\n`
-          + makeMessageByDay(res.data);
-        selectedActivities.value = [];
-        payAdjustment.value = res.data.pay_adjustment;
-      };
+      reqMsg.value = `【活動終了】終了済み${res.data.success_count}件、エラー${res.data.error_count}件\n`
+        + makeMessageByDay(res.data);
+      selectedActivities.value = [];
+      payAdjustment.value = res.data.pay_adjustment;
     } catch (error) {
       reqMsg.value = parseError(error, "活動時間の登録に失敗しました");
       payAdjustment.value = null;
