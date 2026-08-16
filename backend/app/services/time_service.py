@@ -251,8 +251,6 @@ class TimeService():
                                  username: str
                                  ) -> getActivitiesByStatusResponse:
         activities = self.time_repo.get_all_activities(username, status)
-        if not activities:
-            raise NotFound(code=NotFoundCode.ACTIVITY_NOT_FOUND)
         return getActivitiesByStatusResponse(activities=[
             getDayActivityResponse(
                 activity_id=act.activity_id,

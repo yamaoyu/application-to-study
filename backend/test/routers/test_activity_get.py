@@ -456,6 +456,16 @@ def test_get_activities_by_status(client, get_resource_owner_headers):
     }
 
 
+def test_get_activities_by_status_when_no_activities(client, get_resource_owner_headers):
+    """ ステータスを指定して情報を取得 """
+    setup_monthly_income(client, get_resource_owner_headers)
+    response = client.get("/activities?status=success", headers=get_resource_owner_headers)
+    assert response.status_code == 200
+    assert response.json() == {
+        "activities": []
+    }
+
+
 def test_get_activities_with_wrong_status(client, get_resource_owner_headers):
     """ ステータス名を間違えた状態で取得 """
     response = client.get("/activities?status=pendin", headers=get_resource_owner_headers)
