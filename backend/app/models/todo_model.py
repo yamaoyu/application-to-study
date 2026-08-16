@@ -27,6 +27,13 @@ class UpsertTodoParams(BaseModel):
 class TodosCreateRequest(BaseModel):
     todos: list
 
+    @field_validator("todos")
+    def validate_todos(cls, todos):
+        if not todos:
+            raise ValueError("登録するTodoが送られていません")
+
+        return todos
+
 
 class TodoManupulate(BaseModel):
     success_count: int

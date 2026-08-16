@@ -59,7 +59,7 @@ def test_create_todo_with_invalid_date(client, get_resource_owner_headers):
             {
                 "title": test_title,
                 "due": "2026-6-31",
-                "detail": None,
+                "detail": "",
                 "reason": "INVALID_DATE",
                 "result": "error"
             }

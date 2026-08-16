@@ -26,11 +26,12 @@ class TodoService():
         error_count = 0
         results = []
         for todo in todos:
-            title = todo.get("title", None)
-            due = todo.get("due", None)
-            detail = todo.get("detail", None)
             try:
-                UpsertTodoParams(title=title, due=due, detail=detail)
+                # ルーター側でチェックすると1件でも不正なものがあると全件エラーになるのでここでバリデーション(改善の余地あり)
+                validated_todo = UpsertTodoParams.model_validate(todo)
+                title = validated_todo.title
+                due = validated_todo.due
+                detail = validated_todo.detail
             except ValidationError as exc:
                 first_error = exc.errors()[0]
                 loc = first_error.get("loc", [])
@@ -41,9 +42,9 @@ class TodoService():
                     field=field,
                 )
                 results.append({
-                    "title": title,
-                    "due": due,
-                    "detail": detail,
+                    "title": todo.get("title", ""),
+                    "due": todo.get("due", ""),
+                    "detail": todo.get("detail", ""),
                     "result": "error",
                     "reason": reason,
                 })

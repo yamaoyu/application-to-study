@@ -25,6 +25,10 @@ def get_validation_error_code(error_type: str, field) -> str:
                 return "INVALID_USERNAME"
             case "new_password" | "password":
                 return "INVALID_PASSWORD"
+            case "activities":
+                return "VACANT_ACTIVITIES"
+            case "dates":
+                return "INVALID_DATES"
             case _:
                 return "INVALID_VALUE"
 

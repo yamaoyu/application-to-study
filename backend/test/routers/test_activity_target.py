@@ -302,6 +302,27 @@ def test_register_multi_target(client, get_resource_owner_headers):
     }
 
 
+def test_register_multi_target_with_vacant_activities(client, get_resource_owner_headers):
+    """ 複数の目標時間を登録した場合 """
+    setup_monthly_income(client, get_resource_owner_headers)
+    data = {
+        "activities": []
+    }
+    response = client.post("/activities/target",
+                           json=data,
+                           headers=get_resource_owner_headers)
+    assert response.status_code == 422
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "VACANT_ACTIVITIES",
+                "field": "activities"
+            }
+        ]
+    }
+
+
 def test_register_multi_target_with_partial_error(client, get_resource_owner_headers):
     """ 既に目標時間が登録された日が含まれて一部がエラーになる場合 """
     setup_monthly_income(client, get_resource_owner_headers)

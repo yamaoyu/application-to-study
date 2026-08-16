@@ -43,6 +43,13 @@ class TargetTimeIn(BaseModel):
 class MultiTargetTimeIn(BaseModel):
     activities: list[TargetTimeIn]
 
+    @field_validator("activities")
+    def validate_activities(cls, activities):
+        if not activities:
+            raise ValueError("登録する活動時間の指定がありません")
+
+        return activities
+
 
 class RegisterTargetTime(BaseModel):
     date: str
@@ -81,6 +88,13 @@ class ActualTimeIn(BaseModel):
 class MultiActualTimeIn(BaseModel):
     activities: list[ActualTimeIn]
 
+    @field_validator("activities")
+    def validate_activities(cls, activities):
+        if not activities:
+            raise ValueError("登録する目標時間の指定がありません")
+
+        return activities
+
 
 class RegisterActualTime(BaseModel):
     date: str
@@ -110,7 +124,7 @@ class FinishActivityRequest(BaseModel):
     @field_validator("dates")
     def validate_dates(cls, dates):
         if not dates:
-            raise ValueError("日付リストが空です")
+            raise ValueError("終了する日付が指定されていません")
 
         for date_str in dates:
             year, month, day = map(int, date_str.split("-"))

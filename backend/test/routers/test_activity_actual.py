@@ -88,6 +88,27 @@ def test_register_multi_actual(client, get_resource_owner_headers):
     }
 
 
+def test_register_multi_target_with_vacant_activities(client, get_resource_owner_headers):
+    """ 複数の目標時間を登録した場合 """
+    setup_monthly_income(client, get_resource_owner_headers)
+    data = {
+        "activities": []
+    }
+    response = client.put("/activities/actual",
+                          json=data,
+                          headers=get_resource_owner_headers)
+    assert response.status_code == 422
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "VACANT_ACTIVITIES",
+                "field": "activities"
+            }
+        ]
+    }
+
+
 def test_register_actual_with_partial_error(client, get_resource_owner_headers):
     """ 目標時間が登録されていないものが含まれる場合 """
     setup_monthly_income(client, get_resource_owner_headers)
