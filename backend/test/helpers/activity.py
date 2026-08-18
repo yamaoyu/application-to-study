@@ -17,7 +17,7 @@ def setup_target_time(client, get_resource_owner_headers, target_date=test_date)
             {"date": target_date, "target_time": 5.0}
         ]
     }
-    client.post("/activities/target",
+    client.post("/activities/bulk-create-targets",
                 json=data,
                 headers=get_resource_owner_headers)
 
@@ -28,18 +28,18 @@ def setup_actual_time(client, get_resource_owner_headers):
             {"date": test_date, "actual_time": 5.0}
         ]
     }
-    client.put("/activities/actual",
-               json=data,
-               headers=get_resource_owner_headers)
+    client.patch("/activities/bulk-update-actuals",
+                 json=data,
+                 headers=get_resource_owner_headers)
 
 
 def setup_finish_activity(client, get_resource_owner_headers):
     data = {
         "dates": [test_date]
     }
-    client.put("/activities/finish",
-               json=data,
-               headers=get_resource_owner_headers)
+    client.patch("/activities/bulk-finish",
+                 json=data,
+                 headers=get_resource_owner_headers)
 
 
 def setup_monthly_income(client, get_resource_owner_headers):

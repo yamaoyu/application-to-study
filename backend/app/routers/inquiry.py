@@ -11,14 +11,14 @@ from app.services.inquiry_service import InquiryService
 from app.dependencies.auth import get_current_user, admin_only
 
 
-router = APIRouter()
+router = APIRouter(prefix="/inquiries", tags=["inquiries"])
 
 
 def get_inquiry_service(db):
     return InquiryService(db)
 
 
-@router.post("/inquiries", status_code=201, response_model=CreateInquiryResponse)
+@router.post("", status_code=201, response_model=CreateInquiryResponse)
 def send_inquiry(param: CreateInquiryInput,
                  db: Session = Depends(get_db),
                  current_user: dict = Depends(get_current_user)):
@@ -26,7 +26,7 @@ def send_inquiry(param: CreateInquiryInput,
     return service.create_inquiry(param.category, param.detail)
 
 
-@router.get("/inquiries", response_model=GetInquiryResponse)
+@router.get("", response_model=GetInquiryResponse)
 @admin_only()
 def get_inquiries(params: InquirySearchQuery = Depends(),
                   db: Session = Depends(get_db),
@@ -41,7 +41,7 @@ def get_inquiries(params: InquirySearchQuery = Depends(),
     )
 
 
-@router.put("/inquiries/{id}", response_model=InquiryItem)
+@router.patch("/{id}", response_model=InquiryItem)
 @admin_only()
 def edit_inquiry(id: int,
                  param: EditInquiryInput,

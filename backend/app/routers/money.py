@@ -7,7 +7,7 @@ from app.services.money_service import MoneyService
 from app.models.common_model import CheckYearMonth
 
 
-router = APIRouter()
+router = APIRouter(prefix="/incomes", tags=["incomes"])
 
 
 def get_money_service(db: Session = Depends(get_db)) -> MoneyService:
@@ -18,7 +18,7 @@ def get_year_month(year: int, month: int) -> CheckYearMonth:
     return CheckYearMonth(year=year, month=month)
 
 
-@router.post("/incomes/{year}/{month}", status_code=201, response_model=RegisterSalaryResponse)
+@router.post("/{year}/{month}", status_code=201, response_model=RegisterSalaryResponse)
 def register_salary(income: RegisterIncomeRequest,
                     param: CheckYearMonth = Depends(),
                     current_user: dict = Depends(get_current_user),
@@ -28,7 +28,7 @@ def register_salary(income: RegisterIncomeRequest,
     return service.register_monthly_salary(param.year, param.month, income.salary, username)
 
 
-@router.get("/incomes/{year}/{month}", status_code=200, response_model=GetIncomeResponse)
+@router.get("/{year}/{month}", status_code=200, response_model=GetIncomeResponse)
 def get_monthly_income(current_user: dict = Depends(get_current_user),
                        param: CheckYearMonth = Depends(),
                        service: MoneyService = Depends(get_money_service)):

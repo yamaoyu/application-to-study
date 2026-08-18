@@ -19,9 +19,9 @@ def test_finish_activity(client, get_resource_owner_headers):
     data = {
         "dates": [test_date]
     }
-    response = client.put("/activities/finish",
-                          json=data,
-                          headers=get_resource_owner_headers)
+    response = client.patch("/activities/bulk-finish",
+                            json=data,
+                            headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
         "success_count": 1,
@@ -57,7 +57,7 @@ def test_finish_multi_activities(client, get_resource_owner_headers):
             {"date": "2024-5-7", "target_time": 7.0}
         ]
     }
-    client.post("/activities/target",
+    client.post("/activities/bulk-create-targets",
                 json=data,
                 headers=get_resource_owner_headers)
     # 複数の活動時間を登録
@@ -68,16 +68,16 @@ def test_finish_multi_activities(client, get_resource_owner_headers):
             {"date": "2024-5-7", "actual_time": 7.0}
         ]
     }
-    client.put("/activities/actual",
-               json=data,
-               headers=get_resource_owner_headers)
+    client.patch("/activities/bulk-update-actuals",
+                 json=data,
+                 headers=get_resource_owner_headers)
     # 活動を終了
     data = {
         "dates": [test_date, "2024-5-6", "2024-5-7"]
     }
-    response = client.put("/activities/finish",
-                          json=data,
-                          headers=get_resource_owner_headers)
+    response = client.patch("/activities/bulk-finish",
+                            json=data,
+                            headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
         "success_count": 3,
@@ -132,7 +132,7 @@ def test_finish_multi_activity_with_partial_errors(client, get_resource_owner_he
             {"date": "2024-5-7", "target_time": 7.0}
         ]
     }
-    client.post("/activities/target",
+    client.post("/activities/bulk-create-targets",
                 json=data,
                 headers=get_resource_owner_headers)
     # 複数の活動時間を登録
@@ -143,16 +143,16 @@ def test_finish_multi_activity_with_partial_errors(client, get_resource_owner_he
             {"date": "2024-5-7", "actual_time": 7.0}
         ]
     }
-    client.put("/activities/actual",
-               json=data,
-               headers=get_resource_owner_headers)
+    client.patch("/activities/bulk-update-actuals",
+                 json=data,
+                 headers=get_resource_owner_headers)
     # 活動を終了
     data = {
         "dates": [test_date, "2024-5-6", "2024-5-7"]
     }
-    response = client.put("/activities/finish",
-                          json=data,
-                          headers=get_resource_owner_headers)
+    response = client.patch("/activities/bulk-finish",
+                            json=data,
+                            headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
         "success_count": 2,
@@ -195,9 +195,9 @@ def test_finish_multi_activity_with_all_errors(client, get_resource_owner_header
     data = {
         "dates": [test_date, "2024-5-6", "2024-5-7"]
     }
-    response = client.put("/activities/finish",
-                          json=data,
-                          headers=get_resource_owner_headers)
+    response = client.patch("/activities/bulk-finish",
+                            json=data,
+                            headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
         "success_count": 0,
@@ -241,9 +241,9 @@ def test_finish_multi_activity_with_invalid_year(client, get_resource_owner_head
     data = {
         "dates": ["20241-5-5"]
     }
-    response = client.put("/activities/finish",
-                          json=data,
-                          headers=get_resource_owner_headers)
+    response = client.patch("/activities/bulk-finish",
+                            json=data,
+                            headers=get_resource_owner_headers)
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",
@@ -264,9 +264,9 @@ def test_finish_multi_activity_with_invalid_month(client, get_resource_owner_hea
     data = {
         "dates": ["2024-15-5"]
     }
-    response = client.put("/activities/finish",
-                          json=data,
-                          headers=get_resource_owner_headers)
+    response = client.patch("/activities/bulk-finish",
+                            json=data,
+                            headers=get_resource_owner_headers)
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",
@@ -287,15 +287,15 @@ def test_finish_multi_activity_with_invalid_date(client, get_resource_owner_head
     data = {
         "dates": ["2024-5-50"]
     }
-    response = client.put("/activities/finish",
-                          json=data,
-                          headers=get_resource_owner_headers)
+    response = client.patch("/activities/bulk-finish",
+                            json=data,
+                            headers=get_resource_owner_headers)
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",
         "errors": [
             {
-                "code": "INVALID_VALUE",
+                "code": "INVALID_DATES",
                 "field": "dates"
             }
         ]
@@ -304,9 +304,9 @@ def test_finish_multi_activity_with_invalid_date(client, get_resource_owner_head
 
 def test_finish_multi_acitivity_with_no_dates(client, get_resource_owner_headers):
     """ 複数の活動を終了させた場合に日付が指定されていない場合 """
-    response = client.put("/activities/finish",
-                          json={},
-                          headers=get_resource_owner_headers)
+    response = client.patch("/activities/bulk-finish",
+                            json={},
+                            headers=get_resource_owner_headers)
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",

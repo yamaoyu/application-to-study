@@ -15,7 +15,7 @@ export const postTodos =
   (todos: UpsertTodoParam[]
   ): Promise<AxiosResponse<UpsertTodoResponse>> => {
     return apiClient.post(
-      "todos",
+      "todos/bulk-create",
       { todos }
     )
   };
@@ -30,7 +30,7 @@ export const getTodos = (
 export const editTodo =
   (id: number, params: UpsertTodoParam
   ): Promise<AxiosResponse<UpsertTodoResponse>> => {
-    return apiClient.put(
+    return apiClient.patch(
       `todos/update/${id}`,
       params
     )
@@ -39,8 +39,8 @@ export const editTodo =
 export const finishTodos = (
   ids: FinishTodoParam
 ): Promise<AxiosResponse<DeleteTodoResponse>> => {
-  return apiClient.put(
-    `todos/finish`,
+  return apiClient.patch(
+    `todos/bulk-finish`,
     ids
   )
 };
@@ -48,8 +48,8 @@ export const finishTodos = (
 export const deleteTodos = (
   ids: DeleteTodoParam
 ): Promise<AxiosResponse<FinishTodoResponse>> => {
-  return apiClient.put(
-    `todos/delete`,
+  return apiClient.patch(
+    `todos/bulk-delete`,
     ids
   );
 };

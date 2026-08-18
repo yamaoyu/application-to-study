@@ -13,7 +13,7 @@ export const createUser = (
 };
 
 export const updatePassword = (oldPassword: string, newPassword: string) => {
-  return apiClient.put(
+  return apiClient.patch(
     "password",
     {
       old_password: oldPassword,

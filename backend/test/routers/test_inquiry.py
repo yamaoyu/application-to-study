@@ -162,7 +162,7 @@ def test_mark_inquiry_is_checked(client, get_admin_headers, get_resource_owner_h
     monkeypatch.setattr(inquiry_service, "date", FixedDate)
     setup_create_inquiry(client, get_resource_owner_headers)
     data = {"is_checked": True}
-    response = client.put("/inquiries/1", json=data, headers=get_admin_headers)
+    response = client.patch("/inquiries/1", json=data, headers=get_admin_headers)
     assert response.status_code == 200
     assert response.json() == {
         "id": 1,
@@ -178,7 +178,7 @@ def test_change_inquiry_priority(client, get_admin_headers, get_resource_owner_h
     monkeypatch.setattr(inquiry_service, "date", FixedDate)
     setup_create_inquiry(client, get_resource_owner_headers)
     data = {"priority": "高"}
-    response = client.put("/inquiries/1", json=data, headers=get_admin_headers)
+    response = client.patch("/inquiries/1", json=data, headers=get_admin_headers)
     assert response.status_code == 200
     assert response.json() == {
         "id": 1,
@@ -192,7 +192,7 @@ def test_change_inquiry_priority(client, get_admin_headers, get_resource_owner_h
 
 def test_edit_inquiry_not_found(client, get_admin_headers):
     data = {"priority": "高"}
-    response = client.put("/inquiries/999", json=data, headers=get_admin_headers)
+    response = client.patch("/inquiries/999", json=data, headers=get_admin_headers)
     assert response.status_code == 404
     assert response.json() == {
         "code": NotFoundCode.INQUIRY_NOT_FOUND

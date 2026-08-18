@@ -4,7 +4,7 @@ import { mountComponent } from './vitest.setup';
 import { apiClient } from '@/views/api/client';
 import { flushPromises, VueWrapper, DOMWrapper } from '@vue/test-utils';
 
-const mockedPut = vi.mocked(apiClient.put);
+const mockedPut = vi.mocked(apiClient.patch);
 
 const pendingActivities = [
   {
@@ -153,7 +153,7 @@ describe('実績時間の登録(一括)', () => {
     await flushPromises();
 
     expect(mockedPut).toBeCalledWith(
-      `activities/actual`,
+      `activities/bulk-update-actuals`,
       {
         activities: sendActivities
       }
@@ -188,7 +188,7 @@ describe('実績時間の登録(一括)', () => {
     await flushPromises();
 
     expect(mockedPut).toBeCalledWith(
-      `activities/actual`,
+      `activities/bulk-update-actuals`,
       {
         activities: sendActivities
       }

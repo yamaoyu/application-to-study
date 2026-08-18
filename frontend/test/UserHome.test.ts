@@ -6,7 +6,7 @@ import { flushPromises, VueWrapper } from '@vue/test-utils';
 import { getToday } from '@/views/utils/date';
 
 const mockedGet = vi.mocked(apiClient.get);
-const mockedPut = vi.mocked(apiClient.put);
+const mockedPut = vi.mocked(apiClient.patch);
 
 const today = getToday().split("-");
 const expectedYear = Number(today[0]);
@@ -324,7 +324,7 @@ describe('Todoの操作', () => {
         await flushPromises();
 
         expect(mockedPut).toHaveBeenCalledWith(
-            "todos/finish",
+            "todos/bulk-finish",
             {
                 ids: [1]
             }
@@ -379,7 +379,7 @@ describe('Todoの操作', () => {
         await flushPromises();
 
         expect(mockedPut).toHaveBeenCalledWith(
-            "todos/finish",
+            "todos/bulk-finish",
             {
                 ids: [1]
             }
@@ -433,7 +433,7 @@ describe('Todoの操作', () => {
         await flushPromises();
 
         expect(mockedPut).toHaveBeenCalledWith(
-            "todos/delete",
+            "todos/bulk-delete",
             {
                 ids: [1]
             }
@@ -488,7 +488,7 @@ describe('Todoの操作', () => {
         await flushPromises();
 
         expect(mockedPut).toHaveBeenCalledWith(
-            "todos/delete",
+            "todos/bulk-delete",
             {
                 ids: [1]
             }

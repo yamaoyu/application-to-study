@@ -4,7 +4,7 @@ import { mountComponent } from './vitest.setup';
 import { apiClient } from '@/views/api/client';
 import { flushPromises, VueWrapper } from '@vue/test-utils';
 
-const mockedPut = vi.mocked(apiClient.put);
+const mockedPut = vi.mocked(apiClient.patch);
 
 const pendingActivities = [
   {
@@ -126,7 +126,7 @@ describe('活動の終了(一括)', () => {
     await flushPromises();
 
     expect(mockedPut).toBeCalledWith(
-      `activities/finish`,
+      `activities/bulk-finish`,
       {
         dates: expectedDates
       }
@@ -168,7 +168,7 @@ describe('活動の終了(一括)', () => {
     await flushPromises();
 
     expect(mockedPut).toBeCalledWith(
-      `activities/finish`,
+      `activities/bulk-finish`,
       {
         dates: expectedDates
       }
