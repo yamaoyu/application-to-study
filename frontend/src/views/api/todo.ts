@@ -48,7 +48,7 @@ export const finishTodos = (
 export const deleteTodos = (
   ids: DeleteTodoParam
 ): Promise<AxiosResponse<FinishTodoResponse>> => {
-  return apiClient.patch(
+  return apiClient.post(
     `todos/bulk-delete`,
     ids
   );

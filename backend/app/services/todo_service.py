@@ -15,6 +15,7 @@ from app.exceptions import NotFound, Conflict
 from app.error_codes import NotFoundCode, ConflictCode, BadRequestCode
 from app.utils.validation import get_validation_error_code
 from pydantic import ValidationError
+from collections.abc import Mapping
 
 
 class TodoService():
@@ -41,13 +42,7 @@ class TodoService():
                     error_type=first_error["type"],
                     field=field,
                 )
-                results.append({
-                    "title": todo.get("title", ""),
-                    "due": todo.get("due", ""),
-                    "detail": todo.get("detail", ""),
-                    "result": "error",
-                    "reason": reason,
-                })
+                results.append(build_create_error_result(todo, reason))
                 error_count += 1
                 continue
             try:
@@ -194,3 +189,24 @@ class TodoService():
             success_count=len(can_finish_ids),
             error_count=len(finished_ids) + len(missing_ids),
             results=results)
+
+
+def build_create_error_result(todo, reason):
+    """ todo作成時にバリデーションエラー発生時のレスポンス作成 """
+    if isinstance(todo, Mapping):
+        return {
+            "title": todo.get("title", ""),
+            "due": todo.get("due", ""),
+            "detail": todo.get("detail", ""),
+            "result": "error",
+            "reason": reason,
+        }
+
+    return {
+        "title": "",
+        "due": "",
+        "detail": "",
+        "input": repr(todo),
+        "result": "error",
+        "reason": reason,
+    }

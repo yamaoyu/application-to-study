@@ -33,7 +33,7 @@ export const useRegisterActuals = () => {
         actual_time,
       }));
       const res = await registerActuals(activities);
-      statusCode.value = res.status;
+      statusCode.value = res.data.error_count === 0 ? 200 : 400;
       reqMsg.value = `【活動時間登録】更新${res.data.success_count}件、エラー${res.data.error_count}件\n`
         + makeMessageByDay(res.data.results);
       selectedActivities.value = [];

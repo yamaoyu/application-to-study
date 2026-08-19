@@ -29,7 +29,7 @@ export const useRegisterTargets = () => {
   const sendRequest = async () => {
     try {
       const res = await registerTargets(targetActivities.value);
-      statusCode.value = res.status;
+      statusCode.value = res.data.error_count === 0 ? 200 : 400;
       reqMsg.value = `【目標時間登録】登録${res.data.success_count}件、エラー${res.data.error_count}件\n`
         + makeMessageByDay(res.data.results);
       targetActivities.value = [{ date: '', target_time: 0.5 }];

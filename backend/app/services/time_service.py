@@ -446,7 +446,6 @@ class TimeService():
             try:
                 # 達成している場合はincomesテーブルのボーナスを、達成していない場合はpenaltyを加算する。
                 activity_result = calc_activity_result(income.salary, target_time, actual_time)
-                print(activity_result)
                 bonus = activity_result.bonus
                 penalty = activity_result.penalty
                 status = activity_result.status

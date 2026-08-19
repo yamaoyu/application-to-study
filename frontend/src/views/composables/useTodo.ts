@@ -49,7 +49,7 @@ export const useRegisterTodos = () => {
   const registerTodos = async () => {
     try {
       const res = await postTodos(todos.value);
-      statusCode.value = res.status;
+      statusCode.value = res.data.error_count === 0 ? 200 : 400;
       message.value = makeSummaryMessage("作成", res.data.success_count, res.data.error_count);
       message.value += makeMessage(res.data.results, "作成");
       todos.value = [];
