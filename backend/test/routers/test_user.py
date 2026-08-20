@@ -1,6 +1,6 @@
 import pytest
 from conftest import SECRET_KEY, ALGORITHM
-from testdata import RESOURCE_OWNER_USERNAME, RESOURCE_OWNER_PLAIN_PASSWORD
+from testdata import RESOURCE_OWNER_USERNAME, RESOURCE_OWNER_PLAIN_PASSWORD, ADMIN_PASSWORD
 from jose import jwt
 from jose.exceptions import JWTError
 from app.error_codes import NotAuthorizedCode, ConflictCode
@@ -146,6 +146,8 @@ def test_login_not_registered_user(client):
 def test_logout(client, get_resource_owner_headers):
     response = client.post("/logout", headers=get_resource_owner_headers)
     assert response.status_code == 200
+    response = client.post("/token", headers=get_resource_owner_headers)
+    assert response.status_code == 401
 
 
 def test_regenerate_token(client, get_resource_owner_headers):
@@ -160,6 +162,57 @@ def test_regenerate_token(client, get_resource_owner_headers):
         assert decoded_token["sub"] == "testuser"
     except JWTError as e:
         pytest.fail(f"Invalid JWT token {str(e)}")
+
+
+def test_regenerate_token_fail_without_cookie(client, get_resource_owner_headers):
+    client.cookies.clear()
+    response = client.post("/token", headers=get_resource_owner_headers)
+    assert response.status_code == 401
+    assert response.json() == {
+        "code": NotAuthorizedCode.NOT_AUTHORIZED
+    }
+
+
+def test_regenerate_token_with_invalid_refresh_token(client, get_resource_owner_headers):
+    client.cookies.set("refresh_token", "invalid_refresh_token")
+    response = client.post("/token", headers=get_resource_owner_headers)
+    assert response.status_code == 401
+    assert response.json() == {
+        "code": NotAuthorizedCode.NOT_AUTHORIZED
+    }
+
+
+def test_regenerate_token_with_invalid_device_id(client, get_resource_owner_headers):
+    client.cookies.set("device_id", "device_id")
+    response = client.post("/token", headers=get_resource_owner_headers)
+    assert response.status_code == 401
+    assert response.json() == {
+        "code": NotAuthorizedCode.NOT_AUTHORIZED
+    }
+
+
+def test_change_password(client, get_resource_owner_headers):
+    new_password = "newP@ssword1"
+    data = {
+        "old_password": RESOURCE_OWNER_PLAIN_PASSWORD,
+        "new_password": new_password
+    }
+    response = client.patch("/password", json=data, headers=get_resource_owner_headers)
+    assert response.status_code == 200
+
+
+def login_fail_after_test_change_password_with(client, get_resource_owner_headers):
+    new_password = "newP@ssword1"
+    data = {
+        "old_password": RESOURCE_OWNER_PLAIN_PASSWORD,
+        "new_password": new_password
+    }
+    response = client.patch("/password", json=data, headers=get_resource_owner_headers)
+    assert response.status_code == 200
+    user_info = {"username": RESOURCE_OWNER_USERNAME,
+                 "password": RESOURCE_OWNER_PLAIN_PASSWORD}
+    response = client.post("/login", json=user_info)
+    assert response.status_code == 401
 
 
 def test_change_password_with_invalid_old_password(client, get_resource_owner_headers):
@@ -192,3 +245,23 @@ def test_change_password_with_invalid_password(client, get_resource_owner_header
             }
         ]
     }
+
+
+def test_admin_user_can_create_admin_user(client, get_admin_headers):
+    user_info = {"username": "admin2",
+                 "password": ADMIN_PASSWORD}
+    response = client.post("/admins", json=user_info, headers=get_admin_headers)
+    assert response.status_code == 201
+    assert response.json() == {
+        "username": "admin2",
+        "password": "*********",
+        "email": None,
+        "role": "admin"
+    }
+
+
+def test_general_user_fail_to_access_admin_page(client, get_resource_owner_headers):
+    user_info = {"username": RESOURCE_OWNER_USERNAME,
+                 "password": RESOURCE_OWNER_PLAIN_PASSWORD}
+    response = client.post("/admins", json=user_info, headers=get_resource_owner_headers)
+    assert response.status_code == 403

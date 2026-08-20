@@ -8,7 +8,9 @@ from app.models.inquiry_model import (CreateInquiryInput,
                                       GetInquiryResponse,
                                       InquiryItem)
 from app.services.inquiry_service import InquiryService
-from app.dependencies.auth import get_current_user, admin_only
+from app.dependencies.auth import get_current_user
+from app.error_codes import NotAuthorizedCode
+from app.exceptions import Forbidden
 
 
 router = APIRouter(prefix="/inquiries", tags=["inquiries"])
@@ -27,10 +29,11 @@ def send_inquiry(param: CreateInquiryInput,
 
 
 @router.get("", response_model=GetInquiryResponse)
-@admin_only()
 def get_inquiries(params: InquirySearchQuery = Depends(),
                   db: Session = Depends(get_db),
                   current_user: dict = Depends(get_current_user)):
+    if current_user["role"] != "admin":
+        raise Forbidden(code=NotAuthorizedCode.NOT_HAVE_PERMISSION)
     service = get_inquiry_service(db)
     return service.get_inquiries(
         params.year,
@@ -42,10 +45,11 @@ def get_inquiries(params: InquirySearchQuery = Depends(),
 
 
 @router.patch("/{id}", response_model=InquiryItem)
-@admin_only()
 def edit_inquiry(id: int,
                  param: EditInquiryInput,
                  db: Session = Depends(get_db),
                  current_user: dict = Depends(get_current_user)):
+    if current_user["role"] != "admin":
+        raise Forbidden(code=NotAuthorizedCode.NOT_HAVE_PERMISSION)
     service = get_inquiry_service(db)
     return service.edit_inquiry(id, param.priority, param.is_checked)
