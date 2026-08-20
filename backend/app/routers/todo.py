@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from db.database import get_db
 from sqlalchemy.orm import Session
 from app.models.todo_model import (Todo,
+                                   UpsertTodoParams,
                                    TodosCreateRequest,
                                    TodoIdsRequest,
                                    TodosCreateResponse,
@@ -14,14 +15,14 @@ from typing import Optional
 from ..services.todo_service import TodoService
 
 
-router = APIRouter()
+router = APIRouter(prefix="/todos", tags=["todos"])
 
 
 def get_todo_service(db: Session = Depends(get_db)) -> TodoService:
     return TodoService(db)
 
 
-@router.post("/todos", status_code=201, response_model=TodosCreateResponse)
+@router.post("/bulk-create", status_code=200, response_model=TodosCreateResponse)
 def create_todos(params: TodosCreateRequest,
                  service: TodoService = Depends(get_todo_service),
                  current_user: dict = Depends(get_current_user)):
@@ -29,7 +30,7 @@ def create_todos(params: TodosCreateRequest,
     return service.create_todos(params.todos, username)
 
 
-@router.get("/todos", status_code=200, response_model=list[TodoGetResponse])
+@router.get("", status_code=200, response_model=TodoGetResponse)
 def get_all_todo(status: Optional[bool] = None,
                  start_due: Optional[str] = None,
                  end_due: Optional[str] = None,
@@ -40,7 +41,7 @@ def get_all_todo(status: Optional[bool] = None,
     return service.get_todos(status, start_due, end_due, title, username)
 
 
-@router.get("/todos/{todo_id}", status_code=200, response_model=TodoGetResponse)
+@router.get("/{todo_id}", status_code=200, response_model=Todo)
 def get_specific_todo(todo_id: int,
                       service: TodoService = Depends(get_todo_service),
                       current_user: dict = Depends(get_current_user)):
@@ -48,7 +49,7 @@ def get_specific_todo(todo_id: int,
     return service.get_todo(todo_id, username)
 
 
-@router.put("/todos/delete", status_code=200, response_model=TodosDeleteResponse)
+@router.post("/bulk-delete", status_code=200, response_model=TodosDeleteResponse)
 def delete_todos(params: TodoIdsRequest,
                  service: TodoService = Depends(get_todo_service),
                  current_user: dict = Depends(get_current_user)):
@@ -56,16 +57,16 @@ def delete_todos(params: TodoIdsRequest,
     return service.delete_todos(params, username)
 
 
-@router.put("/todos/update/{todo_id}", status_code=200, response_model=TodoEditResponse)
+@router.patch("/update/{todo_id}", status_code=200, response_model=TodoEditResponse)
 def edit_todo(todo_id: int,
-              new_todo: Todo,
+              new_todo: UpsertTodoParams,
               service: TodoService = Depends(get_todo_service),
               current_user: dict = Depends(get_current_user)):
     username = current_user["username"]
     return service.edit_todo(todo_id, new_todo, username)
 
 
-@router.put("/todos/finish", status_code=200, response_model=TodosFinishResponse)
+@router.patch("/bulk-finish", status_code=200, response_model=TodosFinishResponse)
 def finish_todos(params: TodoIdsRequest,
                  service: TodoService = Depends(get_todo_service),
                  current_user: dict = Depends(get_current_user)):

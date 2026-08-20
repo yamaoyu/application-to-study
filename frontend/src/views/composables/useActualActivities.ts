@@ -14,7 +14,7 @@ export const useRegisterActuals = () => {
   const reqMsg = ref<string>(""); // リクエスト結果を表示するためのメッセージ
   const statusCode = ref<number | null>(null);
 
-  const makeMessage = (results: RegisterActualResult[]) => {
+  const makeMessageByDay = (results: RegisterActualResult[]) => {
     return results
       .map((r) => {
         if (r.result === "success") {
@@ -33,11 +33,10 @@ export const useRegisterActuals = () => {
         actual_time,
       }));
       const res = await registerActuals(activities);
-      statusCode.value = res.status;
-      if (res.status === 200) {
-        reqMsg.value = makeMessage(res.data.results);
-        selectedActivities.value = [];
-      };
+      statusCode.value = res.data.error_count === 0 ? 200 : 400;
+      reqMsg.value = `【活動時間登録】更新${res.data.success_count}件、エラー${res.data.error_count}件\n`
+        + makeMessageByDay(res.data.results);
+      selectedActivities.value = [];
     } catch (error: unknown) {
       reqMsg.value = parseError(error, "活動時間の登録に失敗しました");
       if (axios.isAxiosError(error)) {

@@ -58,7 +58,7 @@ export const registerTargets = (
   activities: SendTargetActivityParam[]
 ): Promise<AxiosResponse<RegisterTargetResponse>> => {
   return apiClient.post(
-    "activities/target",
+    "activities/bulk-create-targets",
     { activities }
   )
 };
@@ -66,8 +66,8 @@ export const registerTargets = (
 export const registerActuals = (
   activities: SendActualActivityParam[]
 ): Promise<AxiosResponse<RegisterActualResponse>> => {
-  return apiClient.put(
-    "activities/actual",
+  return apiClient.patch(
+    "activities/bulk-update-actuals",
     { activities }
   )
 };
@@ -75,8 +75,8 @@ export const registerActuals = (
 export const finishActivities = (
   dates: SendFinishActivityParam
 ): Promise<AxiosResponse<FinishActivityResponse>> => {
-  return apiClient.put(
-    "activities/finish",
+  return apiClient.patch(
+    "activities/bulk-finish",
     { dates }
   )
 };

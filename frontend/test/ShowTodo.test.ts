@@ -6,24 +6,26 @@ import { flushPromises, VueWrapper, DOMWrapper } from '@vue/test-utils';
 
 const mockedGet = vi.mocked(apiClient.get);
 
-const defaultTodosData = [
-  {
-    detail: "test detail1",
-    due: "2025-1-1",
-    status: true,
-    title: "test title1",
-    todo_id: 1,
-    username: "test"
-  },
-  {
-    detail: "test detail2",
-    due: "2025-1-2",
-    status: false,
-    title: "test title2",
-    todo_id: 2,
-    username: "test"
-  },
-];
+const defaultTodosData = {
+  todos: [
+    {
+      detail: "test detail1",
+      due: "2025-1-1",
+      status: true,
+      title: "test title1",
+      todo_id: 1,
+      username: "test"
+    },
+    {
+      detail: "test detail2",
+      due: "2025-1-2",
+      status: false,
+      title: "test title2",
+      todo_id: 2,
+      username: "test"
+    },
+  ]
+}
 
 type TodoData = typeof defaultTodosData;
 
@@ -98,7 +100,7 @@ describe('フィルターなし', () => {
       }
     );
     const rows = wrapper.findAll('[data-testid="todo-row"]');
-    expect(rows).toHaveLength(defaultTodosData.length);
+    expect(rows).toHaveLength(defaultTodosData.todos.length);
   });
 
   it("データなし", async () => {
@@ -194,12 +196,12 @@ describe('ステータスでフィルター', () => {
 
     // フィルター適用前
     const rows = wrapper.findAll('[data-testid="todo-row"]');
-    expect(rows).toHaveLength(defaultTodosData.length);
+    expect(rows).toHaveLength(defaultTodosData.todos.length);
 
     // フィルター適用
     mockedGet.mockResolvedValue({
       status: 200,
-      data: [defaultTodosData[0]]
+      data: { "todos": [defaultTodosData.todos[0]] }
     });
     const statusSelect = wrapper.find('[data-testid="status-filter"]') as DOMWrapper<HTMLSelectElement>;
     await statusSelect.setValue("true");
@@ -224,12 +226,12 @@ describe('ステータスでフィルター', () => {
 
     // フィルター適用前
     const rows = wrapper.findAll('[data-testid="todo-row"]');
-    expect(rows).toHaveLength(defaultTodosData.length);
+    expect(rows).toHaveLength(defaultTodosData.todos.length);
 
     // フィルター適用
     mockedGet.mockResolvedValue({
       status: 200,
-      data: [defaultTodosData[1]]
+      data: { "todos": [defaultTodosData.todos[1]] }
     });
     const statusSelect = wrapper.find('[data-testid="status-filter"]') as DOMWrapper<HTMLSelectElement>;
     await statusSelect.setValue("false");
@@ -263,12 +265,12 @@ describe('期限(以前)でフィルター', () => {
 
     // フィルター適用前
     const rows = wrapper.findAll('[data-testid="todo-row"]');
-    expect(rows).toHaveLength(defaultTodosData.length);
+    expect(rows).toHaveLength(defaultTodosData.todos.length);
 
     // フィルター適用
     mockedGet.mockResolvedValue({
       status: 200,
-      data: [defaultTodosData[0]]
+      data: { "todos": [defaultTodosData.todos[0]] }
     });
     const startDueInput = wrapper.find('[data-testid="start-due"]') as DOMWrapper<HTMLInputElement>;
     await startDueInput.setValue("2025-01-01");
@@ -302,12 +304,12 @@ describe('期限(以降)でフィルター', () => {
 
     // フィルター適用前
     const rows = wrapper.findAll('[data-testid="todo-row"]');
-    expect(rows).toHaveLength(defaultTodosData.length);
+    expect(rows).toHaveLength(defaultTodosData.todos.length);
 
     // フィルター適用
     mockedGet.mockResolvedValue({
       status: 200,
-      data: [defaultTodosData[1]]
+      data: { "todos": [defaultTodosData.todos[1]] }
     });
     const endDueInput = wrapper.find('[data-testid="end-due"]') as DOMWrapper<HTMLInputElement>;
     await endDueInput.setValue("2025-01-02");
@@ -341,15 +343,15 @@ describe('タイトル名でフィルター', () => {
 
     // フィルター適用前    
     const rows = wrapper.findAll('[data-testid="todo-row"]');
-    expect(rows).toHaveLength(defaultTodosData.length);
-    expect(rows).toHaveLength(defaultTodosData.length);
-    expect(rows).toHaveLength(defaultTodosData.length);
-    expect(rows).toHaveLength(defaultTodosData.length);
+    expect(rows).toHaveLength(defaultTodosData.todos.length);
+    expect(rows).toHaveLength(defaultTodosData.todos.length);
+    expect(rows).toHaveLength(defaultTodosData.todos.length);
+    expect(rows).toHaveLength(defaultTodosData.todos.length);
 
     // フィルター適用
     mockedGet.mockResolvedValue({
       status: 200,
-      data: [defaultTodosData[0]]
+      data: { "todos": [defaultTodosData.todos[0]] }
     });
     const titleInput = wrapper.find('[data-testid="title"]') as DOMWrapper<HTMLInputElement>;
     titleInput.setValue("title1");

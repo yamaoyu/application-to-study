@@ -73,16 +73,18 @@ def test_get_inquiries(client, get_admin_headers, get_resource_owner_headers, mo
     setup_create_inquiry(client, get_resource_owner_headers)
     response = client.get("/inquiries", headers=get_admin_headers)
     assert response.status_code == 200
-    assert response.json() == [
-        {
-            "id": 1,
-            "category": CATEGORY,
-            "detail": DETAIL,
-            "date": EXPECTED_DATE,
-            "is_checked": False,
-            "priority": "低"
-        }
-    ]
+    assert response.json() == {
+        "inquiries": [
+            {
+                "id": 1,
+                "category": CATEGORY,
+                "detail": DETAIL,
+                "date": EXPECTED_DATE,
+                "is_checked": False,
+                "priority": "低"
+            }
+        ]
+    }
 
 
 def test_get_inquiries_filter_by_month_without_year(client, get_admin_headers, get_resource_owner_headers):
@@ -105,24 +107,26 @@ def test_get_inquiries_filter_by_category(client, get_admin_headers, get_resourc
     setup_create_inquiry(client, get_resource_owner_headers)
     response = client.get("/inquiries?category=要望", headers=get_admin_headers)
     assert response.status_code == 200
-    assert response.json() == [
-        {
-            "id": 1,
-            "category": CATEGORY,
-            "detail": DETAIL,
-            "date": EXPECTED_DATE,
-            "is_checked": False,
-            "priority": "低"
-        }
-    ]
+    assert response.json() == {
+        "inquiries": [
+            {
+                "id": 1,
+                "category": CATEGORY,
+                "detail": DETAIL,
+                "date": EXPECTED_DATE,
+                "is_checked": False,
+                "priority": "低"
+            }
+        ]
+    }
 
 
 def test_get_inquiries_filter_by_category_not_found(client, get_admin_headers, get_resource_owner_headers):
     setup_create_inquiry(client, get_resource_owner_headers)
     response = client.get("/inquiries?category=エラー報告", headers=get_admin_headers)
-    assert response.status_code == 404
+    assert response.status_code == 200
     assert response.json() == {
-        "code": NotFoundCode.INQUIRY_NOT_FOUND
+        "inquiries": []
     }
 
 
@@ -131,24 +135,26 @@ def test_get_inquiries_filter_by_priority(client, get_admin_headers, get_resourc
     setup_create_inquiry(client, get_resource_owner_headers)
     response = client.get("/inquiries?priority=低", headers=get_admin_headers)
     assert response.status_code == 200
-    assert response.json() == [
-        {
-            "id": 1,
-            "category": CATEGORY,
-            "detail": DETAIL,
-            "date": EXPECTED_DATE,
-            "is_checked": False,
-            "priority": "低"
-        }
-    ]
+    assert response.json() == {
+        "inquiries": [
+            {
+                "id": 1,
+                "category": CATEGORY,
+                "detail": DETAIL,
+                "date": EXPECTED_DATE,
+                "is_checked": False,
+                "priority": "低"
+            }
+        ]
+    }
 
 
 def test_get_inquiries_filter_by_priority_not_found(client, get_admin_headers, get_resource_owner_headers):
     setup_create_inquiry(client, get_resource_owner_headers)
     response = client.get("/inquiries?priority=高", headers=get_admin_headers)
-    assert response.status_code == 404
+    assert response.status_code == 200
     assert response.json() == {
-        "code": NotFoundCode.INQUIRY_NOT_FOUND
+        "inquiries": []
     }
 
 
@@ -156,7 +162,7 @@ def test_mark_inquiry_is_checked(client, get_admin_headers, get_resource_owner_h
     monkeypatch.setattr(inquiry_service, "date", FixedDate)
     setup_create_inquiry(client, get_resource_owner_headers)
     data = {"is_checked": True}
-    response = client.put("/inquiries/1", json=data, headers=get_admin_headers)
+    response = client.patch("/inquiries/1", json=data, headers=get_admin_headers)
     assert response.status_code == 200
     assert response.json() == {
         "id": 1,
@@ -172,7 +178,7 @@ def test_change_inquiry_priority(client, get_admin_headers, get_resource_owner_h
     monkeypatch.setattr(inquiry_service, "date", FixedDate)
     setup_create_inquiry(client, get_resource_owner_headers)
     data = {"priority": "高"}
-    response = client.put("/inquiries/1", json=data, headers=get_admin_headers)
+    response = client.patch("/inquiries/1", json=data, headers=get_admin_headers)
     assert response.status_code == 200
     assert response.json() == {
         "id": 1,
@@ -186,7 +192,7 @@ def test_change_inquiry_priority(client, get_admin_headers, get_resource_owner_h
 
 def test_edit_inquiry_not_found(client, get_admin_headers):
     data = {"priority": "高"}
-    response = client.put("/inquiries/999", json=data, headers=get_admin_headers)
+    response = client.patch("/inquiries/999", json=data, headers=get_admin_headers)
     assert response.status_code == 404
     assert response.json() == {
         "code": NotFoundCode.INQUIRY_NOT_FOUND

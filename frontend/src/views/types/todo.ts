@@ -1,7 +1,9 @@
+import { type BulkResponse } from "./common"
+
 type TodoErrorMessage =
     | "UNEXPECTED_ERROR" | "TODO_NOT_FOUND" | "TODO_ALREADY_FINISHED"
 
-export type TodoResult =
+export type TodoUpsertResult =
     | {
         "title": string
         "due": string
@@ -17,12 +19,7 @@ export type TodoResult =
         "reason": TodoErrorMessage
     }
 
-
-export type UpsertTodoResponse = {
-    "success_count": number
-    "error_count": number
-    "results": TodoResult[]
-}
+export type UpsertTodoResponse = BulkResponse<TodoUpsertResult>
 
 export type UpsertTodoParam = {
     "title": string
@@ -38,11 +35,31 @@ export type TodoInfo = {
     "status": boolean
 }
 
-export type GetTodoResponse = TodoInfo
+export type GetTodoResponse = {
+    todos: TodoInfo[]
+}
 
 export type FinishTodoParam = {
     "ids": number[]
 }
+
+export type TodoDeleteFinishResult =
+    | {
+        todo_id: number
+        title: string
+        result: "success"
+        reason: null
+    }
+    | {
+        todo_id: number
+        title: null
+        result: "error"
+        reason: TodoErrorMessage
+    }
+
+export type FinishTodoResponse = BulkResponse<TodoDeleteFinishResult>
+
+export type DeleteTodoResponse = BulkResponse<TodoDeleteFinishResult>
 
 export type DeleteTodoParam = FinishTodoParam
 

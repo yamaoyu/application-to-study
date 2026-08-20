@@ -49,7 +49,7 @@ class TodoRepository():
             db_model.Todo.todo_id == todo_id,
             db_model.Todo.username == username).delete()
 
-    def delete_todos(self, ids: list[int], username: str) -> None:
+    def delete_todos(self, ids: set[int], username: str) -> None:
         self.db.query(db_model.Todo).filter(
             db_model.Todo.todo_id.in_(ids),
             db_model.Todo.username == username).delete()
@@ -62,7 +62,7 @@ class TodoRepository():
     def update_todo_status(self, todo: db_model.Todo, status: bool) -> None:
         todo.status = status
 
-    def finish_todos(self, ids: list[int], username: str) -> None:
+    def finish_todos(self, ids: set[int], username: str) -> None:
         self.db.query(db_model.Todo).filter(
             db_model.Todo.todo_id.in_(ids),
             db_model.Todo.username == username).update({db_model.Todo.status: True})

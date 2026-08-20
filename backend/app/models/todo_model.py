@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic_core import PydanticCustomError
 
 
-class Todo(BaseModel):
+class UpsertTodoParams(BaseModel):
     title: str
     due: date
     detail: Optional[str] = None
@@ -17,13 +17,22 @@ class Todo(BaseModel):
 
     @field_validator("detail")
     def check_detail_length(cls, detail):
+        if detail is None:
+            return detail
         if len(detail) > 200:
             raise ValueError("詳細は200字以下で入力してください")
         return detail
 
 
 class TodosCreateRequest(BaseModel):
-    todos: list[Todo]
+    todos: list
+
+    @field_validator("todos")
+    def validate_todos(cls, todos):
+        if not todos:
+            raise ValueError("登録するTodoが送られていません")
+
+        return todos
 
 
 class TodoManupulate(BaseModel):
@@ -49,7 +58,7 @@ class TodoIdsRequest(BaseModel):
         return list(set(ids))
 
 
-class TodoGetResponse(BaseModel):
+class Todo(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     todo_id: int
@@ -57,6 +66,11 @@ class TodoGetResponse(BaseModel):
     status: bool
     due: date
     detail: Optional[str] = None
+
+
+class TodoGetResponse(BaseModel):
+    # TODO: 将来的にサーバーサイドページングにするときはtotalを追加する
+    todos: list[Todo] | list
 
 
 class TodosFinishResponse(TodoManupulate):

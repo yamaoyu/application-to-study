@@ -7,7 +7,17 @@ export type CreateInquiryResponse = {
     "detail": string
 }
 
-export type GetInquiryInfo = CreateInquiryResponse & {
-    "date": string
-    "is_checked": boolean
+type InquiryPriority = "高" | "中" | "低";
+
+export type InquiryItem = {
+    id: number
+    detail: string
+    date: Date
+    category: InquiryCategoryType
+    priority: InquiryPriority | null
+    is_checked: boolean | null
+}
+
+export type GetInquiryInfo = {
+    inquiries: InquiryItem[]
 }

@@ -46,8 +46,14 @@ describe('目標時間の登録(一括)', () => {
         await flushPromises();
 
         mockedPost.mockResolvedValue({
-            status: 201,
-            data: { results: [{ result: "success", date: "2025/1/1", target_time: insertTime }] }
+            status: 200,
+            data: {
+                success_count: 1,
+                error_count: 0,
+                results: [
+                    { result: "success", date: "2025/1/1", target_time: insertTime }
+                ]
+            }
         });
 
         await wrapper.find("[data-testid='submit-multi-target']").trigger("click");
@@ -58,7 +64,7 @@ describe('目標時間の登録(一括)', () => {
         await bModal.vm.$emit('ok');
         await flushPromises();
         expect(mockedPost).toBeCalledWith(
-            `activities/target`,
+            `activities/bulk-create-targets`,
             {
                 activities: [
                     {
@@ -68,7 +74,8 @@ describe('目標時間の登録(一括)', () => {
                 ]
             }
         );
-        expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual("2025/1/1の目標時間を3時間に登録しました");
+        const expectedMessage = "【目標時間登録】登録1件、エラー0件\n2025/1/1の目標時間を3時間に登録しました";
+        expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);
     });
 
     it('失敗', async () => {
@@ -89,6 +96,8 @@ describe('目標時間の登録(一括)', () => {
         mockedPost.mockResolvedValue({
             status: 201,
             data: {
+                success_count: 0,
+                error_count: 2,
                 results: [
                     { result: "error", date: "2025/1/1", reason: "TARGET_TIME_ALREADY_REGISTERED" },
                     { result: "error", date: "2025/2/1", reason: "SALARY_NOT_FOUND" }
@@ -104,12 +113,12 @@ describe('目標時間の登録(一括)', () => {
         await bModal.vm.$emit('ok');
         await flushPromises();
         expect(mockedPost).toBeCalledWith(
-            `activities/target`,
+            `activities/bulk-create-targets`,
             {
                 activities: insertData
             }
         );
-        const expectedMessage = "2025/1/1の目標時間登録に失敗: 既に登録されています\n2025/2/1の目標時間登録に失敗: 月収が登録されていません";
+        const expectedMessage = "【目標時間登録】登録0件、エラー2件\n2025/1/1の目標時間登録に失敗: 既に登録されています\n2025/2/1の目標時間登録に失敗: 月収が登録されていません";
         expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);
     });
 });

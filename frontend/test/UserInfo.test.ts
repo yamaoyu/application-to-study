@@ -5,7 +5,7 @@ import { apiClient } from '@/views/api/client';
 import { VueWrapper, DOMWrapper } from '@vue/test-utils';
 
 const mockedPost = vi.mocked(apiClient.post)
-const mockedPut = vi.mocked(apiClient.put)
+const mockedPatch = vi.mocked(apiClient.patch)
 
 describe('パスワード変更フォームの動作確認', () => {
     let wrapper: VueWrapper;
@@ -49,7 +49,7 @@ describe('パスワード変更フォームの動作確認', () => {
 
         // 値がないとリクエストを送信できないことを確認する
         await wrapper.find('[data-testid="password-change-button"]').trigger('submit');
-        expect(mockedPut).toBeCalledTimes(0);
+        expect(mockedPatch).toBeCalledTimes(0);
     });
 
     it('新しいパスワード(1回目)を入力フォームに値が入力できる', async () => {
@@ -235,14 +235,14 @@ describe('パスワード変更リクエストを送信', async () => {
         await passCheckForm.setValue(newPasswordCheck);
 
         const expectedMessage = "パスワードの変更に成功しました"
-        mockedPut.mockResolvedValue({
+        mockedPatch.mockResolvedValue({
             status: 200,
             data: {}
         });
         await wrapper.find('[data-testid="password-change-button"]').trigger('submit');
 
         // 更新リクエストが正しく行われたことを確認
-        expect(mockedPut).toBeCalledWith(
+        expect(mockedPatch).toBeCalledWith(
             "password",  // 正しいURL
             {
                 old_password: oldPassword,    // 正しいパラメータ
@@ -270,7 +270,7 @@ describe('パスワード変更リクエストを送信', async () => {
         await passCheckForm.setValue("newP@ssword1");
 
         const expectedMessage = "現在のパスワードに誤りがあります"
-        mockedPut.mockRejectedValue({
+        mockedPatch.mockRejectedValue({
             response: {
                 status: 401,
                 data: {

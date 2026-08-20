@@ -2,6 +2,7 @@ import traceback
 from lib.log_conf import logger
 from sqlalchemy.orm import Session
 from app.models.todo_model import (Todo,
+                                   UpsertTodoParams,
                                    TodoIdsRequest,
                                    TodosCreateResponse,
                                    TodoGetResponse,
@@ -10,22 +11,40 @@ from app.models.todo_model import (Todo,
                                    TodoEditResponse)
 from typing import Optional
 from app.repositories.todo_repository import TodoRepository
-from app.exceptions import NotFound, BadRequest, Conflict
+from app.exceptions import NotFound, Conflict
 from app.error_codes import NotFoundCode, ConflictCode, BadRequestCode
+from app.utils.validation import get_validation_error_code
+from pydantic import ValidationError
+from collections.abc import Mapping
 
 
 class TodoService():
     def __init__(self, db: Session):
         self.repo = TodoRepository(db)
 
-    def create_todos(self, todos: list[Todo], username: str) -> TodosCreateResponse:
+    def create_todos(self, todos: list, username: str) -> TodosCreateResponse:
         success_count = 0
         error_count = 0
         results = []
         for todo in todos:
-            title = todo.title
-            due = todo.due
-            detail = todo.detail
+            try:
+                # ルーター側でチェックすると1件でも不正なものがあると全件エラーになるのでここでバリデーション(改善の余地あり)
+                validated_todo = UpsertTodoParams.model_validate(todo)
+                title = validated_todo.title
+                due = validated_todo.due
+                detail = validated_todo.detail
+            except ValidationError as exc:
+                first_error = exc.errors()[0]
+                loc = first_error.get("loc", [])
+                field = loc[-1] if loc else None
+
+                reason = get_validation_error_code(
+                    error_type=first_error["type"],
+                    field=field,
+                )
+                results.append(build_create_error_result(todo, reason))
+                error_count += 1
+                continue
             try:
                 with self.repo.begin_nested():
                     self.repo.insert_todo(title, due, detail, username)
@@ -49,60 +68,64 @@ class TodoService():
                     "reason": BadRequestCode.UNEXPECTED_ERROR,
                 })
 
-        if error_count == len(todos):
-            raise BadRequest(code=BadRequestCode.UNEXPECTED_ERROR)
         return TodosCreateResponse(
             success_count=success_count,
             error_count=error_count,
             results=results
         )
 
-    def get_todo(self, todo_id: int, username: str) -> TodoGetResponse:
+    def get_todo(self, todo_id: int, username: str) -> Todo:
         todo = self.repo.get_todo(todo_id, username)
         if not todo:
             raise NotFound(code=NotFoundCode.TODO_NOT_FOUND)
         logger.info(f"Todoを取得:{username}:ID{todo.todo_id}")
-        return TodoGetResponse.model_validate(todo)
+        return Todo.model_validate(todo)
 
     def get_todos(self,
                   status: Optional[bool],
                   start_due: Optional[str],
                   end_due: Optional[str],
                   title: Optional[str],
-                  username: str) -> list[TodoGetResponse]:
+                  username: str) -> TodoGetResponse:
         todos = self.repo.get_todos(username=username, status=status,
                                     start_due=start_due, end_due=end_due, title=title)
-        if not todos:
-            raise NotFound(code=NotFoundCode.TODO_NOT_FOUND)
         logger.info(f"ユーザー名:{username}  Todoを全て取得")
-        return [TodoGetResponse.model_validate(todo) for todo in todos]
+        if not todos:
+            return TodoGetResponse(todos=[])
+        # dbから取得したままでは「db.db_model.Todo」なので整形する
+        converted_todos = [Todo.model_validate(todo) for todo in todos]
+        return TodoGetResponse(todos=converted_todos)
 
     def delete_todos(self, params: TodoIdsRequest, username: str) -> TodosDeleteResponse:
-        ids = params.ids
+        requested_ids = params.ids
         # 削除するTodoが存在するか確認
-        todos = self.repo.get_todos(username=username, ids=ids)
-        if not todos:
-            raise NotFound(code=NotFoundCode.TODO_NOT_FOUND)
-        ids_can_delete = [todo.todo_id for todo in todos]
-        self.repo.delete_todos(ids_can_delete, username)
+        todos = self.repo.get_todos(username=username, ids=requested_ids)
+        can_delete_ids = set(todo.todo_id for todo in todos)
+        missing_ids = set(requested_ids) - can_delete_ids
+        self.repo.delete_todos(can_delete_ids, username)
         results = []
-        # 削除できるのは存在するTodoのみなので、削除できたTodoの情報を返す
-        # 存在しないTodoの情報は返せないので、削除できなかったTodoの情報は返さない
         for todo in todos:
+            if todo.todo_id in can_delete_ids:
+                results.append({
+                    "todo_id": todo.todo_id,
+                    "title": todo.title,
+                    "result": "success",
+                    "reason": None
+                })
+        for id in missing_ids:
             results.append({
-                "title": todo.title,
-                "due": todo.due,
-                "detail": todo.detail,
-                "result": "success",
-                "reason": None
+                "todo_id": id,
+                "title": None,
+                "result": "error",
+                "reason": NotFoundCode.TODO_NOT_FOUND
             })
         return TodosDeleteResponse(
-            success_count=len(ids_can_delete),
-            error_count=len(ids) - len(ids_can_delete),
+            success_count=len(can_delete_ids),
+            error_count=len(missing_ids),
             results=results
         )
 
-    def edit_todo(self, todo_id: int, new_todo: Todo, username: str) -> TodoEditResponse:
+    def edit_todo(self, todo_id: int, new_todo: UpsertTodoParams, username: str) -> TodoEditResponse:
         new_title = new_todo.title
         new_detail = new_todo.detail
         new_due = new_todo.due
@@ -127,27 +150,63 @@ class TodoService():
             ]
         )
 
+    # TODO 別issueにてサービス層の肥大化を解消する(ここに限らず)
     def finish_todos(self, params: TodoIdsRequest, username: str) -> TodosFinishResponse:
-        ids = params.ids
+        requested_ids = params.ids
         # 終了するTodoが存在するか確認
-        todos = self.repo.get_todos(username=username, ids=ids)
-        if not todos:
-            raise NotFound(code=NotFoundCode.TODO_NOT_FOUND)
+        todos = self.repo.get_todos(username=username, ids=requested_ids)
+        existing_ids = set(todo.todo_id for todo in todos)
         can_finish_ids = set(todo.todo_id for todo in todos if todo.status is False)
-        if len(can_finish_ids) == 0:
-            raise Conflict(code=ConflictCode.TODO_ALREADY_FINISHED)
-        self.repo.finish_todos(list(can_finish_ids), username)
-        results = [
-            {
-                "title": todo.title,
-                "detail": todo.detail,
-                "due": todo.due,
-                "result": "success",
-                "reason": None
-            }
-            for todo in todos if todo.todo_id in can_finish_ids]
-        logger.info(f"{username}が複数のTodoを完了 IDs:{ids}")
+        finished_ids = existing_ids - can_finish_ids
+        missing_ids = set(requested_ids) - existing_ids
+        self.repo.finish_todos(existing_ids, username)
+        results = []
+        for todo in todos:
+            if todo.todo_id in can_finish_ids:
+                results.append({
+                    "todo_id": todo.todo_id,
+                    "title": todo.title,
+                    "result": "success",
+                    "reason": None
+                })
+
+            elif todo.todo_id in finished_ids:
+                results.append({
+                    "todo_id": todo.todo_id,
+                    "title": todo.title,
+                    "result": "error",
+                    "reason": ConflictCode.TODO_ALREADY_FINISHED
+                })
+        for id in missing_ids:
+            results.append({
+                "todo_id": id,
+                "title": None,
+                "result": "error",
+                "reason": NotFoundCode.TODO_NOT_FOUND
+            })
+        logger.info(f"{username}が複数のTodoを完了 IDs:{requested_ids}")
         return TodosFinishResponse(
             success_count=len(can_finish_ids),
-            error_count=len(ids) - len(can_finish_ids),
+            error_count=len(finished_ids) + len(missing_ids),
             results=results)
+
+
+def build_create_error_result(todo, reason):
+    """ todo作成時にバリデーションエラー発生時のレスポンス作成 """
+    if isinstance(todo, Mapping):
+        return {
+            "title": todo.get("title", ""),
+            "due": todo.get("due", ""),
+            "detail": todo.get("detail", ""),
+            "result": "error",
+            "reason": reason,
+        }
+
+    return {
+        "title": "",
+        "due": "",
+        "detail": "",
+        "input": repr(todo),
+        "result": "error",
+        "reason": reason,
+    }

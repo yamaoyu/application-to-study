@@ -37,7 +37,7 @@ import { useGetInquiries } from './composables/useInquiry';
 export default{
     setup() {
         const { inquiries, message, fetchInquiries } = useGetInquiries();
-        const getInquiryStatus = (isChecked: boolean) => isChecked ? "確認済" : "未確認";
+        const getInquiryStatus = (isChecked: boolean | null) => isChecked ? "確認済" : "未確認";
 
         onMounted( async()=>{
             await fetchInquiries();

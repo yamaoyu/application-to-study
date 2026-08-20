@@ -25,7 +25,9 @@ export const fieldErrorMessages = {
     "INVALID_VALUE": "不明なバリデーションエラーが発生しました",
     "EMPTY_LIST": "必要な値を指定してください",
     "INVALID_PASSWORD": "パスワードは大文字、小文字、数字、記号を含めた8-16文字としてください",
-    "INVALID_USERNAME": "ユーザー名は3文字以上、16文字以下としてください"
+    "INVALID_USERNAME": "ユーザー名は3文字以上、16文字以下としてください",
+    "VACANT_ACTIVITIES": "登録する活動が指定されていません",
+    "INVALID_DATES": "不正な日付が含まれるか日付が指定されていません"
 } as const;
 
 export type ErrorCode = keyof typeof errorMessages;

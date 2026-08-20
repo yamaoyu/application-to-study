@@ -5,7 +5,7 @@ from helpers.activity import (
     setup_finish_activity,
     setup_monthly_income
 )
-from app.error_codes import NotFoundCode, BadRequestCode, ConflictCode
+from app.error_codes import NotFoundCode, ConflictCode
 
 
 def test_register_actual(client, get_resource_owner_headers):
@@ -18,11 +18,13 @@ def test_register_actual(client, get_resource_owner_headers):
             {"date": test_date, "actual_time": 5.0},
         ]
     }
-    response = client.put("/activities/actual",
-                          json=data,
-                          headers=get_resource_owner_headers)
+    response = client.patch("/activities/bulk-update-actuals",
+                            json=data,
+                            headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
+        "success_count": 1,
+        "error_count": 0,
         "results": [
             {
                 "date": test_date,
@@ -45,7 +47,7 @@ def test_register_multi_actual(client, get_resource_owner_headers):
             {"date": "2024-5-7", "target_time": 7.0}
         ]
     }
-    client.post("/activities/target",
+    client.post("/activities/bulk-create-targets",
                 json=data,
                 headers=get_resource_owner_headers)
     # 活動時間を登録
@@ -56,11 +58,13 @@ def test_register_multi_actual(client, get_resource_owner_headers):
             {"date": "2024-5-7", "actual_time": 7.0}
         ]
     }
-    response = client.put("/activities/actual",
-                          json=data,
-                          headers=get_resource_owner_headers)
+    response = client.patch("/activities/bulk-update-actuals",
+                            json=data,
+                            headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
+        "success_count": 3,
+        "error_count": 0,
         "results": [
             {
                 "date": test_date,
@@ -84,6 +88,27 @@ def test_register_multi_actual(client, get_resource_owner_headers):
     }
 
 
+def test_register_multi_target_with_vacant_activities(client, get_resource_owner_headers):
+    """ 複数の目標時間を登録した場合 """
+    setup_monthly_income(client, get_resource_owner_headers)
+    data = {
+        "activities": []
+    }
+    response = client.patch("/activities/bulk-update-actuals",
+                            json=data,
+                            headers=get_resource_owner_headers)
+    assert response.status_code == 422
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "VACANT_ACTIVITIES",
+                "field": "activities"
+            }
+        ]
+    }
+
+
 def test_register_actual_with_partial_error(client, get_resource_owner_headers):
     """ 目標時間が登録されていないものが含まれる場合 """
     setup_monthly_income(client, get_resource_owner_headers)
@@ -94,11 +119,13 @@ def test_register_actual_with_partial_error(client, get_resource_owner_headers):
             {"date": "2024-5-11", "actual_time": 5.0}
         ]
     }
-    response = client.put("/activities/actual",
-                          json=data,
-                          headers=get_resource_owner_headers)
+    response = client.patch("/activities/bulk-update-actuals",
+                            json=data,
+                            headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
+        "success_count": 1,
+        "error_count": 1,
         "results": [
             {
                 "date": test_date,
@@ -124,12 +151,13 @@ def test_register_actual_with_all_errors(client, get_resource_owner_headers):
             {"date": "2024-5-11", "actual_time": 5.0}
         ]
     }
-    response = client.put("/activities/actual",
-                          json=data,
-                          headers=get_resource_owner_headers)
-    assert response.status_code == 400
+    response = client.patch("/activities/bulk-update-actuals",
+                            json=data,
+                            headers=get_resource_owner_headers)
+    assert response.status_code == 200
     assert response.json() == {
-        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
+        "success_count": 0,
+        "error_count": 2,
         "results": [
             {
                 "date": test_date,
@@ -156,9 +184,9 @@ def test_register_actual_with_invalid_hour(client, get_resource_owner_headers):
             {"date": "2024-5-10", "actual_time": 5.2}
         ]
     }
-    response = client.put("/activities/actual",
-                          json=data,
-                          headers=get_resource_owner_headers)
+    response = client.patch("/activities/bulk-update-actuals",
+                            json=data,
+                            headers=get_resource_owner_headers)
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",
@@ -182,12 +210,13 @@ def test_register_actual_after_finish(client, get_resource_owner_headers):
             {"date": test_date, "actual_time": 5.0}
         ]
     }
-    response = client.put("/activities/actual",
-                          json=data,
-                          headers=get_resource_owner_headers)
-    assert response.status_code == 400
+    response = client.patch("/activities/bulk-update-actuals",
+                            json=data,
+                            headers=get_resource_owner_headers)
+    assert response.status_code == 200
     assert response.json() == {
-        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
+        "success_count": 0,
+        "error_count": 1,
         "results": [
             {
                 "date": test_date,
@@ -208,9 +237,9 @@ def test_register_multi_actual_with_invalid_hour(client, get_resource_owner_head
             {"date": test_date, "actual_time": 15.0}  # 上限を超える活動時間
         ]
     }
-    response = client.put("/activities/actual",
-                          json=data,
-                          headers=get_resource_owner_headers)
+    response = client.patch("/activities/bulk-update-actuals",
+                            json=data,
+                            headers=get_resource_owner_headers)
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",
@@ -231,9 +260,9 @@ def test_register_multi_actual_with_invalid_year(client, get_resource_owner_head
         ]
     }
 
-    response = client.put("/activities/actual",
-                          json=data,
-                          headers=get_resource_owner_headers)
+    response = client.patch("/activities/bulk-update-actuals",
+                            json=data,
+                            headers=get_resource_owner_headers)
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",
@@ -254,9 +283,9 @@ def test_register_multi_actual_with_invalid_month(client, get_resource_owner_hea
         ]
     }
 
-    response = client.put("/activities/actual",
-                          json=data,
-                          headers=get_resource_owner_headers)
+    response = client.patch("/activities/bulk-update-actuals",
+                            json=data,
+                            headers=get_resource_owner_headers)
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",
@@ -277,9 +306,9 @@ def test_register_multi_actual_with_invalid_date(client, get_resource_owner_head
         ]
     }
 
-    response = client.put("/activities/actual",
-                          json=data,
-                          headers=get_resource_owner_headers)
+    response = client.patch("/activities/bulk-update-actuals",
+                            json=data,
+                            headers=get_resource_owner_headers)
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",

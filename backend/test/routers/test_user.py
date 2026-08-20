@@ -168,7 +168,7 @@ def test_change_password_with_invalid_old_password(client, get_resource_owner_he
         "old_password": new_password,
         "new_password": new_password
     }
-    response = client.put("/password", json=data, headers=get_resource_owner_headers)
+    response = client.patch("/password", json=data, headers=get_resource_owner_headers)
     assert response.status_code == 401
     assert response.json() == {
         "code": NotAuthorizedCode.INVALID_CURRENT_PASSWORD
@@ -181,7 +181,7 @@ def test_change_password_with_invalid_password(client, get_resource_owner_header
         "old_password": RESOURCE_OWNER_PLAIN_PASSWORD,
         "new_password": new_password
     }
-    response = client.put("/password", json=data, headers=get_resource_owner_headers)
+    response = client.patch("/password", json=data, headers=get_resource_owner_headers)
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",

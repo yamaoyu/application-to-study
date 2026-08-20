@@ -45,16 +45,14 @@ export const useLogin = () => {
 
     try {
       const response = await login(username.value, password.value);
-      if (response.status === 200) {
-        await setAuthDataFromToken(authStore, response.data)
+      await setAuthDataFromToken(authStore, response.data)
 
-        roleStore.setRole(response.data.role)
+      roleStore.setRole(response.data.role)
 
-        if (authStore.getRedirectPath) {
-          router.push({ path: authStore.getRedirectPath })
-        } else {
-          router.push({ path: "/home" })
-        }
+      if (authStore.getRedirectPath) {
+        router.push({ path: authStore.getRedirectPath })
+      } else {
+        router.push({ path: "/home" })
       }
     } catch (error) {
       message.value = parseError(error, "ログインに失敗しました")
@@ -84,16 +82,14 @@ export const useLogout = () => {
 
   const userLogout = async () => {
     try {
-      const res = await logout();
-      if (res.status === 200) {
-        authStore.clearAuthData();
-        roleStore.clearRole();
-        router.push(
-          {
-            path: "/login",
-            query: { message: "ログアウトしました" }
-          })
-      }
+      await logout();
+      authStore.clearAuthData();
+      roleStore.clearRole();
+      router.push(
+        {
+          path: "/login",
+          query: { message: "ログアウトしました" }
+        })
     } catch (error) {
       message.value = parseError(error, "ログアウトに失敗しました");
     }

@@ -7,7 +7,7 @@ from helpers.activity import (
     setup_target_time,
     setup_monthly_income
 )
-from app.error_codes import NotFoundCode, NotAuthorizedCode, BadRequestCode, ConflictCode
+from app.error_codes import NotFoundCode, NotAuthorizedCode, ConflictCode
 
 
 def test_register_target(client, get_resource_owner_headers):
@@ -18,11 +18,13 @@ def test_register_target(client, get_resource_owner_headers):
             {"date": test_date, "target_time": 5.0}
         ]
     }
-    response = client.post("/activities/target",
+    response = client.post("/activities/bulk-create-targets",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 201
+    assert response.status_code == 200
     assert response.json() == {
+        "success_count": 1,
+        "error_count": 0,
         "results": [
             {
                 "date": test_date,
@@ -41,12 +43,13 @@ def test_register_target_without_monthly_income(client, get_resource_owner_heade
             {"date": test_date, "target_time": 5.0}
         ]
     }
-    response = client.post("/activities/target",
+    response = client.post("/activities/bulk-create-targets",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 400
+    assert response.status_code == 200
     assert response.json() == {
-        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
+        "success_count": 0,
+        "error_count": 1,
         "results": [
             {
                 "date": test_date,
@@ -72,7 +75,7 @@ def test_register_target_with_expired_token(client, get_resource_owner_headers):
                 {"date": test_date, "target_time": 5.0}
             ]
         }
-        response = client.post("/activities/target",
+        response = client.post("/activities/bulk-create-targets",
                                json=data,
                                headers=headers)
         assert response.status_code == 401
@@ -90,12 +93,13 @@ def test_register_target_twice(client, get_resource_owner_headers):
             {"date": test_date, "target_time": 5.0}
         ]
     }
-    response = client.post("/activities/target",
+    response = client.post("/activities/bulk-create-targets",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 400
+    assert response.status_code == 200
     assert response.json() == {
-        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
+        "success_count": 0,
+        "error_count": 1,
         "results": [
             {
                 "date": test_date,
@@ -115,7 +119,7 @@ def test_register_target_out_of_range(client, get_resource_owner_headers):
             {"date": test_date, "target_time": 15.0}
         ]
     }
-    response = client.post("/activities/target",
+    response = client.post("/activities/bulk-create-targets",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -133,7 +137,7 @@ def test_register_target_out_of_range(client, get_resource_owner_headers):
             {"date": test_date, "target_time": 0.0}
         ]
     }
-    response = client.post("/activities/target",
+    response = client.post("/activities/bulk-create-targets",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -156,7 +160,7 @@ def test_register_target_with_incorrect_hour(client, get_resource_owner_headers)
             {"date": "2024-5-5", "target_time": 5.3}
         ]
     }
-    response = client.post("/activities/target",
+    response = client.post("/activities/bulk-create-targets",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -179,7 +183,7 @@ def test_register_target_with_invalid_year(client, get_resource_owner_headers):
             {"date": "20240-5-5", "target_time": 5.0}
         ]
     }
-    response = client.post("/activities/target",
+    response = client.post("/activities/bulk-create-targets",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -197,7 +201,7 @@ def test_register_target_with_invalid_year(client, get_resource_owner_headers):
             {"date": "2023-5-5", "target_time": 5.0}
         ]
     }
-    response = client.post("/activities/target",
+    response = client.post("/activities/bulk-create-targets",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -220,7 +224,7 @@ def test_register_target_with_invalid_month(client, get_resource_owner_headers):
             {"date": "2024-13-30", "target_time": 5.0}
         ]
     }
-    response = client.post("/activities/target",
+    response = client.post("/activities/bulk-create-targets",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -243,7 +247,7 @@ def test_register_target_with_invalid_date(client, get_resource_owner_headers):
             {"date": "2024-2-30", "target_time": 5.0}
         ]
     }
-    response = client.post("/activities/target",
+    response = client.post("/activities/bulk-create-targets",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -268,11 +272,13 @@ def test_register_multi_target(client, get_resource_owner_headers):
             {"date": "2024-5-7", "target_time": 7.0}
         ]
     }
-    response = client.post("/activities/target",
+    response = client.post("/activities/bulk-create-targets",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 201
+    assert response.status_code == 200
     assert response.json() == {
+        "success_count": 3,
+        "error_count": 0,
         "results": [
             {
                 "date": test_date,
@@ -296,6 +302,27 @@ def test_register_multi_target(client, get_resource_owner_headers):
     }
 
 
+def test_register_multi_target_with_vacant_activities(client, get_resource_owner_headers):
+    """ 複数の目標時間を登録した場合 """
+    setup_monthly_income(client, get_resource_owner_headers)
+    data = {
+        "activities": []
+    }
+    response = client.post("/activities/bulk-create-targets",
+                           json=data,
+                           headers=get_resource_owner_headers)
+    assert response.status_code == 422
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "VACANT_ACTIVITIES",
+                "field": "activities"
+            }
+        ]
+    }
+
+
 def test_register_multi_target_with_partial_error(client, get_resource_owner_headers):
     """ 既に目標時間が登録された日が含まれて一部がエラーになる場合 """
     setup_monthly_income(client, get_resource_owner_headers)
@@ -306,11 +333,13 @@ def test_register_multi_target_with_partial_error(client, get_resource_owner_hea
             {"date": "2024-5-6", "target_time": 6.0}
         ]
     }
-    response = client.post("/activities/target",
+    response = client.post("/activities/bulk-create-targets",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 201
+    assert response.status_code == 200
     assert response.json() == {
+        "success_count": 1,
+        "error_count": 1,
         "results": [
             {
                 "date": "2024-5-5",
@@ -336,12 +365,13 @@ def test_register_multi_target_with_all_errors(client, get_resource_owner_header
             {"date": "2024-5-6", "target_time": 6.0}
         ]
     }
-    response = client.post("/activities/target",
+    response = client.post("/activities/bulk-create-targets",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 400
+    assert response.status_code == 200
     assert response.json() == {
-        "code": BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED,
+        "success_count": 0,
+        "error_count": 2,
         "results": [
             {
                 "date": "2024-5-5",
@@ -369,7 +399,7 @@ def test_register_multi_target_with_invalid_hour(client, get_resource_owner_head
             {"date": "2024-5-7", "target_time": 15.0}
         ]
     }
-    response = client.post("/activities/target",
+    response = client.post("/activities/bulk-create-targets",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -397,7 +427,7 @@ def test_register_multi_target_with_invalid_year(client, get_resource_owner_head
             {"date": "2024-5-5", "target_time": 5.0}
         ]
     }
-    response = client.post("/activities/target",
+    response = client.post("/activities/bulk-create-targets",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -419,7 +449,7 @@ def test_register_multi_target_with_invalid_month(client, get_resource_owner_hea
             {"date": "2024-13-6", "target_time": 6.0}
         ]
     }
-    response = client.post("/activities/target",
+    response = client.post("/activities/bulk-create-targets",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422
@@ -442,7 +472,7 @@ def test_register_multi_target_with_invalid_date(client, get_resource_owner_head
             {"date": "2024-5-35", "target_time": 5.0}
         ]
     }
-    response = client.post("/activities/target",
+    response = client.post("/activities/bulk-create-targets",
                            json=data,
                            headers=get_resource_owner_headers)
     assert response.status_code == 422

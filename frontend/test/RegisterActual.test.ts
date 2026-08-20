@@ -4,7 +4,7 @@ import { mountComponent } from './vitest.setup';
 import { apiClient } from '@/views/api/client';
 import { flushPromises, VueWrapper, DOMWrapper } from '@vue/test-utils';
 
-const mockedPut = vi.mocked(apiClient.put);
+const mockedPut = vi.mocked(apiClient.patch);
 
 const pendingActivities = [
   {
@@ -129,11 +129,11 @@ describe('実績時間の登録(一括)', () => {
   })
 
   it('成功', async () => {
-    const expectedMessage = "2025/1/1の活動時間を3時間に登録しました\n2025/1/2の活動時間を3.5時間に登録しました";
-
     mockedPut.mockResolvedValue({
       status: 200,
       data: {
+        success_count: 2,
+        error_count: 0,
         results: [
           { result: "success", date: "2025/1/1", actual_time: 3 },
           { result: "success", date: "2025/1/2", actual_time: 3.5 }
@@ -153,11 +153,12 @@ describe('実績時間の登録(一括)', () => {
     await flushPromises();
 
     expect(mockedPut).toBeCalledWith(
-      `activities/actual`,
+      `activities/bulk-update-actuals`,
       {
         activities: sendActivities
       }
     );
+    const expectedMessage = "【活動時間登録】更新2件、エラー0件\n2025/1/1の活動時間を3時間に登録しました\n2025/1/2の活動時間を3.5時間に登録しました";
     expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);
   })
 
@@ -165,6 +166,8 @@ describe('実績時間の登録(一括)', () => {
     mockedPut.mockResolvedValue({
       status: 200,
       data: {
+        success_count: 0,
+        error_count: 3,
         results: [
           { result: "error", date: "2025/1/1", actual_time: null, reason: "ACTIVITY_NOT_FOUND" },
           { result: "error", date: "2025/2/1", actual_time: null, reason: "SALARY_NOT_FOUND" },
@@ -185,12 +188,12 @@ describe('実績時間の登録(一括)', () => {
     await flushPromises();
 
     expect(mockedPut).toBeCalledWith(
-      `activities/actual`,
+      `activities/bulk-update-actuals`,
       {
         activities: sendActivities
       }
     );
-    const expectedMessage = "2025/1/1の活動時間登録に失敗: 活動が登録されていません\n2025/2/1の活動時間登録に失敗: 月収が登録されていません\n2025/1/2の活動時間登録に失敗: 既に確定されています";
+    const expectedMessage = "【活動時間登録】更新0件、エラー3件\n2025/1/1の活動時間登録に失敗: 活動が登録されていません\n2025/2/1の活動時間登録に失敗: 月収が登録されていません\n2025/1/2の活動時間登録に失敗: 既に確定されています";
     expect(wrapper.find("[data-testid='reqMsg']").text()).toEqual(expectedMessage);
   })
 });

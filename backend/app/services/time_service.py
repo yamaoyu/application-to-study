@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.repositories.time_repository import TimeRepository
 from app.repositories.money_repository import MoneyRepository
-from app.exceptions import NotFound, BulkOperationFailed
+from app.exceptions import NotFound
 from collections import defaultdict
 from lib.common import get_next_month_start
 from app.domain.activity_calculator import calc_bonus_penalty, calc_activity_result, round_money
@@ -45,8 +45,6 @@ def fetch_monthly_activities(year: int,
     start_date = datetime(year, month, 1).date()
     end_date = get_next_month_start(start_date)
     activities = time_repo.get_monthly_activities(start_date, end_date, username)
-    if not activities:
-        raise NotFound(code=NotFoundCode.ACTIVITY_NOT_FOUND)
     return activities
 
 
@@ -152,9 +150,6 @@ class TimeService():
                              month: int,
                              username: str
                              ) -> getMonthActivityResponse:
-        activities = fetch_monthly_activities(year, month, username, self.time_repo)
-        if not activities:
-            raise NotFound(code=NotFoundCode.ACTIVITY_NOT_FOUND)
         income_month = date(year, month, 1)
         income = fetch_one_income(income_month, username, self.money_repo)
         if not income:
@@ -162,11 +157,14 @@ class TimeService():
         end_date = get_next_month_start(income_month)
         summary = self.time_repo.get_activity_summary(
             username, income_month, end_date)
+
         total_bonus = round_money(summary["bonus"])
         total_penalty = round_money(summary["penalty"])
         total_monthly_income = round_money(income.salary + total_bonus - total_penalty)
         pay_adjustment = round_money(total_bonus - total_penalty)
+
         logger.info(f"{username}が{income_month.year}-{income_month.month}の活動実績を取得")
+        activities = fetch_monthly_activities(year, month, username, self.time_repo)
         activity_list = []
         # 日付を0埋めしない形式で作成
         for act in activities:
@@ -195,15 +193,12 @@ class TimeService():
                             ) -> getYearActivityResponse:
         start_date = date(year, 1, 1)
         end_date = date(year, 12, 31)
-        activities = self.time_repo.get_yearly_activities(start_date, end_date, username)
-        if not activities:
-            raise NotFound(code=NotFoundCode.ACTIVITY_NOT_FOUND)
         incomes = self.money_repo.get_yearly_salaries(year, username)
         if not incomes:
             raise NotFound(code=NotFoundCode.SALARY_NOT_FOUND)
+
         summary_year = self.time_repo.get_activity_summary(
             username, start_date, end_date)
-
         total_bonus = round_money(summary_year["bonus"])
         total_penalty = round_money(summary_year["penalty"])
         salary = round_money(sum(income.salary for income in incomes))
@@ -212,9 +207,11 @@ class TimeService():
 
         summary_each_month = self.time_repo.get_monthly_activity_summary(
             username, start_date, end_date)
-        monthly_info = get_month_info(activities, incomes, summary_each_month)
 
+        activities = self.time_repo.get_yearly_activities(start_date, end_date, username)
+        monthly_info = get_month_info(activities, incomes, summary_each_month)
         logger.info(f"{username}が{year}年の活動実績を取得")
+
         return getYearActivityResponse(
             total_income=total_income,
             salary=salary,
@@ -227,9 +224,6 @@ class TimeService():
         )
 
     def get_all_activities(self, username: str) -> getAllActivitiesResponse:
-        activities = self.time_repo.get_all_activities(username)
-        if not activities:
-            raise NotFound(code=NotFoundCode.ACTIVITY_NOT_FOUND)
         incomes = self.money_repo.get_all_salaries(username)
         if not incomes:
             raise NotFound(code=NotFoundCode.SALARY_NOT_FOUND)
@@ -241,6 +235,7 @@ class TimeService():
         total_income = round_money(salary + total_bonus - total_penalty)
         success_days = summary["success_days"]
         logger.info(f"{username}が全期間の活動実績を取得")
+        activities = self.time_repo.get_all_activities(username)
         return getAllActivitiesResponse(
             total_income=total_income,
             salary=salary,
@@ -256,8 +251,6 @@ class TimeService():
                                  username: str
                                  ) -> getActivitiesByStatusResponse:
         activities = self.time_repo.get_all_activities(username, status)
-        if not activities:
-            raise NotFound(code=NotFoundCode.ACTIVITY_NOT_FOUND)
         return getActivitiesByStatusResponse(activities=[
             getDayActivityResponse(
                 activity_id=act.activity_id,
@@ -275,6 +268,7 @@ class TimeService():
                                   username: str
                                   ) -> RegisterTargetTimeResponse:
         results = []
+        success_count = 0
         error_count = 0
         for activity in activities:
             target_time = activity["target_time"]
@@ -304,6 +298,7 @@ class TimeService():
                     "target_time": target_time,
                     "reason": None
                 })
+                success_count += 1
             except IntegrityError:
                 results.append({
                     "date": f"{year}-{month}-{day}",
@@ -321,19 +316,20 @@ class TimeService():
                 })
                 error_count += 1
                 logger.error(f"Error registering target time for {date_str}: {str(e)}")
-        if error_count == len(activities):
-            raise BulkOperationFailed(
-                results=results, code=BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED)
-        return RegisterTargetTimeResponse(results=results)
+        return RegisterTargetTimeResponse(
+            success_count=success_count,
+            error_count=error_count,
+            results=results
+        )
 
     def register_actual_time_bulk(self,
                                   params: list[dict],
                                   username: str
                                   ) -> RegisterActualTimeResponse:
         results = []
+        success_count = 0
         error_count = 0
         for param in params:
-            actual_time = param["actual_time"]
             date_str = param["date"]
             year, month, day = map(int, date_str.split("-"))
             # 目標時間を登録する前に、その日の活動実績が存在するか確認
@@ -369,6 +365,7 @@ class TimeService():
                     })
                     error_count += 1
                 else:
+                    actual_time = param["actual_time"]
                     with self.time_repo.begin_nested():
                         self.time_repo.update_actual_time(activity, actual_time)
                         self.time_repo.flush()
@@ -378,6 +375,7 @@ class TimeService():
                         "actual_time": actual_time,
                         "reason": None
                     })
+                    success_count += 1
                     logger.info(f"{username}が複数日の活動時間を登録")
             except Exception as e:
                 results.append({
@@ -388,10 +386,11 @@ class TimeService():
                 })
                 error_count += 1
                 logger.error(f"Error registering actual time for {date_str}: {str(e)}")
-        if error_count == len(params):
-            raise BulkOperationFailed(
-                results=results, code=BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED)
-        return RegisterActualTimeResponse(results=results)
+        return RegisterActualTimeResponse(
+            success_count=success_count,
+            error_count=error_count,
+            results=results
+        )
 
     def finish_activities(self,
                           dates: list,
@@ -401,6 +400,7 @@ class TimeService():
         bonus_sum = 0
         penalty_sum = 0
         results = []
+        success_count = 0
         error_count = 0
         for date_str in dates:
             year, month, day = map(int, date_str.split("-"))
@@ -466,6 +466,7 @@ class TimeService():
                     "reason": None
                 }
                 results.append(result)
+                success_count += 1
             except Exception as e:
                 results.append({
                     "date": f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
@@ -477,10 +478,11 @@ class TimeService():
                 })
                 error_count += 1
                 logger.error(f"Error finishing activity for {date_str}: {str(e)}")
-        if error_count == len(dates):
-            raise BulkOperationFailed(
-                results=results, code=BadRequestCode.BULK_ACTIVITY_OPERATION_FAILED)
-        return FinishActivityResponse(pay_adjustment=round_money(bonus_sum - penalty_sum),
-                                      total_bonus=round_money(bonus_sum),
-                                      total_penalty=round_money(penalty_sum),
-                                      results=results)
+        return FinishActivityResponse(
+            success_count=success_count,
+            error_count=error_count,
+            pay_adjustment=round_money(bonus_sum - penalty_sum),
+            total_bonus=round_money(bonus_sum),
+            total_penalty=round_money(penalty_sum),
+            results=results
+        )

@@ -9,7 +9,7 @@ export const registerInquiry = (category: InquiryCategoryType, detail: string) =
 };
 
 export const getInquiries = () => {
-  return apiClient.get<GetInquiryInfo[]>(
+  return apiClient.get<GetInquiryInfo>(
     "inquiries"
   )
 };

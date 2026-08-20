@@ -2,9 +2,9 @@ import { ref, type Ref } from "vue";
 import { postTodos, getTodos, editTodo, finishTodos, deleteTodos } from "../api/todo";
 import { parseError } from "../utils/error";
 import {
-  TodoResult,
+  TodoUpsertResult,
+  TodoDeleteFinishResult,
   UpsertTodoParam,
-  GetTodoResponse,
   TodoInfo
 } from "../types/todo";
 
@@ -14,20 +14,32 @@ const errorMessageMap = {
   UNEXPECTED_ERROR: (title: string, action: string) => `【Todo${action}失敗】${title}: ${action}に失敗しました`,
 };
 
-const makeMessage = (results: TodoResult[], action: string) => {
+const makeMessage = (results: TodoUpsertResult[] | TodoDeleteFinishResult[], action: string) => {
   const messages = [];
   for (const r of results) {
     if (r.result === "success") {
       messages.push(`【Todo${action}成功】: ${r.title}`)
       continue;
-    } else {
-      const messageFn = errorMessageMap[r.reason] || errorMessageMap.UNEXPECTED_ERROR;
-      messages.push(messageFn(r.title, action));
+    }
+    // titleがない=DBに対象が見つからなかった場合(TODO_NOT_FOUND)
+    if (r.title === null) {
+      messages.push(`【Todo${action}失敗】${action}対象が見つかりません`);
       continue;
     }
+    // その他のエラー
+    const messageFn = errorMessageMap[r.reason] || errorMessageMap.UNEXPECTED_ERROR;
+    messages.push(messageFn(r.title, action));
   }
   return messages.join("\n");
 };
+
+const makeSummaryMessage = (
+  action: string,
+  success_count: number,
+  error_count: number) => {
+  // bulk登録時のリクエスト成功数と失敗数をまとめる
+  return `Todo${action}成功: ${success_count}件、失敗:${error_count}件\n`
+}
 
 export const useRegisterTodos = () => {
   const todos = ref<UpsertTodoParam[]>([]);
@@ -37,11 +49,10 @@ export const useRegisterTodos = () => {
   const registerTodos = async () => {
     try {
       const res = await postTodos(todos.value);
-      if (res.status === 201) {
-        statusCode.value = res.status;
-        message.value = makeMessage(res.data.results, "作成");
-        todos.value = [];
-      }
+      statusCode.value = res.data.error_count === 0 ? 200 : 400;
+      message.value = makeSummaryMessage("作成", res.data.success_count, res.data.error_count);
+      message.value += makeMessage(res.data.results, "作成");
+      todos.value = [];
     } catch (error) {
       statusCode.value = null;
       message.value = parseError(error, "Todoの登録に失敗しました");
@@ -57,7 +68,7 @@ export const useRegisterTodos = () => {
 };
 
 export const useGetTodos = (todoMsg: Ref<string>) => {
-  const todos = ref<GetTodoResponse[]>([]);
+  const todos = ref<TodoInfo[]>([]);
   const statusFilter = ref<string>();
   const startDue = ref<string>();
   const endDue = ref<string>();
@@ -74,7 +85,7 @@ export const useGetTodos = (todoMsg: Ref<string>) => {
     try {
       const res = await getTodos(makeParams());
       if (res.status === 200) {
-        todos.value = res.data;
+        todos.value = res.data.todos;
       }
     } catch (error) {
       todoMsg.value = parseError(error, "Todoの取得に失敗しました");
@@ -122,15 +133,10 @@ export const useTodoOperations = (todoMsg: Ref<string>) => {
     try {
       const params = { "ids": selectedTodoIDs.value }
       const res = await finishTodos(params);
-      if (res.status === 200) {
-        todoMsg.value = `${res.data.success_count}件のTodoを終了しました\n`;
-        todoMsg.value += makeMessage(res.data.results, "終了");
-        if (res.data.error_count > 0) {
-          todoMsg.value += "\n一部/全てのTodoの終了に失敗しました";
-        }
-        if (onSuccess) {
-          await onSuccess();
-        }
+      todoMsg.value = makeSummaryMessage("終了", res.data.success_count, res.data.error_count);
+      todoMsg.value += makeMessage(res.data.results, "終了");
+      if (onSuccess) {
+        await onSuccess();
       }
     } catch (error) {
       todoMsg.value = parseError(error, "Todoの終了に失敗しました");
@@ -142,11 +148,9 @@ export const useTodoOperations = (todoMsg: Ref<string>) => {
       const params = { "ids": selectedTodoIDs.value };
       const res = await deleteTodos(params);
       if (res.status === 200) {
-        todoMsg.value = `${res.data.success_count}件のTodoを削除しました\n`;
+
+        todoMsg.value = makeSummaryMessage("削除", res.data.success_count, res.data.error_count);
         todoMsg.value += makeMessage(res.data.results, "削除");
-        if (res.data.error_count > 0) {
-          todoMsg.value += "\n一部/全てのTodoの削除に失敗しました";
-        }
         if (onSuccess) {
           await onSuccess();
         }

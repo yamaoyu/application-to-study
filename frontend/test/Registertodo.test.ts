@@ -22,11 +22,11 @@ describe('Todoを送信', () => {
     })
 
     it('登録に成功', async () => {
-        const expectedMessage = '【Todo作成成功】: ' + expectedTodo.title;
-
         mockedPost.mockResolvedValue({
-            status: 201,
+            status: 200,
             data: {
+                success_count: 1,
+                error_count: 0,
                 results: [
                     {
                         title: 'Test Todo',
@@ -79,10 +79,11 @@ describe('Todoを送信', () => {
         // APIが正しいパラメータで呼び出されたことを確認
         expect(mockedPost).toHaveBeenCalledTimes(1);
         expect(mockedPost).toHaveBeenCalledWith(
-            'todos',
+            'todos/bulk-create',
             { todos: [expectedTodo] }
         );
         // メッセージとtodosがリセットされることを確認
+        const expectedMessage = 'Todo作成成功: 1件、失敗:0件\n【Todo作成成功】: ' + expectedTodo.title;
         expect(wrapper.find('[data-testid="message"]').element.textContent).toBe(expectedMessage);
         const newRows = wrapper.findAll('[data-testid="todo-row"]');
         expect(newRows).toHaveLength(0);

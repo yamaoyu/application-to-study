@@ -14,7 +14,7 @@ export const useRegisterTargets = () => {
   const reqMsg = ref<string>(""); // リクエスト結果を表示するためのメッセージ
   const statusCode = ref<number | null>(null);
 
-  const makeMessage = (results: RegisterTargetResult[]) => {
+  const makeMessageByDay = (results: RegisterTargetResult[]) => {
     return results
       .map((r) => {
         if (r.result === "success") {
@@ -29,11 +29,10 @@ export const useRegisterTargets = () => {
   const sendRequest = async () => {
     try {
       const res = await registerTargets(targetActivities.value);
-      statusCode.value = res.status;
-      if (res.status === 201) {
-        reqMsg.value = makeMessage(res.data.results);
-        targetActivities.value = [{ date: '', target_time: 0.5 }];
-      };
+      statusCode.value = res.data.error_count === 0 ? 200 : 400;
+      reqMsg.value = `【目標時間登録】登録${res.data.success_count}件、エラー${res.data.error_count}件\n`
+        + makeMessageByDay(res.data.results);
+      targetActivities.value = [{ date: '', target_time: 0.5 }];
     } catch (error: unknown) {
       reqMsg.value = parseError(error, "活動時間の登録に失敗しました")
       if (axios.isAxiosError(error)) {

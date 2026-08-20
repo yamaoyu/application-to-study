@@ -106,7 +106,7 @@ def regenerate_access_token(refresh_token: str = Cookie(default=None),
     return service.regenerate_access_token(refresh_token, device_id)
 
 
-@router.put("/password", status_code=200, response_model=None)
+@router.patch("/password", status_code=200, response_model=None)
 def change_password(params: ChangePasswordInfo,
                     db: Session = Depends(get_db),
                     current_user: dict = Depends(get_current_user)):

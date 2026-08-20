@@ -17,14 +17,14 @@ from app.dependencies.auth import get_current_user
 from sqlalchemy.orm import Session
 from app.services.time_service import TimeService
 
-router = APIRouter()
+router = APIRouter(prefix="/activities", tags=["activities"])
 
 
 def get_time_service(db: Session = Depends(get_db)) -> TimeService:
     return TimeService(db)
 
 
-@router.get("/activities/{year}/{month}/{day}",
+@router.get("/{year}/{month}/{day}",
             status_code=200,
             response_model=getDayActivityResponse)
 def get_day_activity(params: CheckDate = Depends(),
@@ -39,8 +39,8 @@ def get_day_activity(params: CheckDate = Depends(),
     return service.get_day_activity(year, month, day, current_user["username"])
 
 
-@router.post("/activities/target",
-             status_code=201,
+@router.post("/bulk-create-targets",
+             status_code=200,
              response_model=RegisterTargetTimeResponse)
 def register_multi_target_time(activities: MultiTargetTimeIn,
                                db: Session = Depends(get_db),
@@ -51,9 +51,9 @@ def register_multi_target_time(activities: MultiTargetTimeIn,
     return service.register_target_time_bulk(data, current_user["username"])
 
 
-@router.put("/activities/actual",
-            status_code=200,
-            response_model=RegisterActualTimeResponse)
+@router.patch("/bulk-update-actuals",
+              status_code=200,
+              response_model=RegisterActualTimeResponse)
 def update_multi_actual_time(activities: MultiActualTimeIn,
                              db: Session = Depends(get_db),
                              current_user: dict = Depends(get_current_user)):
@@ -64,9 +64,9 @@ def update_multi_actual_time(activities: MultiActualTimeIn,
     return service.register_actual_time_bulk(data, current_user["username"])
 
 
-@router.put("/activities/finish",
-            status_code=200,
-            response_model=FinishActivityResponse)
+@router.patch("/bulk-finish",
+              status_code=200,
+              response_model=FinishActivityResponse)
 def finish_multi_activities(params: FinishActivityRequest,
                             db: Session = Depends(get_db),
                             current_user: dict = Depends(get_current_user)):
@@ -76,7 +76,7 @@ def finish_multi_activities(params: FinishActivityRequest,
     return service.finish_activities(data, current_user["username"])
 
 
-@router.get("/activities/{year}/{month}",
+@router.get("/{year}/{month}",
             status_code=200,
             response_model=getMonthActivityResponse)
 def get_month_activities(params: CheckYearMonth = Depends(),
@@ -87,7 +87,7 @@ def get_month_activities(params: CheckYearMonth = Depends(),
     return service.get_month_activities(params.year, params.month, current_user["username"])
 
 
-@router.get("/activities/{year:int}",
+@router.get("/{year:int}",
             status_code=200,
             response_model=getYearActivityResponse)
 def get_year_activities(param: CheckYear = Depends(),
@@ -98,7 +98,7 @@ def get_year_activities(param: CheckYear = Depends(),
     return service.get_year_activities(param.year, current_user["username"])
 
 
-@router.get("/activities/total",
+@router.get("/total",
             status_code=200,
             response_model=getAllActivitiesResponse)
 def get_all_activities(db: Session = Depends(get_db),
@@ -108,7 +108,7 @@ def get_all_activities(db: Session = Depends(get_db),
     return service.get_all_activities(current_user["username"])
 
 
-@router.get("/activities",
+@router.get("",
             status_code=200,
             response_model=getActivitiesByStatusResponse)
 def get_activities_by_status(param: ValidateStatus = Depends(),
