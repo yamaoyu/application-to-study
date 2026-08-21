@@ -13,7 +13,7 @@ from app.domain.activity_calculator import round_money
 def test_finish_activity(client, get_resource_owner_headers):
     """
     1つの活動を終了した場合
-    target_timeとactual_timeが同じ場合、ボーナスが発生することを確認する
+    target_timeがactual_time以上の場合は、ボーナスが発生することを確認する
     """
     setup_monthly_income(client, get_resource_owner_headers)
     setup_target_time(client, get_resource_owner_headers)
@@ -48,7 +48,7 @@ def test_finish_activity(client, get_resource_owner_headers):
 def test_finish_activity_status_failed(client, get_resource_owner_headers):
     """
     1つの活動を終了した場合
-    target_timeとactual_timeが同じ場合、ボーナスが発生することを確認する
+    target_timeがactual_timeより大きい場合、ペナルティが発生することを確認する
     """
     setup_monthly_income(client, get_resource_owner_headers)
     setup_target_time(client, get_resource_owner_headers)
