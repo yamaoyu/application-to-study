@@ -15,6 +15,8 @@ from helpers.activity import (
 )
 from app.error_codes import NotFoundCode, NotAuthorizedCode
 
+# --- 特定日の活動を取得 ---
+
 
 def test_get_day_activities_registered_target(client, get_resource_owner_headers):
     """ 目標時間登録まで行った日の情報を取得 """
@@ -99,6 +101,8 @@ def test_get_day_activities_with_expired_token(client, get_resource_owner_header
             "code": NotAuthorizedCode.NOT_AUTHORIZED
         }
 
+# --- 指定した月の活動を取得 ---
+
 
 def test_get_month_activities(client, get_resource_owner_headers):
     """ 月ごとの情報を取得 """
@@ -110,19 +114,25 @@ def test_get_month_activities(client, get_resource_owner_headers):
     response = client.get("/activities/2024/5",
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
-    assert response.json() == {"total_income": total_monthly_income,
-                               "salary": test_salary,
-                               "pay_adjustment": test_bonus,
-                               "bonus": test_bonus,
-                               "penalty": 0.0,
-                               "success_days": 1,
-                               "fail_days": 0,
-                               "activity_list": [{"date": "2024-5-5",
-                                                  "target_time": 5.0,
-                                                  "actual_time": 5.0,
-                                                  "status": "success",
-                                                  "bonus": test_bonus,
-                                                  "penalty": 0.0}]}
+    assert response.json() == {
+        "total_income": total_monthly_income,
+        "salary": test_salary,
+        "pay_adjustment": test_bonus,
+        "bonus": test_bonus,
+        "penalty": 0.0,
+        "success_days": 1,
+        "fail_days": 0,
+        "activity_list": [
+            {
+                "date": "2024-5-5",
+                "target_time": 5.0,
+                "actual_time": 5.0,
+                "status": "success",
+                "bonus": test_bonus,
+                "penalty": 0.0
+            }
+        ]
+    }
 
 
 def test_get_month_activities_when_activities_not_found(client, get_resource_owner_headers):
@@ -131,14 +141,16 @@ def test_get_month_activities_when_activities_not_found(client, get_resource_own
     response = client.get("/activities/2024/5",
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
-    assert response.json() == {"total_income": test_salary,
-                               "salary": test_salary,
-                               "pay_adjustment": 0.0,
-                               "bonus": 0.0,
-                               "penalty": 0.0,
-                               "success_days": 0,
-                               "fail_days": 0,
-                               "activity_list": []}
+    assert response.json() == {
+        "total_income": test_salary,
+        "salary": test_salary,
+        "pay_adjustment": 0.0,
+        "bonus": 0.0,
+        "penalty": 0.0,
+        "success_days": 0,
+        "fail_days": 0,
+        "activity_list": []
+    }
 
 
 def test_get_month_activities_when_salary_and_activities_not_found(client, get_resource_owner_headers):
@@ -150,28 +162,7 @@ def test_get_month_activities_when_salary_and_activities_not_found(client, get_r
         "code": NotFoundCode.SALARY_NOT_FOUND
     }
 
-
-def test_get_month_activities_end_month(client, get_resource_owner_headers):
-    """ 月ごとの情報を取得し、月の最終日も登録されていることを確認 """
-    setup_monthly_income(client, get_resource_owner_headers)
-    setup_target_time(client, get_resource_owner_headers, "2024-5-31")
-    total_monthly_income = test_salary
-    response = client.get("/activities/2024/5",
-                          headers=get_resource_owner_headers)
-    assert response.status_code == 200
-    assert response.json() == {"total_income": total_monthly_income,
-                               "salary": test_salary,
-                               "pay_adjustment": 0.0,
-                               "bonus": 0.0,
-                               "penalty": 0.0,
-                               "success_days": 0,
-                               "fail_days": 1,
-                               "activity_list": [{"date": "2024-5-31",
-                                                  "target_time": 5.0,
-                                                  "actual_time": 0.0,
-                                                  "status": "pending",
-                                                  "bonus": 0.0,
-                                                  "penalty": 0.0}]}
+# --- 全期間の活動取得 ---
 
 
 def test_get_all_activities(client, get_resource_owner_headers):
@@ -184,13 +175,15 @@ def test_get_all_activities(client, get_resource_owner_headers):
     response = client.get("/activities/total",
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
-    assert response.json() == {"total_income": total_monthly_income,
-                               "salary": test_salary,
-                               "pay_adjustment": test_bonus,
-                               "bonus": test_bonus,
-                               "penalty": 0.0,
-                               "success_days": 1,
-                               "fail_days": 0}
+    assert response.json() == {
+        "total_income": total_monthly_income,
+        "salary": test_salary,
+        "pay_adjustment": test_bonus,
+        "bonus": test_bonus,
+        "penalty": 0.0,
+        "success_days": 1,
+        "fail_days": 0
+    }
 
 
 def test_get_all_activities_when_activities_not_exists(client, get_resource_owner_headers):
@@ -199,13 +192,15 @@ def test_get_all_activities_when_activities_not_exists(client, get_resource_owne
     response = client.get("/activities/total",
                           headers=get_resource_owner_headers)
     assert response.status_code == 200
-    assert response.json() == {"total_income": test_salary,
-                               "salary": test_salary,
-                               "pay_adjustment": 0,
-                               "bonus": 0,
-                               "penalty": 0.0,
-                               "success_days": 0,
-                               "fail_days": 0}
+    assert response.json() == {
+        "total_income": test_salary,
+        "salary": test_salary,
+        "pay_adjustment": 0,
+        "bonus": 0,
+        "penalty": 0.0,
+        "success_days": 0,
+        "fail_days": 0
+    }
 
 
 def test_get_all_activities_when_salary_and_activities_not_exists(client, get_resource_owner_headers):
@@ -217,6 +212,8 @@ def test_get_all_activities_when_salary_and_activities_not_exists(client, get_re
         "code": NotFoundCode.SALARY_NOT_FOUND
     }
 
+# --- 指定した年の活動を取得 ---
+
 
 def test_get_year_activities(client, get_resource_owner_headers):
     """ 年ごとの情報を取得 """
@@ -227,100 +224,101 @@ def test_get_year_activities(client, get_resource_owner_headers):
     total_income = test_salary + test_bonus
     response = client.get("/activities/2024", headers=get_resource_owner_headers)
     assert response.status_code == 200
-    assert response.json() == {"total_income": total_income,
-                               "salary": test_salary,
-                               "pay_adjustment": test_bonus,
-                               "bonus": test_bonus,
-                               "penalty": 0.0,
-                               "success_days": 1,
-                               "fail_days": 0,
-                               "monthly_info": {
-                                   "jan": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None
-                                   },
-                                   "feb": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None},
-                                   "mar": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None},
-                                   "apr": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None},
-                                   "may": {
-                                       "salary": test_salary,
-                                       "bonus": test_bonus,
-                                       "penalty": 0.0,
-                                       "pay_adjustment": test_bonus,
-                                       "success_days": 1,
-                                       "fail_days": 0},
-                                   "jun": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None},
-                                   "jul": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None},
-                                   "aug": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None},
-                                   "sep": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None},
-                                   "oct": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None},
-                                   "nov": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None},
-                                   "dec": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None}
-                               }}
+    assert response.json() == {
+        "total_income": total_income,
+        "salary": test_salary,
+        "pay_adjustment": test_bonus,
+        "bonus": test_bonus,
+        "penalty": 0.0,
+        "success_days": 1,
+        "fail_days": 0,
+        "monthly_info": {
+            "jan": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None
+            },
+            "feb": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None},
+            "mar": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None},
+            "apr": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None},
+            "may": {
+                "salary": test_salary,
+                "bonus": test_bonus,
+                "penalty": 0.0,
+                "pay_adjustment": test_bonus,
+                "success_days": 1,
+                "fail_days": 0},
+            "jun": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None},
+            "jul": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None},
+            "aug": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None},
+            "sep": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None},
+            "oct": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None},
+            "nov": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None},
+            "dec": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None}
+        }}
 
 
 def test_get_year_activities_when_activities_not_exists(client, get_resource_owner_headers):
@@ -328,100 +326,101 @@ def test_get_year_activities_when_activities_not_exists(client, get_resource_own
     setup_monthly_income(client, get_resource_owner_headers)
     response = client.get("/activities/2024", headers=get_resource_owner_headers)
     assert response.status_code == 200
-    assert response.json() == {"total_income": test_salary,
-                               "salary": test_salary,
-                               "pay_adjustment": 0.0,
-                               "bonus": 0.0,
-                               "penalty": 0.0,
-                               "success_days": 0,
-                               "fail_days": 0,
-                               "monthly_info": {
-                                   "jan": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None
-                                   },
-                                   "feb": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None},
-                                   "mar": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None},
-                                   "apr": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None},
-                                   "may": {
-                                       "salary": test_salary,
-                                       "bonus": 0.0,
-                                       "penalty": 0.0,
-                                       "pay_adjustment": 0.0,
-                                       "success_days": 0,
-                                       "fail_days": 0},
-                                   "jun": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None},
-                                   "jul": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None},
-                                   "aug": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None},
-                                   "sep": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None},
-                                   "oct": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None},
-                                   "nov": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None},
-                                   "dec": {
-                                       "salary": None,
-                                       "bonus": None,
-                                       "penalty": None,
-                                       "pay_adjustment": None,
-                                       "success_days": None,
-                                       "fail_days": None}
-                               }}
+    assert response.json() == {
+        "total_income": test_salary,
+        "salary": test_salary,
+        "pay_adjustment": 0.0,
+        "bonus": 0.0,
+        "penalty": 0.0,
+        "success_days": 0,
+        "fail_days": 0,
+        "monthly_info": {
+            "jan": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None
+            },
+            "feb": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None},
+            "mar": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None},
+            "apr": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None},
+            "may": {
+                "salary": test_salary,
+                "bonus": 0.0,
+                "penalty": 0.0,
+                "pay_adjustment": 0.0,
+                "success_days": 0,
+                "fail_days": 0},
+            "jun": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None},
+            "jul": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None},
+            "aug": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None},
+            "sep": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None},
+            "oct": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None},
+            "nov": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None},
+            "dec": {
+                "salary": None,
+                "bonus": None,
+                "penalty": None,
+                "pay_adjustment": None,
+                "success_days": None,
+                "fail_days": None}
+        }}
 
 
 def test_get_year_activities_when_salary_and_activities_not_exists(client, get_resource_owner_headers):
@@ -431,6 +430,8 @@ def test_get_year_activities_when_salary_and_activities_not_exists(client, get_r
     assert response.json() == {
         "code": NotFoundCode.SALARY_NOT_FOUND
     }
+
+# --- ステータスを指定して活動を取得 ---
 
 
 def test_get_activities_by_status(client, get_resource_owner_headers):

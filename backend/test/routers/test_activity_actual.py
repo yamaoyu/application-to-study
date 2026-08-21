@@ -199,6 +199,108 @@ def test_register_actual_with_invalid_hour(client, get_resource_owner_headers):
     }
 
 
+def test_register_actual_accept_min_hour(client, get_resource_owner_headers):
+    """ 活動時間の最小値を登録した場合 """
+    setup_monthly_income(client, get_resource_owner_headers)
+    setup_target_time(client, get_resource_owner_headers)
+    data = {
+        "activities": [
+            {"date": test_date, "actual_time": 0.0}
+        ]
+    }
+    response = client.patch("/activities/bulk-update-actuals",
+                            json=data,
+                            headers=get_resource_owner_headers)
+    assert response.status_code == 200
+    assert response.json() == {
+        "success_count": 1,
+        "error_count": 0,
+        "results": [
+            {
+                "date": test_date,
+                "result": "success",
+                "actual_time": 0.0,
+                "reason": None
+            }
+        ]
+    }
+
+
+def test_register_actual_deny_negative_hour(client, get_resource_owner_headers):
+    """ 活動時間の負の値を登録した場合 """
+    setup_monthly_income(client, get_resource_owner_headers)
+    setup_target_time(client, get_resource_owner_headers)
+    data = {
+        "activities": [
+            {"date": test_date, "actual_time": -1.0}
+        ]
+    }
+    response = client.patch("/activities/bulk-update-actuals",
+                            json=data,
+                            headers=get_resource_owner_headers)
+    assert response.status_code == 422
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_VALUE",
+                "field": "actual_time"
+            }
+        ]
+    }
+
+
+def test_register_actual_accept_max_hour(client, get_resource_owner_headers):
+    """ 活動時間の最大値を登録した場合 """
+    setup_monthly_income(client, get_resource_owner_headers)
+    setup_target_time(client, get_resource_owner_headers)
+    data = {
+        "activities": [
+            {"date": test_date, "actual_time": 12.0}
+        ]
+    }
+    response = client.patch("/activities/bulk-update-actuals",
+                            json=data,
+                            headers=get_resource_owner_headers)
+    assert response.status_code == 200
+    assert response.json() == {
+        "success_count": 1,
+        "error_count": 0,
+        "results": [
+            {
+                "date": test_date,
+                "result": "success",
+                "actual_time": 12.0,
+                "reason": None
+            }
+        ]
+    }
+
+
+def test_register_actual_deny_over_max_hour(client, get_resource_owner_headers):
+    """ 活動時間の最大値を超える値を登録した場合 """
+    setup_monthly_income(client, get_resource_owner_headers)
+    setup_target_time(client, get_resource_owner_headers)
+    data = {
+        "activities": [
+            {"date": test_date, "actual_time": 12.5}
+        ]
+    }
+    response = client.patch("/activities/bulk-update-actuals",
+                            json=data,
+                            headers=get_resource_owner_headers)
+    assert response.status_code == 422
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+            {
+                "code": "INVALID_VALUE",
+                "field": "actual_time"
+            }
+        ]
+    }
+
+
 def test_register_actual_after_finish(client, get_resource_owner_headers):
     """ 活動を終了した日の活動時間を更新しようとした場合 """
     setup_monthly_income(client, get_resource_owner_headers)
