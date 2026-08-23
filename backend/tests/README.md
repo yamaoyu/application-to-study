@@ -6,6 +6,11 @@
 docker compose exec -e ENV=test backend python -m pytest
 ```
 
+```sh
+# 特定のフォルダにあるテストを実行
+docker compose exec -e ENV=test backend python -m pytest tests/routers/inquiry/*.py -vv
+```
+
 - 開発コンテナで実行する場合
 
 ``` sh

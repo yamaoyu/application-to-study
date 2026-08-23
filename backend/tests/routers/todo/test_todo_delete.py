@@ -1,5 +1,5 @@
 from app.error_codes import NotFoundCode
-from test.helpers.todo import TEST_TITLE, setup_create_todo
+from helpers.todo import TEST_TITLE, setup_create_todo
 
 
 def test_delete_todo(client, get_resource_owner_headers):

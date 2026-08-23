@@ -1,5 +1,5 @@
 from app.error_codes import NotFoundCode, ConflictCode
-from test.helpers.todo import TEST_TITLE, TEST_DUE, TEST_DETAIL, setup_create_todo, setup_finish_todo
+from helpers.todo import TEST_TITLE, TEST_DUE, TEST_DETAIL, setup_create_todo, setup_finish_todo
 
 
 def test_create_todo(client, get_resource_owner_headers):

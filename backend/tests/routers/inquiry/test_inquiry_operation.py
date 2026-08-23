@@ -1,5 +1,5 @@
 from app.error_codes import NotFoundCode, NotAuthorizedCode
-from test.helpers.inquiry import CATEGORY, DETAIL, EXPECTED_DATE, setup_create_inquiry
+from helpers.inquiry import CATEGORY, DETAIL, EXPECTED_DATE, setup_create_inquiry
 
 
 def test_create_inquiry(client, get_resource_owner_headers):

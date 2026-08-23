@@ -6,7 +6,7 @@ from app.repositories.time_repository import TimeRepository
 from app.repositories.money_repository import MoneyRepository
 from app.exceptions import NotFound
 from collections import defaultdict
-from lib.common import get_next_month_start
+from lib.common import get_month_end
 from app.domain.activity_calculator import calc_bonus_penalty, calc_activity_result, round_money
 from app.models.time_model import (getDayActivityResponse,
                                    RegisterTargetTimeResponse,
@@ -43,7 +43,7 @@ def fetch_monthly_activities(year: int,
                              time_repo: TimeRepository
                              ) -> list[db_model.Activity]:
     start_date = datetime(year, month, 1).date()
-    end_date = get_next_month_start(start_date)
+    end_date = get_month_end(start_date)
     activities = time_repo.get_monthly_activities(start_date, end_date, username)
     return activities
 
@@ -154,7 +154,7 @@ class TimeService():
         income = fetch_one_income(income_month, username, self.money_repo)
         if not income:
             raise NotFound(code=NotFoundCode.SALARY_NOT_FOUND)
-        end_date = get_next_month_start(income_month)
+        end_date = get_month_end(income_month)
         summary = self.time_repo.get_activity_summary(
             username, income_month, end_date)
 

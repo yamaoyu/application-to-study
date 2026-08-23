@@ -201,7 +201,7 @@ def test_change_password(client, get_resource_owner_headers):
     assert response.status_code == 200
 
 
-def login_fail_after_test_change_password_with(client, get_resource_owner_headers):
+def test_login_fail_after_test_change_password_with(client, get_resource_owner_headers):
     new_password = "newP@ssword1"
     data = {
         "old_password": RESOURCE_OWNER_PLAIN_PASSWORD,

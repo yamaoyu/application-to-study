@@ -1,6 +1,6 @@
 from app.error_codes import NotAuthorizedCode
 import app.services.inquiry_service as inquiry_service
-from test.helpers.inquiry import (
+from helpers.inquiry import (
     CATEGORY,
     DETAIL,
     EXPECTED_DATE,
