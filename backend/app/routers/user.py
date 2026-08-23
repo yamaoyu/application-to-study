@@ -1,5 +1,5 @@
 import os
-from app.dependencies.auth import get_current_user, admin_only
+from app.dependencies.auth import get_current_user
 from db.database import get_db
 from sqlalchemy.orm import Session
 from app.models.user_model import (RegisterUserInfo,
@@ -11,6 +11,8 @@ from app.models.user_model import (RegisterUserInfo,
 from fastapi import APIRouter, Depends, Response, Cookie, Request
 from app.services.user_service import UserService
 from typing import Literal
+from app.error_codes import NotAuthorizedCode
+from app.exceptions import Forbidden
 
 CookieSameSite = Literal["lax", "strict", "none"]
 
@@ -52,9 +54,11 @@ def create_user(user: RegisterUserInfo, db: Session = Depends(get_db)):
 
 
 @router.post("/admins", response_model=RegisterUserResponse, status_code=201)
-@admin_only()
 def create_admin_user(user: RegisterUserInfo,
-                      db: Session = Depends(get_db)):
+                      db: Session = Depends(get_db),
+                      current_user: dict = Depends(get_current_user)):
+    if current_user["role"] != "admin":
+        raise Forbidden(code=NotAuthorizedCode.NOT_HAVE_PERMISSION)
     service = get_user_service(db)
     return service.create_user(user.username, user.password, user.email, "admin")
 

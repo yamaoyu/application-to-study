@@ -26,14 +26,14 @@ class TimeRepository():
     def get_monthly_activities(self, start_date: date, end_date: date, username: str) -> list[db_model.Activity]:
         return self.db.query(db_model.Activity).filter(
             db_model.Activity.date >= start_date,
-            db_model.Activity.date < end_date,
+            db_model.Activity.date <= end_date,
             db_model.Activity.username == username).order_by(
             db_model.Activity.date).all()
 
     def get_yearly_activities(self, start_date: date, end_date: date, username: str) -> list[db_model.Activity]:
         return self.db.query(db_model.Activity).filter(
             db_model.Activity.date >= start_date,
-            db_model.Activity.date < end_date,
+            db_model.Activity.date <= end_date,
             db_model.Activity.username == username).order_by(
                 db_model.Activity.date).all()
 
@@ -72,7 +72,7 @@ class TimeRepository():
         if start_date is not None:
             query = query.filter(db_model.Activity.date >= start_date)
         if end_date is not None:
-            query = query.filter(db_model.Activity.date < end_date)
+            query = query.filter(db_model.Activity.date <= end_date)
         result = query.one()
 
         return {

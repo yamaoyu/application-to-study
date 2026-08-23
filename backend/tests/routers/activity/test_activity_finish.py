@@ -11,7 +11,10 @@ from app.domain.activity_calculator import round_money
 
 
 def test_finish_activity(client, get_resource_owner_headers):
-    """ 1つの活動を終了した場合 """
+    """
+    1つの活動を終了した場合
+    target_timeがactual_time以上の場合は、ボーナスが発生することを確認する
+    """
     setup_monthly_income(client, get_resource_owner_headers)
     setup_target_time(client, get_resource_owner_headers)
     setup_actual_time(client, get_resource_owner_headers)
@@ -36,6 +39,41 @@ def test_finish_activity(client, get_resource_owner_headers):
                 "status": "success",
                 "bonus": 0.58,
                 "penalty": 0.0,
+                "reason": None
+            }
+        ]
+    }
+
+
+def test_finish_activity_status_failed(client, get_resource_owner_headers):
+    """
+    1つの活動を終了した場合
+    target_timeがactual_timeより大きい場合、ペナルティが発生することを確認する
+    """
+    setup_monthly_income(client, get_resource_owner_headers)
+    setup_target_time(client, get_resource_owner_headers)
+    # actual_timeは0のままなので、活動を終了すると失敗となり、ペナルティが発生することを確認する
+    # 活動時間を登録
+    data = {
+        "dates": [test_date]
+    }
+    response = client.patch("/activities/bulk-finish",
+                            json=data,
+                            headers=get_resource_owner_headers)
+    assert response.status_code == 200
+    assert response.json() == {
+        "success_count": 1,
+        "error_count": 0,
+        "pay_adjustment": -0.58,
+        "total_bonus": 0.0,
+        "total_penalty": 0.58,
+        "results": [
+            {
+                "date": test_date,
+                "result": "success",
+                "status": "failure",
+                "bonus": 0.0,
+                "penalty": 0.58,
                 "reason": None
             }
         ]

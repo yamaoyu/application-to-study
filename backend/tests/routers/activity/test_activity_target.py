@@ -111,6 +111,58 @@ def test_register_target_twice(client, get_resource_owner_headers):
     }
 
 
+def test_register_target_accept_minimum_time(client, get_resource_owner_headers):
+    """ 目標時間の下限である0.5時間を登録 """
+    setup_monthly_income(client, get_resource_owner_headers)
+    data = {
+        "activities": [
+            {"date": test_date, "target_time": 0.5}
+        ]
+    }
+    response = client.post("/activities/bulk-create-targets",
+                           json=data,
+                           headers=get_resource_owner_headers)
+    assert response.status_code == 200
+    assert response.json() == {
+        "success_count": 1,
+        "error_count": 0,
+        "results": [
+            {
+                "date": test_date,
+                "result": "success",
+                "target_time": 0.5,
+                "reason": None
+            }
+        ]
+    }
+
+
+def test_register_target_accept_maximum_time(client, get_resource_owner_headers):
+    """ 目標時間の上限である12時間を登録 """
+    setup_monthly_income(client, get_resource_owner_headers)
+    data = {
+        "activities": [
+            {"date": test_date, "target_time": 12.0}
+        ]
+    }
+    response = client.post("/activities/bulk-create-targets",
+                           json=data,
+                           headers=get_resource_owner_headers)
+    assert response.status_code == 200
+    assert response.json() == {
+        "success_count": 1,
+        "error_count": 0,
+        "results": [
+            {
+                "date": test_date,
+                "result": "success",
+                "target_time": 12.0,
+                "reason": None
+            }
+        ]
+    }
+
+
 def test_register_target_out_of_range(client, get_resource_owner_headers):
     """ 入力上限の12時間を超えた目標時間と入力下限の0.5を下回った目標時間を登録 """
     setup_monthly_income(client, get_resource_owner_headers)

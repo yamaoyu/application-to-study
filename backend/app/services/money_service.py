@@ -5,7 +5,7 @@ from app.repositories.money_repository import MoneyRepository
 from app.repositories.time_repository import TimeRepository
 from app.exceptions import NotFound, BadRequest, Conflict
 from datetime import date
-from lib.common import get_next_month_start
+from lib.common import get_month_end
 from app.models.money_model import RegisterSalaryResponse, GetIncomeResponse
 from app.error_codes import NotFoundCode, ConflictCode, BadRequestCode
 
@@ -32,7 +32,7 @@ class MoneyService():
         income = self.income_repo.get_monthly_salary(income_month, username)
         if not income:
             raise NotFound(code=NotFoundCode.SALARY_NOT_FOUND)
-        end_date = get_next_month_start(income_month)
+        end_date = get_month_end(income_month)
         activity_summary = self.time_repo.get_activity_summary(
             username, income_month, end_date)
         total_bonus = round(activity_summary["bonus"], 2)
