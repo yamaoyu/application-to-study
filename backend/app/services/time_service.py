@@ -7,11 +7,10 @@ from app.repositories.money_repository import MoneyRepository
 from app.exceptions import NotFound
 from collections import defaultdict
 from lib.common import get_month_end
-from app.domain.activity_calculator import calc_bonus_penalty, calc_activity_result, round_money
+from app.domain.activity_calculator import calc_bonus_penalty, round_money
 from app.models.time_model import (getDayActivityResponse,
                                    RegisterTargetTimeResponse,
                                    RegisterActualTimeResponse,
-                                   FinishActivityResponse,
                                    getMonthActivityResponse,
                                    getYearActivityResponse,
                                    getAllActivitiesResponse,
@@ -389,100 +388,5 @@ class TimeService():
         return RegisterActualTimeResponse(
             success_count=success_count,
             error_count=error_count,
-            results=results
-        )
-
-    def finish_activities(self,
-                          dates: list,
-                          username: str
-                          ) -> FinishActivityResponse:
-        # まとめて終了された活動の合計を集計
-        bonus_sum = 0
-        penalty_sum = 0
-        results = []
-        success_count = 0
-        error_count = 0
-        for date_str in dates:
-            year, month, day = map(int, date_str.split("-"))
-            parsed_date = date(year, month, day)
-            activity = fetch_one_activity(parsed_date, username, self.time_repo)
-            if not activity:
-                results.append({
-                    "date": f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
-                    "reason": NotFoundCode.ACTIVITY_NOT_FOUND,
-                    "result": "error",
-                    "bonus": None,
-                    "penalty": None,
-                    "status": None
-                })
-                error_count += 1
-                continue
-            if activity.status != "pending":
-                results.append({
-                    "date": f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
-                    "reason": ConflictCode.ACTIVITY_ALREADY_FINISHED,
-                    "result": "error",
-                    "bonus": None,
-                    "penalty": None,
-                    "status": None
-                })
-                error_count += 1
-                continue
-            target_time = activity.target_time
-            actual_time = activity.actual_time
-            income_month = date(year, month, 1)
-            income = fetch_one_income(income_month, username, self.money_repo)
-            if not income:
-                results.append({
-                    "date": f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
-                    "reason": NotFoundCode.SALARY_NOT_FOUND,
-                    "result": "error",
-                    "bonus": None,
-                    "penalty": None,
-                    "status": None
-                })
-                error_count += 1
-                continue
-            try:
-                # 達成している場合はincomesテーブルのボーナスを、達成していない場合はpenaltyを加算する。
-                activity_result = calc_activity_result(income.salary, target_time, actual_time)
-                bonus = activity_result.bonus
-                penalty = activity_result.penalty
-                status = activity_result.status
-                bonus_sum += bonus
-                penalty_sum += penalty
-                with self.time_repo.begin_nested():
-                    self.time_repo.update_activity_status_and_bonus(
-                        activity, status, bonus, penalty)
-                    self.time_repo.flush()
-                    logger.info(
-                        f"{username}が{parsed_date.year}-{parsed_date.month}-{parsed_date.day}の活動を終了")
-                result = {
-                    "date": f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
-                    "status": status,
-                    "bonus": bonus,
-                    "penalty": penalty,
-                    "result": "success",
-                    "reason": None
-                }
-                results.append(result)
-                success_count += 1
-            except Exception as e:
-                results.append({
-                    "date": f"{parsed_date.year}-{parsed_date.month}-{parsed_date.day}",
-                    "reason": BadRequestCode.UNEXPECTED_ERROR,
-                    "result": "error",
-                    "bonus": None,
-                    "penalty": None,
-                    "status": None
-                })
-                error_count += 1
-                logger.error(f"Error finishing activity for {date_str}: {str(e)}")
-        return FinishActivityResponse(
-            success_count=success_count,
-            error_count=error_count,
-            pay_adjustment=round_money(bonus_sum - penalty_sum),
-            total_bonus=round_money(bonus_sum),
-            total_penalty=round_money(penalty_sum),
             results=results
         )

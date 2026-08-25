@@ -16,6 +16,7 @@ from db.database import get_db
 from app.dependencies.auth import get_current_user
 from sqlalchemy.orm import Session
 from app.services.time_service import TimeService
+from app.services.activity.finish_activities import FinishActivities
 
 router = APIRouter(prefix="/activities", tags=["activities"])
 
@@ -71,9 +72,8 @@ def finish_multi_activities(params: FinishActivityRequest,
                             db: Session = Depends(get_db),
                             current_user: dict = Depends(get_current_user)):
     """ 複数日の活動を確定する """
-    service = get_time_service(db)
-    data = params.dates
-    return service.finish_activities(data, current_user["username"])
+    service = FinishActivities(db)
+    return service.execute(params.dates, current_user["username"])
 
 
 @router.get("/{year}/{month}",
