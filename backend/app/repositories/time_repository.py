@@ -44,7 +44,7 @@ class TimeRepository():
             sqlstatement = sqlstatement.filter(db_model.Activity.status == status)
         return sqlstatement.order_by(db_model.Activity.date).all()
 
-    def insert_target_time(self, target_date: date, target_time: int, username: str) -> None:
+    def create_activity_with_target_tim(self, target_date: date, target_time: int, username: str) -> None:
         insert_data = db_model.Activity(
             date=target_date, target_time=target_time, username=username)
         self.db.add(insert_data)

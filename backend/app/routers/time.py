@@ -16,6 +16,8 @@ from db.database import get_db
 from app.dependencies.auth import get_current_user
 from sqlalchemy.orm import Session
 from app.services.time_service import TimeService
+from app.services.activity.register_target import RegisterTargetTime
+from app.services.activity.register_actual import RegisterActualTime
 from app.services.activity.finish_activities import FinishActivities
 
 router = APIRouter(prefix="/activities", tags=["activities"])
@@ -46,10 +48,10 @@ def get_day_activity(params: CheckDate = Depends(),
 def register_multi_target_time(activities: MultiTargetTimeIn,
                                db: Session = Depends(get_db),
                                current_user: dict = Depends(get_current_user)):
-    service = get_time_service(db)
+    service = RegisterTargetTime(db)
     data = [{"date": activity.date, "target_time": activity.target_time}
             for activity in activities.activities]
-    return service.register_target_time_bulk(data, current_user["username"])
+    return service.execute(data, current_user["username"])
 
 
 @router.patch("/bulk-update-actuals",
@@ -59,10 +61,10 @@ def update_multi_actual_time(activities: MultiActualTimeIn,
                              db: Session = Depends(get_db),
                              current_user: dict = Depends(get_current_user)):
     """ 複数日の活動時間を登録する """
-    service = get_time_service(db)
+    service = RegisterActualTime(db)
     data = [{"date": activity.date, "actual_time": activity.actual_time}
             for activity in activities.activities]
-    return service.register_actual_time_bulk(data, current_user["username"])
+    return service.execute(data, current_user["username"])
 
 
 @router.patch("/bulk-finish",
