@@ -1,7 +1,6 @@
 from datetime import datetime, date
 from lib.log_conf import logger
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
 from app.repositories.time_repository import TimeRepository
 from app.repositories.money_repository import MoneyRepository
 from app.exceptions import NotFound
@@ -9,7 +8,6 @@ from collections import defaultdict
 from lib.common import get_month_end
 from app.domain.activity_calculator import calc_bonus_penalty, round_money
 from app.models.time_model import (getDayActivityResponse,
-                                   RegisterTargetTimeResponse,
                                    RegisterActualTimeResponse,
                                    getMonthActivityResponse,
                                    getYearActivityResponse,
@@ -261,65 +259,6 @@ class TimeService():
                 penalty=act.penalty
             ) for act in activities
         ])
-
-    def register_target_time_bulk(self,
-                                  activities: list[dict],
-                                  username: str
-                                  ) -> RegisterTargetTimeResponse:
-        results = []
-        success_count = 0
-        error_count = 0
-        for activity in activities:
-            target_time = activity["target_time"]
-            date_str = activity["date"]
-            year, month, day = map(int, date_str.split("-"))
-            # 目標時間を登録する前に、その日の活動実績が存在するか確認
-            income_month = date(year, month, 1)
-            income = fetch_one_income(income_month, username, self.money_repo)
-            if not income:
-                results.append({
-                    "date": f"{year}-{month}-{day}",
-                    "result": "error",
-                    "reason": NotFoundCode.SALARY_NOT_FOUND,
-                    "target_time": None
-                })
-                error_count += 1
-                continue
-            try:
-                with self.time_repo.begin_nested():
-                    parsed_date = date(year, month, day)
-                    self.time_repo.insert_target_time(parsed_date, target_time, username)
-                    self.time_repo.flush()
-                logger.info(f"{username}が複数日の目標時間を登録")
-                results.append({
-                    "date": f"{year}-{month}-{day}",
-                    "result": "success",
-                    "target_time": target_time,
-                    "reason": None
-                })
-                success_count += 1
-            except IntegrityError:
-                results.append({
-                    "date": f"{year}-{month}-{day}",
-                    "result": "error",
-                    "reason": ConflictCode.TARGET_TIME_ALREADY_REGISTERED,
-                    "target_time": None
-                })
-                error_count += 1
-            except Exception as e:
-                results.append({
-                    "date": f"{year}-{month}-{day}",
-                    "result": "error",
-                    "reason": BadRequestCode.UNEXPECTED_ERROR,
-                    "target_time": None
-                })
-                error_count += 1
-                logger.error(f"Error registering target time for {date_str}: {str(e)}")
-        return RegisterTargetTimeResponse(
-            success_count=success_count,
-            error_count=error_count,
-            results=results
-        )
 
     def register_actual_time_bulk(self,
                                   params: list[dict],

@@ -44,12 +44,12 @@ class TimeRepository():
             sqlstatement = sqlstatement.filter(db_model.Activity.status == status)
         return sqlstatement.order_by(db_model.Activity.date).all()
 
-    def create_activity_with_target_tim(self, target_date: date, target_time: int, username: str) -> None:
+    def create_activity_with_target_time(self, target_date: date, target_time: float, username: str) -> None:
         insert_data = db_model.Activity(
             date=target_date, target_time=target_time, username=username)
         self.db.add(insert_data)
 
-    def update_actual_time(self, activity: db_model.Activity, actual_time: int) -> None:
+    def update_actual_time(self, activity: db_model.Activity, actual_time: float) -> None:
         activity.actual_time = actual_time
 
     def update_activity_status_and_bonus(self, activity: db_model.Activity, status: str, bonus: float, penalty: float) -> None:

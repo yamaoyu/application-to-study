@@ -16,9 +16,9 @@ from db.database import get_db
 from app.dependencies.auth import get_current_user
 from sqlalchemy.orm import Session
 from app.services.time_service import TimeService
-from app.services.activity.register_target import RegisterTargetTime
-from app.services.activity.register_actual import RegisterActualTime
-from app.services.activity.finish_activities import FinishActivities
+from app.services.activity.register_target import RegisterTargetTimeUseCase
+from app.services.activity.register_actual import RegisterActualTimeUseCase
+from app.services.activity.finish_activities import FinishActivitiesUseCase
 
 router = APIRouter(prefix="/activities", tags=["activities"])
 
@@ -48,7 +48,7 @@ def get_day_activity(params: CheckDate = Depends(),
 def register_multi_target_time(activities: MultiTargetTimeIn,
                                db: Session = Depends(get_db),
                                current_user: dict = Depends(get_current_user)):
-    service = RegisterTargetTime(db)
+    service = RegisterTargetTimeUseCase(db)
     data = [{"date": activity.date, "target_time": activity.target_time}
             for activity in activities.activities]
     return service.execute(data, current_user["username"])
@@ -61,7 +61,7 @@ def update_multi_actual_time(activities: MultiActualTimeIn,
                              db: Session = Depends(get_db),
                              current_user: dict = Depends(get_current_user)):
     """ 複数日の活動時間を登録する """
-    service = RegisterActualTime(db)
+    service = RegisterActualTimeUseCase(db)
     data = [{"date": activity.date, "actual_time": activity.actual_time}
             for activity in activities.activities]
     return service.execute(data, current_user["username"])
@@ -74,7 +74,7 @@ def finish_multi_activities(params: FinishActivityRequest,
                             db: Session = Depends(get_db),
                             current_user: dict = Depends(get_current_user)):
     """ 複数日の活動を確定する """
-    service = FinishActivities(db)
+    service = FinishActivitiesUseCase(db)
     return service.execute(params.dates, current_user["username"])
 
 
