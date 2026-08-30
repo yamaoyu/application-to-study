@@ -7,7 +7,7 @@ from helpers.activity import (
     setup_monthly_income
 )
 from app.error_codes import NotFoundCode, ConflictCode
-from app.domain.activity_calculator import round_money
+from app.domain.income.amount import round_money_amount
 
 
 def test_finish_activity(client, get_resource_owner_headers):
@@ -118,7 +118,7 @@ def test_finish_multi_activities(client, get_resource_owner_headers):
     # 今回のテストでのボーナス等を定義
     total_bonus = 1.39
     total_penalty = 0.35
-    pay_adjustment = round_money(total_bonus - total_penalty)
+    pay_adjustment = round_money_amount(total_bonus - total_penalty)
     # 複数の目標時間を登録
     data = {
         "activities": [
@@ -193,7 +193,7 @@ def test_finish_multi_activity_with_partial_errors(client, get_resource_owner_he
     # 今回のテストでのボーナス等を定義
     total_bonus = 0.81
     total_penalty = 0.35
-    pay_adjustment = round_money(total_bonus - total_penalty)
+    pay_adjustment = round_money_amount(total_bonus - total_penalty)
     # 複数の目標時間を登録
     data = {
         "activities": [

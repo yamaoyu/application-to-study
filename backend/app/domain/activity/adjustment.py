@@ -19,7 +19,7 @@ class Adjustment:
                 penalty=0.0,
             )
 
-        shortage = round(target_time - actual_time, 1)
+        shortage = _calc_shortage(target_time, actual_time)
         return cls(
             bonus=0.0,
             penalty=salary.amount_for(shortage),
@@ -28,3 +28,7 @@ class Adjustment:
     @property
     def pay_adjustment(self) -> float:
         return round(self.bonus - self.penalty, 2)
+
+
+def _calc_shortage(target_time: float, actual_time: float) -> float:
+    return round(target_time - actual_time, 1)

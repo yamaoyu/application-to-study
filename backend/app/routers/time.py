@@ -15,16 +15,12 @@ from app.models.common_model import CheckDate, CheckYearMonth, CheckYear
 from db.database import get_db
 from app.dependencies.auth import get_current_user
 from sqlalchemy.orm import Session
-from app.services.time_service import TimeService
 from app.services.activity.register_target import RegisterTargetTimeUseCase
 from app.services.activity.register_actual import RegisterActualTimeUseCase
 from app.services.activity.finish_activities import FinishActivitiesUseCase
+from app.services.activity.query_activities import ActivityQueryService
 
 router = APIRouter(prefix="/activities", tags=["activities"])
-
-
-def get_time_service(db: Session = Depends(get_db)) -> TimeService:
-    return TimeService(db)
 
 
 @router.get("/{year}/{month}/{day}",
@@ -34,7 +30,7 @@ def get_day_activity(params: CheckDate = Depends(),
                      db: Session = Depends(get_db),
                      current_user: dict = Depends(get_current_user)):
     """ 特定日の活動実績を確認する """
-    service = get_time_service(db)
+    service = ActivityQueryService(db)
     # パスパラメータで受け取る年、月、日は文字列のため、intに変換する
     year = int(params.year)
     month = int(params.month)
@@ -85,7 +81,7 @@ def get_month_activities(params: CheckYearMonth = Depends(),
                          db: Session = Depends(get_db),
                          current_user: dict = Depends(get_current_user)):
     """ 特定月のデータを取得 """
-    service = get_time_service(db)
+    service = ActivityQueryService(db)
     return service.get_month_activities(params.year, params.month, current_user["username"])
 
 
@@ -96,7 +92,7 @@ def get_year_activities(param: CheckYear = Depends(),
                         db: Session = Depends(get_db),
                         current_user: dict = Depends(get_current_user)):
     """ 特定年のデータを取得 """
-    service = get_time_service(db)
+    service = ActivityQueryService(db)
     return service.get_year_activities(param.year, current_user["username"])
 
 
@@ -106,7 +102,7 @@ def get_year_activities(param: CheckYear = Depends(),
 def get_all_activities(db: Session = Depends(get_db),
                        current_user: dict = Depends(get_current_user)):
     """ 全期間を集計したデータを取得 """
-    service = get_time_service(db)
+    service = ActivityQueryService(db)
     return service.get_all_activities(current_user["username"])
 
 
@@ -117,5 +113,5 @@ def get_activities_by_status(param: ValidateStatus = Depends(),
                              db: Session = Depends(get_db),
                              current_user: dict = Depends(get_current_user)):
     """ 日ごとの活動実績をステータスごとに取得 """
-    service = get_time_service(db)
+    service = ActivityQueryService(db)
     return service.get_activities_by_status(param.status, current_user["username"])

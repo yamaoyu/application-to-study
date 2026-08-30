@@ -35,3 +35,13 @@ class Activity:
             salary=salary,
             target_time=self.target_time,
             actual_time=self.actual_time)
+
+    def effective_adjustment(self, salary: MonthlySalary) -> Adjustment:
+        if self.status == ActivityStatus.PENDING:
+            return Adjustment.calculate(
+                salary=salary,
+                target_time=self.target_time,
+                actual_time=self.actual_time,
+            )
+
+        return self.adjustment
