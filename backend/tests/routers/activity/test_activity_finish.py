@@ -7,7 +7,7 @@ from helpers.activity import (
     setup_monthly_income
 )
 from app.error_codes import NotFoundCode, ConflictCode
-from app.domain.income.amount import round_money_amount
+from app.domain.money.amount import round_money_amount
 
 
 def test_finish_activity(client, get_resource_owner_headers):

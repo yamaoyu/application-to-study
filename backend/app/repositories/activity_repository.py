@@ -3,10 +3,10 @@ from datetime import date
 from sqlalchemy.orm import Session, SessionTransaction
 from sqlalchemy import func, case, extract
 from typing import Optional
-from app.domain.income.amount import round_money_amount
+from app.domain.money.amount import round_money_amount
 
 
-class TimeRepository():
+class ActivityRepository():
     def __init__(self, db: Session) -> None:
         self.db = db
 

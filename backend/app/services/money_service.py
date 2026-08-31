@@ -2,7 +2,7 @@ from lib.log_conf import logger
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.repositories.money_repository import MoneyRepository
-from app.repositories.time_repository import TimeRepository
+from app.repositories.activity_repository import ActivityRepository
 from app.exceptions import NotFound, BadRequest, Conflict
 from datetime import date
 from lib.common import get_month_end
@@ -13,7 +13,7 @@ from app.error_codes import NotFoundCode, ConflictCode, BadRequestCode
 class MoneyService():
     def __init__(self, db: Session) -> None:
         self.income_repo = MoneyRepository(db)
-        self.time_repo = TimeRepository(db)
+        self.time_repo = ActivityRepository(db)
 
     def register_monthly_salary(self, year: int, month: int, salary: float, username: str) -> RegisterSalaryResponse:
         try:

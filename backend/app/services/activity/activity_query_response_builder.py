@@ -1,17 +1,17 @@
 from datetime import date
 from collections import defaultdict
 from typing import Optional
-from app.models.time_model import (getDayActivityResponse,
-                                   getMonthActivityResponse,
-                                   getYearActivityResponse,
-                                   getAllActivitiesResponse,
-                                   getActivitiesByStatusResponse,
-                                   Status,
-                                   MonthlyInfo)
+from app.models.activity_model import (getDayActivityResponse,
+                                       getMonthActivityResponse,
+                                       getYearActivityResponse,
+                                       getAllActivitiesResponse,
+                                       getActivitiesByStatusResponse,
+                                       Status,
+                                       MonthlyInfo)
 from app.domain.activity.activity import Activity
 from app.domain.activity.adjustment import Adjustment
 from app.services.activity.utils import format_date
-from app.domain.income.amount import round_money_amount
+from app.domain.money.amount import round_money_amount
 
 
 def _build_month_info(activities: list,

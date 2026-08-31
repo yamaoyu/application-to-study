@@ -1,9 +1,9 @@
 from datetime import date
-from app.models.time_model import FinishActivityResponse
+from app.models.activity_model import FinishActivityResponse
 from app.domain.activity.activity import Activity, ActivityStatus, Adjustment
 from app.domain.income.monthly_income import MonthlySalary
 from app.error_codes import NotFoundCode, ConflictCode, BadRequestCode
-from app.repositories.time_repository import TimeRepository
+from app.repositories.activity_repository import ActivityRepository
 from app.repositories.money_repository import MoneyRepository
 from app.domain.activity.exceptions import ActivityAlreadyFinished
 from lib.log_conf import logger
@@ -12,7 +12,7 @@ from app.services.activity.utils import format_date, parse_activity_date
 
 class FinishActivitiesUseCase:
     def __init__(self, db) -> None:
-        self.time_repo = TimeRepository(db)
+        self.time_repo = ActivityRepository(db)
         self.money_repo = MoneyRepository(db)
 
     def execute(self, dates: list[str], username: str) -> FinishActivityResponse:

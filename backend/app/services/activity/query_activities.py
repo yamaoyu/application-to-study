@@ -1,17 +1,17 @@
 from datetime import date
 from lib.log_conf import logger
 from sqlalchemy.orm import Session
-from app.repositories.time_repository import TimeRepository
+from app.repositories.activity_repository import ActivityRepository
 from app.repositories.money_repository import MoneyRepository
 from app.exceptions import NotFound
 from lib.common import get_month_end
-from app.models.time_model import (getDayActivityResponse,
-                                   getMonthActivityResponse,
-                                   getYearActivityResponse,
-                                   getAllActivitiesResponse,
-                                   getActivitiesByStatusResponse)
+from app.models.activity_model import (getDayActivityResponse,
+                                       getMonthActivityResponse,
+                                       getYearActivityResponse,
+                                       getAllActivitiesResponse,
+                                       getActivitiesByStatusResponse)
 from app.error_codes import NotFoundCode
-from app.domain.income.amount import round_money_amount
+from app.domain.money.amount import round_money_amount
 from app.domain.income.monthly_income import MonthlySalary
 from app.domain.activity.adjustment import Adjustment
 from app.domain.activity.activity import Activity, ActivityStatus
@@ -20,7 +20,7 @@ from app.services.activity.activity_query_response_builder import ActivityRespon
 
 class ActivityQueryService():
     def __init__(self, db: Session) -> None:
-        self.time_repo = TimeRepository(db)
+        self.time_repo = ActivityRepository(db)
         self.money_repo = MoneyRepository(db)
 
     def get_day_activity(self,

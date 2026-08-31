@@ -1,7 +1,7 @@
 from datetime import date
-from app.models.time_model import RegisterActualTimeResponse
+from app.models.activity_model import RegisterActualTimeResponse
 from app.error_codes import NotFoundCode, ConflictCode, BadRequestCode
-from app.repositories.time_repository import TimeRepository
+from app.repositories.activity_repository import ActivityRepository
 from app.repositories.money_repository import MoneyRepository
 from lib.log_conf import logger
 from app.services.activity.utils import format_date, parse_activity_date
@@ -9,7 +9,7 @@ from app.services.activity.utils import format_date, parse_activity_date
 
 class RegisterActualTimeUseCase:
     def __init__(self, db) -> None:
-        self.time_repo = TimeRepository(db)
+        self.time_repo = ActivityRepository(db)
         self.money_repo = MoneyRepository(db)
 
     def execute(self,
