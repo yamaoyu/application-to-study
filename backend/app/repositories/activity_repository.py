@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session, SessionTransaction
 from sqlalchemy import func, case, extract
 from typing import Optional
 from app.domain.money.amount import round_money_amount
+from app.domain.activity.summary import ActivityResultSummary
 
 
 class ActivityRepository():
@@ -65,7 +66,7 @@ class ActivityRepository():
         activity.bonus = bonus
         activity.penalty = penalty
 
-    def get_activity_summary(self, username: str, start_date: date | None = None, end_date: date | None = None) -> dict:
+    def get_activity_summary(self, username: str, start_date: date | None = None, end_date: date | None = None) -> ActivityResultSummary:
         query = self.db.query(
             func.coalesce(func.sum(db_model.Activity.bonus), 0.0).label("bonus"),
             func.coalesce(func.sum(db_model.Activity.penalty), 0.0).label("penalty"),
@@ -83,13 +84,13 @@ class ActivityRepository():
             query = query.filter(db_model.Activity.date <= end_date)
         result = query.one()
 
-        return {
-            "bonus": round(result.bonus or 0.0, 2),
-            "penalty": round(result.penalty or 0.0, 2),
-            "success_days": result.success_days or 0,
-            "pending_days": result.pending_days or 0,
-            "fail_days": result.fail_days or 0,
-        }
+        return ActivityResultSummary(
+            success_days=result.success_days or 0,
+            fail_days=result.fail_days or 0,
+            pending_days=result.pending_days or 0,
+            bonus=result.bonus or 0.0,
+            penalty=result.penalty or 0.0
+        )
 
     def get_monthly_activity_summary(self, username: str, start_date: date, end_date: date) -> dict[int, dict]:
         rows = self.db.query(
