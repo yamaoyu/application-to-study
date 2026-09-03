@@ -3,7 +3,6 @@ from datetime import date
 from sqlalchemy.orm import Session, SessionTransaction
 from sqlalchemy import func, case, extract
 from typing import Optional
-from app.domain.money.amount import round_money_amount
 from app.domain.activity.summary import ActivityResultSummary
 
 
@@ -38,13 +37,6 @@ class ActivityRepository():
             db_model.Activity.date <= end_date,
             db_model.Activity.username == username).order_by(
                 db_model.Activity.date).all()
-
-    def count_all_activities(self, username: str, status: Optional[str] = None) -> int:
-        sqlstatement = self.db.query(db_model.Activity).filter(
-            db_model.Activity.username == username)
-        if status is not None:
-            sqlstatement = sqlstatement.filter(db_model.Activity.status == status)
-        return sqlstatement.order_by(db_model.Activity.date).count()
 
     def get_all_activities(self, username: str, status: Optional[str] = None) -> list[db_model.Activity]:
         sqlstatement = self.db.query(db_model.Activity).filter(
@@ -92,7 +84,7 @@ class ActivityRepository():
             penalty=result.penalty or 0.0
         )
 
-    def get_monthly_activity_summary(self, username: str, start_date: date, end_date: date) -> dict[int, dict]:
+    def get_monthly_activity_summary(self, username: str, start_date: date, end_date: date) -> dict[int, ActivityResultSummary]:
         rows = self.db.query(
             extract("month", db_model.Activity.date).label("month"),
             func.count().label("activity_count"),
@@ -110,12 +102,12 @@ class ActivityRepository():
         ).all()
 
         return {
-            int(row.month): {
-                "success_days": row.success_days or 0,
-                "fail_days": (row.fail_days or 0) + (row.pending_days or 0),
-                "bonus": round_money_amount(row.bonus or 0.0),
-                "penalty": round_money_amount(row.penalty or 0.0),
-                "pay_adjustment": round_money_amount((row.bonus or 0.0) - (row.penalty or 0.0)),
-            }
+            int(row.month): ActivityResultSummary(
+                success_days=row.success_days or 0,
+                fail_days=row.fail_days or 0,
+                pending_days=row.pending_days or 0,
+                bonus=row.bonus or 0.0,
+                penalty=row.penalty or 0.0
+            )
             for row in rows
         }

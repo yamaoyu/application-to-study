@@ -97,10 +97,9 @@ class ActivityQueryService():
         salary = round_money_amount(sum([income.salary for income in incomes]))
 
         summary = self.time_repo.get_activity_summary(username, None, None)
-        activity_count = self.time_repo.count_all_activities(username)
 
         logger.info(f"{username}が全期間の活動実績を取得")
-        return ActivityResponseBuilder.build_all_activities_response(summary, salary, activity_count)
+        return ActivityResponseBuilder.build_all_activities_response(summary, salary)
 
     def get_activities_by_status(self,
                                  status: str,
