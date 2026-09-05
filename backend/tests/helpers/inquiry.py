@@ -1,5 +1,5 @@
 from datetime import date
-from app.services import inquiry_service
+from app.services.inquiry import inquiry_service
 
 CATEGORY = "要望"
 DETAIL = "問い合わせ詳細"

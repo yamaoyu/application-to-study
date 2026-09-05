@@ -55,7 +55,7 @@ class TodoIdsRequest(BaseModel):
                 "empty_list",
                 "idsは1件以上指定してください",
             )
-        return list(set(ids))
+        return list(dict.fromkeys(ids))
 
 
 class Todo(BaseModel):

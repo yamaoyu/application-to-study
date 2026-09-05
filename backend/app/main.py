@@ -1,6 +1,6 @@
 import os
 from fastapi import FastAPI, APIRouter, Request
-from app.routers.time import router as today_router
+from app.routers.activity import router as activity_router
 from app.routers.money import router as money_router
 from app.routers.todo import router as todo_router
 from app.routers.user import router as user_router
@@ -34,7 +34,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(today_router)
+app.include_router(activity_router)
 app.include_router(money_router)
 app.include_router(todo_router)
 app.include_router(user_router)

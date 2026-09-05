@@ -7,7 +7,7 @@ from app.models.inquiry_model import (CreateInquiryInput,
                                       EditInquiryInput,
                                       GetInquiryResponse,
                                       InquiryItem)
-from app.services.inquiry_service import InquiryService
+from app.services.inquiry.inquiry_service import InquiryService
 from app.dependencies.auth import get_current_user
 from app.error_codes import NotAuthorizedCode
 from app.exceptions import Forbidden
