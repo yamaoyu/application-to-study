@@ -15,7 +15,10 @@ export const errorMessages = {
     "INQUIRY_NOT_FOUND": "問い合わせはありません",
     "NOT_HAVE_PERMISSION": "権限がありません",
     "INVALID_CATEGORY": "カテゴリは要望・エラー報告・その他から選択してください",
-    "LOGIN_FAILED": "ユーザー名またはパスワードが正しくありません"
+    "LOGIN_FAILED": "ユーザー名またはパスワードが正しくありません",
+    "INVALID_TODO_TITLE": "タイトルは32文字以下としてください",
+    "INVALID_TODO_DUE": "不正な日付です",
+    "INVALID_TODO_DETAIL": "詳細は200文字以下としてください"
 } as const;
 
 export const fieldErrorMessages = {

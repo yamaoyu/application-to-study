@@ -12,6 +12,9 @@ const errorMessageMap = {
   TODO_NOT_FOUND: (title: string, action: string) => `【Todo${action}失敗】${title}: 登録されていません`,
   TODO_ALREADY_FINISHED: (title: string, action: string) => `【Todo${action}失敗】${title}: 終了したアクションは更新できません`,
   UNEXPECTED_ERROR: (title: string, action: string) => `【Todo${action}失敗】${title}: ${action}に失敗しました`,
+  INVALID_TODO_TITLE: (title: string, action: string) => `【Todo${action}失敗】${title}: タイトルは32文字以下としてください`,
+  INVALID_TODO_DUE: (title: string, action: string) => `【Todo${action}失敗】${title}: 不正な日付です`,
+  INVALID_TODO_DETAIL: (title: string, action: string) => `【Todo${action}失敗】${title}: 詳細は200文字以下としてください`,
 };
 
 const makeMessage = (results: TodoUpsertResult[] | TodoDeleteFinishResult[], action: string) => {

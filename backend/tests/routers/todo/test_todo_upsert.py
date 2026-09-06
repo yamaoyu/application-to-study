@@ -1,5 +1,4 @@
-from app.error_codes import NotFoundCode, ConflictCode
-from app.domain.todo.exceptions import TodoValidationReason
+from app.error_codes import NotFoundCode, ConflictCode, BadRequestCode
 from helpers.todo import TEST_TITLE, TEST_DUE, TEST_DETAIL, setup_create_todo, setup_finish_todo
 
 
@@ -42,7 +41,7 @@ def test_create_todo_with_invalid_date(client, get_resource_owner_headers):
                 "title": TEST_TITLE,
                 "due": "2026-6-31",
                 "detail": "",
-                "reason": TodoValidationReason.INVALID_DUE,
+                "reason": BadRequestCode.INVALID_TODO_DUE,
                 "result": "error"
             }
         ]
@@ -102,7 +101,7 @@ def test_create_todos_with_invalid_date(client, get_resource_owner_headers):
                 "title": TEST_TITLE + "2",
                 "due": "2026-6-31",
                 "detail": TEST_DETAIL + "2",
-                "reason": TodoValidationReason.INVALID_DUE,
+                "reason": BadRequestCode.INVALID_TODO_DUE,
                 "result": "error"
             }
         ]
@@ -124,7 +123,7 @@ def test_fail_create_todos_with_long_title(client, get_resource_owner_headers):
                 "title": "a" * 33,
                 "due": TEST_DUE,
                 "detail": TEST_DETAIL,
-                "reason": TodoValidationReason.TITLE_TOO_LONG,
+                "reason": BadRequestCode.INVALID_TODO_TITLE,
                 "result": "error"
             }
         ]
@@ -146,7 +145,7 @@ def test_fail_create_todos_without_title(client, get_resource_owner_headers):
                 "title": "",
                 "due": TEST_DUE,
                 "detail": TEST_DETAIL,
-                "reason": TodoValidationReason.TITLE_REQUIRED,
+                "reason": BadRequestCode.INVALID_TODO_TITLE,
                 "result": "error"
             }
         ]
@@ -168,7 +167,7 @@ def test_fail_create_todos_without_due(client, get_resource_owner_headers):
                 "title": TEST_TITLE,
                 "due": "",
                 "detail": TEST_DETAIL,
-                "reason": TodoValidationReason.DUE_REQUIRED,
+                "reason": BadRequestCode.INVALID_TODO_DUE,
                 "result": "error"
             }
         ]
@@ -190,7 +189,7 @@ def test_fail_create_todos_with_long_detail(client, get_resource_owner_headers):
                 "title": TEST_TITLE,
                 "due": TEST_DUE,
                 "detail": "a" * 201,
-                "reason": TodoValidationReason.DETAIL_TOO_LONG,
+                "reason": BadRequestCode.INVALID_TODO_DETAIL,
                 "result": "error"
             }
         ]

@@ -6,22 +6,8 @@ from pydantic_core import PydanticCustomError
 
 class UpsertTodoParams(BaseModel):
     title: str
-    due: date
+    due: str
     detail: Optional[str] = None
-
-    @field_validator("title")
-    def check_title_length(cls, title):
-        if len(title) > 32:
-            raise ValueError("タイトルは32字以下で入力してください")
-        return title
-
-    @field_validator("detail")
-    def check_detail_length(cls, detail):
-        if detail is None:
-            return detail
-        if len(detail) > 200:
-            raise ValueError("詳細は200字以下で入力してください")
-        return detail
 
 
 class TodosCreateRequest(BaseModel):
@@ -55,7 +41,7 @@ class TodoIdsRequest(BaseModel):
                 "empty_list",
                 "idsは1件以上指定してください",
             )
-        return list(dict.fromkeys(ids))
+        return ids
 
 
 class Todo(BaseModel):

@@ -11,7 +11,7 @@ class TodoDeleteService:
         self.repo = TodoRepository(db)
 
     def execute(self, params: TodoIdsRequest, username: str) -> TodosDeleteResponse:
-        requested_ids = params.ids
+        requested_ids = list(dict.fromkeys(params.ids))
 
         # 削除するTodoが存在するか確認
         todos = self.repo.get_todos(username=username, ids=requested_ids)

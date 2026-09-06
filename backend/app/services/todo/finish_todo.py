@@ -14,7 +14,7 @@ class TodoFinishService:
         self.repo = TodoRepository(db)
 
     def execute(self, params: TodoIdsRequest, username: str) -> TodosFinishResponse:
-        requested_ids = params.ids
+        requested_ids = list(dict.fromkeys(params.ids))
         todos = self.repo.get_todos(username=username, ids=requested_ids)
         todos_by_id = {todo.todo_id: todo for todo in todos}
 

@@ -60,6 +60,8 @@ class TodoDraft:
 
     @staticmethod
     def _validate_detail(detail: Optional[str]) -> str | None:
-        if isinstance(detail, str) and len(detail) > 200:
+        if detail is None:
+            return detail
+        if len(detail) > 200:
             raise InvalidTodo(TodoValidationReason.DETAIL_TOO_LONG)
         return detail

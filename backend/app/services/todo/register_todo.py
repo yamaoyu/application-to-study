@@ -5,8 +5,9 @@ from app.repositories.todo_repository import TodoRepository
 from app.models.todo_model import TodosCreateResponse
 from app.error_codes import BadRequestCode
 from collections.abc import Mapping
-from app.domain.todo.exceptions import InvalidTodo
+from app.domain.todo.exceptions import InvalidTodo, TodoValidationReason
 from app.domain.todo.todo import TodoDraft
+from app.services.todo.error_mapping import to_todo_bad_request_code
 
 
 class TodoRegisterService:
@@ -31,7 +32,10 @@ class TodoRegisterService:
                 success_count += 1
             except InvalidTodo as invalid_e:
                 error_count += 1
-                results.append(build_error_result(todo, invalid_e.reason))
+                results.append(build_error_result(
+                    todo,
+                    to_todo_bad_request_code(TodoValidationReason(invalid_e.reason)))
+                )
             except Exception:
                 error_count += 1
                 logger.error(f"todoの作成に失敗しました\n{traceback.format_exc()}")
