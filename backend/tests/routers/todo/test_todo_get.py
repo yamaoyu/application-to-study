@@ -1,7 +1,7 @@
 from unittest.mock import patch
 from datetime import timedelta
 from testdata import RESOURCE_OWNER_USERNAME
-from lib.security import create_access_token
+from app.security.token import create_access_token
 from app.error_codes import NotFoundCode, NotAuthorizedCode
 from helpers.todo import TEST_TITLE, TEST_DUE, TEST_DETAIL, setup_create_todo, setup_finish_todo
 
@@ -170,7 +170,7 @@ def test_get_todo_with_expired_token(client, get_resource_owner_headers):
         return create_access_token(data, expires_delta)
 
     setup_create_todo(client, get_resource_owner_headers)
-    with patch("lib.security.create_access_token", mock_create_expired_access_token):
+    with patch("app.security.token.create_access_token", mock_create_expired_access_token):
         access_token = mock_create_expired_access_token(data={"sub": RESOURCE_OWNER_USERNAME},
                                                         minutes=-30)
         headers = {"Authorization": f"Bearer {access_token}"}

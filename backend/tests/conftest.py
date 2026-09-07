@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from db.database import Base, get_db
 from db import db_model
-from lib.security import get_password_hash
+from app.security.password import get_password_hash
 from app.main import app
 from testdata import (RESOURCE_OWNER_USERNAME, RESOURCE_OWNER_PLAIN_PASSWORD,
                       RESOURCE_OWNER_EMAIL, NON_RESOURCE_OWNER_USERNAME, NON_RESOURCE_OWNER_PLAIN_PASSWORD,

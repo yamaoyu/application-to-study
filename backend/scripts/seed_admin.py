@@ -1,5 +1,5 @@
 import os
-from lib.security import get_password_hash
+from app.security.password import get_password_hash
 from db.database import SessionLocal
 from db import db_model
 

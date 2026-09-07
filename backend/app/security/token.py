@@ -1,52 +1,18 @@
 import os
 import traceback
-import re
-import bcrypt
 from typing import Union
 from datetime import datetime, timedelta, timezone
-from app.exceptions import BadRequest, NotAuthorized
+from app.exceptions import BadRequest
 from lib.log_conf import logger
 from jose import jwt
-from app.error_codes import NotAuthorizedCode, BadRequestCode
+from app.error_codes import BadRequestCode
 
-# openssl rand -hex 32
+# openssl randex 32
 SECRET_KEY = os.environ["SECRET_KEY"]
 ALGORITHM = os.environ["ALGORITHM"]
-PEPPER = os.getenv("PEPPER")
 # .envに定義したものは文字列として読み込まれるようなのでint型へ変換する
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 15))
 REFRESH_TOKEN_EXPIRE_WEEKS = int(os.getenv("REFRESH_TOKEN_EXPIRE_WEEKS", 1))
-ROUNDS = int(os.getenv("BCRYPT_ROUNDS", 12))
-special_characters = r"[!@#$%&*()+\-=[\]{};:<>,./?_~|]"
-
-credentials_exception = NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
-
-
-def verify_password(plain_password, hashed_password) -> bool:
-    pw = (plain_password + PEPPER).encode("utf-8")
-    try:
-        return bcrypt.checkpw(pw, hashed_password.encode("utf-8"))
-    except (ValueError, TypeError) as e:
-        logger.error(f"パスワードの検証に失敗しました{str(e)}")
-        return False
-
-
-def get_password_hash(password) -> str:
-    pw = (password + PEPPER).encode("utf-8")
-    hashed = bcrypt.hashpw(pw, bcrypt.gensalt(rounds=ROUNDS))
-    return hashed.decode("utf-8")
-
-
-def is_password_complex(password: str) -> bool:
-    if not re.search(r"[a-z]", password):
-        return False
-    if not re.search(r"[A-Z]", password):
-        return False
-    if not re.search(r"[0-9]", password):
-        return False
-    if not re.search(special_characters, password):
-        return False
-    return True
 
 
 def create_access_token(payload: dict,

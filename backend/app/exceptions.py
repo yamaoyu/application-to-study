@@ -41,3 +41,16 @@ class BulkOperationFailed(AppError):
     ):
         super().__init__(code=code)
         self.results = results
+
+
+class DomainValidationError(AppError):
+    """ドメインルール違反"""
+
+    def __init__(
+        self,
+        code: str,
+        field: str,
+        detail: str
+    ):
+        super().__init__(code=code, detail=detail)
+        self.field = field

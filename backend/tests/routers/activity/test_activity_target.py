@@ -1,7 +1,7 @@
 from unittest.mock import patch
 from datetime import timedelta
 from testdata import RESOURCE_OWNER_USERNAME
-from lib.security import create_access_token
+from app.security.token import create_access_token
 from helpers.activity import (
     test_date,
     setup_target_time,
@@ -66,7 +66,7 @@ def test_register_target_with_expired_token(client, get_resource_owner_headers):
     def mock_create_access_token(data, expires_delta=timedelta(minutes=-30)):
         return create_access_token(data, expires_delta)
 
-    with patch("lib.security.create_access_token", mock_create_access_token):
+    with patch("app.security.token.create_access_token", mock_create_access_token):
         access_token = mock_create_access_token(data={"sub": RESOURCE_OWNER_USERNAME})
         headers = {"Authorization": f"Bearer {access_token}"}
         setup_monthly_income(client, get_resource_owner_headers)
