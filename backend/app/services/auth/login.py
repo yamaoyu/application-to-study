@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.exceptions import NotAuthorized
 from lib.log_conf import logger
 from app.repositories.user_repository import UserRepository
-from app.repositories.token_repository import TokenRepository
+from app.repositories.auth_repository import TokenRepository
 from app.error_codes import NotAuthorizedCode
 from app.security.token import create_access_token, create_refresh_token_value
 from app.security.password import verify_password

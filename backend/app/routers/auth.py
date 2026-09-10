@@ -3,7 +3,7 @@ from typing import Literal
 from app.dependencies.auth import get_current_user
 from db.database import get_db
 from sqlalchemy.orm import Session
-from app.models.user_model import (LoginUserInfo,
+from app.models.auth_model import (LoginUserInfo,
                                    LoginUserResponse,
                                    regenerateAccessTokenResponse)
 from app.services.auth.login import LoginUseCase

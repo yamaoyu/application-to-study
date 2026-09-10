@@ -5,7 +5,7 @@ from lib.log_conf import logger
 from jose import jwt, JWTError, ExpiredSignatureError
 from datetime import date
 from app.repositories.user_repository import UserRepository
-from app.repositories.token_repository import TokenRepository
+from app.repositories.auth_repository import TokenRepository
 from app.error_codes import NotAuthorizedCode, NotFoundCode
 # openssl rand -hex 32
 SECRET_KEY = os.environ["SECRET_KEY"]

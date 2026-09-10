@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
 from app.exceptions import NotFound, NotAuthorized
 from app.repositories.user_repository import UserRepository
-from app.repositories.token_repository import TokenRepository
+from app.repositories.auth_repository import TokenRepository
 from app.error_codes import NotAuthorizedCode, NotFoundCode
-from app.models.user_model import regenerateAccessTokenResponse
+from app.models.auth_model import regenerateAccessTokenResponse
 from app.security.token import create_access_token
 from app.services.auth.token_verifier import TokenVerifier
 
