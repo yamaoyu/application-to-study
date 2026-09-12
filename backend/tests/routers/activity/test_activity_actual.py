@@ -5,7 +5,7 @@ from helpers.activity import (
     setup_finish_activity,
     setup_monthly_income
 )
-from app.error_codes import NotFoundCode, ConflictCode
+from app.error_codes import NotFoundCode, ConflictCode, BadRequestCode
 
 
 def test_register_actual(client, get_resource_owner_headers):
@@ -187,13 +187,16 @@ def test_register_actual_with_invalid_hour(client, get_resource_owner_headers):
     response = client.patch("/activities/bulk-update-actuals",
                             json=data,
                             headers=get_resource_owner_headers)
-    assert response.status_code == 422
+    assert response.status_code == 200
     assert response.json() == {
-        "code": "VALIDATION_ERROR",
-        "errors": [
+        "success_count": 0,
+        "error_count": 1,
+        "results": [
             {
-                "code": "INVALID_VALUE",
-                "field": "actual_time"
+                "date": test_date,
+                "result": "error",
+                "actual_time": 12.0,
+                "reason": BadRequestCode.INVALID_ACTUAL_TIME
             }
         ]
     }
@@ -238,13 +241,16 @@ def test_register_actual_deny_negative_hour(client, get_resource_owner_headers):
     response = client.patch("/activities/bulk-update-actuals",
                             json=data,
                             headers=get_resource_owner_headers)
-    assert response.status_code == 422
+    assert response.status_code == 200
     assert response.json() == {
-        "code": "VALIDATION_ERROR",
-        "errors": [
+        "success_count": 0,
+        "error_count": 1,
+        "results": [
             {
-                "code": "INVALID_VALUE",
-                "field": "actual_time"
+                "date": test_date,
+                "result": "error",
+                "actual_time": 12.0,
+                "reason": BadRequestCode.INVALID_ACTUAL_TIME
             }
         ]
     }
@@ -289,13 +295,16 @@ def test_register_actual_deny_over_max_hour(client, get_resource_owner_headers):
     response = client.patch("/activities/bulk-update-actuals",
                             json=data,
                             headers=get_resource_owner_headers)
-    assert response.status_code == 422
+    assert response.status_code == 200
     assert response.json() == {
-        "code": "VALIDATION_ERROR",
-        "errors": [
+        "success_count": 0,
+        "error_count": 1,
+        "results": [
             {
-                "code": "INVALID_VALUE",
-                "field": "actual_time"
+                "date": test_date,
+                "result": "error",
+                "actual_time": None,
+                "reason": BadRequestCode.INVALID_ACTUAL_TIME
             }
         ]
     }
@@ -336,19 +345,29 @@ def test_register_multi_actual_with_invalid_hour(client, get_resource_owner_head
     # 活動時間を登録
     data = {
         "activities": [
-            {"date": test_date, "actual_time": 15.0}  # 上限を超える活動時間
+            {"date": test_date, "actual_time": 15.0},  # 上限を超える活動時間
+            {"date": "2024-5-6", "actual_time": 5.0}  # 受け付ける時間
         ]
     }
     response = client.patch("/activities/bulk-update-actuals",
                             json=data,
                             headers=get_resource_owner_headers)
-    assert response.status_code == 422
+    assert response.status_code == 200
     assert response.json() == {
-        "code": "VALIDATION_ERROR",
-        "errors": [
+        "success_count": 1,
+        "error_count": 1,
+        "results": [
             {
-                "code": "INVALID_VALUE",
-                "field": "actual_time"
+                "date": test_date,
+                "result": "error",
+                "actual_time": None,
+                "reason": BadRequestCode.INVALID_ACTUAL_TIME
+            },
+            {
+                "date": "2024-5-6",
+                "result": "success",
+                "actual_time": 5.0,
+                "reason": None
             }
         ]
     }

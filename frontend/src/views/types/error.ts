@@ -18,7 +18,9 @@ export const errorMessages = {
     "LOGIN_FAILED": "ユーザー名またはパスワードが正しくありません",
     "INVALID_TODO_TITLE": "タイトルは32文字以下としてください",
     "INVALID_TODO_DUE": "不正な日付です",
-    "INVALID_TODO_DETAIL": "詳細は200文字以下としてください"
+    "INVALID_TODO_DETAIL": "詳細は200文字以下としてください",
+    "INVALID_TARGET_TIME": "目標時間は0.5時間以上12時間以下としてください",
+    "INVALID_ACTUAL_TIME": "活動時間は12時間以下としてください"
 } as const;
 
 export const fieldErrorMessages = {

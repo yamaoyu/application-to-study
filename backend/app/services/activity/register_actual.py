@@ -5,6 +5,9 @@ from app.repositories.activity_repository import ActivityRepository
 from app.repositories.money_repository import MoneyRepository
 from lib.log_conf import logger
 from app.services.activity.utils import format_date, parse_activity_date
+from app.domain.activity.exceptions import InvalidActivity, ActivityValidationReason
+from app.services.activity.error_mapping import to_todo_bad_request_code
+from app.domain.activity.activity import Activity, Adjustment, ActivityStatus
 
 
 class RegisterActualTimeUseCase:
@@ -58,19 +61,23 @@ class RegisterActualTimeUseCase:
             return self._build_error_result(
                 parsed_date, NotFoundCode.ACTIVITY_NOT_FOUND
             )
-        # ドメイン層で行う内容が増えるのであればここはドメイン層に移す
-        if activity_row.status != "pending":
-            return self._build_error_result(
-                parsed_date, ConflictCode.ACTIVITY_ALREADY_FINISHED
-            )
-
         try:
+            activity = Activity(activity_row.target_time, actual_time,
+                                ActivityStatus(activity_row.status), Adjustment(0, 0))
+            if activity.status.is_finished():
+                return self._build_error_result(
+                    parsed_date, ConflictCode.ACTIVITY_ALREADY_FINISHED
+                )
             with self.time_repo.begin_nested():
                 self.time_repo.update_actual_time(activity_row, actual_time)
                 self.time_repo.flush()
             logger.info(f"{username}が複数日の実績時間を登録")
             return self._build_success_result(
                 parsed_date, actual_time
+            )
+        except InvalidActivity:
+            return self._build_error_result(
+                parsed_date, to_todo_bad_request_code(ActivityValidationReason.INVALID_ACTUAL_TIME)
             )
         except Exception as e:
             logger.error(

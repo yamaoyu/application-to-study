@@ -6,6 +6,9 @@ from app.repositories.money_repository import MoneyRepository
 from lib.log_conf import logger
 from sqlalchemy.exc import IntegrityError
 from app.services.activity.utils import format_date, parse_activity_date
+from app.domain.activity.exceptions import InvalidActivity, ActivityValidationReason
+from app.services.activity.error_mapping import to_todo_bad_request_code
+from app.domain.activity.activity import Activity, Adjustment, ActivityStatus
 
 
 class RegisterTargetTimeUseCase:
@@ -42,13 +45,18 @@ class RegisterTargetTimeUseCase:
                 return self._build_error_result(
                     parsed_date, NotFoundCode.SALARY_NOT_FOUND
                 )
+            activity = Activity(target_time, 0.0, ActivityStatus.PENDING, Adjustment(0, 0))
             with self.time_repo.begin_nested():
                 self.time_repo.create_activity_with_target_time(
-                    parsed_date, target_time, username)
+                    parsed_date, activity.target_time, username)
                 self.time_repo.flush()
             logger.info(f"{username}が複数日の目標時間を登録")
             return self._build_success_result(
                 parsed_date, target_time
+            )
+        except InvalidActivity:
+            return self._build_error_result(
+                parsed_date, to_todo_bad_request_code(ActivityValidationReason.INVALID_TARGET_TIME)
             )
         except IntegrityError:
             return self._build_error_result(
