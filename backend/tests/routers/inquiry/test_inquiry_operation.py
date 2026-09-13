@@ -1,4 +1,4 @@
-from app.error_codes import NotFoundCode, NotAuthorizedCode
+from app.error_codes import NotFoundCode, NotAuthorizedCode, ValidationErrorCode
 from helpers.inquiry import CATEGORY, DETAIL, EXPECTED_DATE, setup_create_inquiry
 
 
@@ -36,7 +36,22 @@ def test_create_inquiry_without_detail(client, get_resource_owner_headers):
         "errors": [
                 {
                     "field": "detail",
-                    "code": "INVALID_VALUE"
+                    "code": ValidationErrorCode.INQUIRY_DETAIL_REQUIRED
+                }
+        ]
+    }
+
+
+def test_create_inquiry_with_detail_too_long(client, get_resource_owner_headers):
+    data = {"category": CATEGORY, "detail": "a" * 257}
+    response = client.post("/inquiries", json=data, headers=get_resource_owner_headers)
+    assert response.status_code == 422
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "errors": [
+                {
+                    "field": "detail",
+                    "code": ValidationErrorCode.INQUIRY_DETAIL_TOO_LONG
                 }
         ]
     }

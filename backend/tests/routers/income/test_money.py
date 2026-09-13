@@ -1,4 +1,4 @@
-from app.error_codes import ConflictCode, NotFoundCode
+from app.error_codes import ConflictCode, NotFoundCode, ValidationErrorCode
 
 # テストで使用する変数
 test_year = 2024
@@ -103,7 +103,7 @@ def test_register_income_deny_less_than_min_yen(client, get_resource_owner_heade
         "errors": [
             {
                 "field": "salary",
-                "code": "INVALID_VALUE"
+                "code": ValidationErrorCode.INVALID_MONTHLY_INCOME
             }
         ]
     }
@@ -137,7 +137,7 @@ def test_register_income_deny_more_than_max_yen(client, get_resource_owner_heade
         "errors": [
             {
                 "field": "salary",
-                "code": "INVALID_VALUE"
+                "code": ValidationErrorCode.INVALID_MONTHLY_INCOME
             }
         ]
     }
@@ -170,7 +170,7 @@ def test_register_income_with_minus_digit(client, get_resource_owner_headers):
         "errors": [
             {
                 "field": "salary",
-                "code": "INVALID_VALUE"
+                "code": ValidationErrorCode.INVALID_MONTHLY_INCOME
             }
         ]
     }

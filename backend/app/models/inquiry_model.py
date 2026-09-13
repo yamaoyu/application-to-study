@@ -27,14 +27,6 @@ class CreateInquiryInput(BaseModel):
             raise ValueError("カテゴリは要望・エラー報告・その他から選択してください")
         return category
 
-    @field_validator("detail")
-    def check_detail_length(cls, detail):
-        if detail is None or not detail.strip():
-            raise ValueError("詳細は必須です")
-        if len(detail) > 256:
-            raise ValueError("詳細は256文字以内で入力してください")
-        return detail
-
 
 class CreateInquiryResponse(CreateInquiryInput):
     pass
