@@ -10,8 +10,10 @@ class TodoAlreadyFinished(TodoDomainError):
 
 
 class InvalidTodo(TodoDomainError):
-    def __init__(self, reason: str):
+    def __init__(self, reason: str, field: str, detail: str):
         self.reason = reason
+        self.field = field
+        self.detail = detail
 
 
 class TodoValidationReason(StrEnum):

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.repositories.todo_repository import TodoRepository
 from app.models.todo_model import (UpsertTodoParams,
                                    TodoEditResponse)
-from app.exceptions import NotFound, Conflict, BadRequest
+from app.exceptions import NotFound, Conflict, DomainValidationError
 from app.error_codes import NotFoundCode, ConflictCode
 from app.domain.todo.todo import Todo, TodoDraft
 from app.domain.todo.exceptions import TodoAlreadyFinished, InvalidTodo, TodoValidationReason
@@ -46,7 +46,10 @@ class TodoEditService:
                 results=[self._build_success_result(editing_todo)]
             )
         except InvalidTodo as e:
-            raise BadRequest(code=to_todo_bad_request_code(TodoValidationReason(e.reason)))
+            raise DomainValidationError(code=to_todo_bad_request_code(
+                TodoValidationReason(e.reason)),
+                field=e.reason,
+                detail=e.detail)
         except TodoAlreadyFinished:
             raise Conflict(code=ConflictCode.TODO_ALREADY_FINISHED)
 

@@ -181,7 +181,7 @@ def test_register_actual_with_invalid_hour(client, get_resource_owner_headers):
     setup_target_time(client, get_resource_owner_headers)
     data = {
         "activities": [
-            {"date": "2024-5-10", "actual_time": 5.2}
+            {"date": test_date, "actual_time": 5.2}
         ]
     }
     response = client.patch("/activities/bulk-update-actuals",
@@ -195,7 +195,7 @@ def test_register_actual_with_invalid_hour(client, get_resource_owner_headers):
             {
                 "date": test_date,
                 "result": "error",
-                "actual_time": 12.0,
+                "actual_time": None,
                 "reason": BadRequestCode.INVALID_ACTUAL_TIME
             }
         ]
@@ -249,7 +249,7 @@ def test_register_actual_deny_negative_hour(client, get_resource_owner_headers):
             {
                 "date": test_date,
                 "result": "error",
-                "actual_time": 12.0,
+                "actual_time": None,
                 "reason": BadRequestCode.INVALID_ACTUAL_TIME
             }
         ]
@@ -342,6 +342,16 @@ def test_register_actual_after_finish(client, get_resource_owner_headers):
 def test_register_multi_actual_with_invalid_hour(client, get_resource_owner_headers):
     """ 複数の活動時間を登録する際に不正なデータが含まれている場合 """
     setup_monthly_income(client, get_resource_owner_headers)
+    # 目標時間を登録
+    data = {
+        "activities": [
+            {"date": test_date, "target_time": 10.0},
+            {"date": "2024-5-6", "target_time": 5.0}
+        ]
+    }
+    client.post("/activities/bulk-create-targets",
+                json=data,
+                headers=get_resource_owner_headers)
     # 活動時間を登録
     data = {
         "activities": [

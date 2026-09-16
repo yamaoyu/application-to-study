@@ -43,25 +43,30 @@ class TodoDraft:
     @staticmethod
     def _validate_title(title: str) -> str:
         if not title:
-            raise InvalidTodo(TodoValidationReason.TITLE_REQUIRED)
+            raise InvalidTodo(TodoValidationReason.TITLE_REQUIRED,
+                              field="title", detail="Title is required.")
         if len(title) > 32:
-            raise InvalidTodo(TodoValidationReason.TITLE_TOO_LONG)
+            raise InvalidTodo(TodoValidationReason.TITLE_TOO_LONG,
+                              field="title", detail="Title is too long.")
         return title
 
     @staticmethod
     def _validate_due(due: str) -> date:
         if not due:
-            raise InvalidTodo(TodoValidationReason.DUE_REQUIRED)
+            raise InvalidTodo(TodoValidationReason.DUE_REQUIRED,
+                              field="due", detail="Due date is required.")
         try:
             year, month, day = map(int, due.split("-"))
             return date(year, month, day)
         except Exception:
-            raise InvalidTodo(TodoValidationReason.INVALID_DUE)
+            raise InvalidTodo(TodoValidationReason.INVALID_DUE,
+                              field="due", detail="Invalid due date.")
 
     @staticmethod
     def _validate_detail(detail: Optional[str]) -> str | None:
-        if detail is None:
+        if not isinstance(detail, str):
             return detail
         if len(detail) > 200:
-            raise InvalidTodo(TodoValidationReason.DETAIL_TOO_LONG)
+            raise InvalidTodo(TodoValidationReason.DETAIL_TOO_LONG,
+                              field="detail", detail="Detail is too long.")
         return detail
