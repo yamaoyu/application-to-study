@@ -5,7 +5,7 @@ from helpers.activity import (
     setup_finish_activity,
     setup_monthly_income
 )
-from app.error_codes import NotFoundCode, ConflictCode, BadRequestCode
+from app.error_codes import NotFoundCode, ConflictCode, ValidationErrorCode
 
 
 def test_register_actual(client, get_resource_owner_headers):
@@ -196,7 +196,7 @@ def test_register_actual_with_invalid_hour(client, get_resource_owner_headers):
                 "date": test_date,
                 "result": "error",
                 "actual_time": None,
-                "reason": BadRequestCode.INVALID_ACTUAL_TIME
+                "reason": ValidationErrorCode.INVALID_ACTUAL_TIME
             }
         ]
     }
@@ -250,7 +250,7 @@ def test_register_actual_deny_negative_hour(client, get_resource_owner_headers):
                 "date": test_date,
                 "result": "error",
                 "actual_time": None,
-                "reason": BadRequestCode.INVALID_ACTUAL_TIME
+                "reason": ValidationErrorCode.INVALID_ACTUAL_TIME
             }
         ]
     }
@@ -304,7 +304,7 @@ def test_register_actual_deny_over_max_hour(client, get_resource_owner_headers):
                 "date": test_date,
                 "result": "error",
                 "actual_time": None,
-                "reason": BadRequestCode.INVALID_ACTUAL_TIME
+                "reason": ValidationErrorCode.INVALID_ACTUAL_TIME
             }
         ]
     }
@@ -371,7 +371,7 @@ def test_register_multi_actual_with_invalid_hour(client, get_resource_owner_head
                 "date": test_date,
                 "result": "error",
                 "actual_time": None,
-                "reason": BadRequestCode.INVALID_ACTUAL_TIME
+                "reason": ValidationErrorCode.INVALID_ACTUAL_TIME
             },
             {
                 "date": "2024-5-6",

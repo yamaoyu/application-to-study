@@ -10,11 +10,16 @@ class InquiryDetail:
         normalized = self.value.strip()
 
         if not normalized:
-            raise InValidInquiry(InquiryValidationReason.INQUIRY_DETAIL_REQUIRED, "詳細は必須です")
+            raise InValidInquiry(
+                reason=InquiryValidationReason.INQUIRY_DETAIL_REQUIRED,
+                field="detail",
+                detail="詳細は必須です")
 
         if len(normalized) > 256:
-            raise InValidInquiry(InquiryValidationReason.INQUIRY_DETAIL_TOO_LONG,
-                                 "詳細は256文字以内で入力してください")
+            raise InValidInquiry(
+                reason=InquiryValidationReason.INQUIRY_DETAIL_TOO_LONG,
+                field="detail",
+                detail="詳細は256文字以内で入力してください")
 
         # "  hello  "が"hello"として扱われるように、正規化された値を設定する
         object.__setattr__(self, "value", normalized)

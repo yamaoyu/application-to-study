@@ -10,4 +10,7 @@ class IncomeValidationReason(StrEnum):
 
 
 class InValidIncome(IncomeDomainError):
-    pass
+    def __init__(self, reason: IncomeValidationReason, field: str, detail: str):
+        self.reason = reason
+        self.field = field
+        self.detail = detail

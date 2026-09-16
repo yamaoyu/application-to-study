@@ -11,4 +11,7 @@ class InquiryValidationReason(StrEnum):
 
 
 class InValidInquiry(InquiryDomainError):
-    pass
+    def __init__(self, reason: InquiryValidationReason, field: str, detail: str):
+        self.reason = reason
+        self.field = field
+        self.detail = detail

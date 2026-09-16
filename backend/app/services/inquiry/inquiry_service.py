@@ -30,9 +30,8 @@ class InquiryService():
         try:
             inquiry_detail = InquiryDetail(value=detail)
         except InValidInquiry as e:
-            code = e.args[0]
             raise DomainValidationError(
-                code=to_inquiry_bad_request_code(code), field="detail", detail=e.args[1])
+                code=to_inquiry_bad_request_code(e.reason), field=e.field, detail=e.detail)
 
         today = date.today()
         inquiry = self.repo.get_inquiry_by_content(category, inquiry_detail.value)

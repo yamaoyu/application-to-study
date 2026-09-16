@@ -48,7 +48,7 @@ class TodoEditService:
         except InvalidTodo as e:
             raise DomainValidationError(code=to_todo_bad_request_code(
                 TodoValidationReason(e.reason)),
-                field=e.reason,
+                field=e.field,
                 detail=e.detail)
         except TodoAlreadyFinished:
             raise Conflict(code=ConflictCode.TODO_ALREADY_FINISHED)

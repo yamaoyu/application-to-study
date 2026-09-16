@@ -24,9 +24,10 @@ class RegisterSalaryUsecase():
             self.income_repo.flush()
             logger.info(f"{username}:{income_month}の月収を登録")
             return RegisterSalaryResponse(year=year, month=month, salary=salary)
-        except InValidIncome:
-            raise DomainValidationError(
-                code=ValidationErrorCode.INVALID_MONTHLY_INCOME, field="salary", detail="月収は5以上2000以下としてください")
+        except InValidIncome as validate_error:
+            raise DomainValidationError(to_income_bad_request_code(validate_error.reason),
+                                        field=validate_error.field,
+                                        detail=validate_error.detail)
         except IntegrityError as sqlalchemy_error:
             if "Duplicate entry" in str(getattr(sqlalchemy_error, "orig", sqlalchemy_error)):
                 raise Conflict(code=ConflictCode.SALARY_ALREADY_EXISTS)
@@ -38,5 +39,5 @@ INCOME_VALIDATION_REASON_TO_ERROR_CODE = {
 }
 
 
-def to_todo_bad_request_code(reason: IncomeValidationReason) -> ValidationErrorCode:
+def to_income_bad_request_code(reason: IncomeValidationReason) -> ValidationErrorCode:
     return INCOME_VALIDATION_REASON_TO_ERROR_CODE[reason]

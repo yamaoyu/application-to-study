@@ -7,7 +7,7 @@ from helpers.activity import (
     setup_target_time,
     setup_monthly_income
 )
-from app.error_codes import NotFoundCode, NotAuthorizedCode, ConflictCode, BadRequestCode
+from app.error_codes import NotFoundCode, NotAuthorizedCode, ConflictCode, ValidationErrorCode
 
 
 def test_register_target(client, get_resource_owner_headers):
@@ -183,7 +183,7 @@ def test_register_target_out_of_range(client, get_resource_owner_headers):
                 "date": test_date,
                 "result": "error",
                 "target_time": None,
-                "reason": BadRequestCode.INVALID_TARGET_TIME
+                "reason": ValidationErrorCode.INVALID_TARGET_TIME
             }
         ]
     }
@@ -204,7 +204,7 @@ def test_register_target_out_of_range(client, get_resource_owner_headers):
                 "date": test_date,
                 "result": "error",
                 "target_time": None,
-                "reason": BadRequestCode.INVALID_TARGET_TIME
+                "reason": ValidationErrorCode.INVALID_TARGET_TIME
             }
         ]
     }
@@ -230,7 +230,7 @@ def test_register_target_with_incorrect_hour(client, get_resource_owner_headers)
                 "date": test_date,
                 "result": "error",
                 "target_time": None,
-                "reason": BadRequestCode.INVALID_TARGET_TIME
+                "reason": ValidationErrorCode.INVALID_TARGET_TIME
             }
         ]
     }
@@ -472,7 +472,7 @@ def test_register_multi_target_with_invalid_hour(client, get_resource_owner_head
                 "date": test_date,
                 "result": "error",
                 "target_time": None,
-                "reason": BadRequestCode.INVALID_TARGET_TIME
+                "reason": ValidationErrorCode.INVALID_TARGET_TIME
             },
             {
                 "date": "2024-5-6",
@@ -484,7 +484,7 @@ def test_register_multi_target_with_invalid_hour(client, get_resource_owner_head
                 "date": "2024-5-7",
                 "result": "error",
                 "target_time": None,
-                "reason": BadRequestCode.INVALID_TARGET_TIME
+                "reason": ValidationErrorCode.INVALID_TARGET_TIME
             }
         ]
     }
