@@ -2,11 +2,23 @@ from lib.log_conf import logger
 from datetime import date
 from sqlalchemy.orm import Session
 from app.repositories.inquiry_repository import InquiryRepository
-from app.exceptions import NotFound
+from app.exceptions import NotFound, DomainValidationError
 from typing import Optional
 from app.models.inquiry_model import Category, Priority, GetInquiryResponse, InquiryItem
 from db import db_model
-from app.error_codes import NotFoundCode
+from app.error_codes import NotFoundCode, ValidationErrorCode
+from app.domain.inquiry.exceptions import InValidInquiry, InquiryValidationReason
+from app.domain.inquiry.inquiry import InquiryDetail
+
+
+INQUIRY_VALIDATION_REASON_TO_ERROR_CODE = {
+    InquiryValidationReason.INQUIRY_DETAIL_TOO_LONG: ValidationErrorCode.INQUIRY_DETAIL_TOO_LONG,
+    InquiryValidationReason.INQUIRY_DETAIL_REQUIRED: ValidationErrorCode.INQUIRY_DETAIL_REQUIRED
+}
+
+
+def to_inquiry_bad_request_code(reason: InquiryValidationReason) -> ValidationErrorCode:
+    return INQUIRY_VALIDATION_REASON_TO_ERROR_CODE[reason]
 
 
 class InquiryService():
@@ -14,18 +26,25 @@ class InquiryService():
         self.repo = InquiryRepository(db)
 
     def create_inquiry(self, category: str, detail: str) -> dict:
+        # 詳細を検証
+        try:
+            inquiry_detail = InquiryDetail(value=detail)
+        except InValidInquiry as e:
+            raise DomainValidationError(
+                code=to_inquiry_bad_request_code(e.reason), field=e.field, detail=e.detail)
+
         today = date.today()
-        inquiry = self.repo.get_inquiry_by_content(category, detail)
+        inquiry = self.repo.get_inquiry_by_content(category, inquiry_detail.value)
         # 同じ内容で登録があれば日付を更新
         if inquiry:
             self.repo.update_date(inquiry, today)
         # 同じ内容で登録がなければ追加
         else:
-            self.repo.insert_inquiry(category, detail, today)
+            self.repo.insert_inquiry(category, inquiry_detail.value, today)
         logger.info("問い合わせを受付")
         return {
             "category": category,
-            "detail": detail
+            "detail": inquiry_detail.value
         }
 
     def get_inquiries(self,

@@ -7,6 +7,7 @@ import { getToday } from '@/views/utils/date';
 
 const mockedGet = vi.mocked(apiClient.get);
 const mockedPut = vi.mocked(apiClient.patch);
+const mockedPost = vi.mocked(apiClient.post)
 
 const today = getToday().split("-");
 const expectedYear = Number(today[0]);
@@ -390,7 +391,7 @@ describe('Todoの操作', () => {
 
     it('Todo削除', async () => {
         // deleteTodo()のモック
-        mockedPut.mockResolvedValue({
+        mockedPost.mockResolvedValue({
             status: 200,
             data: {
                 success_count: 1,
@@ -432,7 +433,7 @@ describe('Todoの操作', () => {
         await bModal.vm.$emit('ok');
         await flushPromises();
 
-        expect(mockedPut).toHaveBeenCalledWith(
+        expect(mockedPost).toHaveBeenCalledWith(
             "todos/bulk-delete",
             {
                 ids: [1]
@@ -445,7 +446,7 @@ describe('Todoの操作', () => {
         wrapper = await mountUserHome();
 
         // deleteTodo()のモック
-        mockedPut.mockResolvedValue({
+        mockedPost.mockResolvedValue({
             status: 200,
             data: {
                 success_count: 0,
@@ -487,7 +488,7 @@ describe('Todoの操作', () => {
         await bModal.vm.$emit('ok');
         await flushPromises();
 
-        expect(mockedPut).toHaveBeenCalledWith(
+        expect(mockedPost).toHaveBeenCalledWith(
             "todos/bulk-delete",
             {
                 ids: [1]

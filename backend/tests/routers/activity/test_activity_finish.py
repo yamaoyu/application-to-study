@@ -7,7 +7,7 @@ from helpers.activity import (
     setup_monthly_income
 )
 from app.error_codes import NotFoundCode, ConflictCode
-from app.domain.activity_calculator import round_money
+from app.domain.money.amount import round_money_amount
 
 
 def test_finish_activity(client, get_resource_owner_headers):
@@ -80,13 +80,45 @@ def test_finish_activity_status_failed(client, get_resource_owner_headers):
     }
 
 
+def test_finish_activity_fail_when_already_finished(client, get_resource_owner_headers):
+    """ 既に終了済みの活動を終了しようとすると失敗する """
+    setup_monthly_income(client, get_resource_owner_headers)
+    setup_target_time(client, get_resource_owner_headers)
+    setup_actual_time(client, get_resource_owner_headers)
+    setup_finish_activity(client, get_resource_owner_headers)
+    data = {
+        "dates": [test_date]
+    }
+    response = client.patch("/activities/bulk-finish",
+                            json=data,
+                            headers=get_resource_owner_headers)
+    assert response.status_code == 200
+    assert response.json() == {
+        "success_count": 0,
+        "error_count": 1,
+        "pay_adjustment": 0,
+        "total_bonus": 0,
+        "total_penalty": 0,
+        "results": [
+            {
+                "date": test_date,
+                "result": "error",
+                "reason": ConflictCode.ACTIVITY_ALREADY_FINISHED,
+                "bonus": None,
+                "penalty": None,
+                "status": None
+            }
+        ]
+    }
+
+
 def test_finish_multi_activities(client, get_resource_owner_headers):
     """ 複数の活動を終了させた場合 """
     setup_monthly_income(client, get_resource_owner_headers)
     # 今回のテストでのボーナス等を定義
     total_bonus = 1.39
     total_penalty = 0.35
-    pay_adjustment = round_money(total_bonus - total_penalty)
+    pay_adjustment = round_money_amount(total_bonus - total_penalty)
     # 複数の目標時間を登録
     data = {
         "activities": [
@@ -161,11 +193,10 @@ def test_finish_multi_activity_with_partial_errors(client, get_resource_owner_he
     # 今回のテストでのボーナス等を定義
     total_bonus = 0.81
     total_penalty = 0.35
-    pay_adjustment = round_money(total_bonus - total_penalty)
+    pay_adjustment = round_money_amount(total_bonus - total_penalty)
     # 複数の目標時間を登録
     data = {
         "activities": [
-            {"date": test_date, "target_time": 5.0},
             {"date": "2024-5-6", "target_time": 6.0},
             {"date": "2024-5-7", "target_time": 7.0}
         ]
@@ -176,7 +207,6 @@ def test_finish_multi_activity_with_partial_errors(client, get_resource_owner_he
     # 複数の活動時間を登録
     data = {
         "activities": [
-            {"date": test_date, "actual_time": 5.0},
             {"date": "2024-5-6", "actual_time": 3.0},
             {"date": "2024-5-7", "actual_time": 7.0}
         ]
@@ -247,7 +277,7 @@ def test_finish_multi_activity_with_all_errors(client, get_resource_owner_header
             {
                 "date": test_date,
                 "result": "error",
-                "reason": NotFoundCode.ACTIVITY_NOT_FOUND,
+                "reason": NotFoundCode.SALARY_NOT_FOUND,
                 "bonus": None,
                 "penalty": None,
                 "status": None
@@ -255,7 +285,7 @@ def test_finish_multi_activity_with_all_errors(client, get_resource_owner_header
             {
                 "date": "2024-5-6",
                 "result": "error",
-                "reason": NotFoundCode.ACTIVITY_NOT_FOUND,
+                "reason": NotFoundCode.SALARY_NOT_FOUND,
                 "bonus": None,
                 "penalty": None,
                 "status": None
@@ -263,7 +293,7 @@ def test_finish_multi_activity_with_all_errors(client, get_resource_owner_header
             {
                 "date": "2024-5-7",
                 "result": "error",
-                "reason": NotFoundCode.ACTIVITY_NOT_FOUND,
+                "reason": NotFoundCode.SALARY_NOT_FOUND,
                 "bonus": None,
                 "penalty": None,
                 "status": None

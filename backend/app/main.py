@@ -1,9 +1,10 @@
 import os
 from fastapi import FastAPI, APIRouter, Request
-from app.routers.time import router as today_router
+from app.routers.activity import router as activity_router
 from app.routers.money import router as money_router
 from app.routers.todo import router as todo_router
 from app.routers.user import router as user_router
+from app.routers.auth import router as auth_router
 from app.routers.inquiry import router as inquiry_router
 from app.routers.health_check import router as health_router
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,7 +16,8 @@ from app.exceptions import (NotFound,
                             Conflict,
                             NotAuthorized,
                             Forbidden,
-                            BulkOperationFailed)
+                            BulkOperationFailed,
+                            DomainValidationError)
 from pydantic import ValidationError
 from app.utils.validation import get_validation_error_code
 
@@ -34,10 +36,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(today_router)
+app.include_router(activity_router)
 app.include_router(money_router)
 app.include_router(todo_router)
 app.include_router(user_router)
+app.include_router(auth_router)
 app.include_router(inquiry_router)
 app.include_router(health_router)
 
@@ -110,4 +113,20 @@ def bulk_operation_failed_handler(request, exc):
             "code": exc.code,
             "results": exc.results,
         }
+    )
+
+
+@app.exception_handler(DomainValidationError)
+def domain_validation_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=422,
+        content={
+            "code": "VALIDATION_ERROR",
+            "errors": [
+                {
+                    "field": exc.field,
+                    "code": exc.code,
+                }
+            ],
+        },
     )

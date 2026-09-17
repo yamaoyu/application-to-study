@@ -1,13 +1,13 @@
 from unittest.mock import patch
 from datetime import timedelta
 from testdata import RESOURCE_OWNER_USERNAME
-from lib.security import create_access_token
+from app.security.token import create_access_token
 from helpers.activity import (
     test_date,
     setup_target_time,
     setup_monthly_income
 )
-from app.error_codes import NotFoundCode, NotAuthorizedCode, ConflictCode
+from app.error_codes import NotFoundCode, NotAuthorizedCode, ConflictCode, ValidationErrorCode
 
 
 def test_register_target(client, get_resource_owner_headers):
@@ -66,7 +66,7 @@ def test_register_target_with_expired_token(client, get_resource_owner_headers):
     def mock_create_access_token(data, expires_delta=timedelta(minutes=-30)):
         return create_access_token(data, expires_delta)
 
-    with patch("lib.security.create_access_token", mock_create_access_token):
+    with patch("app.security.token.create_access_token", mock_create_access_token):
         access_token = mock_create_access_token(data={"sub": RESOURCE_OWNER_USERNAME})
         headers = {"Authorization": f"Bearer {access_token}"}
         setup_monthly_income(client, get_resource_owner_headers)
@@ -174,13 +174,16 @@ def test_register_target_out_of_range(client, get_resource_owner_headers):
     response = client.post("/activities/bulk-create-targets",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 422
+    assert response.status_code == 200
     assert response.json() == {
-        "code": "VALIDATION_ERROR",
-        "errors": [
+        "success_count": 0,
+        "error_count": 1,
+        "results": [
             {
-                "code": "INVALID_VALUE",
-                "field": "target_time"
+                "date": test_date,
+                "result": "error",
+                "target_time": None,
+                "reason": ValidationErrorCode.INVALID_TARGET_TIME
             }
         ]
     }
@@ -192,13 +195,16 @@ def test_register_target_out_of_range(client, get_resource_owner_headers):
     response = client.post("/activities/bulk-create-targets",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 422
+    assert response.status_code == 200
     assert response.json() == {
-        "code": "VALIDATION_ERROR",
-        "errors": [
+        "success_count": 0,
+        "error_count": 1,
+        "results": [
             {
-                "code": "INVALID_VALUE",
-                "field": "target_time"
+                "date": test_date,
+                "result": "error",
+                "target_time": None,
+                "reason": ValidationErrorCode.INVALID_TARGET_TIME
             }
         ]
     }
@@ -215,13 +221,16 @@ def test_register_target_with_incorrect_hour(client, get_resource_owner_headers)
     response = client.post("/activities/bulk-create-targets",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 422
+    assert response.status_code == 200
     assert response.json() == {
-        "code": "VALIDATION_ERROR",
-        "errors": [
+        "success_count": 0,
+        "error_count": 1,
+        "results": [
             {
-                "code": "INVALID_VALUE",
-                "field": "target_time"
+                "date": test_date,
+                "result": "error",
+                "target_time": None,
+                "reason": ValidationErrorCode.INVALID_TARGET_TIME
             }
         ]
     }
@@ -454,17 +463,28 @@ def test_register_multi_target_with_invalid_hour(client, get_resource_owner_head
     response = client.post("/activities/bulk-create-targets",
                            json=data,
                            headers=get_resource_owner_headers)
-    assert response.status_code == 422
+    assert response.status_code == 200
     assert response.json() == {
-        "code": "VALIDATION_ERROR",
-        "errors": [
+        "success_count": 1,
+        "error_count": 2,
+        "results": [
             {
-                "code": "INVALID_VALUE",
-                "field": "target_time"
+                "date": test_date,
+                "result": "error",
+                "target_time": None,
+                "reason": ValidationErrorCode.INVALID_TARGET_TIME
             },
             {
-                "code": "INVALID_VALUE",
-                "field": "target_time"
+                "date": "2024-5-6",
+                "result": "success",
+                "target_time": 6.0,
+                "reason": None
+            },
+            {
+                "date": "2024-5-7",
+                "result": "error",
+                "target_time": None,
+                "reason": ValidationErrorCode.INVALID_TARGET_TIME
             }
         ]
     }

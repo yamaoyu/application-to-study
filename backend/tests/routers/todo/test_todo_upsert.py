@@ -1,4 +1,4 @@
-from app.error_codes import NotFoundCode, ConflictCode
+from app.error_codes import NotFoundCode, ConflictCode, ValidationErrorCode
 from helpers.todo import TEST_TITLE, TEST_DUE, TEST_DETAIL, setup_create_todo, setup_finish_todo
 
 
@@ -41,7 +41,7 @@ def test_create_todo_with_invalid_date(client, get_resource_owner_headers):
                 "title": TEST_TITLE,
                 "due": "2026-6-31",
                 "detail": "",
-                "reason": "INVALID_DATE",
+                "reason": ValidationErrorCode.INVALID_TODO_DUE,
                 "result": "error"
             }
         ]
@@ -101,7 +101,7 @@ def test_create_todos_with_invalid_date(client, get_resource_owner_headers):
                 "title": TEST_TITLE + "2",
                 "due": "2026-6-31",
                 "detail": TEST_DETAIL + "2",
-                "reason": "INVALID_DATE",
+                "reason": ValidationErrorCode.INVALID_TODO_DUE,
                 "result": "error"
             }
         ]
@@ -123,7 +123,51 @@ def test_fail_create_todos_with_long_title(client, get_resource_owner_headers):
                 "title": "a" * 33,
                 "due": TEST_DUE,
                 "detail": TEST_DETAIL,
-                "reason": "INVALID_VALUE",
+                "reason": ValidationErrorCode.INVALID_TODO_TITLE,
+                "result": "error"
+            }
+        ]
+    }
+
+
+def test_fail_create_todos_without_title(client, get_resource_owner_headers):
+    """ titleが含まれない場合はエラー """
+    data = {
+        "todos": [{"due": TEST_DUE, "detail": TEST_DETAIL}]
+    }
+    response = client.post("/todos/bulk-create", json=data, headers=get_resource_owner_headers)
+    assert response.status_code == 200
+    assert response.json() == {
+        "success_count": 0,
+        "error_count": 1,
+        "results": [
+            {
+                "title": "",
+                "due": TEST_DUE,
+                "detail": TEST_DETAIL,
+                "reason": ValidationErrorCode.INVALID_TODO_TITLE,
+                "result": "error"
+            }
+        ]
+    }
+
+
+def test_fail_create_todos_without_due(client, get_resource_owner_headers):
+    """ dueが存在しない場合はエラー """
+    data = {
+        "todos": [{"title": TEST_TITLE, "detail": TEST_DETAIL}]
+    }
+    response = client.post("/todos/bulk-create", json=data, headers=get_resource_owner_headers)
+    assert response.status_code == 200
+    assert response.json() == {
+        "success_count": 0,
+        "error_count": 1,
+        "results": [
+            {
+                "title": TEST_TITLE,
+                "due": "",
+                "detail": TEST_DETAIL,
+                "reason": ValidationErrorCode.INVALID_TODO_DUE,
                 "result": "error"
             }
         ]
@@ -145,7 +189,7 @@ def test_fail_create_todos_with_long_detail(client, get_resource_owner_headers):
                 "title": TEST_TITLE,
                 "due": TEST_DUE,
                 "detail": "a" * 201,
-                "reason": "INVALID_VALUE",
+                "reason": ValidationErrorCode.INVALID_TODO_DETAIL,
                 "result": "error"
             }
         ]

@@ -3,15 +3,20 @@ from db.database import get_db
 from app.dependencies.auth import get_current_user
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends
-from app.services.money_service import MoneyService
+from app.services.money.register_monthly_salary import RegisterSalaryUsecase
+from app.services.money.get_monthly_income import GetMonthlyIncomeUsecase
 from app.models.common_model import CheckYearMonth
 
 
 router = APIRouter(prefix="/incomes", tags=["incomes"])
 
 
-def get_money_service(db: Session = Depends(get_db)) -> MoneyService:
-    return MoneyService(db)
+def get_register_salary_service(db: Session = Depends(get_db)) -> RegisterSalaryUsecase:
+    return RegisterSalaryUsecase(db)
+
+
+def get_fetch_monthly_income_service(db: Session = Depends(get_db)) -> GetMonthlyIncomeUsecase:
+    return GetMonthlyIncomeUsecase(db)
 
 
 def get_year_month(year: int, month: int) -> CheckYearMonth:
@@ -22,16 +27,16 @@ def get_year_month(year: int, month: int) -> CheckYearMonth:
 def register_salary(income: RegisterIncomeRequest,
                     param: CheckYearMonth = Depends(),
                     current_user: dict = Depends(get_current_user),
-                    service: MoneyService = Depends(get_money_service)):
+                    service: RegisterSalaryUsecase = Depends(get_register_salary_service)):
     """  月収を登録する """
     username = current_user["username"]
-    return service.register_monthly_salary(param.year, param.month, income.salary, username)
+    return service.execute(param.year, param.month, income.salary, username)
 
 
 @router.get("/{year}/{month}", status_code=200, response_model=GetIncomeResponse)
 def get_monthly_income(current_user: dict = Depends(get_current_user),
                        param: CheckYearMonth = Depends(),
-                       service: MoneyService = Depends(get_money_service)):
+                       service: GetMonthlyIncomeUsecase = Depends(get_fetch_monthly_income_service)):
     """ 月毎の収入を確認する """
     username = current_user["username"]
-    return service.get_monthly_income(param.year, param.month, username)
+    return service.execute(param.year, param.month, username)
