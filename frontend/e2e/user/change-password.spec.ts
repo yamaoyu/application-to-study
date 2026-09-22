@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { mockAuth } from './mocks/auth';
-import { mockChangePassword } from './mocks/user';
+import { mockAuth } from '../mocks/auth';
+import { mockChangePassword } from '../mocks/user';
 
 test.use({
     ignoreHTTPSErrors: true

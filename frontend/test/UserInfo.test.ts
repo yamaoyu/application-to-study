@@ -42,7 +42,6 @@ describe('パスワード変更フォームの動作確認', () => {
     });
 
     it('現在のパスワード入力フォームに値がないとリクエストを送信できない', async () => {
-        // パスワードを変更するにチェックを入れず、入力できないことを確認する
         const oldPassForm = wrapper.find('[data-testid="oldPassword"]') as DOMWrapper<HTMLInputElement>;
         expect(oldPassForm.element.disabled).toBe(true);
         expect(oldPassForm.element.value).toBe("");
