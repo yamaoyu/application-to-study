@@ -22,3 +22,21 @@ export async function mockGetMonthlySalary(page: Page) {
         });
     });
 }
+
+export async function mockRegisterSalary(page: Page) {
+    await page.route(`${BACKEND_URL}/incomes/${year}/${month}`, async (route) => {
+        if (route.request().method() !== 'POST') {
+            await route.continue();
+            return;
+        }
+
+        await route.fulfill({
+            status: 201,
+            json: {
+                "year": year,
+                "month": month,
+                "salary": 30.0
+            },
+        });
+    });
+}
