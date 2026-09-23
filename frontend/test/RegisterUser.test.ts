@@ -69,7 +69,6 @@ describe('ユーザー作成', () => {
     })
 })
 
-
 describe('パスワード検証', () => {
     let wrapper: VueWrapper;
 

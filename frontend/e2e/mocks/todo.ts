@@ -1,6 +1,12 @@
 import type { Page } from '@playwright/test';
 import { BACKEND_URL } from '../config';
 
+const today = new Date();
+const year = today.getFullYear();
+const month = today.getMonth() + 1; // 月は0から始まるため、1を加算
+const day = today.getDate();
+const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+
 export async function mockTodos(page: Page) {
     let todos = [
         {
@@ -82,12 +88,33 @@ export async function mockTodos(page: Page) {
                 return;
             }
 
+            if (
+                method === "PATCH" &&
+                url.pathname.startsWith('/todos/update')
+            ) {
+                await route.fulfill({
+                    status: 200,
+                    json: {
+                        "success_count": 1,
+                        "error_count": 0,
+                        "results": [
+                            {
+                                "title": "title-new",
+                                "due": formattedDate,
+                                "detail": "detail-new",
+                                "result": "success",
+                                "reason": null
+                            }
+                        ]
+                    },
+                });
+                return;
+            }
+
             await route.continue();
         }
     );
-}
 
-export async function mockRegisterTodo(page: Page) {
     await page.route(`${BACKEND_URL}/todos/bulk-create`, async (route) => {
         if (route.request().method() !== 'POST') {
             await route.continue();
@@ -102,7 +129,7 @@ export async function mockRegisterTodo(page: Page) {
                 "results": [
                     {
                         "title": "title",
-                        "due": "2026-09-23",
+                        "due": formattedDate,
                         "detail": "detail",
                         "reason": null,
                         "result": "success"
@@ -111,4 +138,4 @@ export async function mockRegisterTodo(page: Page) {
             },
         });
     });
-};
+}

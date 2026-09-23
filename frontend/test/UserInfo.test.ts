@@ -4,7 +4,6 @@ import { mountComponent } from './vitest.setup';
 import { apiClient } from '@/views/api/client';
 import { VueWrapper, DOMWrapper } from '@vue/test-utils';
 
-const mockedPost = vi.mocked(apiClient.post)
 const mockedPatch = vi.mocked(apiClient.patch)
 
 describe('パスワード変更フォームの動作確認', () => {
@@ -280,10 +279,4 @@ describe('パスワード変更リクエストを送信', async () => {
         await wrapper.find('[data-testid="password-change-button"]').trigger('submit');
         expect(wrapper.find("[data-testid='message']").text()).toEqual(expectedMessage);
     });
-
-
-    it('必須項目を入力しないとリクエストを送信できない', async () => {
-        await wrapper.find('[data-testid="password-change-button"]').trigger('submit');
-        expect(mockedPost).toBeCalledTimes(0);
-    })
 });

@@ -43,6 +43,10 @@ jobs:
     - name: Install frontend dependencies
       working-directory: frontend
       run: npm ci
+
+    - name: Install Playwright browser
+      working-directory: frontend
+      run: npx playwright install --with-deps chromium
         
     - name: Start Docker
       run: |
@@ -99,13 +103,17 @@ jobs:
         docker compose cp backend:/backend/results/test-results.xml results/backend/ || echo "Failed to copy backend results"
         docker compose cp frontend:/frontend/results/test-results.xml results/frontend/ || echo "Failed to copy frontend results"
 
+    - name: E2E test
+      working-directory: frontend
+      run: npx playwright test e2e
+
     - name: Upload vitest test results
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: frontend-test-results
         path: results/frontend/test-results.xml
-        
+
     - name: Docker logs
       if: failure()
       run: |
@@ -117,4 +125,3 @@ jobs:
     - name: Stop Docker Compose
       if: always()
       run: docker compose down -v
-

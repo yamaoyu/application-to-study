@@ -11,6 +11,7 @@ const SELECTORS = {
   loginButton: 'login-button'
 };
 
+// コンテナ作成時に作成しているテスト用ユーザーを使用する想定
 const TEST_USERNAME: string = process.env.E2E_TEST_USER || "testuser1"
 const TEST_USER_PASSWORD: string = process.env.E2E_TEST_PASSWORD || "Abcdefg1!"
 
