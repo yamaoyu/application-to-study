@@ -12,6 +12,11 @@ from db import db_model
 BASE_URL = os.getenv("BASE_URL")
 E2E_TEST_USER = os.getenv("E2E_TEST_USER")
 E2E_TEST_PASSWORD = os.getenv("E2E_TEST_PASSWORD")
+ENV = os.getenv("ENV")
+
+if ENV not in ["DEV", "TEST"]:
+    print("開発・テスト環境ではないためテスト用ユーザーは作成しません")
+    exit()
 
 hashed_password = get_password_hash(E2E_TEST_PASSWORD)
 

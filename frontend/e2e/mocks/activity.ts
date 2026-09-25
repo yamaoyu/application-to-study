@@ -8,7 +8,7 @@ const day = today.getDate();
 const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
 
 export async function mockActivityByDay(page: Page) {
-    await page.route(`${BACKEND_URL}/${year}/${month}/${day}`, async (route) => {
+    await page.route(`${BACKEND_URL}/activities/${year}/${month}/${day}`, async (route) => {
         if (route.request().method() !== 'GET') {
             await route.continue();
             return;
@@ -124,7 +124,7 @@ export async function mockFinishActivity(page: Page) {
                     {
                         "date": formattedDate,
                         "result": "success",
-                        "status": "success",
+                        "status": "pending",
                         "bonus": 0.58,
                         "penalty": 0.0,
                         "reason": null

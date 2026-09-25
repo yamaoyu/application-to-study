@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eu
+
 if [ ! -d "alembic" ]; then
     alembic init alembic
     echo "alembic initialized"

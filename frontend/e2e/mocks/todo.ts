@@ -92,6 +92,15 @@ export async function mockTodos(page: Page) {
                 method === "PATCH" &&
                 url.pathname.startsWith('/todos/update')
             ) {
+                todos[1] =
+                {
+                    todo_id: 2,
+                    title: 'title-new',
+                    detail: 'detail-new',
+                    due: formattedDate,
+                    status: false,
+                }
+
                 await route.fulfill({
                     status: 200,
                     json: {
@@ -120,6 +129,16 @@ export async function mockTodos(page: Page) {
             await route.continue();
             return;
         }
+
+        todos.push(
+            {
+                todo_id: 2,
+                title: 'title',
+                detail: 'detail',
+                due: formattedDate,
+                status: false,
+            },
+        )
 
         await route.fulfill({
             status: 200,

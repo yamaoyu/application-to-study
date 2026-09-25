@@ -15,9 +15,10 @@ export async function mockGetMonthlySalary(page: Page) {
         await route.fulfill({
             status: 200,
             json: {
-                "year": year,
-                "month": month,
-                "salary": 30.0
+                "base_income": 30.0,
+                "pay_adjustment": 0.0,
+                "total_penalty": 0.0,
+                "total_bonus": 0.0
             },
         });
     });
