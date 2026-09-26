@@ -178,16 +178,17 @@ export type SortTodoType = "id" | "due"
 
 export const useSortTodos = (todos: Ref<TodoInfo[]>) => {
   const sortType = ref("id"); // todoの一覧で表示されるソート順で初期値は登録順(id)
-  const sortTodos = async (type: SortTodoType) => {
+  const sortTodos = (type: SortTodoType) => {
     sortType.value = type;
-    if (sortType.value === "id") {
-      todos.value.sort((item1: TodoInfo, item2: TodoInfo) => item1.todo_id - item2.todo_id);
+
+    if (type === "id") {
+      todos.value = [...todos.value].sort(
+        (a, b) => a.todo_id - b.todo_id
+      );
     } else {
-      todos.value.sort((item1: TodoInfo, item2: TodoInfo) => {
-        if (item1.due > item2.due) return 1;
-        if (item1.due < item2.due) return -1;
-        return 0;
-      });
+      todos.value = [...todos.value].sort(
+        (a, b) => a.due.localeCompare(b.due)
+      );
     }
   };
 
