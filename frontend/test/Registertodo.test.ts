@@ -180,56 +180,14 @@ describe('リクエストを送信できないパターン', () => {
 });
 
 describe('必須項目を入力せずリストにtodoを追加できないパターン', () => {
-    let wrapper: VueWrapper;
-
-    beforeEach(() => {
-        vi.resetAllMocks() // 呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-        wrapper = mountComponent(RegisterTodo)
-    });
-
     it('タイトルの入力がない場合は送信ボタンをクリックできない', async () => {
-        // モーダルを開いてtodoを入力
-        const addButton = wrapper.find('[data-testid="add-todo"]');
-        await addButton.trigger("click");
-        // モーダルが表示されることを確認
-        const modal = document.body.querySelector("[data-testid='modal-show']") as HTMLDivElement;
-        expect(modal).not.toBeNull();
-        const bModal = wrapper.findComponent({ name: 'BModal' });
-        expect(bModal.props("title")).toBe("Todo作成");
-        await nextTick(); // DOM要素(今回はモーダル)の更新を待つ
-        // フォームにデータを入力
-        // 期限
-        const dueInput = modal.querySelector('[data-testid="due"]') as HTMLInputElement;
-        expect(dueInput).not.toBeNull();
-        dueInput.value = "2025-01-01";
-        expect(dueInput.value).toEqual("2025-01-01");
-        dueInput.dispatchEvent(new Event('input', { bubbles: true }));
-
         // クリックできるか確認
-        expect(validateTodo("create", { title: "", due: "", detail: "" })).toBe(false);
+        expect(validateTodo("create", { title: "", due: "2026-09-30", detail: "" })).toBe(false);
     });
 
     it('期限の入力がない場合は送信ボタンをクリックできない', async () => {
-        // モーダルを開いてtodoを入力
-        const addButton = wrapper.find('[data-testid="add-todo"]');
-        addButton.trigger("click");
-        // モーダルが表示されることを確認
-        const modal = document.body.querySelector("[data-testid='modal-show']") as HTMLDivElement;
-        expect(modal).not.toBeNull();
-        const bModal = wrapper.findComponent({ name: 'BModal' });
-        await flushPromises();
-        expect(bModal.props("title")).toBe("Todo作成");
-        await nextTick(); // DOM要素(今回はモーダル)の更新を待つ
-        // フォームにデータを入力
-        // タイトル
-        const titleInput = modal.querySelector('[data-testid="title"]') as HTMLInputElement;
-        expect(titleInput).not.toBeNull();
-        titleInput.value = "title";
-        expect(titleInput.value).toEqual("title");
-        titleInput.dispatchEvent(new Event('input', { bubbles: true }));
-
         // クリックできるか確認
-        expect(validateTodo("create", { title: "", due: "", detail: "" })).toBe(false);
+        expect(validateTodo("create", { title: "title", due: "", detail: "" })).toBe(false);
     });
 });
 
@@ -268,6 +226,5 @@ describe('リストからtodo削除', () => {
         await flushPromises();
         const newRows = wrapper.findAll('[data-testid="todo-row"]');
         expect(newRows).toHaveLength(2);
-
     });
 });

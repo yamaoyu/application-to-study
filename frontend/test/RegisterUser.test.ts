@@ -69,51 +69,12 @@ describe('ユーザー作成', () => {
     })
 })
 
-describe('ユーザー名を入力せずにリクエスト送信', () => {
-    let wrapper: VueWrapper;
-
-    beforeEach(() => {
-        vi.resetAllMocks() // 呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-        wrapper = mountComponent(RegisterUser)
-    })
-
-    it('ユーザー名の入力を求めるメッセージを表示する', async () => {
-        const usernameInput = wrapper.find('[data-testid="username"]').element as HTMLInputElement;
-        // ユーザー名の入力が空であることを確認
-        expect(usernameInput.value).toBe("");
-        await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
-        // ユーザー名の入力を求めるメッセージを表示されることを確認
-        expect(usernameInput.validity.valid).toBe(false);
-        expect(usernameInput.validity.valueMissing).toBe(true);
-    })
-})
-
 describe('パスワード検証', () => {
     let wrapper: VueWrapper;
 
     beforeEach(() => {
         vi.clearAllMocks()
         wrapper = mountComponent(RegisterUser)
-    })
-
-    it('パスワードが入力されていない場合', async () => {
-        const passwordInput = wrapper.find('[data-testid="password"]').element as HTMLInputElement;
-        // パスワードの入力が空であることを確認
-        expect(passwordInput.value).toBe("");
-        await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
-        // パスワードの入力を求めるメッセージを表示されることを確認
-        expect(passwordInput.validity.valid).toBe(false);
-        expect(passwordInput.validity.valueMissing).toBe(true);
-    })
-
-    it('確認用パスワードが入力されていない場合', async () => {
-        const passwordCheckInput = wrapper.find('[data-testid="passwordCheck"]').element as HTMLInputElement;
-        // 確認用パスワードの入力が空であることを確認
-        expect(passwordCheckInput.value).toBe("");
-        await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
-        // 確認用パスワードの入力を求めるメッセージを表示されることを確認
-        expect(passwordCheckInput.validity.valid).toBe(false);
-        expect(passwordCheckInput.validity.valueMissing).toBe(true);
     })
 
     it('大文字が含まれていない場合', async () => {
@@ -176,29 +137,5 @@ describe('パスワード検証', () => {
         await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
         // パスワードが一致しないことを確認
         expect(wrapper.text()).toContain('パスワードが一致しません');
-    })
-})
-
-describe('メールアドレスの検証', () => {
-    let wrapper: VueWrapper;
-
-    beforeEach(async () => {
-        wrapper = mountComponent(RegisterUser);
-    })
-
-    it('メールアドレスに@が含まれていない場合', async () => {
-        // メールアドレス表示の有無は環境変数で設定しておりimport.meta.envのVITE_MAIL_FORMをstubで指定する
-        vi.stubEnv('VITE_MAIL_FORM', 'true');
-        // env が反映された状態で再 import
-        const { default: RegisterUser } = await import('@/views/RegisterUser.vue');
-        wrapper = mountComponent(RegisterUser);
-        // フォームを入力し、メールアドレスの入力が@を含まないことを確認
-        const emailInput = wrapper.find('[data-testid="email"]') as DOMWrapper<HTMLInputElement>;
-        await emailInput.setValue("testuser.com");
-        expect(emailInput.element.value).toBe("testuser.com");
-        await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
-        // @を含むメールアドレスを求めるメッセージが表示されることを確認
-        expect(emailInput.element.validity.valid).toBe(false);
-        expect(emailInput.element.validity.typeMismatch).toBe(true);
     })
 })

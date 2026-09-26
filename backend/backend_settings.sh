@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eu
+
 if [ ! -d "alembic" ]; then
     alembic init alembic
     echo "alembic initialized"
@@ -9,7 +11,8 @@ else
 fi
 
 alembic upgrade head
-python scripts/seed_admin.py
+python -m scripts.seed_admin
+python -m scripts.seed_testuser
 
 if [ $ENV = "DEV" ]; then
     python -m debugpy --listen 0.0.0.0:5678 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload

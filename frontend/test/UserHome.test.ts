@@ -37,13 +37,13 @@ const defaultTodosData = {
             todo_id: 1,
             title: "title1",
             detail: "detail1",
-            due: "2025-1-1"
+            due: "2025-1-2"
         },
         {
             todo_id: 2,
             title: "title2",
             detail: "detail2",
-            due: "2025-1-2"
+            due: "2025-1-1"
         }
     ]
 };
@@ -246,16 +246,18 @@ describe('Todoの操作', () => {
         // editTodo()後のtodo再取得処理のモック
         mockedGet.mockResolvedValueOnce({
             status: 200,
-            data: [
-                {
-                    detail: detail,
-                    due: due,
-                    status: true,
-                    title: title,
-                    todo_id: 1,
-                    username: "test"
-                },
-            ]
+            data: {
+                todos: [
+                    {
+                        detail: detail,
+                        due: due,
+                        status: true,
+                        title: title,
+                        todo_id: 1,
+                        username: "test"
+                    }
+                ],
+            }
         });
 
         await wrapper.find("[data-testid='edit-0']").trigger("click");
@@ -302,16 +304,18 @@ describe('Todoの操作', () => {
         // finishTodo()後のtodo再取得処理のモック
         mockedGet.mockResolvedValueOnce({
             status: 200,
-            data: [
-                {
-                    detail: "test detail",
-                    due: "2025-1-1",
-                    status: true,
-                    title: "test title",
-                    todo_id: 1,
-                    username: "test"
-                }
-            ]
+            data: {
+                todos: [
+                    {
+                        detail: "test detail",
+                        due: "2025-1-1",
+                        status: true,
+                        title: "test title",
+                        todo_id: 1,
+                        username: "test"
+                    }
+                ]
+            }
         });
         // 終了ボタンをクリックし、モーダルを開く
         await wrapper.find("[data-testid='finish-0']").trigger("click");
@@ -356,16 +360,18 @@ describe('Todoの操作', () => {
         mockedGet.mockResolvedValueOnce({
             response: {
                 status: 200,
-                data: [
-                    {
-                        detail: "test detail",
-                        due: "2025-1-1",
-                        status: true,
-                        title: "test title",
-                        todo_id: 1,
-                        username: "test"
-                    }
-                ]
+                data: {
+                    todos: [
+                        {
+                            detail: "test detail",
+                            due: "2025-1-1",
+                            status: true,
+                            title: "test title",
+                            todo_id: 1,
+                            username: "test"
+                        }
+                    ]
+                }
             }
         });
         // 終了ボタンをクリックし、モーダルを開く
@@ -411,16 +417,18 @@ describe('Todoの操作', () => {
         // deleteTodo()後のtodo再取得処理のモック
         mockedGet.mockResolvedValueOnce({
             status: 200,
-            data: [
-                {
-                    detail: "test detail",
-                    due: "2025-1-1",
-                    status: true,
-                    title: "test title",
-                    todo_id: 1,
-                    username: "test"
-                },
-            ]
+            data: {
+                todos: [
+                    {
+                        detail: "test detail",
+                        due: "2025-1-1",
+                        status: true,
+                        title: "test title",
+                        todo_id: 1,
+                        username: "test"
+                    },
+                ]
+            }
         });
         // 削除ボタンをクリックし、モーダルを開く
         await wrapper.find("[data-testid='delete-0']").trigger("click");
@@ -511,7 +519,9 @@ describe('Todoのソート', () => {
         await wrapper.find("[data-testid='sort-todos-id']").trigger("click");
         await flushPromises();
         const rows = wrapper.findAll('[data-testid="todo-row"]');
+        console.log(rows.map(row => row.text()));
         expect(rows).toHaveLength(defaultTodosData.todos.length);
+        expect(rows[0].text()).toContain("title1");
     })
 
     it('期限順', async () => {
@@ -519,7 +529,9 @@ describe('Todoのソート', () => {
         await wrapper.find("[data-testid='sort-todos-due']").trigger("click");
         await flushPromises();
         const rows = wrapper.findAll('[data-testid="todo-row"]');
+        console.log(rows.map(row => row.text()));
         expect(rows).toHaveLength(defaultTodosData.todos.length);
+        expect(rows[0].text()).toContain("title2");
     })
 });
 

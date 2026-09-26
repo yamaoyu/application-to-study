@@ -20,7 +20,8 @@
     ],
     "types": [
       "vite/client",
-      "vitest/globals"
+      "vitest/globals",
+      "node"
     ],
     "paths": {
       "@/*": [
@@ -29,13 +30,13 @@
     }
   },
   "include": [
-    "src/**/*.js",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
-    "test/**/*.js",
     "test/**/*.ts",
-    "vite-env.d.ts"
+    "e2e/**/*.ts",
+    "vite-env.d.ts",
+    "playwright.config.ts"
   ],
   "exclude": [
     "node_modules",

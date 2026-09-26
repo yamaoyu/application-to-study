@@ -11,6 +11,6 @@
     # httpで起動
     bash docker_exec.sh -d
     # httpsで起動
-    docker_exec.sh --profile https -d
+    bash docker_exec.sh --profile https -d
     ```
     docker_exec.shに引数を渡すことで「docker compose up」にオプションを設定できる
