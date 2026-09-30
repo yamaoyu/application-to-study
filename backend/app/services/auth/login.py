@@ -1,7 +1,7 @@
 import traceback
 import uuid
 from typing import Union
-from datetime import timedelta
+from datetime import timedelta, datetime
 from sqlalchemy.orm import Session
 from app.exceptions import NotAuthorized
 from lib.log_conf import logger
@@ -35,6 +35,9 @@ class LoginUseCase:
         token_info = self.create_or_update_refresh_token(
             {"sub": user.username, "role": user.role}, device_id=device_id)
         logger.info(f"{username}がログイン")
+        # リフレッシュトークンがあり、ログインフォームからログインする頻度は少ないのでパフォーマンスの影響は問題ない
+        now = datetime.now()
+        self.user_repo.update_last_active_at(user, now)
         return {"access_token": access_token,
                 "token_type": "Bearer",
                 "refresh_token": token_info["refresh_token"],

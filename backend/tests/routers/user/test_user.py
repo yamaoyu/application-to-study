@@ -4,6 +4,11 @@ from testdata import RESOURCE_OWNER_USERNAME, RESOURCE_OWNER_PLAIN_PASSWORD, ADM
 from jose import jwt
 from jose.exceptions import JWTError
 from app.error_codes import NotAuthorizedCode, ConflictCode
+from app.services.auth.login import LoginUseCase
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
+from app.security.password import get_password_hash
+from datetime import datetime
 
 # conftestで登録したユーザーとは別にこのファイルでユーザー作成する際に使うパスワード
 password = "P@ssword1"
@@ -110,6 +115,30 @@ def test_login(client, create_resource_owner):
         assert decoded_token["sub"] == "testuser"
     except JWTError as e:
         pytest.fail(f"Invalid JWT token {str(e)}")
+
+
+@patch("app.services.auth.login.UserRepository")
+def test_login_updates_last_active_at(mock_repository_class):
+    user_repo = mock_repository_class.return_value
+    user = SimpleNamespace(
+        username=RESOURCE_OWNER_USERNAME,
+        password=get_password_hash(RESOURCE_OWNER_PLAIN_PASSWORD),
+        status="active",
+        created_at=datetime.now(),
+        last_active_at=None,
+        role="general"
+    )
+    user_repo.get_user.return_value = user
+
+    service = LoginUseCase(db=Mock())
+
+    service.execute(
+        username=RESOURCE_OWNER_USERNAME,
+        plain_password=RESOURCE_OWNER_PLAIN_PASSWORD,
+        device_id="dummy",
+    )
+
+    user_repo.update_last_active_at.assert_called_once()
 
 
 def test_login_with_form_data_for_swagger_ui(client, create_resource_owner):

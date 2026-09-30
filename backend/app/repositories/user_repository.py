@@ -1,6 +1,7 @@
 from db import db_model
 from sqlalchemy.orm import Session
 from typing import Optional
+from datetime import datetime
 
 
 class UserRepository():
@@ -21,3 +22,6 @@ class UserRepository():
 
     def update_password(self, user: db_model.User, password: str) -> None:
         user.password = password
+
+    def update_last_active_at(self, user: db_model.User, last_active_at: datetime):
+        user.last_active_at = last_active_at
