@@ -11,9 +11,15 @@ class UserRepository():
     def flush(self) -> None:
         self.db.flush()
 
-    def insert_user(self, username: str, hash_password: str, email: Optional[str], role: str) -> None:
+    def insert_user(
+            self,
+            username: str,
+            hash_password: str,
+            email: Optional[str],
+            role: str,
+            created_at: datetime) -> None:
         form_data = db_model.User(
-            username=username, password=hash_password, email=email, role=role)
+            username=username, password=hash_password, email=email, role=role, created_at=created_at)
         self.db.add(form_data)
 
     def get_user(self, username: str) -> db_model.User:

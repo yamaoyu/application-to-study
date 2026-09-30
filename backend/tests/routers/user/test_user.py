@@ -5,6 +5,7 @@ from jose import jwt
 from jose.exceptions import JWTError
 from app.error_codes import NotAuthorizedCode, ConflictCode
 from app.services.auth.login import LoginUseCase
+from app.services.user.create_user import CreateUserUseCase
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 from app.security.password import get_password_hash
@@ -25,6 +26,44 @@ def test_register_user(client):
         "email": None,
         "role": "general"
     }
+
+
+@patch(
+    "app.services.user.create_user.get_password_hash",
+    return_value="hashed-password",
+)
+@patch("app.services.user.create_user.datetime")
+@patch("app.services.user.create_user.UserRepository")
+# @patch とテスト関数の引数は対応しており、複数の @patch を重ねた場合は、下から上の順番で引数へ渡される
+def test_create_user_sets_created_at(
+    mock_repository_class,
+    mock_datetime,
+    mock_get_password_hash,
+):
+    fixed_now = datetime(2026, 10, 3, 12, 0, 0)
+    mock_datetime.now.return_value = fixed_now
+
+    user_repo = mock_repository_class.return_value
+    service = CreateUserUseCase(db=Mock())
+
+    result = service.execute(
+        username_input="testuser",
+        plain_password="P@ssword1",
+        email_input="test@example.com",
+        role="general",
+    )
+
+    user_repo.insert_user.assert_called_once_with(
+        "testuser",
+        "hashed-password",
+        "test@example.com",
+        "general",
+        fixed_now,
+    )
+    user_repo.flush.assert_called_once()
+
+    assert result.username == "testuser"
+    assert result.role == "general"
 
 
 def test_register_user_with_short_username(client):
