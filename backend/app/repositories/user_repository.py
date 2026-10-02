@@ -31,3 +31,28 @@ class UserRepository():
 
     def update_last_active_at(self, user: db_model.User, last_active_at: datetime):
         user.last_active_at = last_active_at
+
+    def get_users(self,
+                  status: Optional[str] = None,
+                  last_active_at: Optional[datetime] = None,
+                  created_at: Optional[datetime] = None,
+                  role: Optional[str] = None,
+                  username: Optional[str] = None) -> list:
+        sqlstatement = self.db.query(
+            db_model.User.username,
+            db_model.User.role,
+            db_model.User.status,
+            db_model.User.created_at,
+            db_model.User.last_active_at
+        )
+        if status:
+            sqlstatement = sqlstatement.filter(db_model.User.status == status)
+        if last_active_at:
+            sqlstatement = sqlstatement.filter(db_model.User.last_active_at >= last_active_at)
+        if created_at:
+            sqlstatement = sqlstatement.filter(db_model.User.created_at >= created_at)
+        if role:
+            sqlstatement = sqlstatement.filter(db_model.User.role == role)
+        if username:
+            sqlstatement = sqlstatement.filter(db_model.User.username.like(f"%{username}%"))
+        return sqlstatement.all()
