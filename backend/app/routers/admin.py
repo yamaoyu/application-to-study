@@ -24,12 +24,13 @@ def check_user_is_admin(role):
         raise Forbidden(code=NotAuthorizedCode.NOT_HAVE_PERMISSION)
 
 
-@router.patch("/users/{username}/status", response_model=StatusChangeResponse, status_code=201)
+@router.patch("/users/{username}/status", response_model=StatusChangeResponse, status_code=200)
 def change_status(param: StatusChangeIn,
+                  username: str,
                   current_user: dict = Depends(get_current_user),
                   service: ChangeUserStatus = Depends(get_change_status_service)) -> StatusChangeResponse:
     check_user_is_admin(current_user["role"])
-    return service.execute(param.status, current_user["username"])
+    return service.execute(param.status, username)
 
 
 @router.get("/users", status_code=200)

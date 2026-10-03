@@ -56,3 +56,12 @@ class UserRepository():
         if username:
             sqlstatement = sqlstatement.filter(db_model.User.username.like(f"%{username}%"))
         return sqlstatement.all()
+
+    def change_status(self, user: db_model.User, status: str) -> None:
+        user.status = status
+
+    def count_active_admin_number(self) -> int:
+        return self.db.query(db_model.User).filter(
+            db_model.User.role == "admin",
+            db_model.User.status == "active"
+        ).count()
