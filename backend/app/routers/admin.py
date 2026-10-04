@@ -1,12 +1,18 @@
 from app.dependencies.auth import get_current_user
 from db.database import get_db
 from sqlalchemy.orm import Session
-from app.models.admin_model import StatusChangeIn, StatusChangeResponse, GetUsersIn
+from app.models.admin_model import (
+    StatusChangeIn,
+    StatusChangeResponse,
+    GetUsersIn,
+    RoleChangeResponse,
+    RoleChangeIn)
 from fastapi import APIRouter, Depends
 from app.error_codes import NotAuthorizedCode
 from app.exceptions import Forbidden
 from app.services.admin.change_user_status import ChangeUserStatus
 from app.services.admin.get_user_list import GetUserList
+from app.services.admin.change_role import ChangeUserRole
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -17,6 +23,10 @@ def get_change_status_service(db: Session = Depends(get_db)) -> ChangeUserStatus
 
 def get_user_list_service(db: Session = Depends(get_db)) -> GetUserList:
     return GetUserList(db)
+
+
+def get_change_role_service(db: Session = Depends(get_db)) -> ChangeUserRole:
+    return ChangeUserRole(db)
 
 
 def check_user_is_admin(role):
@@ -45,3 +55,12 @@ def get_users(params: GetUsersIn = Depends(),
         role=params.role,
         username=params.username,
     )
+
+
+@router.patch("/users/{username}/role", response_model=RoleChangeResponse, status_code=200)
+def change_role(param: RoleChangeIn,
+                username: str,
+                current_user: dict = Depends(get_current_user),
+                service: ChangeUserRole = Depends(get_change_role_service)) -> RoleChangeResponse:
+    check_user_is_admin(current_user["role"])
+    return service.execute(param.role, username)

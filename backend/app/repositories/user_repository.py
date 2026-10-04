@@ -2,6 +2,7 @@ from db import db_model
 from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import datetime
+from app.models.admin_model import UserStatus, UserRole
 
 
 class UserRepository():
@@ -57,7 +58,7 @@ class UserRepository():
             sqlstatement = sqlstatement.filter(db_model.User.username.like(f"%{username}%"))
         return sqlstatement.all()
 
-    def change_status(self, user: db_model.User, status: str) -> None:
+    def change_status(self, user: db_model.User, status: UserStatus) -> None:
         user.status = status
 
     def count_active_admin_number(self) -> int:
@@ -65,3 +66,6 @@ class UserRepository():
             db_model.User.role == "admin",
             db_model.User.status == "active"
         ).count()
+
+    def change_role(self, user: db_model.User, role: UserRole) -> None:
+        user.role = role

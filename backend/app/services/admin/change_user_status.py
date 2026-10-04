@@ -1,14 +1,14 @@
 from app.repositories.user_repository import UserRepository
 from app.error_codes import NotFoundCode, ConflictCode
 from app.exceptions import NotFound, Conflict
-from app.models.admin_model import StatusChangeResponse
+from app.models.admin_model import StatusChangeResponse, UserStatus
 
 
 class ChangeUserStatus:
     def __init__(self, db) -> None:
         self.user_repo = UserRepository(db)
 
-    def execute(self, status: str, username: str) -> StatusChangeResponse:
+    def execute(self, status: UserStatus, username: str) -> StatusChangeResponse:
         user = self.user_repo.get_user(username)
         if not user:
             raise NotFound(code=NotFoundCode.USER_NOT_FOUND)
