@@ -3,7 +3,7 @@ import uuid
 from typing import Union
 from datetime import timedelta, datetime
 from sqlalchemy.orm import Session
-from app.exceptions import NotAuthorized
+from app.exceptions import NotAuthorized, Forbidden
 from lib.log_conf import logger
 from app.repositories.user_repository import UserRepository
 from app.repositories.auth_repository import TokenRepository
@@ -28,6 +28,8 @@ class LoginUseCase:
         user = self.user_repo.get_user(username)
         if not user:
             raise NotAuthorized(code=NotAuthorizedCode.LOGIN_FAILED)
+        if user.status != "active":
+            raise Forbidden(code=NotAuthorizedCode.USER_SUSPENDED)
         is_password = verify_password(plain_password, user.password)
         if not is_password:
             raise NotAuthorized(code=NotAuthorizedCode.LOGIN_FAILED)

@@ -230,3 +230,16 @@ def test_user_accepted_admin_feature_after_role_changed_to_admin(client, get_adm
         "username": ADMIN_ACTIVE,
         "role": "general"
     }
+
+
+def test_suspended_user_cannot_change_role(client, get_suspended_user_headers, setup_users):
+    data = {
+        "role": "admin"
+    }
+    response = client.patch(f"/admin/users/{GENERAL_ACTIVE}/role",
+                            json=data,
+                            headers=get_suspended_user_headers)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.USER_SUSPENDED
+    }

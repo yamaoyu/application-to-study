@@ -10,6 +10,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 from app.security.password import get_password_hash
 from datetime import datetime
+from db.db_model import User
 
 # conftestで登録したユーザーとは別にこのファイルでユーザー作成する際に使うパスワード
 password = "P@ssword1"
@@ -156,6 +157,36 @@ def test_login(client, create_resource_owner):
         pytest.fail(f"Invalid JWT token {str(e)}")
 
 
+def test_suspended_user_denied(client, get_admin_headers, db_session):
+    USERNAME = "general"
+    PLAIN_PASSWORD = "dummy-Password1"
+    HASHED_PASSWORD = get_password_hash(PLAIN_PASSWORD)
+    now = datetime.now()
+    users = [
+        User(
+            username=USERNAME,
+            password=HASHED_PASSWORD,
+            status="suspended",
+            role="general",
+            created_at=now,
+            last_active_at=now,
+        )
+    ]
+
+    db_session.add_all(users)
+    db_session.commit()
+
+    data = {
+        "username": USERNAME,
+        "password": PLAIN_PASSWORD
+    }
+    response = client.post("/login", json=data)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.USER_SUSPENDED
+    }
+
+
 @patch("app.services.auth.login.UserRepository")
 def test_login_updates_last_active_at(mock_repository_class):
     user_repo = mock_repository_class.return_value
@@ -215,6 +246,13 @@ def test_logout(client, get_resource_owner_headers):
     response = client.post("/logout", headers=get_resource_owner_headers)
     assert response.status_code == 200
     response = client.post("/token", headers=get_resource_owner_headers)
+    assert response.status_code == 401
+
+
+def test_suspended_user_can_logout(client, get_suspended_user_headers):
+    response = client.post("/logout", headers=get_suspended_user_headers)
+    assert response.status_code == 200
+    response = client.post("/token", headers=get_suspended_user_headers)
     assert response.status_code == 401
 
 

@@ -190,3 +190,12 @@ def test_get_inquiries_filter_by_date(client, get_admin_headers, get_resource_ow
     response = client.get("/inquiries?year=2026&month=7", headers=get_admin_headers)
     assert response.status_code == 200
     assert response.json() == {"inquiries": []}
+
+
+def test_suspended_user_cannot_get_inquiries(client, get_resource_owner_headers, get_suspended_user_headers):
+    suspended_user_headers = get_suspended_user_headers
+    response = client.get("/inquiries", headers=suspended_user_headers)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.USER_SUSPENDED
+    }

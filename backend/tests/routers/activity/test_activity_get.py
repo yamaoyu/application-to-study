@@ -471,3 +471,39 @@ def test_get_activities_with_wrong_status(client, get_resource_owner_headers):
     """ ステータス名を間違えた状態で取得 """
     response = client.get("/activities?status=pendin", headers=get_resource_owner_headers)
     assert response.status_code == 422
+
+
+def test_suspended_user_cannot_get_all_activities(client, get_suspended_user_headers):
+    """ suspendedユーザーは活動情報を取得できない """
+    response = client.get("/activities/total", headers=get_suspended_user_headers)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.USER_SUSPENDED
+    }
+
+
+def test_suspended_user_cannot_get_year_activities(client, get_suspended_user_headers):
+    """ suspendedユーザーは活動情報を取得できない """
+    response = client.get("/activities/2024", headers=get_suspended_user_headers)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.USER_SUSPENDED
+    }
+
+
+def test_suspended_user_cannot_get_month_activities(client, get_suspended_user_headers):
+    """ suspendedユーザーは活動情報を取得できない """
+    response = client.get("/activities/2024/5", headers=get_suspended_user_headers)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.USER_SUSPENDED
+    }
+
+
+def test_suspended_user_cannot_get_day_activities(client, get_suspended_user_headers):
+    """ suspendedユーザーは活動情報を取得できない """
+    response = client.get(f"/activities{test_date_path}", headers=get_suspended_user_headers)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.USER_SUSPENDED
+    }

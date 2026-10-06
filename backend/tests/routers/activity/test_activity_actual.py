@@ -5,7 +5,7 @@ from helpers.activity import (
     setup_finish_activity,
     setup_monthly_income
 )
-from app.error_codes import NotFoundCode, ConflictCode, ValidationErrorCode
+from app.error_codes import NotFoundCode, ConflictCode, ValidationErrorCode, NotAuthorizedCode
 
 
 def test_register_actual(client, get_resource_owner_headers):
@@ -449,4 +449,20 @@ def test_register_multi_actual_with_invalid_date(client, get_resource_owner_head
                 "field": "date"
             }
         ]
+    }
+
+
+def test_suspended_user_cannot_register_actual(client, get_suspended_user_headers):
+    """ suspendedユーザーは活動時間を登録できない """
+    data = {
+        "activities": [
+            {"date": test_date, "actual_time": 5.0}
+        ]
+    }
+    response = client.patch("/activities/bulk-update-actuals",
+                            json=data,
+                            headers=get_suspended_user_headers)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.USER_SUSPENDED
     }

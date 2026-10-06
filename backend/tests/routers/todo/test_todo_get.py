@@ -210,3 +210,13 @@ def test_get_todo_by_another_user(client, get_resource_owner_headers, get_non_re
     assert response.json() == {
         "code": NotFoundCode.TODO_NOT_FOUND
     }
+
+
+def test_suspended_user_cannot_get_todo(client, get_resource_owner_headers, get_suspended_user_headers):
+    setup_create_todo(client, get_resource_owner_headers)
+    suspended_user_headers = get_suspended_user_headers
+    response = client.get("/todos/1", headers=suspended_user_headers)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.USER_SUSPENDED
+    }

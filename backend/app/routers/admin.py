@@ -1,4 +1,4 @@
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import get_current_active_user
 from db.database import get_db
 from sqlalchemy.orm import Session
 from app.models.admin_model import (
@@ -37,7 +37,7 @@ def check_user_is_admin(role):
 @router.patch("/users/{username}/status", response_model=StatusChangeResponse, status_code=200)
 def change_status(param: StatusChangeIn,
                   username: str,
-                  current_user: dict = Depends(get_current_user),
+                  current_user: dict = Depends(get_current_active_user),
                   service: ChangeUserStatus = Depends(get_change_status_service)) -> StatusChangeResponse:
     check_user_is_admin(current_user["role"])
     return service.execute(param.status, username)
@@ -45,7 +45,7 @@ def change_status(param: StatusChangeIn,
 
 @router.get("/users", status_code=200)
 def get_users(params: GetUsersIn = Depends(),
-              current_user: dict = Depends(get_current_user),
+              current_user: dict = Depends(get_current_active_user),
               service: GetUserList = Depends(get_user_list_service)):
     check_user_is_admin(current_user["role"])
     return service.execute(
@@ -60,7 +60,7 @@ def get_users(params: GetUsersIn = Depends(),
 @router.patch("/users/{username}/role", response_model=RoleChangeResponse, status_code=200)
 def change_role(param: RoleChangeIn,
                 username: str,
-                current_user: dict = Depends(get_current_user),
+                current_user: dict = Depends(get_current_active_user),
                 service: ChangeUserRole = Depends(get_change_role_service)) -> RoleChangeResponse:
     check_user_is_admin(current_user["role"])
     return service.execute(param.role, username)

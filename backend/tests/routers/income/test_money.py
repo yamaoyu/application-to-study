@@ -1,4 +1,4 @@
-from app.error_codes import ConflictCode, NotFoundCode, ValidationErrorCode
+from app.error_codes import ConflictCode, NotFoundCode, ValidationErrorCode, NotAuthorizedCode
 
 # テストで使用する変数
 test_year = 2024
@@ -258,4 +258,28 @@ def test_get_income_not_contain_another_user(client, get_resource_owner_headers,
         "pay_adjustment": 0.0,
         "total_penalty": 0.0,
         "total_bonus": 0.0
+    }
+
+
+def test_suspended_user_cannot_get_income(client, get_resource_owner_headers, get_suspended_user_headers):
+    setup_salary_for_test(client, get_resource_owner_headers)
+    suspended_user_headers = get_suspended_user_headers
+    year = test_year
+    month = test_month
+    response = client.get(f"/incomes/{year}/{month}", headers=suspended_user_headers)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.USER_SUSPENDED
+    }
+
+
+def test_suspended_user_cannot_register_income(client, get_suspended_user_headers):
+    data = {"salary": test_salary}
+    year = test_year
+    month = test_month
+    response = client.post(f"/incomes/{year}/{month}",
+                           json=data, headers=get_suspended_user_headers)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.USER_SUSPENDED
     }

@@ -10,7 +10,8 @@ from app.security.password import get_password_hash
 from app.main import app
 from testdata import (RESOURCE_OWNER_USERNAME, RESOURCE_OWNER_PLAIN_PASSWORD,
                       RESOURCE_OWNER_EMAIL, NON_RESOURCE_OWNER_USERNAME, NON_RESOURCE_OWNER_PLAIN_PASSWORD,
-                      ADMIN_USERNAME, ADMIN_PASSWORD)
+                      ADMIN_USERNAME, ADMIN_PASSWORD,
+                      SUSPENDED_USERNAME, SUSPENDED_PASSWORD)
 
 
 MYSQL_USER = os.getenv("MYSQL_USER")
@@ -109,6 +110,36 @@ def login_non_resource_owner(client, create_non_resource_owner):
 @pytest.fixture()
 def get_non_resource_owner_headers(login_non_resource_owner):
     access_token = login_non_resource_owner.json()['access_token']
+    headers = {"Authorization": f"Bearer {access_token}"}
+    return headers
+
+
+@pytest.fixture()
+def get_suspended_user_token(db_session, client):
+    """
+    権限としてadminはgeneralユーザーの権限+管理機能である
+    管理者用のAPIのテストでも動作を確認できるように`suspended`ユーザーをadmin権限で作成する
+    最初からsuspendedで作成するとログインできないため、activeで作成してログイン後、ステータスを変更する
+    """
+    user = db_model.User(
+        username=SUSPENDED_USERNAME,
+        password=get_password_hash(SUSPENDED_PASSWORD),
+        role="admin",
+        status="active"
+    )
+    db_session.add(user)
+    db_session.commit()
+    data = {"username": SUSPENDED_USERNAME, "password": SUSPENDED_PASSWORD}
+    token = client.post("/login", json=data)
+
+    user.status = "suspended"
+    db_session.commit()
+    return token
+
+
+@pytest.fixture()
+def get_suspended_user_headers(get_suspended_user_token):
+    access_token = get_suspended_user_token.json()['access_token']
     headers = {"Authorization": f"Bearer {access_token}"}
     return headers
 

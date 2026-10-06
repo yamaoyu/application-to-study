@@ -557,3 +557,19 @@ def test_register_multi_target_with_invalid_date(client, get_resource_owner_head
             }
         ]
     }
+
+
+def test_suspended_user_cannot_register_target(client, get_suspended_user_headers):
+    """ suspendedユーザーは目標時間を登録できない """
+    data = {
+        "activities": [
+            {"date": test_date, "target_time": 5.0}
+        ]
+    }
+    response = client.post("/activities/bulk-create-targets",
+                           json=data,
+                           headers=get_suspended_user_headers)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.USER_SUSPENDED
+    }

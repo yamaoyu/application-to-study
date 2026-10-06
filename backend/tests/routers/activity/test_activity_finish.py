@@ -6,7 +6,7 @@ from helpers.activity import (
     setup_finish_activity,
     setup_monthly_income
 )
-from app.error_codes import NotFoundCode, ConflictCode
+from app.error_codes import NotFoundCode, ConflictCode, NotAuthorizedCode
 from app.domain.money.amount import round_money_amount
 
 
@@ -384,4 +384,18 @@ def test_finish_multi_acitivity_with_no_dates(client, get_resource_owner_headers
                 "field": "dates"
             }
         ]
+    }
+
+
+def test_suspended_user_cannot_finish_activity(client, get_suspended_user_headers):
+    """ suspendedユーザーは活動を終了できないことを確認する """
+    data = {
+        "dates": [test_date]
+    }
+    response = client.patch("/activities/bulk-finish",
+                            json=data,
+                            headers=get_suspended_user_headers)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.USER_SUSPENDED
     }

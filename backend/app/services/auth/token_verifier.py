@@ -48,7 +48,7 @@ class TokenVerifier:
             user = self.user_repo.get_user(username)
             if not user:
                 raise NotFound(code=NotFoundCode.USER_NOT_FOUND)
-            return {"username": username, "role": user.role}
+            return {"username": username, "role": user.role, "status": user.status}
         except ExpiredSignatureError:
             raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
         except JWTError:

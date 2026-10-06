@@ -1,6 +1,7 @@
 import pytest
 from datetime import timedelta, datetime
 from db.db_model import User
+from app.error_codes import NotAuthorizedCode
 
 
 @pytest.fixture
@@ -157,4 +158,12 @@ def test_get_users_with_invalid_role(client, get_admin_headers, users_for_filter
                 'code': 'INVALID_INPUT'
             }
         ]
+    }
+
+
+def test_suspended_user_cannot_get_users(client, get_suspended_user_headers):
+    response = client.get("/admin/users", headers=get_suspended_user_headers)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.USER_SUSPENDED
     }

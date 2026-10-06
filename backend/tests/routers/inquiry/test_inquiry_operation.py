@@ -123,3 +123,12 @@ def test_edit_inquiry_not_found(client, get_admin_headers, monkeypatch):
     assert response.json() == {
         "code": NotFoundCode.INQUIRY_NOT_FOUND
     }
+
+
+def test_suspended_user_cannot_create_inquiry(client, get_suspended_user_headers):
+    data = {"category": CATEGORY, "detail": DETAIL}
+    response = client.post("/inquiries", json=data, headers=get_suspended_user_headers)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.USER_SUSPENDED
+    }

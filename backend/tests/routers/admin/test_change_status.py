@@ -157,3 +157,16 @@ def test_fail_change_last_admin_to_suspend(client, get_admin_headers, setup_user
     assert response.json() == {
         "code": ConflictCode.LAST_ADMIN_USER
     }
+
+
+def test_suspended_user_cannot_change_status(client, get_suspended_user_headers, setup_users):
+    data = {
+        "status": "active"
+    }
+    response = client.patch(f"/admin/users/{GENERAL_ACTIVE}/status",
+                            json=data,
+                            headers=get_suspended_user_headers)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.USER_SUSPENDED
+    }
