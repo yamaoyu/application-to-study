@@ -23,7 +23,7 @@ class LoginUseCase:
         Note:
             この内、routerからレスポンスで返すのはアクセストークン、トークンタイプ、ユーザーロールのみとし、
             リフレッシュトークンはセキュリティの観点からクッキーに保存する
-            よって、LoginUserResponseとは別の辞書型で返す
+            よって、クッキーに保存する用とAPIが返す用のデータを合わせて返す
         """
         user = self.user_repo.get_user(username)
         if not user:
@@ -33,11 +33,12 @@ class LoginUseCase:
         is_password = verify_password(plain_password, user.password)
         if not is_password:
             raise NotAuthorized(code=NotAuthorizedCode.LOGIN_FAILED)
-        access_token = create_access_token({"sub": user.username, "role": user.role})
+        access_token = create_access_token(
+            {"sub": user.username, "role": user.role, "token_version": user.token_version})
         token_info = self.create_or_update_refresh_token(
-            {"sub": user.username, "role": user.role}, device_id=device_id)
+            {"sub": user.username, "role": user.role, "token_version": user.token_version}, device_id=device_id)
         logger.info(f"{username}がログイン")
-        # リフレッシュトークンがあり、ログインフォームからログインする頻度は少ないのでパフォーマンスの影響は問題ない
+        # リフレッシュトークンがあり、ログインフォームからログインする頻度は少ないのでdb書き込みによるパフォーマンスの影響は問題ない
         now = datetime.now()
         self.user_repo.update_last_active_at(user, now)
         return {"access_token": access_token,
@@ -45,7 +46,8 @@ class LoginUseCase:
                 "refresh_token": token_info["refresh_token"],
                 "device_id": token_info["device_id"],
                 "expires_at": token_info["expires_at"],
-                "role": user.role}
+                "role": user.role,
+                "must_change_password": user.must_change_password}
 
     def create_or_update_refresh_token(self, data: dict,
                                        device_id: str,

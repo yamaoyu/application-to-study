@@ -74,7 +74,8 @@ def login(response: Response,
     return {
         "access_token": token_info["access_token"],
         "token_type": token_info["token_type"],
-        "role": token_info["role"]
+        "role": token_info["role"],
+        "must_change_password": token_info["must_change_password"]
     }
 
 

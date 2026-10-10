@@ -29,6 +29,7 @@ class UserRepository():
 
     def update_password(self, user: db_model.User, password: str) -> None:
         user.password = password
+        user.must_change_password = False
 
     def update_last_active_at(self, user: db_model.User, last_active_at: datetime):
         user.last_active_at = last_active_at
@@ -69,3 +70,9 @@ class UserRepository():
 
     def change_role(self, user: db_model.User, role: UserRole) -> None:
         user.role = role
+
+    def reset_password(self, user: db_model.User, hashed_password: str) -> None:
+        """ トークンバージョンを見てアクセストークンの有効性を確認するため,パスワードリセット時に加算 """
+        user.password = hashed_password
+        user.must_change_password = True
+        user.token_version += 1

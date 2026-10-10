@@ -96,10 +96,29 @@ def conflict_exception_handler(request, exc):
 
 
 @app.exception_handler(NotAuthorized)
-@app.exception_handler(HTTPException)
 def not_authorized_exception_handler(request, exc):
     # トークンがない場合HTTPExceptionが発生するため、NotAuthorizedとHTTPExceptionの両方をハンドリングする
     return JSONResponse(status_code=401, content={"code": exc.code})
+
+
+@app.exception_handler(HTTPException)
+def http_exception_handler(request, exc):
+    detail = exc.detail
+    if isinstance(detail, dict):
+        code = detail.get("code")
+        message = detail.get("message")
+    else:
+        code = None
+        message = str(detail)
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "code": code or "HTTP_ERROR",
+            "message": message,
+        },
+        headers=exc.headers,
+    )
 
 
 @app.exception_handler(Forbidden)

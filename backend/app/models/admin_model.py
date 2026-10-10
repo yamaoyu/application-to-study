@@ -51,3 +51,8 @@ class RoleChangeIn(BaseModel):
 class RoleChangeResponse(BaseModel):
     username: str
     role: UserRole
+
+
+class ResetPasswordResponse(BaseModel):
+    username: str
+    password: str

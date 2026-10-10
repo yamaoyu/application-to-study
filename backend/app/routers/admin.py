@@ -6,13 +6,15 @@ from app.models.admin_model import (
     StatusChangeResponse,
     GetUsersIn,
     RoleChangeResponse,
-    RoleChangeIn)
+    RoleChangeIn,
+    ResetPasswordResponse)
 from fastapi import APIRouter, Depends
 from app.error_codes import NotAuthorizedCode
 from app.exceptions import Forbidden
 from app.services.admin.change_user_status import ChangeUserStatus
 from app.services.admin.get_user_list import GetUserList
 from app.services.admin.change_role import ChangeUserRole
+from app.services.admin.reset_password import ResetPassword
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -27,6 +29,10 @@ def get_user_list_service(db: Session = Depends(get_db)) -> GetUserList:
 
 def get_change_role_service(db: Session = Depends(get_db)) -> ChangeUserRole:
     return ChangeUserRole(db)
+
+
+def get_reset_password_service(db: Session = Depends(get_db)) -> ResetPassword:
+    return ResetPassword(db)
 
 
 def check_user_is_admin(role):
@@ -64,3 +70,11 @@ def change_role(param: RoleChangeIn,
                 service: ChangeUserRole = Depends(get_change_role_service)) -> RoleChangeResponse:
     check_user_is_admin(current_user["role"])
     return service.execute(param.role, username)
+
+
+@router.patch("/users/{username}/password", response_model=ResetPasswordResponse, status_code=200)
+def reset_password(username: str,
+                   current_user: dict = Depends(get_current_active_user),
+                   service: ResetPassword = Depends(get_reset_password_service)) -> ResetPasswordResponse:
+    check_user_is_admin(current_user["role"])
+    return service.execute(username)
