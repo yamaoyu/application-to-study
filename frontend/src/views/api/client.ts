@@ -38,9 +38,7 @@ apiClient.interceptors.response.use(
     const url = originalRequest?.url ?? '';
 
     if (
-      url.includes('token') ||
-      url.includes('users') ||
-      url.includes('login')
+      ['token', 'users', 'login'].includes(url)
     ) {
       return Promise.reject(error);
     };
