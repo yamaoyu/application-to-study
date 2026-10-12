@@ -1,6 +1,6 @@
 from unittest.mock import patch
 from datetime import timedelta
-from testdata import RESOURCE_OWNER_USERNAME
+from testdata import RESOURCE_OWNER_USERNAME, RESOURCE_OWNER_PLAIN_PASSWORD
 from app.security.token import create_access_token
 from app.error_codes import NotFoundCode, NotAuthorizedCode
 from helpers.todo import TEST_TITLE, TEST_DUE, TEST_DETAIL, setup_create_todo, setup_finish_todo
@@ -219,4 +219,23 @@ def test_suspended_user_cannot_get_todo(client, get_resource_owner_headers, get_
     assert response.status_code == 403
     assert response.json() == {
         "code": NotAuthorizedCode.USER_SUSPENDED
+    }
+
+
+def test_must_change_password_user_denied(client, create_resource_owner, get_admin_headers):
+    response = client.patch(
+        f"/admin/users/{RESOURCE_OWNER_USERNAME}/password", headers=get_admin_headers)
+    assert response.status_code == 200
+    assert response.json()["password"] != RESOURCE_OWNER_PLAIN_PASSWORD
+    new_password = response.json()["password"]
+    user_info = {"username": RESOURCE_OWNER_USERNAME,
+                 "password": new_password}
+    response = client.post("/login", json=user_info)
+    assert response.status_code == 200
+    access_token = response.json()["access_token"]
+    token_type = response.json()["token_type"]
+    response = client.get("/todos/", headers={"Authorization": f"{token_type} {access_token}"})
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.PASSWORD_CHANGE_REQUIRED
     }

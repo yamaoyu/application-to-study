@@ -1,5 +1,6 @@
 from app.error_codes import NotFoundCode, NotAuthorizedCode, ValidationErrorCode
 from helpers.inquiry import CATEGORY, DETAIL, EXPECTED_DATE, setup_create_inquiry
+from testdata import RESOURCE_OWNER_USERNAME, RESOURCE_OWNER_PLAIN_PASSWORD
 
 
 def test_create_inquiry(client, get_resource_owner_headers):
@@ -131,4 +132,25 @@ def test_suspended_user_cannot_create_inquiry(client, get_suspended_user_headers
     assert response.status_code == 403
     assert response.json() == {
         "code": NotAuthorizedCode.USER_SUSPENDED
+    }
+
+
+def test_must_change_password_user_denied(client, create_resource_owner, get_admin_headers):
+    response = client.patch(
+        f"/admin/users/{RESOURCE_OWNER_USERNAME}/password", headers=get_admin_headers)
+    assert response.status_code == 200
+    assert response.json()["password"] != RESOURCE_OWNER_PLAIN_PASSWORD
+    new_password = response.json()["password"]
+    user_info = {"username": RESOURCE_OWNER_USERNAME,
+                 "password": new_password}
+    response = client.post("/login", json=user_info)
+    assert response.status_code == 200
+    access_token = response.json()["access_token"]
+    token_type = response.json()["token_type"]
+    data = {"category": CATEGORY, "detail": DETAIL}
+    response = client.post("/inquiries", json=data,
+                           headers={"Authorization": f"{token_type} {access_token}"})
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.PASSWORD_CHANGE_REQUIRED
     }

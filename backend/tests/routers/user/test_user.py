@@ -137,7 +137,7 @@ def test_login(client, create_resource_owner):
     access_token = response.json()["access_token"]
     assert response.status_code == 200
     assert response.json()["token_type"] == "Bearer"
-    assert len(response.json()) == 3
+    assert len(response.json()) == 4
     assert response.json()["role"] == "general"
 
     assert "refresh_token" in response.cookies
@@ -196,7 +196,9 @@ def test_login_updates_last_active_at(mock_repository_class):
         status="active",
         created_at=datetime.now(),
         last_active_at=None,
-        role="general"
+        role="general",
+        token_version=1,
+        must_change_password=False
     )
     user_repo.get_user.return_value = user
 

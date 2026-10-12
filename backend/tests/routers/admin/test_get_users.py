@@ -2,6 +2,7 @@ import pytest
 from datetime import timedelta, datetime
 from db.db_model import User
 from app.error_codes import NotAuthorizedCode
+from testdata import ADMIN_USERNAME, ADMIN_PASSWORD
 
 
 @pytest.fixture
@@ -15,6 +16,7 @@ def users_for_filter_test(db_session):
             role="general",
             created_at=now,
             last_active_at=now,
+            must_change_password=False
         ),
         User(
             username="general-suspend",
@@ -22,7 +24,8 @@ def users_for_filter_test(db_session):
             status="suspended",
             role="general",
             created_at=now,
-            last_active_at=now
+            last_active_at=now,
+            must_change_password=False
         ),
         User(
             username="admin-active",
@@ -30,7 +33,8 @@ def users_for_filter_test(db_session):
             status="active",
             role="admin",
             created_at=now,
-            last_active_at=now
+            last_active_at=now,
+            must_change_password=False
         ),
         User(
             username="admin-suspend",
@@ -38,7 +42,8 @@ def users_for_filter_test(db_session):
             status="suspended",
             role="admin",
             created_at=now,
-            last_active_at=now
+            last_active_at=now,
+            must_change_password=False
         ),
         User(
             username="for-date-filter",
@@ -46,7 +51,8 @@ def users_for_filter_test(db_session):
             status="active",
             role="general",
             created_at=now - timedelta(days=1),
-            last_active_at=now + timedelta(days=1)
+            last_active_at=now + timedelta(days=1),
+            must_change_password=False
         )
     ]
 
@@ -166,4 +172,23 @@ def test_suspended_user_cannot_get_users(client, get_suspended_user_headers):
     assert response.status_code == 403
     assert response.json() == {
         "code": NotAuthorizedCode.USER_SUSPENDED
+    }
+
+
+def test_must_change_password_user_denied(client, get_admin_headers):
+    response = client.patch(
+        f"/admin/users/{ADMIN_USERNAME}/password", headers=get_admin_headers)
+    assert response.status_code == 200
+    assert response.json()["password"] != ADMIN_PASSWORD
+    new_password = response.json()["password"]
+    user_info = {"username": ADMIN_USERNAME,
+                 "password": new_password}
+    response = client.post("/login", json=user_info)
+    assert response.status_code == 200
+    access_token = response.json()["access_token"]
+    token_type = response.json()["token_type"]
+    response = client.get("/admin/users", headers={"Authorization": f"{token_type} {access_token}"})
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.PASSWORD_CHANGE_REQUIRED
     }
