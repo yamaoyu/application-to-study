@@ -243,3 +243,21 @@ def test_suspended_user_cannot_change_role(client, get_suspended_user_headers, s
     assert response.json() == {
         "code": NotAuthorizedCode.USER_SUSPENDED
     }
+
+
+def test_change_suspended_admin_status_accepted(client, get_admin_headers, setup_users):
+    """
+        ロール変更時はadminロールでactiveなユーザーが0人にならないことが条件である
+        activeなadminが一人だけでもsuspendedユーザーのロール変更に影響がないことを確認する
+    """
+    data = {
+        "role": "general"
+    }
+    response = client.patch(f"/admin/users/{ADMIN_SUSPEND}/role",
+                            json=data,
+                            headers=get_admin_headers)
+    assert response.status_code == 200
+    assert response.json() == {
+        "username": ADMIN_SUSPEND,
+        "role": "general"
+    }

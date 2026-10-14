@@ -13,7 +13,7 @@ from app.error_codes import NotAuthorizedCode
 from app.exceptions import Forbidden
 from app.services.admin.change_user_status import ChangeUserStatus
 from app.services.admin.get_user_list import GetUserList
-from app.services.admin.change_role import ChangeUserRole
+from app.services.admin.change_user_role import ChangeUserRole
 from app.services.admin.reset_password import ResetPassword
 
 router = APIRouter(prefix="/admin", tags=["admin"])
