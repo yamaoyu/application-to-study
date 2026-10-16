@@ -17,9 +17,7 @@ apiClient.interceptors.request.use((config) => {
   }
 
   if (
-    url.includes('token') ||
-    url.includes('users') ||
-    url.includes('login')
+    ['token', 'users', 'login'].includes(url)
   ) {
     return config;
   };

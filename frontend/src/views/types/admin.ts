@@ -1,4 +1,4 @@
-export type UserStatus = "active" | "suepended"
+export type UserStatus = "active" | "suspended"
 export type UserStatusFilter = UserStatus | ""
 
 export type UserRole = "admin" | "general"
@@ -14,8 +14,6 @@ export type UserItem = {
 
 export type GetUsersResponse = { users: UserItem[] }
 
-
-
 export type GetUsersParams = {
     status?: UserStatus
     last_active_at?: string
@@ -23,3 +21,17 @@ export type GetUsersParams = {
     role?: UserRole
     username?: string
 }
+
+export type ChangeRoleParams = {
+    username: string
+    role: UserRole
+}
+
+export type ChangeRoleResponse = ChangeRoleParams
+
+export type ChangeStatusParams = {
+    username: string
+    status: UserStatus
+}
+
+export type ChangeStatusResponse = ChangeRoleParams

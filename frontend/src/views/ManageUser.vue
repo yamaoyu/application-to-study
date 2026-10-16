@@ -59,6 +59,7 @@
             <th>最終ログイン</th>
             <th>ロール</th>
             <th>ステータス</th>
+            <th></th>
           </tr>
         </thead>
         <tbody v-for="(user, name) in users" :key="name">
@@ -68,6 +69,33 @@
             <td>{{ formatJstDate(user.last_active_at) }}</td>
             <td>{{ user.role }}</td>
             <td>{{ user.status }}</td>
+            <td>
+              <div class="dropdown">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-light border"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                  :aria-label="`${user.username}の操作`"
+                  title="操作"
+                >
+                  ⋮
+                </button>
+
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li>
+                    <button class="dropdown-item" type="button" @click="handleRoleChange(user)">
+                      {{ user.role === "general" ? "管理者権限へ変更" : "一般権限へ変更" }}
+                    </button>
+                  </li>
+                  <li>
+                    <button class="dropdown-item" type="button" value="ステータス変更" @click="handleStatusChange(user)">
+                      {{ user.status === "active" ? "停止する" : "有効化する" }}
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -81,8 +109,9 @@
 <script lang="ts">
 
 import { onMounted, ref } from 'vue';
-import { useGetUsersList } from './composables/useManageUser';
+import { useGetUsersList, useChangeRole, useChangeStatus } from './composables/useManageUser';
 import { BButton } from 'bootstrap-vue-next';
+import { UserItem } from './types/admin';
 
 export default {
   components: {
@@ -100,22 +129,34 @@ export default {
         username,
         message
     } = useGetUsersList();
+    const { changeRole } = useChangeRole();
+    const { changeStatus } = useChangeStatus();
 
-  const formatJstDate = (value?: string | null) => {
-    if (!value) return "-";
+    const formatJstDate = (value?: string | null) => {
+      if (!value) return "-";
 
-    return new Intl.DateTimeFormat("ja-JP", {
-      timeZone: "Asia/Tokyo",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(new Date(value));
-  };
+      return new Intl.DateTimeFormat("ja-JP", {
+        timeZone: "Asia/Tokyo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date(value));
+    };
 
     const isFormVisible = ref<boolean>(false);
 
     const toggleFormVisibility = () => {
       isFormVisible.value = !isFormVisible.value;
+    };
+
+    const handleRoleChange = async (user: UserItem) => {
+      await changeRole(user.role, user.username);
+      await getUsers();
+    }
+
+    const handleStatusChange = async (user: UserItem) => {
+      await changeStatus(user.status, user.username);
+      await getUsers();
     };
 
     const resetFilter = () => {
@@ -132,6 +173,8 @@ export default {
 
     return {
       getUsers,
+      handleRoleChange,
+      handleStatusChange,
       users,
       message,
       userStatus,
