@@ -1,7 +1,8 @@
 import pytest
 from datetime import timedelta, datetime
 from db.db_model import User
-from app.error_codes import NotAuthorizedCode
+from unittest.mock import patch
+from app.error_codes import NotAuthorizedCode, NotFoundCode
 from testdata import ADMIN_USERNAME, ADMIN_PASSWORD
 
 
@@ -192,3 +193,20 @@ def test_must_change_password_user_denied(client, get_admin_headers):
     assert response.json() == {
         "code": NotAuthorizedCode.PASSWORD_CHANGE_REQUIRED
     }
+
+
+def test_get_users_without_macth_users(client, get_admin_headers):
+    # 存在しないユーザーを検索したいが、テスト用ユーザーが存在するため、モックを使って、ユーザーが存在しない場合の挙動をテストする
+    def mock_get_users(self,
+                       status=None,
+                       last_active_at=None,
+                       created_at=None,
+                       role=None,
+                       username=None):
+        return []
+    with patch("app.repositories.user_repository.UserRepository.get_users", mock_get_users):
+        response = client.get("/admin/users", headers=get_admin_headers)
+        assert response.status_code == 404
+        assert response.json() == {
+            "code": NotFoundCode.USER_NOT_FOUND
+        }

@@ -14,11 +14,11 @@
       <div class="row g-2">
           <div class="col-md-6">
             <label class="form-label">作成日</label>
-            <input v-model="createdAt" type="date" class="form-control" data-testid="start-due">
+            <input v-model="createdAt" type="date" class="form-control" data-testid="created-at-filter">
           </div>
           <div class="col-md-6">
             <label class="form-label">最終ログイン</label>
-            <input v-model="lastActiveAt" type="date" class="form-control" data-testid="end-due">
+            <input v-model="lastActiveAt" type="date" class="form-control" data-testid="last-active-at-filter">
           </div>
       </div>
       <div class="row g-2">
@@ -32,7 +32,7 @@
           </div>
           <div class="col-md-6">
             <label class="form-label">ロール</label>
-            <select v-model="userRole" class="form-select" data-testid="status-filter">
+            <select v-model="userRole" class="form-select" data-testid="role-filter">
               <option value="">すべて</option>
               <option value="admin">管理者</option>
               <option value="general">一般</option>
@@ -41,7 +41,7 @@
       </div>
       <div class="mt-3">
         <label>ユーザー名</label>
-        <input v-model="username" type="text" class="form-control" data-testid="title">
+        <input v-model="username" type="text" class="form-control" data-testid="username-filter">
       </div>
       <div class="d-flex justify-content-end mt-3">
         <BButton variant="secondary" class="me-2" data-testid="reset" @click="resetFilter">条件リセット</BButton>
@@ -62,9 +62,9 @@
             <th></th>
           </tr>
         </thead>
-        <tbody v-for="(user, name) in users" :key="name">
-          <tr>
-            <td :data-testid="`user-${name}`">{{ user.username }}</td>
+        <tbody v-for="(user, index) in users" :key="index">
+          <tr data-testid="user-row">
+            <td :data-testid="`user-${index}`">{{ user.username }}</td>
             <td>{{ formatJstDate(user.created_at) }}</td>
             <td>{{ formatJstDate(user.last_active_at) }}</td>
             <td>{{ user.role }}</td>
@@ -84,12 +84,12 @@
 
                 <ul class="dropdown-menu dropdown-menu-end">
                   <li>
-                    <button class="dropdown-item" type="button" @click="handleRoleChange(user)">
+                    <button class="dropdown-item" type="button" :data-testid="`change-role-${index}`"  @click="handleRoleChange(user)">
                       {{ user.role === "general" ? "管理者権限へ変更" : "一般権限へ変更" }}
                     </button>
                   </li>
                   <li>
-                    <button class="dropdown-item" type="button" value="ステータス変更" @click="handleStatusChange(user)">
+                    <button class="dropdown-item" type="button" :data-testid="`change-status-${index}`" @click="handleStatusChange(user)">
                       {{ user.status === "active" ? "停止する" : "有効化する" }}
                     </button>
                   </li>
