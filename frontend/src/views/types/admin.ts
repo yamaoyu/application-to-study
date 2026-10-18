@@ -35,3 +35,8 @@ export type ChangeStatusParams = {
 }
 
 export type ChangeStatusResponse = ChangeRoleParams
+
+export type ResetPasswordResponse = {
+    username: string
+    password: string
+}

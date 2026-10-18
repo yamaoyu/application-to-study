@@ -93,6 +93,11 @@
                       {{ user.status === "active" ? "停止する" : "有効化する" }}
                     </button>
                   </li>
+                  <li>
+                    <button class="dropdown-item" type="button" :data-testid="`reset-password-${index}`" @click="confirmPasswordReset(user)">
+                      パスワードリセット
+                    </button>
+                  </li>
                 </ul>
               </div>
             </td>
@@ -101,24 +106,41 @@
       </table>
     </div>
   </template>
-  <div class="container d-flex flex-column align-items-center">
-    <p v-if="message" class="mt-3 col-8" data-testid="message">{{ message }}</p>
+  <div v-if="message" class="container d-flex flex-column align-items-center">
+    <p class="mt-3 col-8 alert" :class="isSuccess ? 'alert-success' : 'alert-warning'" data-testid="message">{{ message }}</p>
   </div>
+
+  <BModal
+    v-model="showPasswordResetModal"
+    title="パスワードリセット確認"
+    cancel-title="キャンセル"
+    data-testid="modal-show"
+    @ok="handlePasswordReset()"
+  >
+    <p v-if="selectedUser">
+      {{ selectedUser.username }} のパスワードをリセットします。よろしいですか？
+    </p>
+  </BModal>
 </template>
   
 <script lang="ts">
 
 import { onMounted, ref } from 'vue';
-import { useGetUsersList, useChangeRole, useChangeStatus } from './composables/useManageUser';
-import { BButton } from 'bootstrap-vue-next';
+import { useGetUsersList, useChangeRole, useChangeStatus, useResetPassword } from './composables/useManageUser';
+import { BButton, BModal } from 'bootstrap-vue-next';
 import { UserItem } from './types/admin';
 
 export default {
   components: {
-    BButton
+    BButton,
+    BModal
   },
 
   setup() {
+    const message = ref<string>("");
+    const showPasswordResetModal = ref<boolean>(false);
+    const selectedUser = ref<UserItem | null>();
+    const isSuccess = ref<boolean>(false);
     const {
         getUsers,
         users,
@@ -126,11 +148,11 @@ export default {
         userRole,
         lastActiveAt,
         createdAt,
-        username,
-        message
-    } = useGetUsersList();
-    const { changeRole } = useChangeRole();
-    const { changeStatus } = useChangeStatus();
+        username
+    } = useGetUsersList(message, isSuccess);
+    const { changeRole } = useChangeRole(message, isSuccess);
+    const { changeStatus } = useChangeStatus(message, isSuccess);
+    const { resetPassword } = useResetPassword(message, isSuccess);
 
     const formatJstDate = (value?: string | null) => {
       if (!value) return "-";
@@ -159,6 +181,19 @@ export default {
       await getUsers();
     };
 
+    const handlePasswordReset = async () => {
+      if (!selectedUser.value) return;
+      await resetPassword(selectedUser.value.username);
+      selectedUser.value = null;
+      showPasswordResetModal.value = false;
+      await getUsers();
+    }
+
+    const confirmPasswordReset = async (user: UserItem) => {
+      showPasswordResetModal.value = true;
+      selectedUser.value = user;
+    }
+
     const resetFilter = () => {
       userStatus.value = "";
       userRole.value = "";
@@ -175,8 +210,13 @@ export default {
       getUsers,
       handleRoleChange,
       handleStatusChange,
+      handlePasswordReset,
+      confirmPasswordReset,
       users,
       message,
+      isSuccess,
+      showPasswordResetModal,
+      selectedUser,
       userStatus,
       userRole,
       lastActiveAt,

@@ -5,7 +5,8 @@ import {
     ChangeRoleResponse,
     ChangeRoleParams,
     ChangeStatusResponse,
-    ChangeStatusParams
+    ChangeStatusParams,
+    ResetPasswordResponse
 } from '../types/admin';
 import type { AxiosResponse } from "axios";
 
@@ -27,3 +28,6 @@ export const changeUserStatus = (
     return apiClient.patch(`admin/users/${params.username}/status`, { status: params.status });
 };
 
+export const resetUserPassword = (username: string): Promise<AxiosResponse<ResetPasswordResponse>> => {
+    return apiClient.patch(`/admin/users/${username}/password`)
+}

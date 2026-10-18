@@ -297,7 +297,7 @@ describe('ロール変更', () => {
             }
         });
 
-        const roleChangeBtn = await wrapper.find('[data-testid="change-role-3"');
+        const roleChangeBtn = await wrapper.find('[data-testid="change-role-3"]');
         expect(roleChangeBtn.text()).toBe("一般権限へ変更");
         await roleChangeBtn.trigger("click");
         expect(mockedPatch).toHaveBeenCalledWith(
@@ -319,7 +319,7 @@ describe('ロール変更', () => {
             }
         });
 
-        const roleChangeBtn = await wrapper.find('[data-testid="change-role-0"');
+        const roleChangeBtn = await wrapper.find('[data-testid="change-role-0"]');
         expect(roleChangeBtn.text()).toBe("管理者権限へ変更");
         await roleChangeBtn.trigger("click");
         expect(mockedPatch).toHaveBeenCalledWith(
@@ -351,7 +351,7 @@ describe('ステータス変更', () => {
             }
         });
 
-        const roleChangeBtn = await wrapper.find('[data-testid="change-status-0"');
+        const roleChangeBtn = await wrapper.find('[data-testid="change-status-0"]');
         expect(roleChangeBtn.text()).toBe("停止する");
         await roleChangeBtn.trigger("click");
         expect(mockedPatch).toHaveBeenCalledWith(
@@ -373,7 +373,7 @@ describe('ステータス変更', () => {
             }
         });
 
-        const roleChangeBtn = await wrapper.find('[data-testid="change-status-1"');
+        const roleChangeBtn = await wrapper.find('[data-testid="change-status-1"]');
         expect(roleChangeBtn.text()).toBe("有効化する");
         await roleChangeBtn.trigger("click");
         expect(mockedPatch).toHaveBeenCalledWith(
@@ -382,5 +382,93 @@ describe('ステータス変更', () => {
                 "status": "active"
             }
         );
+    })
+})
+
+describe('パスワードリセット', () => {
+    let wrapper: VueWrapper;
+
+    beforeEach(() => {
+        vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+    }
+    );
+
+    it('成功', async () => {
+        wrapper = await mountManageUser(createResolvedMock(defaultUserData));
+
+        const newPassword = "PWRD%l5VLsmBPI%$";
+
+        // パスワードリセットのモック
+        mockedPatch.mockResolvedValue({
+            status: 200,
+            data: {
+                "username": GENERAL_SUSPEND,
+                "password": newPassword
+            }
+        });
+
+        // ユーザー取得のモック
+        mockedGet.mockResolvedValue({
+            status: 200,
+            data: {
+                users: defaultUserData
+            }
+        })
+
+        await wrapper.find("[data-testid='reset-password-1']").trigger("click");
+        // モーダルが表示されることを確認
+        const modal = document.body.querySelector('[data-testid="modal-show"]') as HTMLDivElement;
+        expect(modal).not.toBeNull();
+        const bModal = wrapper.findComponent({ name: 'BModal' });
+        await flushPromises();
+        expect(bModal.props("title")).toBe("パスワードリセット確認");
+        await bModal.vm.$emit('ok');
+        await flushPromises();
+        expect(mockedPatch).toHaveBeenCalledWith(
+            `/admin/users/${GENERAL_SUSPEND}/password`
+        )
+        const expectedMessage = [
+            "パスワードリセットに成功しました\nこの情報は一度しか表示されません",
+            `ユーザー名: ${GENERAL_SUSPEND}`,
+            `新しいパスワード: ${newPassword}`
+        ].join("\n")
+        expect(wrapper.find("[data-testid='message']").text()).toEqual(expectedMessage);
+    })
+
+    it('失敗', async () => {
+        wrapper = await mountManageUser(createResolvedMock(defaultUserData));
+
+        // パスワードリセットのモック
+        mockedPatch.mockRejectedValue({
+            response: {
+                status: 404,
+                data: {
+                    code: "USER_NOT_FOUND"
+                }
+            }
+        });
+
+        // ユーザー取得のモック
+        mockedGet.mockResolvedValue({
+            status: 200,
+            data: {
+                users: defaultUserData
+            }
+        })
+
+        await wrapper.find("[data-testid='reset-password-1']").trigger("click");
+        // モーダルが表示されることを確認
+        const modal = document.body.querySelector('[data-testid="modal-show"]') as HTMLDivElement;
+        expect(modal).not.toBeNull();
+        const bModal = wrapper.findComponent({ name: 'BModal' });
+        await flushPromises();
+        expect(bModal.props("title")).toBe("パスワードリセット確認");
+        await bModal.vm.$emit('ok');
+        await flushPromises();
+        expect(mockedPatch).toHaveBeenCalledWith(
+            `/admin/users/${GENERAL_SUSPEND}/password`
+        )
+
+        expect(wrapper.find("[data-testid='message']").text()).toEqual("ユーザーが見つかりません");
     })
 })
