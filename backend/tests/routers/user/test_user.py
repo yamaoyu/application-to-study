@@ -355,6 +355,32 @@ def test_change_password_with_invalid_password(client, get_resource_owner_header
     }
 
 
+def test_must_change_password_user_success_password_change(client, create_resource_owner, get_admin_headers):
+    """ must_change_password=Trueのユーザーもパスワード変更APIを使用できる """
+    password_reset_response = client.patch(
+        f"/admin/users/{RESOURCE_OWNER_USERNAME}/password", headers=get_admin_headers)
+    assert password_reset_response.status_code == 200
+    reseted_password = password_reset_response.json()["password"]
+    user_info = {"username": RESOURCE_OWNER_USERNAME,
+                 "password": reseted_password}
+    login_response = client.post("/login", json=user_info)
+    assert login_response.status_code == 200
+    assert login_response.json()["must_change_password"] is True
+    access_token = login_response.json()["access_token"]
+    headers = {"Authorization": f"Bearer {access_token}"}
+    new_password = RESOURCE_OWNER_PLAIN_PASSWORD
+    data = {
+        "old_password": reseted_password,
+        "new_password": new_password
+    }
+    password_change_response = client.patch(
+        "/password",
+        json=data,
+        headers=headers
+    )
+    assert password_change_response.status_code == 200
+
+
 def test_admin_user_can_create_admin_user(client, get_admin_headers):
     user_info = {"username": "admin2",
                  "password": ADMIN_PASSWORD}

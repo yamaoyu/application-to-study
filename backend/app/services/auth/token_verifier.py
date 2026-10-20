@@ -63,6 +63,28 @@ class TokenVerifier:
             "token_version": user.token_version
         }
 
+    def get_current_user_for_password_change(self, token: str) -> dict:
+        try:
+            user = self.authenticate_user(token)
+            payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
+        except ExpiredSignatureError:
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+        except JWTError:
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+        except Exception:
+            logger.error(f"ユーザーの認証に失敗しました\n{traceback.format_exc()}")
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+        if user.token_version != payload.get("token_version"):
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+        if user.status != "active":
+            raise Forbidden(code=NotAuthorizedCode.USER_SUSPENDED)
+        return {
+            "username": user.username,
+            "role": user.role,
+            "status": user.status,
+            "token_version": user.token_version
+        }
+
     def authenticate_user(self, token: str):
         payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
         username = payload.get("sub")

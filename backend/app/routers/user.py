@@ -1,4 +1,4 @@
-from app.dependencies.auth import get_current_active_user
+from app.dependencies.auth import get_current_active_user, get_current_user_for_password_change
 from db.database import get_db
 from sqlalchemy.orm import Session
 from app.models.user_model import (RegisterUserInfo,
@@ -39,6 +39,6 @@ def create_admin_user(user: RegisterUserInfo,
 
 @router.patch("/password", status_code=200, response_model=None)
 def change_password(params: ChangePasswordInfo,
-                    current_user: dict = Depends(get_current_active_user),
+                    current_user: dict = Depends(get_current_user_for_password_change),
                     service: ChangePasswordUseCase = Depends(get_change_password_service)):
     return service.execute(params.old_password, params.new_password, current_user["username"])

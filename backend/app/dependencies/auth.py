@@ -56,8 +56,8 @@ def get_current_active_user(
     return user_info
 
 
-def authenticated_user(
+def get_current_user_for_password_change(
     token: str = Depends(get_access_token),
     verifier: TokenVerifier = Depends(get_token_verifier)
 ):
-    return verifier.authenticate_user(token)
+    return verifier.get_current_user_for_password_change(token)
