@@ -64,6 +64,10 @@ class TokenVerifier:
         }
 
     def get_current_user_for_password_change(self, token: str) -> dict:
+        """
+        管理者によるパスワードリセットされたユーザーがパスワード変更するための認証
+        must_change_passwordがTrueでないと使えない
+        """
         try:
             user = self.authenticate_user(token)
             payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
@@ -78,6 +82,8 @@ class TokenVerifier:
             raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
         if user.status != "active":
             raise Forbidden(code=NotAuthorizedCode.USER_SUSPENDED)
+        if not user.must_change_password:
+            raise Forbidden(code=NotAuthorizedCode.NOT_HAVE_PERMISSION)
         return {
             "username": user.username,
             "role": user.role,

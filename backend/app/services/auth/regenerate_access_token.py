@@ -23,6 +23,10 @@ class RegenerateAccessTokenUseCase:
         if self.token_verifier.verify_refresh_token(refresh_token, device_id=device_id):
             access_token = create_access_token(
                 {"sub": user.username, "role": user.role, "token_version": user.token_version})
-            return regenerateAccessTokenResponse(access_token=access_token, token_type="Bearer")
+            return regenerateAccessTokenResponse(
+                access_token=access_token,
+                token_type="Bearer",
+                role=user.role,
+                must_change_password=user.must_change_password)
         else:
             raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)

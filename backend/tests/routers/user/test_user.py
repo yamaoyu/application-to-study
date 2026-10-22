@@ -16,6 +16,17 @@ from db.db_model import User
 password = "P@ssword1"
 
 
+def setup_reset_password(client, username: str, headers: dict):
+    password_reset_response = client.patch(
+        f"/admin/users/{username}/password", headers=headers)
+    assert password_reset_response.status_code == 200
+    reseted_password = password_reset_response.json()["password"]
+    user_info = {"username": username,
+                 "password": reseted_password}
+    login_response = client.post("/login", json=user_info)
+    return login_response, reseted_password
+
+
 def test_register_user(client):
     user_info = {"username": "test",
                  "password": password}
@@ -153,6 +164,9 @@ def test_login(client, create_resource_owner):
             access_token, SECRET_KEY, ALGORITHM)
         assert "sub" in decoded_token
         assert decoded_token["sub"] == "testuser"
+        assert response.json()["token_type"] == "Bearer"
+        assert response.json()["role"] == "general"
+        assert response.json()["must_change_password"] is False
     except JWTError as e:
         pytest.fail(f"Invalid JWT token {str(e)}")
 
@@ -268,6 +282,9 @@ def test_regenerate_token(client, get_resource_owner_headers):
         decoded_token = jwt.decode(access_token, SECRET_KEY, ALGORITHM)
         assert "sub" in decoded_token
         assert decoded_token["sub"] == "testuser"
+        assert response.json()["token_type"] == "Bearer"
+        assert response.json()["role"] == "general"
+        assert response.json()["must_change_password"] is False
     except JWTError as e:
         pytest.fail(f"Invalid JWT token {str(e)}")
 
@@ -355,14 +372,16 @@ def test_change_password_with_invalid_password(client, get_resource_owner_header
     }
 
 
-def test_must_change_password_user_success_password_change(client, create_resource_owner, get_admin_headers):
-    """ must_change_password=Trueのユーザーもパスワード変更APIを使用できる """
+def test_must_change_password_user_denied_normal_password_change(client, create_resource_owner, get_admin_headers):
+    """ must_change_password=Trueのユーザーはパスワードリセット後の強制パスワード変更APIを使用できる """
     password_reset_response = client.patch(
         f"/admin/users/{RESOURCE_OWNER_USERNAME}/password", headers=get_admin_headers)
     assert password_reset_response.status_code == 200
     reseted_password = password_reset_response.json()["password"]
-    user_info = {"username": RESOURCE_OWNER_USERNAME,
-                 "password": reseted_password}
+    user_info = {
+        "username": RESOURCE_OWNER_USERNAME,
+        "password": reseted_password
+    }
     login_response = client.post("/login", json=user_info)
     assert login_response.status_code == 200
     assert login_response.json()["must_change_password"] is True
@@ -378,7 +397,56 @@ def test_must_change_password_user_success_password_change(client, create_resour
         json=data,
         headers=headers
     )
+    assert password_change_response.status_code == 403
+    assert password_change_response.status_code == {
+        "code": NotAuthorizedCode.NOT_HAVE_PERMISSION
+    }
+
+
+def test_reseted_password_user_success_forced_password_change(client, create_resource_owner, get_admin_headers):
+    """ must_change_password=Trueのユーザーはパスワードリセット後の強制パスワード変更APIを使用できる """
+    password_reset_response = client.patch(
+        f"/admin/users/{RESOURCE_OWNER_USERNAME}/password", headers=get_admin_headers)
+    assert password_reset_response.status_code == 200
+    reseted_password = password_reset_response.json()["password"]
+    user_info = {
+        "username": RESOURCE_OWNER_USERNAME,
+        "password": reseted_password
+    }
+    login_response = client.post("/login", json=user_info)
+    assert login_response.status_code == 200
+    assert login_response.json()["must_change_password"] is True
+    access_token = login_response.json()["access_token"]
+    headers = {"Authorization": f"Bearer {access_token}"}
+    new_password = RESOURCE_OWNER_PLAIN_PASSWORD
+    data = {
+        "new_password": new_password
+    }
+    password_change_response = client.patch(
+        "/password/forced",
+        json=data,
+        headers=headers
+    )
     assert password_change_response.status_code == 200
+    user_info = {"username": RESOURCE_OWNER_USERNAME,
+                 "password": new_password}
+    login_response_after_reset = client.post("/login", json=user_info)
+    assert login_response_after_reset.json()["must_change_password"] is False
+
+
+def test_not_password_reseted_user_denied_force_password_change(client, get_resource_owner_headers):
+    data = {
+        "new_password": RESOURCE_OWNER_PLAIN_PASSWORD
+    }
+    password_change_response = client.patch(
+        "/password/forced",
+        json=data,
+        headers=get_resource_owner_headers
+    )
+    assert password_change_response.status_code == 403
+    assert password_change_response.json() == {
+        "code": NotAuthorizedCode.NOT_HAVE_PERMISSION
+    }
 
 
 def test_admin_user_can_create_admin_user(client, get_admin_headers):
