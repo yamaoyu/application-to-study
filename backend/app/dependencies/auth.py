@@ -38,14 +38,6 @@ def get_token_verifier(db: Session = Depends(get_db)) -> TokenVerifier:
     return TokenVerifier(db)
 
 
-def get_current_user(
-    token: str = Depends(get_access_token),
-    verifier: TokenVerifier = Depends(get_token_verifier),
-):
-    user_info = verifier.get_current_user_from_token(token)
-    return user_info
-
-
 def get_current_active_user(
     token: str = Depends(get_access_token),
     verifier: TokenVerifier = Depends(get_token_verifier),
@@ -61,3 +53,10 @@ def get_current_user_for_password_change(
     verifier: TokenVerifier = Depends(get_token_verifier)
 ):
     return verifier.get_current_user_for_password_change(token)
+
+
+def get_current_user_for_logout(
+        token: str = Depends(get_access_token),
+        verifier: TokenVerifier = Depends(get_token_verifier)
+):
+    return verifier.get_current_user_from_token_for_logout(token)

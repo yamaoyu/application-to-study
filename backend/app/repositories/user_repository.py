@@ -30,6 +30,7 @@ class UserRepository():
     def update_password(self, user: db_model.User, password: str) -> None:
         user.password = password
         user.must_change_password = False
+        user.token_version += 1
 
     def update_last_active_at(self, user: db_model.User, last_active_at: datetime):
         user.last_active_at = last_active_at

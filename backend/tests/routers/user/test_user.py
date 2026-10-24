@@ -258,11 +258,58 @@ def test_login_not_registered_user(client):
     }
 
 
+def test_password_change_user_token_denied(client, get_resource_owner_headers):
+    """パスワード変更したユーザーは古いパスワードでログインしたトークンを使用できない"""
+    new_password = "newP@ssword1"
+    data = {
+        "old_password": RESOURCE_OWNER_PLAIN_PASSWORD,
+        "new_password": new_password
+    }
+    password_reset_response = client.patch(
+        "/password", json=data, headers=get_resource_owner_headers)
+    assert password_reset_response.status_code == 200
+    data = {"salary": 20.0,
+            "year": 2026,
+            "month": 10}
+    income_response = client.post("/incomes/2026/10", json=data, headers=get_resource_owner_headers)
+    assert income_response.status_code == 401
+    assert income_response.json() == {
+        "code": NotAuthorizedCode.NOT_AUTHORIZED
+    }
+
+
 def test_logout(client, get_resource_owner_headers):
     response = client.post("/logout", headers=get_resource_owner_headers)
     assert response.status_code == 200
     response = client.post("/token", headers=get_resource_owner_headers)
     assert response.status_code == 401
+
+
+def test_password_reseted_user_success_logout(client, get_admin_headers, get_resource_owner_headers):
+    """ログアウトはユーザーの状況に関わらず実行可能"""
+    password_reset_response = client.patch(
+        f"/admin/users/{RESOURCE_OWNER_USERNAME}/password", headers=get_admin_headers)
+    assert password_reset_response.status_code == 200
+    login_response = client.post("/logout", headers=get_resource_owner_headers)
+    assert login_response.status_code == 200
+    token_response = client.post("/token", headers=get_resource_owner_headers)
+    assert token_response.status_code == 401
+
+
+def test_password_changed_user_success_logout(client, get_resource_owner_headers):
+    """ログアウトはユーザーの状況に関わらず実行可能"""
+    new_password = "newP@ssword1"
+    data = {
+        "old_password": RESOURCE_OWNER_PLAIN_PASSWORD,
+        "new_password": new_password
+    }
+    password_reset_response = client.patch(
+        "/password", json=data, headers=get_resource_owner_headers)
+    assert password_reset_response.status_code == 200
+    logout_response = client.post("/logout", headers=get_resource_owner_headers)
+    assert logout_response.status_code == 200
+    token_response = client.post("/token", headers=get_resource_owner_headers)
+    assert token_response.status_code == 401
 
 
 def test_suspended_user_can_logout(client, get_suspended_user_headers):
@@ -373,7 +420,7 @@ def test_change_password_with_invalid_password(client, get_resource_owner_header
 
 
 def test_must_change_password_user_denied_normal_password_change(client, create_resource_owner, get_admin_headers):
-    """ must_change_password=Trueのユーザーはパスワードリセット後の強制パスワード変更APIを使用できる """
+    """ must_change_password=Trueのユーザーは通常のパスワード変更APIを使用できない """
     password_reset_response = client.patch(
         f"/admin/users/{RESOURCE_OWNER_USERNAME}/password", headers=get_admin_headers)
     assert password_reset_response.status_code == 200
@@ -398,8 +445,8 @@ def test_must_change_password_user_denied_normal_password_change(client, create_
         headers=headers
     )
     assert password_change_response.status_code == 403
-    assert password_change_response.status_code == {
-        "code": NotAuthorizedCode.NOT_HAVE_PERMISSION
+    assert password_change_response.json() == {
+        "code": NotAuthorizedCode.PASSWORD_CHANGE_REQUIRED
     }
 
 

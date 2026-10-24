@@ -63,6 +63,23 @@ class TokenVerifier:
             "token_version": user.token_version
         }
 
+    def get_current_user_from_token_for_logout(self, token: str) -> dict:
+        try:
+            user = self.authenticate_user(token)
+        except ExpiredSignatureError:
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+        except JWTError:
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+        except Exception:
+            logger.error(f"ユーザーの認証に失敗しました\n{traceback.format_exc()}")
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+        return {
+            "username": user.username,
+            "role": user.role,
+            "status": user.status,
+            "token_version": user.token_version
+        }
+
     def get_current_user_for_password_change(self, token: str) -> dict:
         """
         管理者によるパスワードリセットされたユーザーがパスワード変更するための認証
