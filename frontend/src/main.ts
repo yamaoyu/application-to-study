@@ -28,14 +28,14 @@ router.beforeEach(async (to) => {
   }
   // 遷移先がログインページとユーザー登録ページ以外の場合
   if (ALLOWED_ROUTES.includes(destination)) {
-    // トークンがあればホームページへ
+    // トークンがあればホームページへ(パスワード変更が必要なら変更フォーム)
     try {
       const response = await verifyRefreshToken()
-      if (response.status === 200) {
-        return { name: 'Home' }
-      }
-      // トークンがなければそのまま
-      return
+      await setAuthDataFromToken(authStore, response.data)
+
+      return authStore.mustChangePassword
+        ? { name: "ForcePasswordChange" }
+        : { name: "Home" }
     } catch {
       return
     }
@@ -48,8 +48,14 @@ router.beforeEach(async (to) => {
       await setAuthDataFromToken(authStore, response.data)
     } catch {
       authStore.setRedirectPath(to.path)
-      return { name: 'Login', message: '再度ログインしてください' }
+      return { name: 'Login' }
     }
+  }
+  if (
+    authStore.mustChangePassword &&
+    to.name !== "ForcePasswordChange"
+  ) {
+    return { name: "ForcePasswordChange" }
   }
 }
 )

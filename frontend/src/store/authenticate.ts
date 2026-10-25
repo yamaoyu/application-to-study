@@ -7,7 +7,8 @@ export const useAuthStore = defineStore('authStore', {
     tokenType: "",
     expire: 0,
     redirectPath: "",
-    role: ""
+    role: "",
+    mustChangePassword: false
   }),
   getters: {
     isToken(): boolean {
@@ -24,18 +25,21 @@ export const useAuthStore = defineStore('authStore', {
     }
   },
   actions: {
-    setAuthData(accessToken: string, tokenType: string, expire: number) {
+    setAuthData(accessToken: string, tokenType: string, expire: number, mustChangePassword: boolean) {
       if (!accessToken || !tokenType || !expire) {
         throw new Error('データに不備があります')
       }
       this.accessToken = accessToken;
       this.tokenType = tokenType;
       this.expire = expire;
+      this.mustChangePassword = mustChangePassword;
     },
     clearAuthData() {
       this.accessToken = "";
       this.tokenType = "";
       this.expire = 0;
+      this.mustChangePassword = false;
+      this.redirectPath = "";
     },
     isExpired() {
       const currentTime = Date.now()

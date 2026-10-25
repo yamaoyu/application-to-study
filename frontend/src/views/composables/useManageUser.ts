@@ -27,6 +27,7 @@ export const useGetUsersList = (message: Ref<string>, isSuccess: Ref<boolean>) =
         } catch (error) {
             message.value = parseError(error, "ユーザー一覧の取得に失敗しました");
             isSuccess.value = false;
+            users.value = [];
         }
     }
 

@@ -21,7 +21,8 @@ export const errorMessages = {
     "INVALID_TODO_DUE": "不正な日付です",
     "INVALID_TODO_DETAIL": "詳細は200文字以下としてください",
     "INVALID_TARGET_TIME": "目標時間は0.5時間以上12時間以下かつ0.5時間刻みとしてください",
-    "INVALID_ACTUAL_TIME": "活動時間は12時間以下かつ0.5時間刻みとしてください"
+    "INVALID_ACTUAL_TIME": "活動時間は12時間以下かつ0.5時間刻みとしてください",
+    "PASSWORD_CHANGE_REQUIRED": "パスワードのリセットが必要です"
 } as const;
 
 export const fieldErrorMessages = {

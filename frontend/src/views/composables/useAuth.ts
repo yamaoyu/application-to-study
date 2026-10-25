@@ -17,7 +17,7 @@ export const setAuthDataFromToken = (
     throw new Error("トークンの有効期限がありません");
   }
 
-  authStore.setAuthData(response.access_token, response.token_type, decoded.exp);
+  authStore.setAuthData(response.access_token, response.token_type, decoded.exp, response.must_change_password);
 };
 
 
