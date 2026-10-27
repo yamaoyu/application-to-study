@@ -5,6 +5,7 @@ import type { Component } from 'vue';
 import { createBootstrap } from 'bootstrap-vue-next';
 
 export const mockRouterPush = vi.fn();
+export const mockRouterReplace = vi.fn();
 
 // モックのルーターを作成
 vi.mock('vue-router', async () => {
@@ -15,7 +16,8 @@ vi.mock('vue-router', async () => {
             query: {}
         }),
         useRouter: () => ({
-            push: mockRouterPush
+            push: mockRouterPush,
+            replace: mockRouterReplace
         })
     }
 })
