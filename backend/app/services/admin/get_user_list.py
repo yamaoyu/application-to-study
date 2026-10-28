@@ -2,8 +2,6 @@ from datetime import datetime
 from typing import Optional
 from app.models.admin_model import GetUsersResponse, UserItem
 from app.repositories.user_repository import UserRepository
-from app.error_codes import NotFoundCode
-from app.exceptions import NotFound
 
 
 class GetUserList:
@@ -18,7 +16,5 @@ class GetUserList:
             role: Optional[str] = None,
             username: Optional[str] = None) -> GetUsersResponse:
         users = self.user_repo.get_users(status, last_active_at, created_at, role, username)
-        if not users:
-            raise NotFound(code=NotFoundCode.USER_NOT_FOUND)
         parsed_users = [UserItem.model_validate(user) for user in users]
         return GetUsersResponse(users=parsed_users)

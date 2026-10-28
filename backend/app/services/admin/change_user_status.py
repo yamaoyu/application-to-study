@@ -32,5 +32,4 @@ class ChangeUserStatus:
             return False
         if admin_count > 1:
             return False
-        print(user_role, new_status, admin_count)
         return True
