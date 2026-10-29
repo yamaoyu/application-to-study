@@ -171,14 +171,20 @@ export default {
       isFormVisible.value = !isFormVisible.value;
     };
 
+    const getUsersAfterRequest = async () => {
+      if (isSuccess.value) {
+        await getUsers();
+      }
+    }
+
     const handleRoleChange = async (user: UserItem) => {
       await changeRole(user.role, user.username);
-      await getUsers();
+      await getUsersAfterRequest();
     }
 
     const handleStatusChange = async (user: UserItem) => {
       await changeStatus(user.status, user.username);
-      await getUsers();
+      await getUsersAfterRequest();
     };
 
     const handlePasswordReset = async () => {
@@ -186,7 +192,7 @@ export default {
       await resetPassword(selectedUser.value.username);
       selectedUser.value = null;
       showPasswordResetModal.value = false;
-      await getUsers();
+      await getUsersAfterRequest();
     }
 
     const confirmPasswordReset = async (user: UserItem) => {

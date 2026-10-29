@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { backendUrl } from '../config/env';
 import { useAuthStore } from '@/store/authenticate';
+import { useRoleStore } from '@/store/authenticate';
 import { verifyRefreshToken } from './auth';
 import { setAuthDataFromToken } from '../composables/useAuth';
 
@@ -8,8 +9,10 @@ export const apiClient = axios.create({
   baseURL: backendUrl
 });
 
+const authStore = useAuthStore();
+const roleStore = useRoleStore();
+
 apiClient.interceptors.request.use((config) => {
-  const authStore = useAuthStore();
   const url = config.url;
 
   if (!url) {
@@ -44,8 +47,7 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
       try {
         const tokenResponse = await verifyRefreshToken();
-        const authStore = useAuthStore();
-        await setAuthDataFromToken(authStore, tokenResponse.data)
+        await setAuthDataFromToken(authStore, roleStore, tokenResponse.data)
         originalRequest.headers.Authorization = authStore.getAuthHeader;
         return apiClient(originalRequest);
       } catch (error) {
