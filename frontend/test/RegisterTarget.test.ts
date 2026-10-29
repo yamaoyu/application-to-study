@@ -17,12 +17,12 @@ describe('目標時間の登録(一括)', () => {
 
     it('フォームの操作', async () => {
         // 追加
-        wrapper.find("[data-testid='increase-target-row']").trigger("click");
+        await wrapper.find("[data-testid='increase-target-row']").trigger("click");
         await flushPromises(); // html要素が変わるため変更を待つ
         const rows = wrapper.findAll('[data-testid="target-row"]');
         expect(rows).toHaveLength(2);
         // 減らす
-        wrapper.find("[data-testid='decrease-target-row-1']").trigger("click");
+        await wrapper.find("[data-testid='decrease-target-row-1']").trigger("click");
         await flushPromises();
         const newRows = wrapper.findAll('[data-testid="target-row"]');
         expect(newRows).toHaveLength(1);
