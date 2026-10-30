@@ -4,6 +4,7 @@ sqlalchemy
 pymysql
 python-jose[cryptography]
 pytest
+pytest_asyncio
 bcrypt==4.3.0
 python-multipart
 alembic

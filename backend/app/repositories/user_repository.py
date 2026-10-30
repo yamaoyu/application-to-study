@@ -64,10 +64,14 @@ class UserRepository():
         user.status = status
 
     def count_active_admin_number(self) -> int:
-        return self.db.query(db_model.User).filter(
+        # 同時にリクエスト来た時に備えて悲観ロックをする
+        # 仮にリクエストが多い場合は管理者ユーザー数を保持するテーブルを作ってそれをロックするなどがある
+        admins = self.db.query(db_model.User).filter(
             db_model.User.role == "admin",
             db_model.User.status == "active"
-        ).count()
+        ).with_for_update().all()
+
+        return len(admins)
 
     def change_role(self, user: db_model.User, role: UserRole) -> None:
         user.role = role

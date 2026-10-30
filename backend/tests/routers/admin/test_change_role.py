@@ -1,4 +1,6 @@
 import pytest
+import asyncio
+from app.security.token import create_access_token
 from datetime import datetime
 from db.db_model import User
 from app.error_codes import ConflictCode, NotFoundCode, NotAuthorizedCode
@@ -261,3 +263,44 @@ def test_change_suspended_admin_status_accepted(client, get_admin_headers, setup
         "username": ADMIN_SUSPEND,
         "role": "general"
     }
+
+
+@pytest.mark.asyncio
+async def test_concurrent_change_role(
+    async_client,
+    create_admin,
+    setup_users
+):
+    """
+        同時にリクエストが来た場合、activeなadminユーザーが0人にならないことを確認する
+        conftestで作成したadminユーザーとsetup_usersで作成したadminユーザーの2人がいる状態で、同時に2人のadminユーザーをsuspendedにするリクエストを送る
+        どちらか一方のリクエストは成功し、もう一方のリクエストは409 Conflictになることを確認する
+    """
+    access_token = create_access_token({
+        "sub": ADMIN_USERNAME,
+        "role": "admin",
+        "token_version": 1,
+    })
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+    data = {
+        "role": "general"
+    }
+
+    response1, response2 = await asyncio.gather(
+        async_client.patch(
+            f"/admin/users/{ADMIN_ACTIVE}/role",
+            json=data,
+            headers=headers,
+        ),
+        async_client.patch(
+            f"/admin/users/{ADMIN_USERNAME}/role",
+            json=data,
+            headers=headers,
+        ),
+    )
+
+    responses = [response1, response2]
+    assert sum(1 for r in responses if r.status_code == 200) == 1
+    assert sum(1 for r in responses if r.status_code in [409, 403]) == 1

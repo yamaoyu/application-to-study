@@ -1,4 +1,6 @@
 import pytest
+import pytest_asyncio
+import httpx
 import os
 from fastapi.testclient import TestClient
 from sqlalchemy.pool import NullPool
@@ -65,6 +67,33 @@ def client(db_session):
 
     # テスト終了後に依存関係のオーバーライドをリセット
     del app.dependency_overrides[get_db]
+
+
+@pytest_asyncio.fixture
+async def async_client():
+    def override_get_db():
+        db = TestSession()
+
+        try:
+            yield db
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
+        finally:
+            db.close()
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    transport = httpx.ASGITransport(app=app)
+
+    async with httpx.AsyncClient(
+        transport=transport,
+        base_url="http://test",
+    ) as client:
+        yield client
+
+    app.dependency_overrides.pop(get_db, None)
 
 
 @pytest.fixture()
