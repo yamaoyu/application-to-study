@@ -4,6 +4,7 @@ from db.db_model import User
 from unittest.mock import patch
 from app.error_codes import NotAuthorizedCode
 from testdata import ADMIN_USERNAME, ADMIN_PASSWORD
+from db import db_model
 
 
 @pytest.fixture
@@ -176,14 +177,17 @@ def test_suspended_user_cannot_get_users(client, get_suspended_user_headers):
     }
 
 
-def test_must_change_password_user_denied(client, get_admin_headers):
-    response = client.patch(
-        f"/admin/users/{ADMIN_USERNAME}/password", headers=get_admin_headers)
-    assert response.status_code == 200
-    assert response.json()["password"] != ADMIN_PASSWORD
-    new_password = response.json()["password"]
+def test_must_change_password_user_denied(client, get_admin_headers, db_session):
+    user = (
+        db_session.query(db_model.User)
+        .filter(db_model.User.username == ADMIN_USERNAME)
+        .one()
+    )
+    user.must_change_password = True
+    db_session.commit()
+
     user_info = {"username": ADMIN_USERNAME,
-                 "password": new_password}
+                 "password": ADMIN_PASSWORD}
     response = client.post("/login", json=user_info)
     assert response.status_code == 200
     access_token = response.json()["access_token"]

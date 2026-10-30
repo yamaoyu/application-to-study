@@ -122,7 +122,6 @@ describe('フィルターなし', () => {
                 }
             }
         );
-        console.log(wrapper.html())
         const rows = wrapper.findAll('[data-testid="user-row"]');
         expect(rows).toHaveLength(4);
     });
@@ -407,13 +406,6 @@ describe('パスワードリセット', () => {
             }
         });
 
-        // ユーザー取得のモック
-        mockedGet.mockResolvedValue({
-            status: 200,
-            data: {
-                users: defaultUserData
-            }
-        })
 
         await wrapper.find("[data-testid='reset-password-1']").trigger("click");
         // モーダルが表示されることを確認
@@ -441,20 +433,12 @@ describe('パスワードリセット', () => {
         // パスワードリセットのモック
         mockedPatch.mockRejectedValue({
             response: {
-                status: 404,
+                status: 403,
                 data: {
-                    code: "USER_NOT_FOUND"
+                    code: "CANNOT_RESET_OWN_PASSWORD"
                 }
             }
         });
-
-        // ユーザー取得のモック
-        mockedGet.mockResolvedValue({
-            status: 200,
-            data: {
-                users: defaultUserData
-            }
-        })
 
         await wrapper.find("[data-testid='reset-password-1']").trigger("click");
         // モーダルが表示されることを確認
@@ -469,6 +453,6 @@ describe('パスワードリセット', () => {
             `/admin/users/${GENERAL_SUSPEND}/password`
         )
 
-        expect(wrapper.find("[data-testid='message']").text()).toEqual("ユーザーが見つかりません");
+        expect(wrapper.find("[data-testid='message']").text()).toEqual("自分のパスワードはリセットできません");
     })
 })

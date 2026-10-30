@@ -1,4 +1,4 @@
-from testdata import RESOURCE_OWNER_USERNAME, RESOURCE_OWNER_PLAIN_PASSWORD
+from testdata import RESOURCE_OWNER_USERNAME, RESOURCE_OWNER_PLAIN_PASSWORD, ADMIN_USERNAME
 from app.error_codes import NotAuthorizedCode, NotFoundCode
 
 
@@ -77,6 +77,16 @@ def test_password_reseted_user_old_token_denied(client, get_admin_headers, get_r
     assert income_response.status_code == 403
     assert income_response.json() == {
         "code": NotAuthorizedCode.PASSWORD_CHANGE_REQUIRED
+    }
+
+
+def test_reset_password_by_self_denied(client, get_admin_headers):
+    """自分のパスワードをリセットしようとした場合はエラーになる"""
+    response = client.patch(
+        f"/admin/users/{ADMIN_USERNAME}/password", headers=get_admin_headers)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.CANNOT_RESET_OWN_PASSWORD
     }
 
 

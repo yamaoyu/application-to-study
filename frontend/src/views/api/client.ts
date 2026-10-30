@@ -9,10 +9,8 @@ export const apiClient = axios.create({
   baseURL: backendUrl
 });
 
-const authStore = useAuthStore();
-const roleStore = useRoleStore();
-
 apiClient.interceptors.request.use((config) => {
+  const authStore = useAuthStore();
   const url = config.url;
 
   if (!url) {
@@ -35,6 +33,8 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   res => res,
   async (error) => {
+    const authStore = useAuthStore();
+    const roleStore = useRoleStore();
     const originalRequest = error.config;
     const url = originalRequest?.url ?? '';
 

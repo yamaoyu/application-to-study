@@ -1,7 +1,7 @@
 from app.repositories.user_repository import UserRepository
 from app.repositories.auth_repository import TokenRepository
-from app.error_codes import NotFoundCode
-from app.exceptions import NotFound
+from app.error_codes import NotFoundCode, NotAuthorizedCode
+from app.exceptions import NotFound, Forbidden
 from app.models.admin_model import ResetPasswordResponse
 from app.security.password import get_password_hash, generate_random_password
 
@@ -11,8 +11,11 @@ class ResetPassword:
         self.user_repo = UserRepository(db)
         self.auth_repo = TokenRepository(db)
 
-    def execute(self, username: str) -> ResetPasswordResponse:
-        user = self.user_repo.get_user(username)
+    def execute(self, target_username: str, requester_username: str) -> ResetPasswordResponse:
+        if target_username == requester_username:
+            raise Forbidden(code=NotAuthorizedCode.CANNOT_RESET_OWN_PASSWORD)
+
+        user = self.user_repo.get_user(target_username)
         if not user:
             raise NotFound(code=NotFoundCode.USER_NOT_FOUND)
 
@@ -20,9 +23,9 @@ class ResetPassword:
         hashed_password = get_password_hash(random_password)
         self.user_repo.reset_password(user, hashed_password)
 
-        self.auth_repo.delete_refresh_token(username)
+        self.auth_repo.delete_refresh_token(target_username)
 
         return ResetPasswordResponse(
-            username=username,
+            username=target_username,
             password=random_password
         )

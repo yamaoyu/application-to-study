@@ -77,4 +77,4 @@ def reset_password(username: str,
                    current_user: dict = Depends(get_current_active_user),
                    service: ResetPassword = Depends(get_reset_password_service)) -> ResetPasswordResponse:
     check_user_is_admin(current_user["role"])
-    return service.execute(username)
+    return service.execute(target_username=username, requester_username=current_user["username"])

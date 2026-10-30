@@ -192,7 +192,6 @@ export default {
       await resetPassword(selectedUser.value.username);
       selectedUser.value = null;
       showPasswordResetModal.value = false;
-      await getUsersAfterRequest();
     }
 
     const confirmPasswordReset = async (user: UserItem) => {

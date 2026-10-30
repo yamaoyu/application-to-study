@@ -62,30 +62,30 @@ class User(Base):
     password: Mapped[str] = mapped_column(CHAR(60), nullable=False)
     email: Mapped[Optional[str]] = mapped_column(VARCHAR(32), nullable=True)
     role: Mapped[str] = mapped_column(Enum("admin", "general"), default="general", nullable=False)
-    status = mapped_column(
+    status: Mapped[str] = mapped_column(
         Enum("active", "suspended"),
         server_default="active",
         nullable=False,
     )
 
-    created_at = mapped_column(
+    created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
     )
 
-    last_active_at = mapped_column(
+    last_active_at: Mapped[datetime.datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )
 
-    must_change_password = mapped_column(
+    must_change_password: Mapped[bool] = mapped_column(
         Boolean,
         server_default=false(),
         nullable=False,
     )
 
-    token_version = mapped_column(
+    token_version: Mapped[int] = mapped_column(
         Integer,
         server_default="1",
         nullable=False,
