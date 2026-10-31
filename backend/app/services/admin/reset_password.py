@@ -12,12 +12,12 @@ class ResetPassword:
         self.auth_repo = TokenRepository(db)
 
     def execute(self, target_username: str, requester_username: str) -> ResetPasswordResponse:
-        if target_username == requester_username:
-            raise Forbidden(code=NotAuthorizedCode.CANNOT_RESET_OWN_PASSWORD)
-
         user = self.user_repo.get_user(target_username)
         if not user:
             raise NotFound(code=NotFoundCode.USER_NOT_FOUND)
+
+        if user.username == requester_username:
+            raise Forbidden(code=NotAuthorizedCode.CANNOT_RESET_OWN_PASSWORD)
 
         random_password = generate_random_password(16)
         hashed_password = get_password_hash(random_password)

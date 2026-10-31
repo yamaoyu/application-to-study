@@ -16,7 +16,7 @@
         </div>
       </div>
       
-      <BForm @submit.prevent="changePassword">
+      <BForm @submit.prevent="submitPasswordChange">
         <div class="form-group mt-3">
           <div class="input-group">
             <BFormInput v-model="oldPassword" :type="!showOldPassword ? 'password':'text'" placeholder="現在のパスワード(必須)" :disabled="!isPasswordChangeEnabled" required data-testid="oldPassword"/>
@@ -83,6 +83,8 @@ import { ref, watch } from 'vue'
 import { BForm, BFormInput, BFormInvalidFeedback, BFormValidFeedback } from 'bootstrap-vue-next';
 import { getResponseAlert } from './utils/ui';
 import { useChangePassword, usePasswordValidation } from './composables/useUserInfo';
+import { useAuthStore, useRoleStore } from '@/store/authenticate';
+import { useRouter } from 'vue-router';
 
 export default {
   components: {
@@ -107,6 +109,33 @@ export default {
       newPasswordCheck.value = ''
     });
 
+    const authStore = useAuthStore();
+    const roleStore = useRoleStore();
+    const router = useRouter();
+
+    const submitPasswordChange = async() => {
+      if (
+        !passwordValidateResult.value.valid ||
+        !passwordEqualResult.value.valid
+      ) {
+        return
+      }
+      await changePassword();
+
+      if (statusCode.value !== 200) {
+        return
+      } 
+      authStore.clearAuthData();
+      roleStore.clearRole();
+
+      await router.replace({
+        name: "Login",
+        query: {
+          message: "パスワードを変更しました。新しいパスワードでログインしてください",
+        }
+      })
+    }
+
     return {
       oldPassword,
       newPassword,
@@ -121,7 +150,7 @@ export default {
       showOldPassword,
       showNewPassword,
       showNewPasswordCheck,
-      changePassword
+      submitPasswordChange
     }
   }
 }

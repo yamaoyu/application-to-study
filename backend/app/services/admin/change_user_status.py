@@ -14,7 +14,7 @@ class ChangeUserStatus:
             raise NotFound(code=NotFoundCode.USER_NOT_FOUND)
         # この辺りの条件が複雑になったらドメイン層へ移行する
         admin_count = self.user_repo.count_active_admin_number()
-        if self.is_last_admin(user.role, new_status, admin_count):
+        if self.is_last_admin(user, new_status, admin_count):
             raise Conflict(code=ConflictCode.LAST_ADMIN_USER)
         self.user_repo.change_status(user, new_status)
         self.user_repo.flush()
@@ -24,9 +24,11 @@ class ChangeUserStatus:
         )
 
     @staticmethod
-    def is_last_admin(user_role, new_status, admin_count: int) -> bool:
+    def is_last_admin(user_info, new_status, admin_count: int) -> bool:
         """ adminロールでactiveなユーザーが0人にならないか確認する """
-        if user_role == "general":
+        if user_info.role == "general":
+            return False
+        if user_info.role == "general":
             return False
         if new_status == "active":
             return False
