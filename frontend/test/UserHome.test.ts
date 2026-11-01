@@ -6,7 +6,7 @@ import { flushPromises, VueWrapper } from '@vue/test-utils';
 import { getToday } from '@/views/utils/date';
 
 const mockedGet = vi.mocked(apiClient.get);
-const mockedPut = vi.mocked(apiClient.patch);
+const mockedPatch = vi.mocked(apiClient.patch);
 const mockedPost = vi.mocked(apiClient.post)
 
 const today = getToday().split("-");
@@ -228,7 +228,7 @@ describe('Todoの操作', () => {
         const due = "new due";
 
         // editTodo()のモック
-        mockedPut.mockResolvedValue({
+        mockedPatch.mockResolvedValue({
             status: 200,
             data: {
                 results: [
@@ -269,7 +269,7 @@ describe('Todoの操作', () => {
         expect(bModal.props("title")).toBe("Todo編集");
         await bModal.vm.$emit('ok');
         await flushPromises();
-        expect(mockedPut).toHaveBeenCalledWith(
+        expect(mockedPatch).toHaveBeenCalledWith(
             "todos/update/1",
             {
                 title: defaultTodosData.todos[0].title,
@@ -277,7 +277,7 @@ describe('Todoの操作', () => {
                 due: defaultTodosData.todos[0].due
             }
         );
-        expect(mockedPut).toBeCalledTimes(1);
+        expect(mockedPatch).toBeCalledTimes(1);
         expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual("【Todo更新成功】: new title");
     });
 
@@ -285,7 +285,7 @@ describe('Todoの操作', () => {
         const title = "Test Todo";
 
         // finishTodo()のモック
-        mockedPut.mockResolvedValue({
+        mockedPatch.mockResolvedValue({
             status: 200,
             data: {
                 success_count: 1,
@@ -328,7 +328,7 @@ describe('Todoの操作', () => {
         await bModal.vm.$emit('ok');
         await flushPromises();
 
-        expect(mockedPut).toHaveBeenCalledWith(
+        expect(mockedPatch).toHaveBeenCalledWith(
             "todos/bulk-finish",
             {
                 ids: [1]
@@ -341,7 +341,7 @@ describe('Todoの操作', () => {
         wrapper = await mountUserHome();
 
         // finishTodo()のモック
-        mockedPut.mockResolvedValue({
+        mockedPatch.mockResolvedValue({
             status: 200,
             data: {
                 success_count: 0,
@@ -385,7 +385,7 @@ describe('Todoの操作', () => {
         await bModal.vm.$emit('ok');
         await flushPromises();
 
-        expect(mockedPut).toHaveBeenCalledWith(
+        expect(mockedPatch).toHaveBeenCalledWith(
             "todos/bulk-finish",
             {
                 ids: [1]

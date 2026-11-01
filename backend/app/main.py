@@ -7,6 +7,7 @@ from app.routers.user import router as user_router
 from app.routers.auth import router as auth_router
 from app.routers.inquiry import router as inquiry_router
 from app.routers.health_check import router as health_router
+from app.routers.admin import router as admin_router
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError, HTTPException
 from lib.log_conf import logger
@@ -43,6 +44,7 @@ app.include_router(user_router)
 app.include_router(auth_router)
 app.include_router(inquiry_router)
 app.include_router(health_router)
+app.include_router(admin_router)
 
 
 @app.exception_handler(Exception)
@@ -94,10 +96,29 @@ def conflict_exception_handler(request, exc):
 
 
 @app.exception_handler(NotAuthorized)
-@app.exception_handler(HTTPException)
 def not_authorized_exception_handler(request, exc):
     # トークンがない場合HTTPExceptionが発生するため、NotAuthorizedとHTTPExceptionの両方をハンドリングする
     return JSONResponse(status_code=401, content={"code": exc.code})
+
+
+@app.exception_handler(HTTPException)
+def http_exception_handler(request, exc):
+    detail = exc.detail
+    if isinstance(detail, dict):
+        code = detail.get("code")
+        message = detail.get("message")
+    else:
+        code = None
+        message = str(detail)
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "code": code or "HTTP_ERROR",
+            "message": message,
+        },
+        headers=exc.headers,
+    )
 
 
 @app.exception_handler(Forbidden)

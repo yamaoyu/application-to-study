@@ -1,4 +1,5 @@
-from app.error_codes import ConflictCode, NotFoundCode, ValidationErrorCode
+from app.error_codes import ConflictCode, NotFoundCode, ValidationErrorCode, NotAuthorizedCode
+from testdata import RESOURCE_OWNER_USERNAME, RESOURCE_OWNER_PLAIN_PASSWORD
 
 # テストで使用する変数
 test_year = 2024
@@ -258,4 +259,48 @@ def test_get_income_not_contain_another_user(client, get_resource_owner_headers,
         "pay_adjustment": 0.0,
         "total_penalty": 0.0,
         "total_bonus": 0.0
+    }
+
+
+def test_suspended_user_cannot_get_income(client, get_resource_owner_headers, get_suspended_user_headers):
+    setup_salary_for_test(client, get_resource_owner_headers)
+    suspended_user_headers = get_suspended_user_headers
+    year = test_year
+    month = test_month
+    response = client.get(f"/incomes/{year}/{month}", headers=suspended_user_headers)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.USER_SUSPENDED
+    }
+
+
+def test_suspended_user_cannot_register_income(client, get_suspended_user_headers):
+    data = {"salary": test_salary}
+    year = test_year
+    month = test_month
+    response = client.post(f"/incomes/{year}/{month}",
+                           json=data, headers=get_suspended_user_headers)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.USER_SUSPENDED
+    }
+
+
+def test_must_change_password_user_denied(client, create_resource_owner, get_admin_headers):
+    response = client.patch(
+        f"/admin/users/{RESOURCE_OWNER_USERNAME}/password", headers=get_admin_headers)
+    assert response.status_code == 200
+    assert response.json()["password"] != RESOURCE_OWNER_PLAIN_PASSWORD
+    new_password = response.json()["password"]
+    user_info = {"username": RESOURCE_OWNER_USERNAME,
+                 "password": new_password}
+    response = client.post("/login", json=user_info)
+    assert response.status_code == 200
+    access_token = response.json()["access_token"]
+    token_type = response.json()["token_type"]
+    response = client.get(f"/incomes/{test_year}/{test_month}",
+                          headers={"Authorization": f"{token_type} {access_token}"})
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.PASSWORD_CHANGE_REQUIRED
     }

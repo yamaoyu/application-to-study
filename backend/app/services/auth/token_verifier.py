@@ -1,6 +1,6 @@
 import os
 import traceback
-from app.exceptions import NotFound, NotAuthorized
+from app.exceptions import NotFound, NotAuthorized, Forbidden
 from lib.log_conf import logger
 from jose import jwt, JWTError, ExpiredSignatureError
 from datetime import date
@@ -27,6 +27,8 @@ class TokenVerifier:
             user = self.user_repo.get_user(username)
             if not user:
                 return False
+            if user.must_change_password or user.token_version != payload.get("token_version"):
+                raise Forbidden(code=NotAuthorizedCode.PASSWORD_CHANGE_REQUIRED)
             fetch_token = self.token_repo.get_refresh_token(username, device_id)
             if not fetch_token:
                 return False
@@ -41,20 +43,77 @@ class TokenVerifier:
 
     def get_current_user_from_token(self, token: str) -> dict:
         try:
+            user = self.authenticate_user(token)
             payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
-            username = payload.get("sub")
-            if username is None:
-                raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
-            user = self.user_repo.get_user(username)
-            if not user:
-                raise NotFound(code=NotFoundCode.USER_NOT_FOUND)
-            return {"username": username, "role": user.role}
         except ExpiredSignatureError:
             raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
         except JWTError:
             raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
-        except NotAuthorized as http_e:
-            raise http_e
         except Exception:
             logger.error(f"ユーザーの認証に失敗しました\n{traceback.format_exc()}")
             raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+        if user.must_change_password:
+            raise Forbidden(code=NotAuthorizedCode.PASSWORD_CHANGE_REQUIRED)
+        if user.token_version != payload.get("token_version"):
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+        return {
+            "username": user.username,
+            "role": user.role,
+            "status": user.status,
+            "token_version": user.token_version
+        }
+
+    def get_current_user_from_token_for_logout(self, token: str) -> dict:
+        try:
+            user = self.authenticate_user(token)
+        except ExpiredSignatureError:
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+        except JWTError:
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+        except Exception:
+            logger.error(f"ユーザーの認証に失敗しました\n{traceback.format_exc()}")
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+        return {
+            "username": user.username,
+            "role": user.role,
+            "status": user.status,
+            "token_version": user.token_version
+        }
+
+    def get_current_user_for_password_change(self, token: str) -> dict:
+        """
+        管理者によるパスワードリセットされたユーザーがパスワード変更するための認証
+        must_change_passwordがTrueでないと使えない
+        """
+        try:
+            user = self.authenticate_user(token)
+            payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
+        except ExpiredSignatureError:
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+        except JWTError:
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+        except Exception:
+            logger.error(f"ユーザーの認証に失敗しました\n{traceback.format_exc()}")
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+        if user.token_version != payload.get("token_version"):
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+        if user.status != "active":
+            raise Forbidden(code=NotAuthorizedCode.USER_SUSPENDED)
+        if not user.must_change_password:
+            raise Forbidden(code=NotAuthorizedCode.NOT_HAVE_PERMISSION)
+        return {
+            "username": user.username,
+            "role": user.role,
+            "status": user.status,
+            "token_version": user.token_version
+        }
+
+    def authenticate_user(self, token: str):
+        payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
+        username = payload.get("sub")
+        if username is None:
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+        user = self.user_repo.get_user(username)
+        if not user:
+            raise NotFound(code=NotFoundCode.USER_NOT_FOUND)
+        return user

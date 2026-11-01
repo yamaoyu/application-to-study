@@ -88,7 +88,7 @@ describe('実績時間の登録(一括)', () => {
     expect(defaultCheckedCount).toBe(0);
 
     // 全て選択をクリック
-    wrapper.find("[data-testid='select-all-activities']").trigger("click");
+    await wrapper.find("[data-testid='select-all-activities']").trigger("click");
     await flushPromises(); // html要素が変わるため変更を待つ
     const checkboxes = wrapper.findAll('input[type="checkbox"]');
     const checkedCount = checkboxes.filter(
@@ -97,7 +97,7 @@ describe('実績時間の登録(一括)', () => {
 
     expect(checkedCount).toBe(pendingActivities.length);
     // 選択を解除
-    wrapper.find("[data-testid='reset-selected-activities']").trigger("click");
+    await wrapper.find("[data-testid='reset-selected-activities']").trigger("click");
     await flushPromises(); // html要素が変わるため変更を待つ
     const newCheckboxes = wrapper.findAll('input[type="checkbox"]');
     const newCheckedCount = newCheckboxes.filter(
@@ -118,7 +118,7 @@ describe('実績時間の登録(一括)', () => {
     expect(timeField.element.value).toEqual(newValue);
     expect(submitButton.attributes("disabled")).toBeUndefined(); // disabled属性がなくなっていることを確認
     // 変更を元に戻す
-    wrapper.find("[data-testid='reset-edited-activities']").trigger("click");
+    await wrapper.find("[data-testid='reset-edited-activities']").trigger("click");
     await flushPromises(); // html要素が変わるため変更を待つ
     expect(timeField.element.value).toEqual("3"); const checkboxes = wrapper.findAll('input[type="checkbox"]');
     const checkedCount = checkboxes.filter(
@@ -141,7 +141,7 @@ describe('実績時間の登録(一括)', () => {
       }
     });
     // 全て選択をクリック
-    wrapper.find("[data-testid='select-all-activities']").trigger("click");
+    await wrapper.find("[data-testid='select-all-activities']").trigger("click");
     await flushPromises(); // html要素が変わるため変更を待つ
 
     await wrapper.find("[data-testid='submit-multi-actual']").trigger("click");
@@ -176,7 +176,7 @@ describe('実績時間の登録(一括)', () => {
       }
     });
     // 全て選択をクリック
-    wrapper.find("[data-testid='select-all-activities']").trigger("click");
+    await wrapper.find("[data-testid='select-all-activities']").trigger("click");
     await flushPromises(); // html要素が変わるため変更を待つ
 
     await wrapper.find("[data-testid='submit-multi-actual']").trigger("click");

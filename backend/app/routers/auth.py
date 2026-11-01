@@ -1,6 +1,6 @@
 import os
 from typing import Literal
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import get_current_user_for_logout
 from db.database import get_db
 from sqlalchemy.orm import Session
 from app.models.auth_model import (LoginUserInfo,
@@ -74,14 +74,15 @@ def login(response: Response,
     return {
         "access_token": token_info["access_token"],
         "token_type": token_info["token_type"],
-        "role": token_info["role"]
+        "role": token_info["role"],
+        "must_change_password": token_info["must_change_password"]
     }
 
 
 @router.post("/logout", status_code=200, response_model=None)
 def logout(response: Response,
            device_id: str = Cookie(default=None),
-           current_user: dict = Depends(get_current_user),
+           current_user: dict = Depends(get_current_user_for_logout),
            service: LogoutUseCase = Depends(get_logout_service)):
     response.delete_cookie(key="refresh_token")
     response.delete_cookie(key="device_id")

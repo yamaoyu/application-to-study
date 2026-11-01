@@ -1,6 +1,7 @@
 from typing import Optional
 from lib.log_conf import logger
 from sqlalchemy.exc import IntegrityError
+from datetime import datetime
 from app.repositories.user_repository import UserRepository
 from app.exceptions import Conflict
 from app.models.user_model import RegisterUserResponse
@@ -24,8 +25,9 @@ class CreateUserUseCase():
         password = PlainPassword(plain_password)
         email = Email(email_input)
         hash_password = get_password_hash(password.value)
+        created_at = datetime.now()
         try:
-            self.user_repo.insert_user(username.value, hash_password, email.value, role)
+            self.user_repo.insert_user(username.value, hash_password, email.value, role, created_at)
             self.user_repo.flush()
         except IntegrityError as sqlalchemy_error:
             logger.warning(f"ユーザー作成に失敗しました\n{str(sqlalchemy_error)}")

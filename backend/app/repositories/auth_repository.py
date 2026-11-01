@@ -1,5 +1,6 @@
 from db import db_model
 from sqlalchemy.orm import Session
+from typing import Optional
 
 
 class TokenRepository():
@@ -27,7 +28,9 @@ class TokenRepository():
                                        expires_at=expires_at)
             self.db.add(new_token)
 
-    def delete_refresh_token(self, username: str, device_id: str) -> None:
-        self.db.query(db_model.Token).filter(
-            db_model.Token.username == username,
-            db_model.Token.device_id == device_id).delete()
+    def delete_refresh_token(self, username: str, device_id: Optional[str] = None) -> None:
+        sqlstatemt = self.db.query(db_model.Token).filter(
+            db_model.Token.username == username)
+        if device_id:
+            sqlstatemt = sqlstatemt.filter(db_model.Token.device_id == device_id)
+        sqlstatemt.delete()

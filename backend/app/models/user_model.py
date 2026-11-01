@@ -21,3 +21,7 @@ class RegisterUserResponse(BaseModel):
 class ChangePasswordInfo(BaseModel):
     old_password: str
     new_password: str
+
+
+class ForceChangePasswordInfo(BaseModel):
+    new_password: str

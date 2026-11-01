@@ -10,6 +10,8 @@ import ActivityHome from '../views/ActivityHome.vue'
 import ActivityInfo from '../views/ActivityInfo.vue'
 import ShowTodo from '../views/ShowTodo.vue'
 import ShowInquiry from '../views/ShowInquiry.vue'
+import ManageUser from '@/views/ManageUser.vue'
+import ForcePasswordChange from '@/views/ForcePasswordChange.vue'
 
 const routes = [
   {
@@ -66,6 +68,16 @@ const routes = [
     path: "/show/inquiry",
     name: "ShowInquiry",
     component: ShowInquiry
+  },
+  {
+    path: "/manage/user",
+    name: "ManageUser",
+    component: ManageUser
+  },
+  {
+    path: "/force/password/change",
+    name: "ForcePasswordChange",
+    component: ForcePasswordChange
   }
 ]
 

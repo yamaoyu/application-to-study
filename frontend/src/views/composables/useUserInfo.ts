@@ -1,5 +1,5 @@
 import { ref, computed, type Ref } from "vue";
-import { updatePassword } from "../api/user";
+import { updatePassword, forcePasswordChange } from "../api/user";
 import { parseError } from "../utils/error";
 import { validateUsername, validatePassword, checkPassword, validateEmail } from '../utils/userValidation';
 import axios from "axios";
@@ -31,6 +31,39 @@ export const useChangePassword = () => {
 
   return {
     oldPassword,
+    newPassword,
+    newPasswordCheck,
+    message,
+    statusCode,
+    changePassword
+  }
+};
+
+
+export const useForceChangePassword = () => {
+  const newPassword = ref<string>('');
+  const newPasswordCheck = ref<string>('');
+  const message = ref<string>('パスワード変更が必須です');
+  const statusCode = ref<number | null>(null);
+
+  const changePassword = async () => {
+    try {
+      const res = await forcePasswordChange(newPassword.value);
+      statusCode.value = res.status
+      message.value = "パスワードの変更に成功しました\n再ログインしてください"
+      newPassword.value = ''
+      newPasswordCheck.value = ''
+    } catch (error: unknown) {
+      message.value = parseError(error, "パスワードの変更に失敗しました");
+      if (axios.isAxiosError(error)) {
+        statusCode.value = error.response?.status || null;
+      } else {
+        statusCode.value = null;
+      }
+    }
+  }
+
+  return {
     newPassword,
     newPasswordCheck,
     message,

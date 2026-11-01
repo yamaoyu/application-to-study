@@ -41,6 +41,9 @@
           <li v-if="isAdmin" class="nav-item">
             <router-link class="nav-link" to="/show/inquiry">問い合わせ確認</router-link>
           </li>
+        <li v-if="isAdmin" class="nav-item">
+          <router-link class="nav-link" to="/manage/user">ユーザー管理</router-link>
+        </li>
           <li class="nav-item">
             <a class="nav-link" type="button" @click="userLogout()">ログアウト</a>
           </li>
@@ -79,6 +82,9 @@
         </li>
         <li v-if="isAdmin" class="nav-item" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/show/inquiry">問い合わせ確認</router-link>
+        </li>
+        <li v-if="isAdmin" class="nav-item" data-bs-dismiss="offcanvas">
+          <router-link class="nav-link" to="/manage/user">ユーザー管理</router-link>
         </li>
         <li class="nav-item">
           <a class="nav-link" type="button" @click="userLogout()">ログアウト</a>

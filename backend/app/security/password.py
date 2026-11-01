@@ -1,3 +1,5 @@
+import secrets
+import string
 import os
 import bcrypt
 from lib.log_conf import logger
@@ -19,3 +21,8 @@ def get_password_hash(password) -> str:
     pw = (password + PEPPER).encode("utf-8")
     hashed = bcrypt.hashpw(pw, bcrypt.gensalt(rounds=ROUNDS))
     return hashed.decode("utf-8")
+
+
+def generate_random_password(length: int = 16) -> str:
+    characters = string.ascii_letters + string.digits + "!@#$%^&*"
+    return "".join(secrets.choice(characters) for _ in range(length))

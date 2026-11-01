@@ -9,6 +9,7 @@ import { AuthTokenResponse } from '../types/auth';
 
 export const setAuthDataFromToken = (
   authStore: ReturnType<typeof useAuthStore>,
+  roleStore: ReturnType<typeof useRoleStore>,
   response: AuthTokenResponse
 ) => {
   const decoded = jwtDecode(response.access_token);
@@ -17,7 +18,14 @@ export const setAuthDataFromToken = (
     throw new Error("トークンの有効期限がありません");
   }
 
-  authStore.setAuthData(response.access_token, response.token_type, decoded.exp);
+  authStore.setAuthData(
+    response.access_token,
+    response.token_type,
+    decoded.exp,
+    response.must_change_password
+  );
+
+  roleStore.setRole(response.role);
 };
 
 
@@ -45,7 +53,7 @@ export const useLogin = () => {
 
     try {
       const response = await login(username.value, password.value);
-      await setAuthDataFromToken(authStore, response.data)
+      await setAuthDataFromToken(authStore, roleStore, response.data)
 
       roleStore.setRole(response.data.role)
 
@@ -83,15 +91,13 @@ export const useLogout = () => {
   const userLogout = async () => {
     try {
       await logout();
+    } finally {
       authStore.clearAuthData();
       roleStore.clearRole();
-      router.push(
-        {
-          path: "/login",
-          query: { message: "ログアウトしました" }
-        })
-    } catch (error) {
-      message.value = parseError(error, "ログアウトに失敗しました");
+      await router.replace({
+        name: "Login",
+        query: { message: "ログアウトしました" }
+      });
     }
   }
 

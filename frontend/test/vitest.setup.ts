@@ -1,10 +1,14 @@
 import { vi } from 'vitest';
 import { createPinia } from 'pinia';
-import { mount, type MountingOptions } from '@vue/test-utils'
+import { afterEach } from 'vitest';
+import { mount, type MountingOptions, enableAutoUnmount } from '@vue/test-utils'
 import type { Component } from 'vue';
 import { createBootstrap } from 'bootstrap-vue-next';
 
 export const mockRouterPush = vi.fn();
+export const mockRouterReplace = vi.fn();
+
+enableAutoUnmount(afterEach);
 
 // モックのルーターを作成
 vi.mock('vue-router', async () => {
@@ -15,7 +19,8 @@ vi.mock('vue-router', async () => {
             query: {}
         }),
         useRouter: () => ({
-            push: mockRouterPush
+            push: mockRouterPush,
+            replace: mockRouterReplace
         })
     }
 })

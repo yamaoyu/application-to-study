@@ -13,7 +13,7 @@ from app.models.activity_model import (MultiTargetTimeIn,
                                        getActivitiesByStatusResponse)
 from app.models.common_model import CheckDate, CheckYearMonth, CheckYear
 from db.database import get_db
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import get_current_active_user
 from sqlalchemy.orm import Session
 from app.services.activity.register_target import RegisterTargetTimeUseCase
 from app.services.activity.register_actual import RegisterActualTimeUseCase
@@ -52,7 +52,7 @@ def get_finish_activities_usecase(
             response_model=getDayActivityResponse)
 def get_day_activity(params: CheckDate = Depends(),
                      service: ActivityQueryService = Depends(get_activity_query_service),
-                     current_user: dict = Depends(get_current_user)):
+                     current_user: dict = Depends(get_current_active_user)):
     """ 特定日の活動実績を確認する """
     # パスパラメータで受け取る年、月、日は文字列のため、intに変換する
     year = int(params.year)
@@ -67,7 +67,7 @@ def get_day_activity(params: CheckDate = Depends(),
 def register_multi_target_time(activities: MultiTargetTimeIn,
                                service: RegisterTargetTimeUseCase = Depends(
                                    get_register_target_time_usecase),
-                               current_user: dict = Depends(get_current_user)):
+                               current_user: dict = Depends(get_current_active_user)):
     data = [{"date": activity.date, "target_time": activity.target_time}
             for activity in activities.activities]
     return service.execute(data, current_user["username"])
@@ -79,7 +79,7 @@ def register_multi_target_time(activities: MultiTargetTimeIn,
 def update_multi_actual_time(activities: MultiActualTimeIn,
                              service: RegisterActualTimeUseCase = Depends(
                                  get_register_actual_time_usecase),
-                             current_user: dict = Depends(get_current_user)):
+                             current_user: dict = Depends(get_current_active_user)):
     """ 複数日の活動時間を登録する """
     data = [{"date": activity.date, "actual_time": activity.actual_time}
             for activity in activities.activities]
@@ -92,7 +92,7 @@ def update_multi_actual_time(activities: MultiActualTimeIn,
 def finish_multi_activities(params: FinishActivityRequest,
                             service: FinishActivitiesUseCase = Depends(
                                 get_finish_activities_usecase),
-                            current_user: dict = Depends(get_current_user)):
+                            current_user: dict = Depends(get_current_active_user)):
     """ 複数日の活動を確定する """
     return service.execute(params.dates, current_user["username"])
 
@@ -102,7 +102,7 @@ def finish_multi_activities(params: FinishActivityRequest,
             response_model=getMonthActivityResponse)
 def get_month_activities(params: CheckYearMonth = Depends(),
                          service: ActivityQueryService = Depends(get_activity_query_service),
-                         current_user: dict = Depends(get_current_user)):
+                         current_user: dict = Depends(get_current_active_user)):
     """ 特定月のデータを取得 """
     return service.get_month_activities(params.year, params.month, current_user["username"])
 
@@ -112,7 +112,7 @@ def get_month_activities(params: CheckYearMonth = Depends(),
             response_model=getYearActivityResponse)
 def get_year_activities(param: CheckYear = Depends(),
                         service: ActivityQueryService = Depends(get_activity_query_service),
-                        current_user: dict = Depends(get_current_user)):
+                        current_user: dict = Depends(get_current_active_user)):
     """ 特定年のデータを取得 """
     return service.get_year_activities(param.year, current_user["username"])
 
@@ -121,7 +121,7 @@ def get_year_activities(param: CheckYear = Depends(),
             status_code=200,
             response_model=getAllActivitiesResponse)
 def get_all_activities(service: ActivityQueryService = Depends(get_activity_query_service),
-                       current_user: dict = Depends(get_current_user)):
+                       current_user: dict = Depends(get_current_active_user)):
     """ 全期間を集計したデータを取得 """
     return service.get_all_activities(current_user["username"])
 
@@ -131,6 +131,6 @@ def get_all_activities(service: ActivityQueryService = Depends(get_activity_quer
             response_model=getActivitiesByStatusResponse)
 def get_activities_by_status(param: ValidateStatus = Depends(),
                              service: ActivityQueryService = Depends(get_activity_query_service),
-                             current_user: dict = Depends(get_current_user)):
+                             current_user: dict = Depends(get_current_active_user)):
     """ 日ごとの活動実績をステータスごとに取得 """
     return service.get_activities_by_status(param.status, current_user["username"])

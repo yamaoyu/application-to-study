@@ -1,4 +1,4 @@
-from app.error_codes import NotFoundCode, ConflictCode
+from app.error_codes import NotFoundCode, ConflictCode, NotAuthorizedCode
 from helpers.todo import TEST_TITLE, setup_create_todo, setup_finish_todo
 
 
@@ -173,4 +173,15 @@ def test_finish_todos_with_empty_list(client, get_resource_owner_headers):
                 "field": "ids"
             }
         ]
+    }
+
+
+def test_suspended_user_cannot_finish_todo(client, get_resource_owner_headers, get_suspended_user_headers):
+    setup_create_todo(client, get_resource_owner_headers)
+    suspended_user_headers = get_suspended_user_headers
+    data = {"ids": [1]}
+    response = client.patch("/todos/bulk-finish", json=data, headers=suspended_user_headers)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.USER_SUSPENDED
     }

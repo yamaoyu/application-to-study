@@ -13,8 +13,8 @@ class LoginUserResponse(BaseModel):
     access_token: str
     token_type: str
     role: str
+    must_change_password: bool
 
 
-class regenerateAccessTokenResponse(BaseModel):
-    access_token: str
-    token_type: str
+class regenerateAccessTokenResponse(LoginUserResponse):
+    pass

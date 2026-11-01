@@ -1,4 +1,4 @@
-from app.error_codes import NotFoundCode, ConflictCode, ValidationErrorCode
+from app.error_codes import NotFoundCode, ConflictCode, ValidationErrorCode, NotAuthorizedCode
 from helpers.todo import TEST_TITLE, TEST_DUE, TEST_DETAIL, setup_create_todo, setup_finish_todo
 
 
@@ -247,4 +247,25 @@ def test_fail_edit_completed_todo(client, get_resource_owner_headers):
     assert response.status_code == 409
     assert response.json() == {
         "code": ConflictCode.TODO_ALREADY_FINISHED
+    }
+
+
+def test_suspended_user_cannot_create_todo(client, get_suspended_user_headers):
+    data = {
+        "todos": [{"title": TEST_TITLE, "due": TEST_DUE, "detail": TEST_DETAIL}]
+    }
+    response = client.post("/todos/bulk-create", json=data, headers=get_suspended_user_headers)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.USER_SUSPENDED
+    }
+
+
+def test_suspended_user_cannot_edit_todo(client, get_resource_owner_headers, get_suspended_user_headers):
+    setup_create_todo(client, get_resource_owner_headers)
+    data = {"title": "new title", "due": TEST_DUE, "detail": TEST_DETAIL}
+    response = client.patch("/todos/update/1", json=data, headers=get_suspended_user_headers)
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": NotAuthorizedCode.USER_SUSPENDED
     }

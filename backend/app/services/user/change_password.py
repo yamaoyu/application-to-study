@@ -1,4 +1,5 @@
 from app.repositories.user_repository import UserRepository
+from app.repositories.auth_repository import TokenRepository
 from app.exceptions import NotFound, NotAuthorized
 from app.error_codes import NotAuthorizedCode, NotFoundCode
 from app.security.password import verify_password, get_password_hash
@@ -8,6 +9,7 @@ from app.domain.user.password import PlainPassword
 class ChangePasswordUseCase:
     def __init__(self, db):
         self.user_repo = UserRepository(db)
+        self.auth_repo = TokenRepository(db)
 
     def execute(self, old_password: str, new_password: str, username: str) -> None:
         validate_password = PlainPassword(new_password, field_name="new_password")
@@ -17,4 +19,5 @@ class ChangePasswordUseCase:
         if not verify_password(old_password, user.password):
             raise NotAuthorized(code=NotAuthorizedCode.INVALID_CURRENT_PASSWORD)
         self.user_repo.update_password(user, get_password_hash(validate_password.value))
+        self.auth_repo.delete_refresh_token(username)
         self.user_repo.flush()

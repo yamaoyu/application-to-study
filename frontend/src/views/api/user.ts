@@ -21,3 +21,12 @@ export const updatePassword = (oldPassword: string, newPassword: string) => {
     }
   )
 };
+
+export const forcePasswordChange = (newPassword: string) => {
+  return apiClient.patch(
+    "password/forced",
+    {
+      new_password: newPassword
+    }
+  )
+};
