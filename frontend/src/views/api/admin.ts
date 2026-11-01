@@ -19,15 +19,18 @@ export const getUsersList = (
 export const changeUserRole = (
     params: ChangeRoleParams
 ): Promise<AxiosResponse<ChangeRoleResponse>> => {
-    return apiClient.patch(`admin/users/${params.username}/role`, { role: params.role });
+    const encodedUsername = encodeURIComponent(params.username)
+    return apiClient.patch(`admin/users/${encodedUsername}/role`, { role: params.role });
 };
 
 export const changeUserStatus = (
     params: ChangeStatusParams
 ): Promise<AxiosResponse<ChangeStatusResponse>> => {
-    return apiClient.patch(`admin/users/${params.username}/status`, { status: params.status });
+    const encodedUsername = encodeURIComponent(params.username)
+    return apiClient.patch(`admin/users/${encodedUsername}/status`, { status: params.status });
 };
 
 export const resetUserPassword = (username: string): Promise<AxiosResponse<ResetPasswordResponse>> => {
-    return apiClient.patch(`/admin/users/${username}/password`)
+    const encodedUsername = encodeURIComponent(username)
+    return apiClient.patch(`/admin/users/${encodedUsername}/password`)
 }
