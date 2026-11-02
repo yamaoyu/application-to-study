@@ -1,5 +1,7 @@
 import os
+
 from email_validator import validate_email
+
 from app.exceptions import DomainValidationError
 
 ENV = os.getenv("ENV", "DEV")
@@ -13,6 +15,9 @@ class Email:
         try:
             validate_email(value, check_deliverability=ENV == "PROD")
             self.value = value
-        except Exception:
+        except Exception as e:
             raise DomainValidationError(
-                code="INVALID_EMAIL", field="email", detail="メールアドレスの形式が不正です")
+                code="INVALID_EMAIL",
+                field="email",
+                detail="メールアドレスの形式が不正です",
+            ) from e

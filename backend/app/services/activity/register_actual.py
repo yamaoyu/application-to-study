@@ -1,13 +1,14 @@
 from datetime import date
+
+from app.domain.activity.activity import Activity, ActivityStatus, Adjustment
+from app.domain.activity.exceptions import ActivityValidationReason, InvalidActivity
+from app.error_codes import BadRequestCode, ConflictCode, NotFoundCode
 from app.models.activity_model import RegisterActualTimeResponse
-from app.error_codes import NotFoundCode, ConflictCode, BadRequestCode
 from app.repositories.activity_repository import ActivityRepository
 from app.repositories.money_repository import MoneyRepository
-from lib.log_conf import logger
-from app.services.activity.utils import format_date, parse_activity_date
-from app.domain.activity.exceptions import InvalidActivity, ActivityValidationReason
 from app.services.activity.error_mapping import to_todo_bad_request_code
-from app.domain.activity.activity import Activity, Adjustment, ActivityStatus
+from app.services.activity.utils import format_date, parse_activity_date
+from lib.log_conf import logger
 
 
 class RegisterActualTimeUseCase:
@@ -15,10 +16,9 @@ class RegisterActualTimeUseCase:
         self.time_repo = ActivityRepository(db)
         self.money_repo = MoneyRepository(db)
 
-    def execute(self,
-                activities: list[dict],
-                username: str
-                ) -> RegisterActualTimeResponse:
+    def execute(
+        self, activities: list[dict], username: str
+    ) -> RegisterActualTimeResponse:
         results = []
         success_count = 0
         error_count = 0
@@ -34,9 +34,7 @@ class RegisterActualTimeUseCase:
                 error_count += 1
 
         return RegisterActualTimeResponse(
-            success_count=success_count,
-            error_count=error_count,
-            results=results
+            success_count=success_count, error_count=error_count, results=results
         )
 
     def _build_error_result(self, parsed_date: date, reason: str) -> dict:
@@ -44,26 +42,31 @@ class RegisterActualTimeUseCase:
             "date": format_date(parsed_date),
             "reason": reason,
             "result": "error",
-            "actual_time": None
+            "actual_time": None,
         }
 
-    def _update_one_actual_time(self, parsed_date: date, username: str, actual_time: float) -> dict:
+    def _update_one_actual_time(
+        self, parsed_date: date, username: str, actual_time: float
+    ) -> dict:
         # 活動時間を登録する前に、その日の活動実績が存在するか確認
         income_row = self._fetch_monthly_salary(parsed_date, username)
         if not income_row:
-            return self._build_error_result(
-                parsed_date, NotFoundCode.SALARY_NOT_FOUND
-            )
+            return self._build_error_result(parsed_date, NotFoundCode.SALARY_NOT_FOUND)
 
         activity_row = self.time_repo.get_activity_by_date_and_username(
-            parsed_date, username)
+            parsed_date, username
+        )
         if not activity_row:
             return self._build_error_result(
                 parsed_date, NotFoundCode.ACTIVITY_NOT_FOUND
             )
         try:
-            activity = Activity(activity_row.target_time, actual_time,
-                                ActivityStatus(activity_row.status), Adjustment(0, 0))
+            activity = Activity(
+                activity_row.target_time,
+                actual_time,
+                ActivityStatus(activity_row.status),
+                Adjustment(0, 0),
+            )
             if activity.status.is_finished():
                 return self._build_error_result(
                     parsed_date, ConflictCode.ACTIVITY_ALREADY_FINISHED
@@ -72,16 +75,17 @@ class RegisterActualTimeUseCase:
                 self.time_repo.update_actual_time(activity_row, actual_time)
                 self.time_repo.flush()
             logger.info(f"{username}が複数日の実績時間を登録")
-            return self._build_success_result(
-                parsed_date, actual_time
-            )
+            return self._build_success_result(parsed_date, actual_time)
         except InvalidActivity:
             return self._build_error_result(
-                parsed_date, to_todo_bad_request_code(ActivityValidationReason.INVALID_ACTUAL_TIME)
+                parsed_date,
+                to_todo_bad_request_code(ActivityValidationReason.INVALID_ACTUAL_TIME),
             )
         except Exception as e:
             logger.error(
-                f"Error registering actual time for {parsed_date}: {str(e)}", exc_info=True)
+                f"Error registering actual time for {parsed_date}: {e!s}",
+                exc_info=True,
+            )
 
             return self._build_error_result(
                 parsed_date, BadRequestCode.UNEXPECTED_ERROR
@@ -92,7 +96,7 @@ class RegisterActualTimeUseCase:
             "date": format_date(parsed_date),
             "result": "success",
             "reason": None,
-            "actual_time": actual_time
+            "actual_time": actual_time,
         }
 
     def _fetch_monthly_salary(self, parsed_date: date, username: str):

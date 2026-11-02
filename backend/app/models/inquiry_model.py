@@ -1,17 +1,17 @@
-from enum import Enum
-from pydantic import BaseModel, field_validator, ConfigDict, ValidationInfo, Field
-from typing import Optional
 from datetime import date
+from enum import StrEnum
+
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 from pydantic_core import PydanticCustomError
 
 
-class Category(str, Enum):
+class Category(StrEnum):
     request = "要望"
     error = "エラー報告"
     other = "その他"
 
 
-class Priority(str, Enum):
+class Priority(StrEnum):
     high = "高"
     middle = "中"
     low = "低"
@@ -38,8 +38,8 @@ class InquiryItem(BaseModel):
     detail: str
     date: date
     category: Category
-    priority: Optional[Priority] = None
-    is_checked: Optional[bool] = None
+    priority: Priority | None = None
+    is_checked: bool | None = None
 
 
 class GetInquiryResponse(BaseModel):
@@ -47,16 +47,16 @@ class GetInquiryResponse(BaseModel):
 
 
 class EditInquiryInput(BaseModel):
-    priority: Optional[Priority] = None
-    is_checked: Optional[bool] = None
+    priority: Priority | None = None
+    is_checked: bool | None = None
 
 
 class InquirySearchQuery(BaseModel):
-    month: Optional[int] = None
-    year: Optional[int] = Field(default=None, validate_default=True)
-    category: Optional[Category] = None
-    priority: Optional[Priority] = None
-    is_checked: Optional[bool] = None
+    month: int | None = None
+    year: int | None = Field(default=None, validate_default=True)
+    category: Category | None = None
+    priority: Priority | None = None
+    is_checked: bool | None = None
 
     @field_validator("year")
     def check_year_required_when_month_exists(cls, year, info: ValidationInfo):
@@ -65,7 +65,7 @@ class InquirySearchQuery(BaseModel):
         if month is not None and year is None:
             raise PydanticCustomError(
                 "YEAR_REQUIRED_WHEN_MONTH_SPECIFIED",
-                "月が指定されている場合、年は必須です"
+                "月が指定されている場合、年は必須です",
             )
 
         if year is not None and not (2024 <= year <= 2099):

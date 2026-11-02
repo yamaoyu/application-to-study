@@ -1,13 +1,13 @@
-from pydantic import BaseModel, field_validator, ConfigDict
 from datetime import date
-from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, field_validator
 from pydantic_core import PydanticCustomError
 
 
 class UpsertTodoParams(BaseModel):
     title: str
     due: str
-    detail: Optional[str] = None
+    detail: str | None = None
 
 
 class TodosCreateRequest(BaseModel):
@@ -51,7 +51,7 @@ class Todo(BaseModel):
     title: str
     status: bool
     due: date
-    detail: Optional[str] = None
+    detail: str | None = None
 
 
 class TodoGetResponse(BaseModel):

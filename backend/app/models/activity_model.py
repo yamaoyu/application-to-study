@@ -1,10 +1,11 @@
-from enum import Enum
+from enum import StrEnum
+
 from pydantic import BaseModel, field_validator
+
 from app.models.common_model import CheckDate
-from typing import Optional
 
 
-class Status(str, Enum):
+class Status(StrEnum):
     pending = "pending"
     success = "success"
     failure = "failure"
@@ -42,9 +43,9 @@ class MultiTargetTimeIn(BaseModel):
 
 class RegisterTargetTime(BaseModel):
     date: str
-    target_time: Optional[float] = None
+    target_time: float | None = None
     result: str
-    reason: Optional[str] = None
+    reason: str | None = None
 
 
 class RegisterTargetTimeResponse(BaseModel):
@@ -77,9 +78,9 @@ class MultiActualTimeIn(BaseModel):
 
 class RegisterActualTime(BaseModel):
     date: str
-    actual_time: Optional[float] = None
+    actual_time: float | None = None
     result: str
-    reason: Optional[str] = None
+    reason: str | None = None
 
 
 class RegisterActualTimeResponse(BaseModel):
@@ -90,11 +91,11 @@ class RegisterActualTimeResponse(BaseModel):
 
 class FinishActivity(BaseModel):
     date: str
-    status: Optional[Status] = None
-    bonus: Optional[float] = None
-    penalty: Optional[float] = None
+    status: Status | None = None
+    bonus: float | None = None
+    penalty: float | None = None
     result: str
-    reason: Optional[str] = None
+    reason: str | None = None
 
 
 class FinishActivityRequest(BaseModel):
@@ -158,16 +159,16 @@ class getMonthActivityResponse(ActivitySummary):
 
 
 class MonthlyInfo(BaseModel):
-    salary: Optional[float] = None
-    pay_adjustment: Optional[float] = None
-    bonus: Optional[float] = None
-    penalty: Optional[float] = None
-    success_days: Optional[int] = None
-    fail_days: Optional[int] = None
+    salary: float | None = None
+    pay_adjustment: float | None = None
+    bonus: float | None = None
+    penalty: float | None = None
+    success_days: int | None = None
+    fail_days: int | None = None
 
 
 class getYearActivityResponse(ActivitySummary):
-    monthly_info: dict[str, Optional[MonthlyInfo]]
+    monthly_info: dict[str, MonthlyInfo | None]
 
 
 class getAllActivitiesResponse(ActivitySummary):

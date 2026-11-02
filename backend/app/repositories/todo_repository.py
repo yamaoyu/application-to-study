@@ -1,10 +1,11 @@
-from db import db_model
-from sqlalchemy.orm import Session, SessionTransaction
-from typing import Optional
 from datetime import date
 
+from sqlalchemy.orm import Session, SessionTransaction
 
-class TodoRepository():
+from db import db_model
+
+
+class TodoRepository:
     def __init__(self, db: Session):
         self.db = db
 
@@ -18,20 +19,27 @@ class TodoRepository():
         data = db_model.Todo(title=title, due=due, detail=detail, username=username)
         self.db.add(data)
 
-    def get_todo(self, todo_id: int, username: str) -> Optional[db_model.Todo]:
-        return self.db.query(db_model.Todo).filter(
-            db_model.Todo.todo_id == todo_id,
-            db_model.Todo.username == username).one_or_none()
+    def get_todo(self, todo_id: int, username: str) -> db_model.Todo | None:
+        return (
+            self.db.query(db_model.Todo)
+            .filter(
+                db_model.Todo.todo_id == todo_id, db_model.Todo.username == username
+            )
+            .one_or_none()
+        )
 
-    def get_todos(self,
-                  username: str,
-                  status: bool | None = None,
-                  start_due: str | None = None,
-                  end_due: str | None = None,
-                  title: str | None = None,
-                  ids: Optional[list[int]] = None) -> list[db_model.Todo]:
+    def get_todos(
+        self,
+        username: str,
+        status: bool | None = None,
+        start_due: str | None = None,
+        end_due: str | None = None,
+        title: str | None = None,
+        ids: list[int] | None = None,
+    ) -> list[db_model.Todo]:
         sqlstatement = self.db.query(db_model.Todo).filter(
-            db_model.Todo.username == username)
+            db_model.Todo.username == username
+        )
         if status is not None:
             sqlstatement = sqlstatement.filter(db_model.Todo.status == status)
         if start_due:
@@ -46,15 +54,17 @@ class TodoRepository():
 
     def delete_todo(self, todo_id: int, username: str) -> None:
         self.db.query(db_model.Todo).filter(
-            db_model.Todo.todo_id == todo_id,
-            db_model.Todo.username == username).delete()
+            db_model.Todo.todo_id == todo_id, db_model.Todo.username == username
+        ).delete()
 
     def delete_todos(self, ids: set[int], username: str) -> None:
         self.db.query(db_model.Todo).filter(
-            db_model.Todo.todo_id.in_(ids),
-            db_model.Todo.username == username).delete()
+            db_model.Todo.todo_id.in_(ids), db_model.Todo.username == username
+        ).delete()
 
-    def update_todo_content(self, todo: db_model.Todo, title: str, due: date, detail: Optional[str]) -> None:
+    def update_todo_content(
+        self, todo: db_model.Todo, title: str, due: date, detail: str | None
+    ) -> None:
         todo.title = title
         todo.due = due
         todo.detail = detail
@@ -64,5 +74,5 @@ class TodoRepository():
 
     def finish_todos(self, ids: set[int], username: str) -> None:
         self.db.query(db_model.Todo).filter(
-            db_model.Todo.todo_id.in_(ids),
-            db_model.Todo.username == username).update({db_model.Todo.status: True})
+            db_model.Todo.todo_id.in_(ids), db_model.Todo.username == username
+        ).update({db_model.Todo.status: True})

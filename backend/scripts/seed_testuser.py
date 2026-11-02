@@ -5,9 +5,10 @@
 """
 
 import os
+
 from app.security.password import get_password_hash
-from db.database import SessionLocal
 from db import db_model
+from db.database import SessionLocal
 
 BASE_URL = os.getenv("BASE_URL")
 E2E_TEST_USER = os.getenv("E2E_TEST_USER")
@@ -23,12 +24,16 @@ hashed_password = get_password_hash(E2E_TEST_PASSWORD)
 db = SessionLocal()
 
 try:
-    fetch_user = db.query(db_model.User).filter(
-        db_model.User.username == E2E_TEST_USER).one_or_none()
+    fetch_user = (
+        db.query(db_model.User)
+        .filter(db_model.User.username == E2E_TEST_USER)
+        .one_or_none()
+    )
 
     if not fetch_user:
         user_data = db_model.User(
-            username=E2E_TEST_USER, password=hashed_password, role="general")
+            username=E2E_TEST_USER, password=hashed_password, role="general"
+        )
         db.add(user_data)
         db.commit()
         db.refresh(user_data)

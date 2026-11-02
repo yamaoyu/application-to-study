@@ -1,26 +1,30 @@
 import os
-from fastapi import FastAPI, APIRouter, Request
+
+from fastapi import APIRouter, FastAPI, Request
+from fastapi.exceptions import HTTPException, RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from pydantic import ValidationError
+
+from app.exceptions import (
+    BadRequest,
+    BulkOperationFailed,
+    Conflict,
+    DomainValidationError,
+    Forbidden,
+    NotAuthorized,
+    NotFound,
+)
 from app.routers.activity import router as activity_router
+from app.routers.admin import router as admin_router
+from app.routers.auth import router as auth_router
+from app.routers.health_check import router as health_router
+from app.routers.inquiry import router as inquiry_router
 from app.routers.money import router as money_router
 from app.routers.todo import router as todo_router
 from app.routers.user import router as user_router
-from app.routers.auth import router as auth_router
-from app.routers.inquiry import router as inquiry_router
-from app.routers.health_check import router as health_router
-from app.routers.admin import router as admin_router
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.exceptions import RequestValidationError, HTTPException
-from lib.log_conf import logger
-from fastapi.responses import JSONResponse
-from app.exceptions import (NotFound,
-                            BadRequest,
-                            Conflict,
-                            NotAuthorized,
-                            Forbidden,
-                            BulkOperationFailed,
-                            DomainValidationError)
-from pydantic import ValidationError
 from app.utils.validation import get_validation_error_code
+from lib.log_conf import logger
 
 app = FastAPI()
 router = APIRouter()
@@ -49,8 +53,10 @@ app.include_router(admin_router)
 
 @app.exception_handler(Exception)
 def unhandled_exception_handler(request: Request, exc: Exception):
-    logger.error(f"予期せぬエラーが発生しました {request.url.path} \n{exc}\nEXC_CLASS={exc.__class__.__module__}.{exc.__class__.__name__}",
-                 exc_info=True)
+    logger.error(
+        f"予期せぬエラーが発生しました {request.url.path} \n{exc}\nEXC_CLASS={exc.__class__.__module__}.{exc.__class__.__name__}",
+        exc_info=True,
+    )
     return JSONResponse(
         status_code=500,
         content={"code": "UNEXPECTED_ERROR"},
@@ -66,10 +72,14 @@ def validation_exception_handler(request, exc):
         loc = error.get("loc", [])
         field = loc[-1] if loc else None
 
-        errors.append({
-            "field": field,
-            "code": get_validation_error_code(error_type=error["type"], field=field),
-        })
+        errors.append(
+            {
+                "field": field,
+                "code": get_validation_error_code(
+                    error_type=error["type"], field=field
+                ),
+            }
+        )
 
     return JSONResponse(
         status_code=422,
@@ -133,7 +143,7 @@ def bulk_operation_failed_handler(request, exc):
         content={
             "code": exc.code,
             "results": exc.results,
-        }
+        },
     )
 
 

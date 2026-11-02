@@ -1,13 +1,14 @@
 from helpers.activity import (
-    test_date,
-    test_bonus,
-    setup_target_time,
     setup_actual_time,
     setup_finish_activity,
-    setup_monthly_income
+    setup_monthly_income,
+    setup_target_time,
+    test_bonus,
+    test_date,
 )
-from app.error_codes import NotFoundCode, ConflictCode, NotAuthorizedCode
+
 from app.domain.money.amount import round_money_amount
+from app.error_codes import ConflictCode, NotAuthorizedCode, NotFoundCode
 
 
 def test_finish_activity(client, get_resource_owner_headers):
@@ -19,12 +20,10 @@ def test_finish_activity(client, get_resource_owner_headers):
     setup_target_time(client, get_resource_owner_headers)
     setup_actual_time(client, get_resource_owner_headers)
     # 活動時間を登録
-    data = {
-        "dates": [test_date]
-    }
-    response = client.patch("/activities/bulk-finish",
-                            json=data,
-                            headers=get_resource_owner_headers)
+    data = {"dates": [test_date]}
+    response = client.patch(
+        "/activities/bulk-finish", json=data, headers=get_resource_owner_headers
+    )
     assert response.status_code == 200
     assert response.json() == {
         "success_count": 1,
@@ -39,9 +38,9 @@ def test_finish_activity(client, get_resource_owner_headers):
                 "status": "success",
                 "bonus": 0.58,
                 "penalty": 0.0,
-                "reason": None
+                "reason": None,
             }
-        ]
+        ],
     }
 
 
@@ -54,12 +53,10 @@ def test_finish_activity_status_failed(client, get_resource_owner_headers):
     setup_target_time(client, get_resource_owner_headers)
     # actual_timeは0のままなので、活動を終了すると失敗となり、ペナルティが発生することを確認する
     # 活動時間を登録
-    data = {
-        "dates": [test_date]
-    }
-    response = client.patch("/activities/bulk-finish",
-                            json=data,
-                            headers=get_resource_owner_headers)
+    data = {"dates": [test_date]}
+    response = client.patch(
+        "/activities/bulk-finish", json=data, headers=get_resource_owner_headers
+    )
     assert response.status_code == 200
     assert response.json() == {
         "success_count": 1,
@@ -74,24 +71,22 @@ def test_finish_activity_status_failed(client, get_resource_owner_headers):
                 "status": "failure",
                 "bonus": 0.0,
                 "penalty": 0.58,
-                "reason": None
+                "reason": None,
             }
-        ]
+        ],
     }
 
 
 def test_finish_activity_fail_when_already_finished(client, get_resource_owner_headers):
-    """ 既に終了済みの活動を終了しようとすると失敗する """
+    """既に終了済みの活動を終了しようとすると失敗する"""
     setup_monthly_income(client, get_resource_owner_headers)
     setup_target_time(client, get_resource_owner_headers)
     setup_actual_time(client, get_resource_owner_headers)
     setup_finish_activity(client, get_resource_owner_headers)
-    data = {
-        "dates": [test_date]
-    }
-    response = client.patch("/activities/bulk-finish",
-                            json=data,
-                            headers=get_resource_owner_headers)
+    data = {"dates": [test_date]}
+    response = client.patch(
+        "/activities/bulk-finish", json=data, headers=get_resource_owner_headers
+    )
     assert response.status_code == 200
     assert response.json() == {
         "success_count": 0,
@@ -106,14 +101,14 @@ def test_finish_activity_fail_when_already_finished(client, get_resource_owner_h
                 "reason": ConflictCode.ACTIVITY_ALREADY_FINISHED,
                 "bonus": None,
                 "penalty": None,
-                "status": None
+                "status": None,
             }
-        ]
+        ],
     }
 
 
 def test_finish_multi_activities(client, get_resource_owner_headers):
-    """ 複数の活動を終了させた場合 """
+    """複数の活動を終了させた場合"""
     setup_monthly_income(client, get_resource_owner_headers)
     # 今回のテストでのボーナス等を定義
     total_bonus = 1.39
@@ -124,30 +119,28 @@ def test_finish_multi_activities(client, get_resource_owner_headers):
         "activities": [
             {"date": test_date, "target_time": 5.0},
             {"date": "2024-5-6", "target_time": 6.0},
-            {"date": "2024-5-7", "target_time": 7.0}
+            {"date": "2024-5-7", "target_time": 7.0},
         ]
     }
-    client.post("/activities/bulk-create-targets",
-                json=data,
-                headers=get_resource_owner_headers)
+    client.post(
+        "/activities/bulk-create-targets", json=data, headers=get_resource_owner_headers
+    )
     # 複数の活動時間を登録
     data = {
         "activities": [
             {"date": test_date, "actual_time": 5.0},
             {"date": "2024-5-6", "actual_time": 3.0},
-            {"date": "2024-5-7", "actual_time": 7.0}
+            {"date": "2024-5-7", "actual_time": 7.0},
         ]
     }
-    client.patch("/activities/bulk-update-actuals",
-                 json=data,
-                 headers=get_resource_owner_headers)
+    client.patch(
+        "/activities/bulk-update-actuals", json=data, headers=get_resource_owner_headers
+    )
     # 活動を終了
-    data = {
-        "dates": [test_date, "2024-5-6", "2024-5-7"]
-    }
-    response = client.patch("/activities/bulk-finish",
-                            json=data,
-                            headers=get_resource_owner_headers)
+    data = {"dates": [test_date, "2024-5-6", "2024-5-7"]}
+    response = client.patch(
+        "/activities/bulk-finish", json=data, headers=get_resource_owner_headers
+    )
     assert response.status_code == 200
     assert response.json() == {
         "success_count": 3,
@@ -162,7 +155,7 @@ def test_finish_multi_activities(client, get_resource_owner_headers):
                 "status": "success",
                 "bonus": 0.58,
                 "penalty": 0.0,
-                "reason": None
+                "reason": None,
             },
             {
                 "date": "2024-5-6",
@@ -170,7 +163,7 @@ def test_finish_multi_activities(client, get_resource_owner_headers):
                 "status": "failure",
                 "bonus": 0.0,
                 "penalty": 0.35,
-                "reason": None
+                "reason": None,
             },
             {
                 "date": "2024-5-7",
@@ -178,14 +171,14 @@ def test_finish_multi_activities(client, get_resource_owner_headers):
                 "status": "success",
                 "bonus": 0.81,
                 "penalty": 0.0,
-                "reason": None
-            }
-        ]
+                "reason": None,
+            },
+        ],
     }
 
 
 def test_finish_multi_activity_with_partial_errors(client, get_resource_owner_headers):
-    """ 複数の活動を終了させて一部のみエラーがある場合 """
+    """複数の活動を終了させて一部のみエラーがある場合"""
     setup_monthly_income(client, get_resource_owner_headers)
     setup_target_time(client, get_resource_owner_headers)
     setup_actual_time(client, get_resource_owner_headers)
@@ -198,29 +191,27 @@ def test_finish_multi_activity_with_partial_errors(client, get_resource_owner_he
     data = {
         "activities": [
             {"date": "2024-5-6", "target_time": 6.0},
-            {"date": "2024-5-7", "target_time": 7.0}
+            {"date": "2024-5-7", "target_time": 7.0},
         ]
     }
-    client.post("/activities/bulk-create-targets",
-                json=data,
-                headers=get_resource_owner_headers)
+    client.post(
+        "/activities/bulk-create-targets", json=data, headers=get_resource_owner_headers
+    )
     # 複数の活動時間を登録
     data = {
         "activities": [
             {"date": "2024-5-6", "actual_time": 3.0},
-            {"date": "2024-5-7", "actual_time": 7.0}
+            {"date": "2024-5-7", "actual_time": 7.0},
         ]
     }
-    client.patch("/activities/bulk-update-actuals",
-                 json=data,
-                 headers=get_resource_owner_headers)
+    client.patch(
+        "/activities/bulk-update-actuals", json=data, headers=get_resource_owner_headers
+    )
     # 活動を終了
-    data = {
-        "dates": [test_date, "2024-5-6", "2024-5-7"]
-    }
-    response = client.patch("/activities/bulk-finish",
-                            json=data,
-                            headers=get_resource_owner_headers)
+    data = {"dates": [test_date, "2024-5-6", "2024-5-7"]}
+    response = client.patch(
+        "/activities/bulk-finish", json=data, headers=get_resource_owner_headers
+    )
     assert response.status_code == 200
     assert response.json() == {
         "success_count": 2,
@@ -235,7 +226,7 @@ def test_finish_multi_activity_with_partial_errors(client, get_resource_owner_he
                 "reason": ConflictCode.ACTIVITY_ALREADY_FINISHED,
                 "bonus": None,
                 "penalty": None,
-                "status": None
+                "status": None,
             },
             {
                 "date": "2024-5-6",
@@ -243,7 +234,7 @@ def test_finish_multi_activity_with_partial_errors(client, get_resource_owner_he
                 "status": "failure",
                 "bonus": 0.0,
                 "penalty": 0.35,
-                "reason": None
+                "reason": None,
             },
             {
                 "date": "2024-5-7",
@@ -251,21 +242,19 @@ def test_finish_multi_activity_with_partial_errors(client, get_resource_owner_he
                 "status": "success",
                 "bonus": 0.81,
                 "penalty": 0.0,
-                "reason": None
-            }
-        ]
+                "reason": None,
+            },
+        ],
     }
 
 
 def test_finish_multi_activity_with_all_errors(client, get_resource_owner_headers):
-    """ 複数の活動を終了させて全てエラー場合 """
+    """複数の活動を終了させて全てエラー場合"""
     # 活動を終了
-    data = {
-        "dates": [test_date, "2024-5-6", "2024-5-7"]
-    }
-    response = client.patch("/activities/bulk-finish",
-                            json=data,
-                            headers=get_resource_owner_headers)
+    data = {"dates": [test_date, "2024-5-6", "2024-5-7"]}
+    response = client.patch(
+        "/activities/bulk-finish", json=data, headers=get_resource_owner_headers
+    )
     assert response.status_code == 200
     assert response.json() == {
         "success_count": 0,
@@ -280,7 +269,7 @@ def test_finish_multi_activity_with_all_errors(client, get_resource_owner_header
                 "reason": NotFoundCode.SALARY_NOT_FOUND,
                 "bonus": None,
                 "penalty": None,
-                "status": None
+                "status": None,
             },
             {
                 "date": "2024-5-6",
@@ -288,7 +277,7 @@ def test_finish_multi_activity_with_all_errors(client, get_resource_owner_header
                 "reason": NotFoundCode.SALARY_NOT_FOUND,
                 "bonus": None,
                 "penalty": None,
-                "status": None
+                "status": None,
             },
             {
                 "date": "2024-5-7",
@@ -296,9 +285,9 @@ def test_finish_multi_activity_with_all_errors(client, get_resource_owner_header
                 "reason": NotFoundCode.SALARY_NOT_FOUND,
                 "bonus": None,
                 "penalty": None,
-                "status": None
+                "status": None,
             },
-        ]
+        ],
     }
 
 
@@ -306,21 +295,14 @@ def test_finish_multi_activity_with_invalid_year(client, get_resource_owner_head
     setup_monthly_income(client, get_resource_owner_headers)
     setup_target_time(client, get_resource_owner_headers)
     # 年が不正
-    data = {
-        "dates": ["20241-5-5"]
-    }
-    response = client.patch("/activities/bulk-finish",
-                            json=data,
-                            headers=get_resource_owner_headers)
+    data = {"dates": ["20241-5-5"]}
+    response = client.patch(
+        "/activities/bulk-finish", json=data, headers=get_resource_owner_headers
+    )
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",
-        "errors": [
-            {
-                "code": "INVALID_YEAR",
-                "field": "year"
-            }
-        ]
+        "errors": [{"code": "INVALID_YEAR", "field": "year"}],
     }
 
 
@@ -329,21 +311,14 @@ def test_finish_multi_activity_with_invalid_month(client, get_resource_owner_hea
     setup_target_time(client, get_resource_owner_headers)
 
     # 月が不正
-    data = {
-        "dates": ["2024-15-5"]
-    }
-    response = client.patch("/activities/bulk-finish",
-                            json=data,
-                            headers=get_resource_owner_headers)
+    data = {"dates": ["2024-15-5"]}
+    response = client.patch(
+        "/activities/bulk-finish", json=data, headers=get_resource_owner_headers
+    )
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",
-        "errors": [
-            {
-                "code": "INVALID_MONTH",
-                "field": "month"
-            }
-        ]
+        "errors": [{"code": "INVALID_MONTH", "field": "month"}],
     }
 
 
@@ -352,50 +327,34 @@ def test_finish_multi_activity_with_invalid_date(client, get_resource_owner_head
     setup_target_time(client, get_resource_owner_headers)
 
     # 日付が不正
-    data = {
-        "dates": ["2024-5-50"]
-    }
-    response = client.patch("/activities/bulk-finish",
-                            json=data,
-                            headers=get_resource_owner_headers)
+    data = {"dates": ["2024-5-50"]}
+    response = client.patch(
+        "/activities/bulk-finish", json=data, headers=get_resource_owner_headers
+    )
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",
-        "errors": [
-            {
-                "code": "INVALID_DATES",
-                "field": "dates"
-            }
-        ]
+        "errors": [{"code": "INVALID_DATES", "field": "dates"}],
     }
 
 
 def test_finish_multi_acitivity_with_no_dates(client, get_resource_owner_headers):
-    """ 複数の活動を終了させた場合に日付が指定されていない場合 """
-    response = client.patch("/activities/bulk-finish",
-                            json={},
-                            headers=get_resource_owner_headers)
+    """複数の活動を終了させた場合に日付が指定されていない場合"""
+    response = client.patch(
+        "/activities/bulk-finish", json={}, headers=get_resource_owner_headers
+    )
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",
-        "errors": [
-            {
-                "code": "REQUIRED",
-                "field": "dates"
-            }
-        ]
+        "errors": [{"code": "REQUIRED", "field": "dates"}],
     }
 
 
 def test_suspended_user_cannot_finish_activity(client, get_suspended_user_headers):
-    """ suspendedユーザーは活動を終了できないことを確認する """
-    data = {
-        "dates": [test_date]
-    }
-    response = client.patch("/activities/bulk-finish",
-                            json=data,
-                            headers=get_suspended_user_headers)
+    """suspendedユーザーは活動を終了できないことを確認する"""
+    data = {"dates": [test_date]}
+    response = client.patch(
+        "/activities/bulk-finish", json=data, headers=get_suspended_user_headers
+    )
     assert response.status_code == 403
-    assert response.json() == {
-        "code": NotAuthorizedCode.USER_SUSPENDED
-    }
+    assert response.json() == {"code": NotAuthorizedCode.USER_SUSPENDED}

@@ -1,5 +1,11 @@
-from app.error_codes import ConflictCode, NotFoundCode, ValidationErrorCode, NotAuthorizedCode
-from testdata import RESOURCE_OWNER_USERNAME, RESOURCE_OWNER_PLAIN_PASSWORD
+from testdata import RESOURCE_OWNER_PLAIN_PASSWORD, RESOURCE_OWNER_USERNAME
+
+from app.error_codes import (
+    ConflictCode,
+    NotAuthorizedCode,
+    NotFoundCode,
+    ValidationErrorCode,
+)
 
 # テストで使用する変数
 test_year = 2024
@@ -8,172 +14,152 @@ test_salary = 23.0
 
 
 def setup_salary_for_test(client, get_resource_owner_headers):
-    data = {"salary": test_salary,
-            "year": test_year,
-            "month": test_month}
-    client.post(f"/incomes/{test_year}/{test_month}", json=data, headers=get_resource_owner_headers)
+    data = {"salary": test_salary, "year": test_year, "month": test_month}
+    client.post(
+        f"/incomes/{test_year}/{test_month}",
+        json=data,
+        headers=get_resource_owner_headers,
+    )
 
 
 def test_register_income(client, get_resource_owner_headers):
     data = {"salary": test_salary}
-    response = client.post(f"/incomes/{test_year}/{test_month}",
-                           json=data, headers=get_resource_owner_headers)
+    response = client.post(
+        f"/incomes/{test_year}/{test_month}",
+        json=data,
+        headers=get_resource_owner_headers,
+    )
     assert response.status_code == 201
     assert response.json() == {
         "year": test_year,
         "month": test_month,
-        "salary": test_salary
+        "salary": test_salary,
     }
 
 
 def test_register_income_with_string(client, get_resource_owner_headers):
-    data = {"salary": "aaaaa",
-            "year": test_year,
-            "month": test_month}
-    response = client.post(f"/incomes/{test_year}/{test_month}",
-                           json=data, headers=get_resource_owner_headers)
+    data = {"salary": "aaaaa", "year": test_year, "month": test_month}
+    response = client.post(
+        f"/incomes/{test_year}/{test_month}",
+        json=data,
+        headers=get_resource_owner_headers,
+    )
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",
-        "errors": [
-                {
-                    "field": "salary",
-                    "code": "INVALID_NUMBER"
-                }
-        ]
+        "errors": [{"field": "salary", "code": "INVALID_NUMBER"}],
     }
 
 
 def test_register_income_with_invalid_year(client, get_resource_owner_headers):
     data = {"salary": 23.0}
-    response = client.post(f"/incomes/9999/{test_month}",
-                           json=data, headers=get_resource_owner_headers)
+    response = client.post(
+        f"/incomes/9999/{test_month}", json=data, headers=get_resource_owner_headers
+    )
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",
-        "errors": [
-            {
-                "field": "year",
-                "code": "INVALID_YEAR"
-            }
-        ]
+        "errors": [{"field": "year", "code": "INVALID_YEAR"}],
     }
 
 
 def test_register_income_with_invalid_month(client, get_resource_owner_headers):
     data = {"salary": 23.0}
-    response = client.post(f"/incomes/{test_year}/9999", json=data,
-                           headers=get_resource_owner_headers)
+    response = client.post(
+        f"/incomes/{test_year}/9999", json=data, headers=get_resource_owner_headers
+    )
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",
-        "errors": [
-            {
-                "field": "month",
-                "code": "INVALID_MONTH"
-            }
-        ]
+        "errors": [{"field": "month", "code": "INVALID_MONTH"}],
     }
 
 
 def test_register_income_accept_min_yen(client, get_resource_owner_headers):
-    """ 下限の5万円を受け付ける """
-    data = {"salary": 5,
-            "year": test_year,
-            "month": test_month}
-    response = client.post(f"/incomes/{test_year}/{test_month}",
-                           json=data, headers=get_resource_owner_headers)
+    """下限の5万円を受け付ける"""
+    data = {"salary": 5, "year": test_year, "month": test_month}
+    response = client.post(
+        f"/incomes/{test_year}/{test_month}",
+        json=data,
+        headers=get_resource_owner_headers,
+    )
     assert response.status_code == 201
-    assert response.json() == {
-        "year": test_year,
-        "month": test_month,
-        "salary": 5
-    }
+    assert response.json() == {"year": test_year, "month": test_month, "salary": 5}
 
 
 def test_register_income_deny_less_than_min_yen(client, get_resource_owner_headers):
-    """ 下限の5万円未満は受け付けない """
-    data = {"salary": 4.9,
-            "year": test_year,
-            "month": test_month}
-    response = client.post(f"/incomes/{test_year}/{test_month}",
-                           json=data, headers=get_resource_owner_headers)
+    """下限の5万円未満は受け付けない"""
+    data = {"salary": 4.9, "year": test_year, "month": test_month}
+    response = client.post(
+        f"/incomes/{test_year}/{test_month}",
+        json=data,
+        headers=get_resource_owner_headers,
+    )
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",
         "errors": [
-            {
-                "field": "salary",
-                "code": ValidationErrorCode.INVALID_MONTHLY_INCOME
-            }
-        ]
+            {"field": "salary", "code": ValidationErrorCode.INVALID_MONTHLY_INCOME}
+        ],
     }
 
 
 def test_register_income_accept_max_yen(client, get_resource_owner_headers):
-    """ 上限の2000万円を受け付ける """
-    data = {"salary": 2000,
-            "year": test_year,
-            "month": test_month}
-    response = client.post(f"/incomes/{test_year}/{test_month}",
-                           json=data, headers=get_resource_owner_headers)
+    """上限の2000万円を受け付ける"""
+    data = {"salary": 2000, "year": test_year, "month": test_month}
+    response = client.post(
+        f"/incomes/{test_year}/{test_month}",
+        json=data,
+        headers=get_resource_owner_headers,
+    )
     assert response.status_code == 201
-    assert response.json() == {
-        "year": test_year,
-        "month": test_month,
-        "salary": 2000
-    }
+    assert response.json() == {"year": test_year, "month": test_month, "salary": 2000}
 
 
 def test_register_income_deny_more_than_max_yen(client, get_resource_owner_headers):
-    """ 上限の2000万円を超える場合は受け付けない """
-    data = {"salary": 2000.1,
-            "year": test_year,
-            "month": test_month}
-    response = client.post(f"/incomes/{test_year}/{test_month}",
-                           json=data, headers=get_resource_owner_headers)
+    """上限の2000万円を超える場合は受け付けない"""
+    data = {"salary": 2000.1, "year": test_year, "month": test_month}
+    response = client.post(
+        f"/incomes/{test_year}/{test_month}",
+        json=data,
+        headers=get_resource_owner_headers,
+    )
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",
         "errors": [
-            {
-                "field": "salary",
-                "code": ValidationErrorCode.INVALID_MONTHLY_INCOME
-            }
-        ]
+            {"field": "salary", "code": ValidationErrorCode.INVALID_MONTHLY_INCOME}
+        ],
     }
 
 
 def test_register_income_already_registered(client, get_resource_owner_headers):
-    """ すでに登録されている月の月収を登録しようとした場合 """
+    """すでに登録されている月の月収を登録しようとした場合"""
     setup_salary_for_test(client, get_resource_owner_headers)
-    data = {"salary": test_salary,
-            "year": test_year,
-            "month": test_month}
-    response = client.post(f"/incomes/{test_year}/{test_month}",
-                           json=data, headers=get_resource_owner_headers)
+    data = {"salary": test_salary, "year": test_year, "month": test_month}
+    response = client.post(
+        f"/incomes/{test_year}/{test_month}",
+        json=data,
+        headers=get_resource_owner_headers,
+    )
     assert response.status_code == 409
-    assert response.json() == {
-        "code": ConflictCode.SALARY_ALREADY_EXISTS
-    }
+    assert response.json() == {"code": ConflictCode.SALARY_ALREADY_EXISTS}
 
 
 def test_register_income_with_minus_digit(client, get_resource_owner_headers):
-    """ 月収をマイナスの値で登録 """
-    data = {"salary": -23.0,
-            "year": test_year,
-            "month": test_month}
-    response = client.post(f"/incomes/{test_year}/{test_month}",
-                           json=data, headers=get_resource_owner_headers)
+    """月収をマイナスの値で登録"""
+    data = {"salary": -23.0, "year": test_year, "month": test_month}
+    response = client.post(
+        f"/incomes/{test_year}/{test_month}",
+        json=data,
+        headers=get_resource_owner_headers,
+    )
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",
         "errors": [
-            {
-                "field": "salary",
-                "code": ValidationErrorCode.INVALID_MONTHLY_INCOME
-            }
-        ]
+            {"field": "salary", "code": ValidationErrorCode.INVALID_MONTHLY_INCOME}
+        ],
     }
 
 
@@ -181,24 +167,26 @@ def test_get_income(client, get_resource_owner_headers):
     setup_salary_for_test(client, get_resource_owner_headers)
     year = test_year
     month = test_month
-    response = client.get(f"/incomes/{year}/{month}", headers=get_resource_owner_headers)
+    response = client.get(
+        f"/incomes/{year}/{month}", headers=get_resource_owner_headers
+    )
     assert response.status_code == 200
     assert response.json() == {
         "base_income": test_salary,
         "pay_adjustment": 0.0,
         "total_penalty": 0.0,
-        "total_bonus": 0.0
+        "total_bonus": 0.0,
     }
 
 
 def test_get_income_without_register(client, get_resource_owner_headers):
     year = test_year
     month = test_month
-    response = client.get(f"/incomes/{year}/{month}", headers=get_resource_owner_headers)
+    response = client.get(
+        f"/incomes/{year}/{month}", headers=get_resource_owner_headers
+    )
     assert response.status_code == 404
-    assert response.json() == {
-        "code": NotFoundCode.SALARY_NOT_FOUND
-    }
+    assert response.json() == {"code": NotFoundCode.SALARY_NOT_FOUND}
 
 
 def test_get_income_with_invalid_year(client, get_resource_owner_headers):
@@ -208,12 +196,7 @@ def test_get_income_with_invalid_year(client, get_resource_owner_headers):
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",
-        "errors": [
-            {
-                "field": "year",
-                "code": "INVALID_YEAR"
-            }
-        ]
+        "errors": [{"field": "year", "code": "INVALID_YEAR"}],
     }
 
 
@@ -224,83 +207,83 @@ def test_get_income_with_invalid_month(client, get_resource_owner_headers):
     assert response.status_code == 422
     assert response.json() == {
         "code": "VALIDATION_ERROR",
-        "errors": [
-            {
-                "field": "month",
-                "code": "INVALID_MONTH"
-            }
-        ]
+        "errors": [{"field": "month", "code": "INVALID_MONTH"}],
     }
 
 
-def test_get_income_by_another_user(client, get_resource_owner_headers, get_non_resource_owner_headers):
-    """ 他のユーザーが登録した年収はを取得しようとした場合 """
+def test_get_income_by_another_user(
+    client, get_resource_owner_headers, get_non_resource_owner_headers
+):
+    """他のユーザーが登録した年収はを取得しようとした場合"""
     setup_salary_for_test(client, get_resource_owner_headers)
     user2_headers = get_non_resource_owner_headers
     year = test_year
     month = test_month
     response = client.get(f"/incomes/{year}/{month}", headers=user2_headers)
     assert response.status_code == 404
-    assert response.json() == {
-        "code": NotFoundCode.SALARY_NOT_FOUND
-    }
+    assert response.json() == {"code": NotFoundCode.SALARY_NOT_FOUND}
 
 
-def test_get_income_not_contain_another_user(client, get_resource_owner_headers, get_non_resource_owner_headers):
-    """ 自分の登録した月収取得に他のユーザーが登録した月収は含まれないことを確認する """
+def test_get_income_not_contain_another_user(
+    client, get_resource_owner_headers, get_non_resource_owner_headers
+):
+    """自分の登録した月収取得に他のユーザーが登録した月収は含まれないことを確認する"""
     setup_salary_for_test(client, get_non_resource_owner_headers)
     setup_salary_for_test(client, get_resource_owner_headers)
     year = test_year
     month = test_month
-    response = client.get(f"/incomes/{year}/{month}", headers=get_resource_owner_headers)
+    response = client.get(
+        f"/incomes/{year}/{month}", headers=get_resource_owner_headers
+    )
     assert response.status_code == 200
     assert response.json() == {
         "base_income": test_salary,
         "pay_adjustment": 0.0,
         "total_penalty": 0.0,
-        "total_bonus": 0.0
+        "total_bonus": 0.0,
     }
 
 
-def test_suspended_user_cannot_get_income(client, get_resource_owner_headers, get_suspended_user_headers):
+def test_suspended_user_cannot_get_income(
+    client, get_resource_owner_headers, get_suspended_user_headers
+):
     setup_salary_for_test(client, get_resource_owner_headers)
     suspended_user_headers = get_suspended_user_headers
     year = test_year
     month = test_month
     response = client.get(f"/incomes/{year}/{month}", headers=suspended_user_headers)
     assert response.status_code == 403
-    assert response.json() == {
-        "code": NotAuthorizedCode.USER_SUSPENDED
-    }
+    assert response.json() == {"code": NotAuthorizedCode.USER_SUSPENDED}
 
 
 def test_suspended_user_cannot_register_income(client, get_suspended_user_headers):
     data = {"salary": test_salary}
     year = test_year
     month = test_month
-    response = client.post(f"/incomes/{year}/{month}",
-                           json=data, headers=get_suspended_user_headers)
+    response = client.post(
+        f"/incomes/{year}/{month}", json=data, headers=get_suspended_user_headers
+    )
     assert response.status_code == 403
-    assert response.json() == {
-        "code": NotAuthorizedCode.USER_SUSPENDED
-    }
+    assert response.json() == {"code": NotAuthorizedCode.USER_SUSPENDED}
 
 
-def test_must_change_password_user_denied(client, create_resource_owner, get_admin_headers):
+def test_must_change_password_user_denied(
+    client, create_resource_owner, get_admin_headers
+):
     response = client.patch(
-        f"/admin/users/{RESOURCE_OWNER_USERNAME}/password", headers=get_admin_headers)
+        f"/admin/users/{RESOURCE_OWNER_USERNAME}/password", headers=get_admin_headers
+    )
     assert response.status_code == 200
     assert response.json()["password"] != RESOURCE_OWNER_PLAIN_PASSWORD
     new_password = response.json()["password"]
-    user_info = {"username": RESOURCE_OWNER_USERNAME,
-                 "password": new_password}
+    user_info = {"username": RESOURCE_OWNER_USERNAME, "password": new_password}
     response = client.post("/login", json=user_info)
     assert response.status_code == 200
     access_token = response.json()["access_token"]
     token_type = response.json()["token_type"]
-    response = client.get(f"/incomes/{test_year}/{test_month}",
-                          headers={"Authorization": f"{token_type} {access_token}"})
+    response = client.get(
+        f"/incomes/{test_year}/{test_month}",
+        headers={"Authorization": f"{token_type} {access_token}"},
+    )
     assert response.status_code == 403
-    assert response.json() == {
-        "code": NotAuthorizedCode.PASSWORD_CHANGE_REQUIRED
-    }
+    assert response.json() == {"code": NotAuthorizedCode.PASSWORD_CHANGE_REQUIRED}

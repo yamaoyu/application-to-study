@@ -1,4 +1,5 @@
 from datetime import date
+
 from app.services.inquiry import inquiry_service
 
 CATEGORY = "要望"
@@ -9,7 +10,8 @@ EXPECTED_DATE = FIXED_TODAY.isoformat()
 
 
 class FixedDate(date):
-    """ 期待値を固定するために日付を固定するクラス """
+    """期待値を固定するために日付を固定するクラス"""
+
     @classmethod
     def today(cls):
         return FIXED_TODAY

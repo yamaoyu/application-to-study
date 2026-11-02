@@ -1,5 +1,6 @@
-from pydantic import BaseModel, field_validator, model_validator
 from datetime import datetime
+
+from pydantic import BaseModel, field_validator, model_validator
 
 
 class CheckYear(BaseModel):
@@ -30,5 +31,5 @@ class CheckDate(CheckYearMonth):
         try:
             datetime(year=self.year, month=self.month, day=self.day)
             return self
-        except Exception:
-            raise ValueError("日付が不正です")
+        except Exception as e:
+            raise ValueError("日付が不正です") from e

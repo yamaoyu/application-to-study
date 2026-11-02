@@ -1,13 +1,14 @@
 from datetime import date
-from app.models.activity_model import FinishActivityResponse
+
 from app.domain.activity.activity import Activity, ActivityStatus, Adjustment
+from app.domain.activity.exceptions import ActivityAlreadyFinished
 from app.domain.income.monthly_income import MonthlySalary
-from app.error_codes import NotFoundCode, ConflictCode, BadRequestCode
+from app.error_codes import BadRequestCode, ConflictCode, NotFoundCode
+from app.models.activity_model import FinishActivityResponse
 from app.repositories.activity_repository import ActivityRepository
 from app.repositories.money_repository import MoneyRepository
-from app.domain.activity.exceptions import ActivityAlreadyFinished
-from lib.log_conf import logger
 from app.services.activity.utils import format_date, parse_activity_date
+from lib.log_conf import logger
 
 
 class FinishActivitiesUseCase:
@@ -43,46 +44,50 @@ class FinishActivitiesUseCase:
             pay_adjustment=pay_adjustment,
             total_bonus=round_bonus,
             total_penalty=round_penalty,
-            results=results
+            results=results,
         )
 
     def _finish_one_activity(self, parsed_date: date, username: str) -> dict:
         income = self._fetch_monthly_salary(parsed_date, username)
         if not income:
-            return self._build_error_result(
-                parsed_date, NotFoundCode.SALARY_NOT_FOUND
-            )
+            return self._build_error_result(parsed_date, NotFoundCode.SALARY_NOT_FOUND)
         monthly_income = MonthlySalary(income.salary)
 
         activity_row = self.time_repo.get_activity_by_date_and_username(
-            parsed_date, username)
+            parsed_date, username
+        )
         if not activity_row:
             return self._build_error_result(
-                parsed_date, NotFoundCode.ACTIVITY_NOT_FOUND)
+                parsed_date, NotFoundCode.ACTIVITY_NOT_FOUND
+            )
 
         try:
             activity = Activity(
                 target_time=activity_row.target_time,
                 actual_time=activity_row.actual_time,
                 status=ActivityStatus(activity_row.status),
-                adjustment=Adjustment(0, 0)
+                adjustment=Adjustment(0, 0),
             )
             activity.finish(monthly_income)
             with self.time_repo.begin_nested():
                 self.time_repo.update_activity_status_and_bonus(
-                    activity_row, activity.status.value, activity.adjustment.bonus, activity.adjustment.penalty)
+                    activity_row,
+                    activity.status.value,
+                    activity.adjustment.bonus,
+                    activity.adjustment.penalty,
+                )
                 self.time_repo.flush()
             return self._build_success_result(parsed_date, activity)
         except ActivityAlreadyFinished:
             return self._build_error_result(
-                parsed_date,
-                ConflictCode.ACTIVITY_ALREADY_FINISHED
+                parsed_date, ConflictCode.ACTIVITY_ALREADY_FINISHED
             )
         except Exception as e:
-            logger.error(f"Error finishing activity for {parsed_date}: {str(e)}", exc_info=True)
+            logger.error(
+                f"Error finishing activity for {parsed_date}: {e!s}", exc_info=True
+            )
             return self._build_error_result(
-                parsed_date,
-                BadRequestCode.UNEXPECTED_ERROR
+                parsed_date, BadRequestCode.UNEXPECTED_ERROR
             )
 
     def _build_error_result(self, parsed_date: date, reason: str) -> dict:

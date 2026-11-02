@@ -1,7 +1,9 @@
+import os
 import secrets
 import string
-import os
+
 import bcrypt
+
 from lib.log_conf import logger
 
 PEPPER = os.getenv("PEPPER")
@@ -13,7 +15,7 @@ def verify_password(plain_password, hashed_password) -> bool:
     try:
         return bcrypt.checkpw(pw, hashed_password.encode("utf-8"))
     except (ValueError, TypeError) as e:
-        logger.error(f"パスワードの検証に失敗しました{str(e)}")
+        logger.error(f"パスワードの検証に失敗しました{e!s}")
         return False
 
 

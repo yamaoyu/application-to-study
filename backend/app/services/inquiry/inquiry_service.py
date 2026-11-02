@@ -1,19 +1,19 @@
-from lib.log_conf import logger
 from datetime import date
-from sqlalchemy.orm import Session
-from app.repositories.inquiry_repository import InquiryRepository
-from app.exceptions import NotFound, DomainValidationError
-from typing import Optional
-from app.models.inquiry_model import Category, Priority, GetInquiryResponse, InquiryItem
-from db import db_model
-from app.error_codes import NotFoundCode, ValidationErrorCode
-from app.domain.inquiry.exceptions import InValidInquiry, InquiryValidationReason
-from app.domain.inquiry.inquiry import InquiryDetail
 
+from sqlalchemy.orm import Session
+
+from app.domain.inquiry.exceptions import InquiryValidationReason, InValidInquiry
+from app.domain.inquiry.inquiry import InquiryDetail
+from app.error_codes import NotFoundCode, ValidationErrorCode
+from app.exceptions import DomainValidationError, NotFound
+from app.models.inquiry_model import Category, GetInquiryResponse, InquiryItem, Priority
+from app.repositories.inquiry_repository import InquiryRepository
+from db import db_model
+from lib.log_conf import logger
 
 INQUIRY_VALIDATION_REASON_TO_ERROR_CODE = {
     InquiryValidationReason.INQUIRY_DETAIL_TOO_LONG: ValidationErrorCode.INQUIRY_DETAIL_TOO_LONG,
-    InquiryValidationReason.INQUIRY_DETAIL_REQUIRED: ValidationErrorCode.INQUIRY_DETAIL_REQUIRED
+    InquiryValidationReason.INQUIRY_DETAIL_REQUIRED: ValidationErrorCode.INQUIRY_DETAIL_REQUIRED,
 }
 
 
@@ -21,7 +21,7 @@ def to_inquiry_bad_request_code(reason: InquiryValidationReason) -> ValidationEr
     return INQUIRY_VALIDATION_REASON_TO_ERROR_CODE[reason]
 
 
-class InquiryService():
+class InquiryService:
     def __init__(self, db: Session) -> None:
         self.repo = InquiryRepository(db)
 
@@ -31,7 +31,10 @@ class InquiryService():
             inquiry_detail = InquiryDetail(value=detail)
         except InValidInquiry as e:
             raise DomainValidationError(
-                code=to_inquiry_bad_request_code(e.reason), field=e.field, detail=e.detail)
+                code=to_inquiry_bad_request_code(e.reason),
+                field=e.field,
+                detail=e.detail,
+            ) from e
 
         today = date.today()
         inquiry = self.repo.get_inquiry_by_content(category, inquiry_detail.value)
@@ -42,17 +45,16 @@ class InquiryService():
         else:
             self.repo.insert_inquiry(category, inquiry_detail.value, today)
         logger.info("問い合わせを受付")
-        return {
-            "category": category,
-            "detail": inquiry_detail.value
-        }
+        return {"category": category, "detail": inquiry_detail.value}
 
-    def get_inquiries(self,
-                      year: Optional[int],
-                      month: Optional[int],
-                      category: Optional[Category],
-                      priority: Optional[Priority],
-                      is_checked: Optional[bool]) -> GetInquiryResponse:
+    def get_inquiries(
+        self,
+        year: int | None = None,
+        month: int | None = None,
+        category: Category | None = None,
+        priority: Priority | None = None,
+        is_checked: bool | None = None,
+    ) -> GetInquiryResponse:
         inquiries = self.repo.get_inquiries(year, month, category, priority, is_checked)
         if not inquiries:
             message = ""
@@ -68,10 +70,14 @@ class InquiryService():
                 message = message[:-1] + "の"
             return GetInquiryResponse(inquiries=[])
         # SQLAlchemyモデルから整形してpydanticで列名を確認できるようにする
-        converted_inquiries = [InquiryItem.model_validate(inquiry) for inquiry in inquiries]
+        converted_inquiries = [
+            InquiryItem.model_validate(inquiry) for inquiry in inquiries
+        ]
         return GetInquiryResponse(inquiries=converted_inquiries)
 
-    def edit_inquiry(self, id: int, priority: Optional[Priority], is_checked: Optional[bool]) -> db_model.Inquiry:
+    def edit_inquiry(
+        self, id: int, priority: Priority | None = None, is_checked: bool | None = None
+    ) -> db_model.Inquiry:
         inquiry = self.repo.get_inquiry_by_id(id)
         if not inquiry:
             raise NotFound(code=NotFoundCode.INQUIRY_NOT_FOUND)

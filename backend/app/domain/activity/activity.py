@@ -1,12 +1,13 @@
 import re
-from enum import Enum
 from dataclasses import dataclass
+from enum import StrEnum
+
 from app.domain.activity.adjustment import Adjustment
-from app.domain.income.monthly_income import MonthlySalary
 from app.domain.activity.exceptions import ActivityAlreadyFinished, InvalidActivity
+from app.domain.income.monthly_income import MonthlySalary
 
 
-class ActivityStatus(str, Enum):
+class ActivityStatus(StrEnum):
     PENDING = "pending"
     SUCCESS = "success"
     FAILURE = "failure"
@@ -22,7 +23,13 @@ class Activity:
     status: ActivityStatus
     adjustment: Adjustment
 
-    def __init__(self, target_time: float, actual_time: float, status: ActivityStatus, adjustment: Adjustment) -> None:
+    def __init__(
+        self,
+        target_time: float,
+        actual_time: float,
+        status: ActivityStatus,
+        adjustment: Adjustment,
+    ) -> None:
         if not (0.5 <= target_time <= 12):
             raise InvalidActivity("目標時間は0.5~12.0の範囲で入力してください")
 
@@ -51,9 +58,8 @@ class Activity:
 
         self.status = self._judge_status()
         self.adjustment = Adjustment.calculate(
-            salary=salary,
-            target_time=self.target_time,
-            actual_time=self.actual_time)
+            salary=salary, target_time=self.target_time, actual_time=self.actual_time
+        )
 
     def effective_adjustment(self, salary: MonthlySalary) -> Adjustment:
         if self.status == ActivityStatus.PENDING:

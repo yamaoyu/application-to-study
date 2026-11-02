@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 from app.domain.income.monthly_income import MonthlySalary
 
 
@@ -8,11 +9,7 @@ class Adjustment:
     penalty: float
 
     @classmethod
-    def calculate(
-            cls,
-            salary: MonthlySalary,
-            target_time: float,
-            actual_time: float):
+    def calculate(cls, salary: MonthlySalary, target_time: float, actual_time: float):
         if actual_time >= target_time:
             return cls(
                 bonus=salary.amount_for(actual_time),
