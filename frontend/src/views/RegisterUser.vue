@@ -1,26 +1,50 @@
 <template>
   <nav class="navbar navbar-expand-lg bd-navbar fixed-top bg-dark navbar-dark">
     <div class="container-fluid">
-      <ul class="navbar-nav ms-auto me-2" style="color: white;">
+      <ul class="navbar-nav ms-auto me-2" style="color: white">
         <li class="nav-item">
-          <router-link class="nav-link fs-5 py-1" to="/login">LOGIN</router-link>
+          <router-link class="nav-link fs-5 py-1" to="/login"
+            >LOGIN</router-link
+          >
         </li>
       </ul>
     </div>
   </nav>
   <h2>ユーザー登録</h2>
-  <BForm class="container d-flex flex-column align-items-center" @submit.prevent="submit">
+  <BForm
+    class="container d-flex flex-column align-items-center"
+    @submit.prevent="submit"
+  >
     <div class="form-group mt-3 col-8">
-      <BFormInput v-model="username" placeholder="ユーザー名(必須)" :state="usernameValidateResult.valid" data-testid="username" required/>
+      <BFormInput
+        v-model="username"
+        placeholder="ユーザー名(必須)"
+        :state="usernameValidateResult.valid"
+        data-testid="username"
+        required
+      />
       <BFormInvalidFeedback :state="usernameValidateResult.valid">
         {{ usernameValidateResult.message }}
       </BFormInvalidFeedback>
-      <BFormValidFeedback :state="usernameValidateResult.valid"> OK </BFormValidFeedback>
+      <BFormValidFeedback :state="usernameValidateResult.valid">
+        OK
+      </BFormValidFeedback>
     </div>
     <div class="form-group mt-3 col-8">
       <div class="input-group">
-        <BFormInput v-model="password" :type="!showPassword ? 'password':'text'" placeholder="パスワード(必須)" :state="passwordValidateResult.valid" data-testid="password" required/>
-        <button class="btn btn-outline-secondary" type="button" @click="showPassword = !showPassword">
+        <BFormInput
+          v-model="password"
+          :type="!showPassword ? 'password' : 'text'"
+          placeholder="パスワード(必須)"
+          :state="passwordValidateResult.valid"
+          data-testid="password"
+          required
+        />
+        <button
+          class="btn btn-outline-secondary"
+          type="button"
+          @click="showPassword = !showPassword"
+        >
           <i :class="['bi', showPassword ? 'bi-eye-slash' : 'bi-eye']"></i>
         </button>
       </div>
@@ -28,18 +52,26 @@
         <BFormInvalidFeedback :state="passwordValidateResult.valid">
           {{ passwordValidateResult.message }}
         </BFormInvalidFeedback>
-        <BFormValidFeedback :state="passwordValidateResult.valid"> OK </BFormValidFeedback>
+        <BFormValidFeedback :state="passwordValidateResult.valid">
+          OK
+        </BFormValidFeedback>
       </div>
     </div>
     <div class="form-group mt-3 col-8">
       <div class="input-group">
-        <BFormInput 
-          v-model="passwordCheck" 
-          :type="!showPasswordCheck ? 'password':'text'" 
-          placeholder="パスワード確認(必須)" 
-          :state="passwordEqualResult.valid" 
-          data-testid="passwordCheck" required/>
-        <button class="btn btn-outline-secondary" type="button" @click="showPasswordCheck = !showPasswordCheck">
+        <BFormInput
+          v-model="passwordCheck"
+          :type="!showPasswordCheck ? 'password' : 'text'"
+          placeholder="パスワード確認(必須)"
+          :state="passwordEqualResult.valid"
+          data-testid="passwordCheck"
+          required
+        />
+        <button
+          class="btn btn-outline-secondary"
+          type="button"
+          @click="showPasswordCheck = !showPasswordCheck"
+        >
           <i :class="['bi', showPasswordCheck ? 'bi-eye-slash' : 'bi-eye']"></i>
         </button>
       </div>
@@ -47,80 +79,109 @@
         <BFormInvalidFeedback :state="passwordEqualResult.valid">
           {{ passwordEqualResult.message }}
         </BFormInvalidFeedback>
-        <BFormValidFeedback :state="passwordEqualResult.valid"> OK </BFormValidFeedback>
+        <BFormValidFeedback :state="passwordEqualResult.valid">
+          OK
+        </BFormValidFeedback>
       </div>
     </div>
     <div v-if="showMailForm" class="form-group mt-3 col-8">
-      <BFormInput v-model="email" placeholder="メールアドレス(任意)" type="email" :state="emailValidateResult.valid" data-testid="email"/>
+      <BFormInput
+        v-model="email"
+        placeholder="メールアドレス(任意)"
+        type="email"
+        :state="emailValidateResult.valid"
+        data-testid="email"
+      />
       <BFormInvalidFeedback :state="emailValidateResult.valid">
         {{ emailValidateResult.message }}
       </BFormInvalidFeedback>
-      <BFormValidFeedback :state="emailValidateResult.valid"> OK </BFormValidFeedback>
+      <BFormValidFeedback :state="emailValidateResult.valid">
+        OK
+      </BFormValidFeedback>
     </div>
-    <button type="submit" class="btn btn-outline-secondary mt-3" data-testid="register-user-button">登録</button>
+    <button
+      type="submit"
+      class="btn btn-outline-secondary mt-3"
+      data-testid="register-user-button"
+    >
+      登録
+    </button>
   </BForm>
   <div class="container d-flex flex-column align-items-center">
-    <p v-if="message" :class="getResponseAlert(statusCode)" class="mt-3 col-8" data-testid="message">{{ message }}</p>
+    <p
+      v-if="message"
+      :class="getResponseAlert(statusCode)"
+      class="mt-3 col-8"
+      data-testid="message"
+    >
+      {{ message }}
+    </p>
   </div>
   <div class="mt-3">
     <router-link to="/login">ログインはこちら</router-link>
   </div>
 </template>
-  
-  <script lang="ts">
-  import { ref } from 'vue'
-  import { getResponseAlert } from './utils/ui';
-  import { BForm, BFormInput, BFormInvalidFeedback, BFormValidFeedback } from 'bootstrap-vue-next';
-  import { useRegisterUser } from './composables/userRegisterUser';
-  import { 
-    useUsernameValidation, 
-    usePasswordValidation,
-    useEmailValidation
-  } from './composables/useUserInfo';
 
-  export default {
-    components: {
-      BForm,
-      BFormInput,
-      BFormInvalidFeedback,
-      BFormValidFeedback
-    },
+<script lang="ts">
+import { ref } from "vue";
+import { getResponseAlert } from "./utils/ui";
+import {
+  BForm,
+  BFormInput,
+  BFormInvalidFeedback,
+  BFormValidFeedback,
+} from "bootstrap-vue-next";
+import { useRegisterUser } from "./composables/userRegisterUser";
+import {
+  useUsernameValidation,
+  usePasswordValidation,
+  useEmailValidation,
+} from "./composables/useUserInfo";
 
-    setup() {
-      const showPassword = ref(false);
-      const showPasswordCheck = ref(false);
-      const showMailForm = import.meta.env.VITE_MAIL_FORM === 'true';
-      const {
-        username,
-        password,
-        passwordCheck,
-        email,
-        message,
-        statusCode,
-        submit
-      } = useRegisterUser();
-      
-      const { usernameValidateResult } = useUsernameValidation(username);
-      const { passwordValidateResult, passwordEqualResult } = usePasswordValidation(password, passwordCheck);
-      const { emailValidateResult } = useEmailValidation(email);
-  
-      return {
-        username,
-        password,
-        passwordCheck,
-        email,
-        message,
-        statusCode,
-        getResponseAlert,
-        usernameValidateResult,
-        passwordValidateResult,
-        passwordEqualResult,
-        emailValidateResult,
-        showPassword,
-        showPasswordCheck,
-        showMailForm,
-        submit
-      }
-    }
-  }
-  </script>
+export default {
+  components: {
+    BForm,
+    BFormInput,
+    BFormInvalidFeedback,
+    BFormValidFeedback,
+  },
+
+  setup() {
+    const showPassword = ref(false);
+    const showPasswordCheck = ref(false);
+    const showMailForm = import.meta.env.VITE_MAIL_FORM === "true";
+    const {
+      username,
+      password,
+      passwordCheck,
+      email,
+      message,
+      statusCode,
+      submit,
+    } = useRegisterUser();
+
+    const { usernameValidateResult } = useUsernameValidation(username);
+    const { passwordValidateResult, passwordEqualResult } =
+      usePasswordValidation(password, passwordCheck);
+    const { emailValidateResult } = useEmailValidation(email);
+
+    return {
+      username,
+      password,
+      passwordCheck,
+      email,
+      message,
+      statusCode,
+      getResponseAlert,
+      usernameValidateResult,
+      passwordValidateResult,
+      passwordEqualResult,
+      emailValidateResult,
+      showPassword,
+      showPasswordCheck,
+      showMailForm,
+      submit,
+    };
+  },
+};
+</script>

@@ -1,17 +1,18 @@
 import { type Ref } from "vue";
-import { OneActivity } from '../types/activity';
+import { OneActivity } from "../types/activity";
 
 export const useSelection = (selectedActivities: Ref<OneActivity[]>) => {
-
   const isSelected = (activity: OneActivity) => {
     return selectedActivities.value.some(
-      (selectedActivity) => selectedActivity.activity_id === activity.activity_id
+      (selectedActivity) =>
+        selectedActivity.activity_id === activity.activity_id,
     );
   };
 
   const toggle = (activity: OneActivity) => {
     const index = selectedActivities.value.findIndex(
-      (selectedActivity) => selectedActivity.activity_id === activity.activity_id
+      (selectedActivity) =>
+        selectedActivity.activity_id === activity.activity_id,
     );
 
     if (index > -1) {
@@ -29,7 +30,9 @@ export const useSelection = (selectedActivities: Ref<OneActivity[]>) => {
     if (selectedActivities.value.length === activities.length) {
       selectedActivities.value = [];
     } else {
-      selectedActivities.value = activities.map(activity => ({ ...activity }));
+      selectedActivities.value = activities.map((activity) => ({
+        ...activity,
+      }));
     }
   };
 
@@ -37,6 +40,6 @@ export const useSelection = (selectedActivities: Ref<OneActivity[]>) => {
     isSelected,
     toggle,
     clear,
-    toggleAll
-  }
+    toggleAll,
+  };
 };

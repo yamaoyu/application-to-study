@@ -13,10 +13,18 @@ export const useTodoModal = () => {
     todo.value = content;
 
     switch (action) {
-      case 'create': modalTitle.value = "Todo作成"; break
-      case 'delete': modalTitle.value = "Todo削除確認"; break
-      case 'show': modalTitle.value = "Todo閲覧"; break
-      case 'edit': modalTitle.value = "Todo編集"; break
+      case "create":
+        modalTitle.value = "Todo作成";
+        break;
+      case "delete":
+        modalTitle.value = "Todo削除確認";
+        break;
+      case "show":
+        modalTitle.value = "Todo閲覧";
+        break;
+      case "edit":
+        modalTitle.value = "Todo編集";
+        break;
     }
   };
 
@@ -26,7 +34,7 @@ export const useTodoModal = () => {
       todos.push(todo.value);
     } else if (todoAction.value === "delete") {
       todos.splice(todos.indexOf(todo.value), 1);
-    };
+    }
     todo.value = { title: "", detail: "", due: "" };
   };
 
@@ -36,6 +44,6 @@ export const useTodoModal = () => {
     todoAction,
     todo,
     openModal,
-    closeModal
-  }
+    closeModal,
+  };
 };

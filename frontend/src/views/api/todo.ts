@@ -7,49 +7,37 @@ import {
   GetTodoResponse,
   GetTodosParam,
   DeleteTodoParam,
-  FinishTodoParam
+  FinishTodoParam,
 } from "../types/todo";
 import type { AxiosResponse } from "axios";
 
-export const postTodos =
-  (todos: UpsertTodoParam[]
-  ): Promise<AxiosResponse<UpsertTodoResponse>> => {
-    return apiClient.post(
-      "todos/bulk-create",
-      { todos }
-    )
-  };
-
-export const getTodos = (
-  params: GetTodosParam
-): Promise<AxiosResponse<GetTodoResponse>> => {
-  return apiClient.get("todos", { params }
-  );
+export const postTodos = (
+  todos: UpsertTodoParam[],
+): Promise<AxiosResponse<UpsertTodoResponse>> => {
+  return apiClient.post("todos/bulk-create", { todos });
 };
 
-export const editTodo =
-  (id: number, params: UpsertTodoParam
-  ): Promise<AxiosResponse<UpsertTodoResponse>> => {
-    return apiClient.patch(
-      `todos/update/${id}`,
-      params
-    )
-  };
+export const getTodos = (
+  params: GetTodosParam,
+): Promise<AxiosResponse<GetTodoResponse>> => {
+  return apiClient.get("todos", { params });
+};
+
+export const editTodo = (
+  id: number,
+  params: UpsertTodoParam,
+): Promise<AxiosResponse<UpsertTodoResponse>> => {
+  return apiClient.patch(`todos/update/${id}`, params);
+};
 
 export const finishTodos = (
-  ids: FinishTodoParam
+  ids: FinishTodoParam,
 ): Promise<AxiosResponse<DeleteTodoResponse>> => {
-  return apiClient.patch(
-    `todos/bulk-finish`,
-    ids
-  )
+  return apiClient.patch(`todos/bulk-finish`, ids);
 };
 
 export const deleteTodos = (
-  ids: DeleteTodoParam
+  ids: DeleteTodoParam,
 ): Promise<AxiosResponse<FinishTodoResponse>> => {
-  return apiClient.post(
-    `todos/bulk-delete`,
-    ids
-  );
+  return apiClient.post(`todos/bulk-delete`, ids);
 };

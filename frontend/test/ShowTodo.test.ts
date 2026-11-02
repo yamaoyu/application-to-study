@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import ShowTodo from '@/views/ShowTodo.vue';
-import { mountComponent } from './vitest.setup';
-import { apiClient } from '@/views/api/client';
-import { flushPromises, VueWrapper, DOMWrapper } from '@vue/test-utils';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import ShowTodo from "@/views/ShowTodo.vue";
+import { mountComponent } from "./vitest.setup";
+import { apiClient } from "@/views/api/client";
+import { flushPromises, VueWrapper, DOMWrapper } from "@vue/test-utils";
 
 const mockedGet = vi.mocked(apiClient.get);
 
@@ -14,7 +14,7 @@ const defaultTodosData = {
       status: true,
       title: "test title1",
       todo_id: 1,
-      username: "test"
+      username: "test",
     },
     {
       detail: "test detail2",
@@ -22,46 +22,48 @@ const defaultTodosData = {
       status: false,
       title: "test title2",
       todo_id: 2,
-      username: "test"
+      username: "test",
     },
-  ]
-}
+  ],
+};
 
 type TodoData = typeof defaultTodosData;
 
 type TodosMock =
-  | { type: 'resolve'; value: { status: number; data: TodoData } }
+  | { type: "resolve"; value: { status: number; data: TodoData } }
   | {
-    type: 'reject';
+      type: "reject";
+      value: {
+        response: {
+          status: number;
+          data: {
+            code: string;
+          };
+        };
+      };
+    };
+
+const createResolvedMock = (data: TodoData, status = 200) =>
+  ({
+    type: "resolve",
+    value: {
+      status,
+      data,
+    },
+  }) as const;
+
+const createRejectedMock = (code: string, status = 404) =>
+  ({
+    type: "reject",
     value: {
       response: {
-        status: number;
+        status,
         data: {
-          code: string;
-        };
-      }
-    }
-  };
-
-const createResolvedMock = (data: TodoData, status = 200) => ({
-  type: "resolve",
-  value: {
-    status,
-    data
-  }
-} as const);
-
-const createRejectedMock = (code: string, status = 404) => ({
-  type: "reject",
-  value: {
-    response: {
-      status,
-      data: {
-        code
-      }
-    }
-  }
-} as const);
+          code,
+        },
+      },
+    },
+  }) as const;
 
 const mountShowTodo = async ({
   todosMock = createResolvedMock(defaultTodosData),
@@ -77,28 +79,23 @@ const mountShowTodo = async ({
   return wrapper;
 };
 
-
-describe('フィルターなし', () => {
+describe("フィルターなし", () => {
   let wrapper: VueWrapper;
 
   beforeEach(() => {
-    vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-  }
-  );
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+  });
 
   it("データあり", async () => {
     wrapper = await mountShowTodo();
-    expect(mockedGet).toBeCalledWith(
-      "todos",
-      {
-        "params": {
-          "end_due": undefined,
-          "start_due": undefined,
-          "status": undefined,
-          "title": undefined
-        }
-      }
-    );
+    expect(mockedGet).toBeCalledWith("todos", {
+      params: {
+        end_due: undefined,
+        start_due: undefined,
+        status: undefined,
+        title: undefined,
+      },
+    });
     const rows = wrapper.findAll('[data-testid="todo-row"]');
     expect(rows).toHaveLength(defaultTodosData.todos.length);
   });
@@ -106,35 +103,35 @@ describe('フィルターなし', () => {
   it("データなし", async () => {
     const expectedMessage = "登録されたTODOはありません";
     wrapper = await mountShowTodo({
-      todosMock: createRejectedMock("TODO_NOT_FOUND")
+      todosMock: createRejectedMock("TODO_NOT_FOUND"),
     });
-    expect(mockedGet).toBeCalledWith(
-      "todos",
-      {
-        "params": {
-          "end_due": undefined,
-          "start_due": undefined,
-          "status": undefined,
-          "title": undefined
-        }
-      }
-    )
-    expect(wrapper.find('[data-testid="message"]').text()).toBe(expectedMessage);
+    expect(mockedGet).toBeCalledWith("todos", {
+      params: {
+        end_due: undefined,
+        start_due: undefined,
+        status: undefined,
+        title: undefined,
+      },
+    });
+    expect(wrapper.find('[data-testid="message"]').text()).toBe(
+      expectedMessage,
+    );
   });
 });
 
-describe('フィルターの操作', () => {
+describe("フィルターの操作", () => {
   let wrapper: VueWrapper;
 
   beforeEach(() => {
-    vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
     wrapper = mountComponent(ShowTodo);
-  }
-  );
+  });
 
   it("ステータスを選択", async () => {
     // すべてに変更
-    const statusSelect = wrapper.find('[data-testid="status-filter"]') as DOMWrapper<HTMLSelectElement>;
+    const statusSelect = wrapper.find(
+      '[data-testid="status-filter"]',
+    ) as DOMWrapper<HTMLSelectElement>;
     await statusSelect.setValue("");
     expect(statusSelect.element.value).toEqual("");
     // 未完了に変更
@@ -146,28 +143,42 @@ describe('フィルターの操作', () => {
   });
 
   it("期限(以前)を入力", async () => {
-    const startDueInput = wrapper.find('[data-testid="start-due"]') as DOMWrapper<HTMLInputElement>;
+    const startDueInput = wrapper.find(
+      '[data-testid="start-due"]',
+    ) as DOMWrapper<HTMLInputElement>;
     await startDueInput.setValue("2025-01-01");
     expect(startDueInput.element.value).toEqual("2025-01-01");
   });
 
   it("期限(以降)を入力", async () => {
-    const endDueInput = wrapper.find('[data-testid="end-due"]') as DOMWrapper<HTMLInputElement>;
+    const endDueInput = wrapper.find(
+      '[data-testid="end-due"]',
+    ) as DOMWrapper<HTMLInputElement>;
     await endDueInput.setValue("2025-01-01");
     expect(endDueInput.element.value).toEqual("2025-01-01");
   });
 
   it("タイトルを入力", async () => {
-    const titleInput = wrapper.find('[data-testid="title"]') as DOMWrapper<HTMLInputElement>;
+    const titleInput = wrapper.find(
+      '[data-testid="title"]',
+    ) as DOMWrapper<HTMLInputElement>;
     await titleInput.setValue("title");
     expect(titleInput.element.value).toEqual("title");
   });
 
   it("フィルターをリセット", async () => {
-    const statusSelect = wrapper.find('[data-testid="status-filter"]') as DOMWrapper<HTMLSelectElement>;
-    const startDueInput = wrapper.find('[data-testid="start-due"]') as DOMWrapper<HTMLInputElement>;
-    const endDueInput = wrapper.find('[data-testid="end-due"]') as DOMWrapper<HTMLInputElement>;
-    const titleInput = wrapper.find('[data-testid="title"]') as DOMWrapper<HTMLInputElement>;
+    const statusSelect = wrapper.find(
+      '[data-testid="status-filter"]',
+    ) as DOMWrapper<HTMLSelectElement>;
+    const startDueInput = wrapper.find(
+      '[data-testid="start-due"]',
+    ) as DOMWrapper<HTMLInputElement>;
+    const endDueInput = wrapper.find(
+      '[data-testid="end-due"]',
+    ) as DOMWrapper<HTMLInputElement>;
+    const titleInput = wrapper.find(
+      '[data-testid="title"]',
+    ) as DOMWrapper<HTMLInputElement>;
 
     // フィルターを変更
     await statusSelect.setValue("false");
@@ -183,13 +194,12 @@ describe('フィルターの操作', () => {
   });
 });
 
-describe('ステータスでフィルター', () => {
+describe("ステータスでフィルター", () => {
   let wrapper: VueWrapper;
 
   beforeEach(() => {
-    vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-  }
-  );
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+  });
 
   it("完了", async () => {
     wrapper = await mountShowTodo();
@@ -201,22 +211,21 @@ describe('ステータスでフィルター', () => {
     // フィルター適用
     mockedGet.mockResolvedValue({
       status: 200,
-      data: { "todos": [defaultTodosData.todos[0]] }
+      data: { todos: [defaultTodosData.todos[0]] },
     });
-    const statusSelect = wrapper.find('[data-testid="status-filter"]') as DOMWrapper<HTMLSelectElement>;
+    const statusSelect = wrapper.find(
+      '[data-testid="status-filter"]',
+    ) as DOMWrapper<HTMLSelectElement>;
     await statusSelect.setValue("true");
     await wrapper.find("[data-testid='apply']").trigger("click");
-    expect(mockedGet).toBeCalledWith(
-      "todos",
-      {
-        "params": {
-          "end_due": undefined,
-          "start_due": undefined,
-          "status": "true",
-          "title": undefined
-        }
-      }
-    );
+    expect(mockedGet).toBeCalledWith("todos", {
+      params: {
+        end_due: undefined,
+        start_due: undefined,
+        status: "true",
+        title: undefined,
+      },
+    });
     const newRows = wrapper.findAll('[data-testid="todo-row"]');
     expect(newRows).toHaveLength(1);
   });
@@ -231,34 +240,32 @@ describe('ステータスでフィルター', () => {
     // フィルター適用
     mockedGet.mockResolvedValue({
       status: 200,
-      data: { "todos": [defaultTodosData.todos[1]] }
+      data: { todos: [defaultTodosData.todos[1]] },
     });
-    const statusSelect = wrapper.find('[data-testid="status-filter"]') as DOMWrapper<HTMLSelectElement>;
+    const statusSelect = wrapper.find(
+      '[data-testid="status-filter"]',
+    ) as DOMWrapper<HTMLSelectElement>;
     await statusSelect.setValue("false");
     await wrapper.find("[data-testid='apply']").trigger("click");
-    expect(mockedGet).toBeCalledWith(
-      "todos",
-      {
-        "params": {
-          "end_due": undefined,
-          "start_due": undefined,
-          "status": "false",
-          "title": undefined
-        }
-      }
-    );
+    expect(mockedGet).toBeCalledWith("todos", {
+      params: {
+        end_due: undefined,
+        start_due: undefined,
+        status: "false",
+        title: undefined,
+      },
+    });
     const newRows = wrapper.findAll('[data-testid="todo-row"]');
     expect(newRows).toHaveLength(1);
   });
 });
 
-describe('期限(以前)でフィルター', () => {
+describe("期限(以前)でフィルター", () => {
   let wrapper: VueWrapper;
 
   beforeEach(() => {
-    vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-  }
-  );
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+  });
 
   it("データあり", async () => {
     wrapper = await mountShowTodo();
@@ -270,34 +277,32 @@ describe('期限(以前)でフィルター', () => {
     // フィルター適用
     mockedGet.mockResolvedValue({
       status: 200,
-      data: { "todos": [defaultTodosData.todos[0]] }
+      data: { todos: [defaultTodosData.todos[0]] },
     });
-    const startDueInput = wrapper.find('[data-testid="start-due"]') as DOMWrapper<HTMLInputElement>;
+    const startDueInput = wrapper.find(
+      '[data-testid="start-due"]',
+    ) as DOMWrapper<HTMLInputElement>;
     await startDueInput.setValue("2025-01-01");
     await wrapper.find("[data-testid='apply']").trigger("click");
-    expect(mockedGet).toBeCalledWith(
-      "todos",
-      {
-        "params": {
-          "end_due": undefined,
-          "start_due": "2025-01-01",
-          "status": undefined,
-          "title": undefined
-        }
-      }
-    );
+    expect(mockedGet).toBeCalledWith("todos", {
+      params: {
+        end_due: undefined,
+        start_due: "2025-01-01",
+        status: undefined,
+        title: undefined,
+      },
+    });
     const newRows = wrapper.findAll('[data-testid="todo-row"]');
     expect(newRows).toHaveLength(1);
   });
 });
 
-describe('期限(以降)でフィルター', () => {
+describe("期限(以降)でフィルター", () => {
   let wrapper: VueWrapper;
 
   beforeEach(() => {
-    vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-  }
-  );
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+  });
 
   it("データあり", async () => {
     wrapper = await mountShowTodo();
@@ -309,39 +314,37 @@ describe('期限(以降)でフィルター', () => {
     // フィルター適用
     mockedGet.mockResolvedValue({
       status: 200,
-      data: { "todos": [defaultTodosData.todos[1]] }
+      data: { todos: [defaultTodosData.todos[1]] },
     });
-    const endDueInput = wrapper.find('[data-testid="end-due"]') as DOMWrapper<HTMLInputElement>;
+    const endDueInput = wrapper.find(
+      '[data-testid="end-due"]',
+    ) as DOMWrapper<HTMLInputElement>;
     await endDueInput.setValue("2025-01-02");
     await wrapper.find("[data-testid='apply']").trigger("click");
-    expect(mockedGet).toBeCalledWith(
-      "todos",
-      {
-        "params": {
-          "end_due": "2025-01-02",
-          "start_due": undefined,
-          "status": undefined,
-          "title": undefined
-        }
-      }
-    );
+    expect(mockedGet).toBeCalledWith("todos", {
+      params: {
+        end_due: "2025-01-02",
+        start_due: undefined,
+        status: undefined,
+        title: undefined,
+      },
+    });
     const newRows = wrapper.findAll('[data-testid="todo-row"]');
     expect(newRows).toHaveLength(1);
   });
 });
 
-describe('タイトル名でフィルター', () => {
+describe("タイトル名でフィルター", () => {
   let wrapper: VueWrapper;
 
   beforeEach(() => {
-    vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-  }
-  );
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+  });
 
   it("データあり", async () => {
     wrapper = await mountShowTodo();
 
-    // フィルター適用前    
+    // フィルター適用前
     const rows = wrapper.findAll('[data-testid="todo-row"]');
     expect(rows).toHaveLength(defaultTodosData.todos.length);
     expect(rows).toHaveLength(defaultTodosData.todos.length);
@@ -351,22 +354,21 @@ describe('タイトル名でフィルター', () => {
     // フィルター適用
     mockedGet.mockResolvedValue({
       status: 200,
-      data: { "todos": [defaultTodosData.todos[0]] }
+      data: { todos: [defaultTodosData.todos[0]] },
     });
-    const titleInput = wrapper.find('[data-testid="title"]') as DOMWrapper<HTMLInputElement>;
+    const titleInput = wrapper.find(
+      '[data-testid="title"]',
+    ) as DOMWrapper<HTMLInputElement>;
     titleInput.setValue("title1");
     await wrapper.find("[data-testid='apply']").trigger("click");
-    expect(mockedGet).toBeCalledWith(
-      "todos",
-      {
-        "params": {
-          "end_due": undefined,
-          "start_due": undefined,
-          "status": undefined,
-          "title": "title1"
-        }
-      }
-    );
+    expect(mockedGet).toBeCalledWith("todos", {
+      params: {
+        end_due: undefined,
+        start_due: undefined,
+        status: undefined,
+        title: "title1",
+      },
+    });
     const newRows = wrapper.findAll('[data-testid="todo-row"]');
     expect(newRows).toHaveLength(1);
   });

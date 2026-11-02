@@ -3,10 +3,10 @@ import { getMonthlySalary, postSalary } from "../api/salary";
 import { getThisMonth } from "../utils/date";
 import { parseError } from "../utils/error";
 import { MonthlySalarySummary } from "../types/salary";
-import axios from 'axios';
+import axios from "axios";
 
 export const useFetchMonthlySalary = () => {
-  const fetchMsg = ref<string>('');
+  const fetchMsg = ref<string>("");
   const fetchSalarySummary = ref<MonthlySalarySummary>();
   const fetchSalaryStatus = ref<number | null>(null);
 
@@ -14,12 +14,14 @@ export const useFetchMonthlySalary = () => {
     try {
       const res = await getMonthlySalary(year, month);
       // total_incomeはbase_income+pay_adjustmentで計算できるためフロントエンドで計算している
-      const totalIncome = Math.round((res.data.base_income + res.data.pay_adjustment) * 100) / 100;
+      const totalIncome =
+        Math.round((res.data.base_income + res.data.pay_adjustment) * 100) /
+        100;
       fetchSalarySummary.value = {
         ...res.data,
-        total_income: totalIncome
-      }
-      fetchSalaryStatus.value = res.status
+        total_income: totalIncome,
+      };
+      fetchSalaryStatus.value = res.status;
       fetchMsg.value = "";
     } catch (error: unknown) {
       fetchMsg.value = parseError(error, "月収の取得に失敗しました");
@@ -36,12 +38,12 @@ export const useFetchMonthlySalary = () => {
     fetchMsg,
     fetchSalarySummary,
     fetchSalaryStatus,
-    fetchMonthlySalary
-  }
+    fetchMonthlySalary,
+  };
 };
 
 export const useRegisterSalary = () => {
-  const registerMsg = ref<string>('');
+  const registerMsg = ref<string>("");
   const selectedMonth = ref<string>(getThisMonth());
   const registerStatusCode = ref<number | null>(null);
 
@@ -50,9 +52,9 @@ export const useRegisterSalary = () => {
       const year = Number(selectedMonth.value.split("-")[0]);
       const month = Number(selectedMonth.value.split("-")[1]);
       const res = await postSalary(year, month, Number(salary));
-      registerStatusCode.value = res.status
+      registerStatusCode.value = res.status;
       if (res.status === 201) {
-        registerMsg.value = year + "-" + month + "の月収:" + salary + "万円"
+        registerMsg.value = year + "-" + month + "の月収:" + salary + "万円";
       }
     } catch (error: unknown) {
       registerMsg.value = parseError(error, "月収の登録に失敗しました");

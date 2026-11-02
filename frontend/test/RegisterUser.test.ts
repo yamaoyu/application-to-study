@@ -1,141 +1,176 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import RegisterUser from '@/views/RegisterUser.vue'
-import { mountComponent } from './vitest.setup';
-import { apiClient } from '@/views/api/client';
-import { VueWrapper, DOMWrapper } from '@vue/test-utils';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import RegisterUser from "@/views/RegisterUser.vue";
+import { mountComponent } from "./vitest.setup";
+import { apiClient } from "@/views/api/client";
+import { VueWrapper, DOMWrapper } from "@vue/test-utils";
 
 const mockedPost = vi.mocked(apiClient.post);
 
-describe('ユーザー作成', () => {
-    let wrapper: VueWrapper;
+describe("ユーザー作成", () => {
+  let wrapper: VueWrapper;
 
-    beforeEach(() => {
-        vi.resetAllMocks() // 呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-        wrapper = mountComponent(RegisterUser)
-    })
+  beforeEach(() => {
+    vi.resetAllMocks(); // 呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+    wrapper = mountComponent(RegisterUser);
+  });
 
-    it('ユーザー作成に成功', async () => {
-        const username = "test";
-        const maskedPassword = "**********"
-        const email = "test@example.com"
+  it("ユーザー作成に成功", async () => {
+    const username = "test";
+    const maskedPassword = "**********";
+    const email = "test@example.com";
 
+    mockedPost.mockResolvedValue({
+      status: 201,
+      data: {
+        username: username,
+        password: maskedPassword,
+        email: email,
+        role: "general",
+      },
+    });
 
-        mockedPost.mockResolvedValue({
-            status: 201,
-            data: {
-                "username": username,
-                "password": maskedPassword,
-                "email": email,
-                "role": "general"
-            }
-        });
+    // メールアドレス表示の有無は環境変数で設定しておりimport.meta.envのVITE_MAIL_FORMをstubで指定する
+    vi.stubEnv("VITE_MAIL_FORM", "true");
+    // env が反映された状態で再 import
+    const { default: RegisterUser } = await import("@/views/RegisterUser.vue");
+    wrapper = mountComponent(RegisterUser);
+    // ユーザー名が正しく入力されていることを確認
+    const usernameInput = wrapper.find(
+      '[data-testid="username"]',
+    ) as DOMWrapper<HTMLInputElement>;
+    await usernameInput.setValue(username);
+    expect(usernameInput.element.value).toBe(username);
+    // パスワードが正しく入力されていることを確認
+    const passwordInput = wrapper.find(
+      '[data-testid="password"]',
+    ) as DOMWrapper<HTMLInputElement>;
+    await passwordInput.setValue("Test1234!");
+    expect(passwordInput.element.value).toBe("Test1234!");
+    // 確認用パスワードが正しく入力されていることを確認
+    const passwordCheckInput = wrapper.find(
+      '[data-testid="passwordCheck"]',
+    ) as DOMWrapper<HTMLInputElement>;
+    await passwordCheckInput.setValue("Test1234!");
+    expect(passwordCheckInput.element.value).toBe("Test1234!");
+    // パスワードと確認用パスワードが一致していることを確認
+    expect(wrapper.text()).not.toContain("パスワードが一致しません");
+    // メールアドレスが正しく入力されていることを確認
+    const emailInput = wrapper.find(
+      '[data-testid="email"]',
+    ) as DOMWrapper<HTMLInputElement>;
+    await emailInput.setValue("test@example.com");
+    expect(emailInput.element.value).toBe("test@example.com");
+    // リクエストが正しく行われたことを確認
+    await wrapper
+      .find('[data-testid="register-user-button"]')
+      .trigger("submit");
+    expect(mockedPost).toHaveBeenCalledTimes(1);
+    expect(mockedPost).toHaveBeenCalledWith(
+      "users", // 正しいURL
+      {
+        username: username, // 正しいパラメータ
+        password: "Test1234!",
+        email: "test@example.com",
+      },
+    );
+    // メッセージが正しいか確認
+    expect(wrapper.find("[data-testid='message']").text()).toEqual(
+      `${username}を作成しました`,
+    );
+  });
+});
 
-        // メールアドレス表示の有無は環境変数で設定しておりimport.meta.envのVITE_MAIL_FORMをstubで指定する
-        vi.stubEnv('VITE_MAIL_FORM', 'true');
-        // env が反映された状態で再 import
-        const { default: RegisterUser } = await import('@/views/RegisterUser.vue');
-        wrapper = mountComponent(RegisterUser);
-        // ユーザー名が正しく入力されていることを確認
-        const usernameInput = wrapper.find('[data-testid="username"]') as DOMWrapper<HTMLInputElement>;
-        await usernameInput.setValue(username);
-        expect(usernameInput.element.value).toBe(username);
-        // パスワードが正しく入力されていることを確認
-        const passwordInput = wrapper.find('[data-testid="password"]') as DOMWrapper<HTMLInputElement>;
-        await passwordInput.setValue("Test1234!");
-        expect(passwordInput.element.value).toBe("Test1234!");
-        // 確認用パスワードが正しく入力されていることを確認
-        const passwordCheckInput = wrapper.find('[data-testid="passwordCheck"]') as DOMWrapper<HTMLInputElement>;
-        await passwordCheckInput.setValue("Test1234!");
-        expect(passwordCheckInput.element.value).toBe("Test1234!");
-        // パスワードと確認用パスワードが一致していることを確認
-        expect(wrapper.text()).not.toContain('パスワードが一致しません')
-        // メールアドレスが正しく入力されていることを確認
-        const emailInput = wrapper.find('[data-testid="email"]') as DOMWrapper<HTMLInputElement>;
-        await emailInput.setValue("test@example.com");
-        expect(emailInput.element.value).toBe("test@example.com");
-        // リクエストが正しく行われたことを確認
-        await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
-        expect(mockedPost).toHaveBeenCalledTimes(1);
-        expect(mockedPost).toHaveBeenCalledWith(
-            "users",  // 正しいURL
-            {
-                username: username,    // 正しいパラメータ
-                password: "Test1234!",
-                email: "test@example.com"
-            }
-        );
-        // メッセージが正しいか確認
-        expect(wrapper.find("[data-testid='message']").text()).toEqual(`${username}を作成しました`);
-    })
-})
+describe("パスワード検証", () => {
+  let wrapper: VueWrapper;
 
-describe('パスワード検証', () => {
-    let wrapper: VueWrapper;
+  beforeEach(() => {
+    vi.clearAllMocks();
+    wrapper = mountComponent(RegisterUser);
+  });
 
-    beforeEach(() => {
-        vi.clearAllMocks()
-        wrapper = mountComponent(RegisterUser)
-    })
+  it("大文字が含まれていない場合", async () => {
+    const passwordInput = wrapper.find(
+      '[data-testid="password"]',
+    ) as DOMWrapper<HTMLInputElement>;
+    await passwordInput.setValue("test1234");
+    // パスワードの入力が大文字を含まないことを確認
+    expect(passwordInput.element.value).toBe("test1234");
+    await wrapper
+      .find('[data-testid="register-user-button"]')
+      .trigger("submit");
+    // 大文字を含むパスワードを求めるメッセージが表示されることを確認
+    expect(wrapper.text()).toContain("大文字が含まれていません");
+  });
 
-    it('大文字が含まれていない場合', async () => {
-        const passwordInput = wrapper.find('[data-testid="password"]') as DOMWrapper<HTMLInputElement>;
-        await passwordInput.setValue("test1234");
-        // パスワードの入力が大文字を含まないことを確認
-        expect(passwordInput.element.value).toBe("test1234");
-        await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
-        // 大文字を含むパスワードを求めるメッセージが表示されることを確認
-        expect(wrapper.text()).toContain("大文字が含まれていません");
-    })
+  it("小文字が含まれていない場合", async () => {
+    const passwordInput = wrapper.find(
+      '[data-testid="password"]',
+    ) as DOMWrapper<HTMLInputElement>;
+    await passwordInput.setValue("TEST1234");
+    // パスワードの入力が小文字を含まないことを確認
+    expect(passwordInput.element.value).toBe("TEST1234");
+    await wrapper
+      .find('[data-testid="register-user-button"]')
+      .trigger("submit");
+    // 小文字を含むパスワードを求めるメッセージが表示されることを確認
+    expect(wrapper.text()).toContain("小文字が含まれていません");
+  });
 
-    it('小文字が含まれていない場合', async () => {
-        const passwordInput = wrapper.find('[data-testid="password"]') as DOMWrapper<HTMLInputElement>;
-        await passwordInput.setValue("TEST1234");
-        // パスワードの入力が小文字を含まないことを確認
-        expect(passwordInput.element.value).toBe("TEST1234");
-        await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
-        // 小文字を含むパスワードを求めるメッセージが表示されることを確認
-        expect(wrapper.text()).toContain("小文字が含まれていません");
-    })
+  it("数字が含まれていない場合", async () => {
+    const passwordInput = wrapper.find(
+      '[data-testid="password"]',
+    ) as DOMWrapper<HTMLInputElement>;
+    await passwordInput.setValue("Testtest");
+    // パスワードの入力が数字を含まないことを確認
+    expect(passwordInput.element.value).toBe("Testtest");
+    await wrapper
+      .find('[data-testid="register-user-button"]')
+      .trigger("submit");
+    // 数字を含むパスワードを求めるメッセージが表示されることを確認
+    expect(wrapper.text()).toContain("数字が含まれていません");
+  });
 
-    it('数字が含まれていない場合', async () => {
-        const passwordInput = wrapper.find('[data-testid="password"]') as DOMWrapper<HTMLInputElement>;
-        await passwordInput.setValue("Testtest");
-        // パスワードの入力が数字を含まないことを確認
-        expect(passwordInput.element.value).toBe("Testtest");
-        await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
-        // 数字を含むパスワードを求めるメッセージが表示されることを確認
-        expect(wrapper.text()).toContain("数字が含まれていません");
-    })
+  it("記号が含まれていない場合", async () => {
+    const passwordInput = wrapper.find(
+      '[data-testid="password"]',
+    ) as DOMWrapper<HTMLInputElement>;
+    await passwordInput.setValue("Test1234");
+    // パスワードの入力が記号を含まないことを確認
+    expect(passwordInput.element.value).toBe("Test1234");
+    await wrapper
+      .find('[data-testid="register-user-button"]')
+      .trigger("submit");
+    // 記号を含むパスワードを求めるメッセージが表示されることを確認
+    expect(wrapper.text()).toContain("記号が含まれていません");
+  });
 
-    it('記号が含まれていない場合', async () => {
-        const passwordInput = wrapper.find('[data-testid="password"]') as DOMWrapper<HTMLInputElement>;
-        await passwordInput.setValue("Test1234");
-        // パスワードの入力が記号を含まないことを確認
-        expect(passwordInput.element.value).toBe("Test1234");
-        await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
-        // 記号を含むパスワードを求めるメッセージが表示されることを確認
-        expect(wrapper.text()).toContain("記号が含まれていません");
-    })
+  it("パスワードが8文字未満の場合", async () => {
+    const passwordInput = wrapper.find(
+      '[data-testid="password"]',
+    ) as DOMWrapper<HTMLInputElement>;
+    await passwordInput.setValue("Test123");
+    // パスワードの入力が8文字未満であることを確認
+    expect(passwordInput.element.value).toBe("Test123");
+    await wrapper
+      .find('[data-testid="register-user-button"]')
+      .trigger("submit");
+    // 8文字以上のパスワードを求めるメッセージが表示されることを確認
+    expect(wrapper.text()).toContain(
+      "パスワードは8文字以上16文字以下にして下さい",
+    );
+  });
 
-    it('パスワードが8文字未満の場合', async () => {
-        const passwordInput = wrapper.find('[data-testid="password"]') as DOMWrapper<HTMLInputElement>;
-        await passwordInput.setValue("Test123");
-        // パスワードの入力が8文字未満であることを確認
-        expect(passwordInput.element.value).toBe("Test123");
-        await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
-        // 8文字以上のパスワードを求めるメッセージが表示されることを確認
-        expect(wrapper.text()).toContain("パスワードは8文字以上16文字以下にして下さい");
-    })
-
-    it('2つのパスワードが一致しない場合', async () => {
-        const usernameInput = wrapper.find('[data-testid="username"]');
-        const passwordInput = wrapper.find('[data-testid="password"]');
-        const passwordCheckInput = wrapper.find('[data-testid="passwordCheck"]');
-        await usernameInput.setValue("testuser");
-        await passwordInput.setValue("Test1234!");
-        await passwordCheckInput.setValue("Test12345");
-        await wrapper.find('[data-testid="register-user-button"]').trigger('submit');
-        // パスワードが一致しないことを確認
-        expect(wrapper.text()).toContain('パスワードが一致しません');
-    })
-})
+  it("2つのパスワードが一致しない場合", async () => {
+    const usernameInput = wrapper.find('[data-testid="username"]');
+    const passwordInput = wrapper.find('[data-testid="password"]');
+    const passwordCheckInput = wrapper.find('[data-testid="passwordCheck"]');
+    await usernameInput.setValue("testuser");
+    await passwordInput.setValue("Test1234!");
+    await passwordCheckInput.setValue("Test12345");
+    await wrapper
+      .find('[data-testid="register-user-button"]')
+      .trigger("submit");
+    // パスワードが一致しないことを確認
+    expect(wrapper.text()).toContain("パスワードが一致しません");
+  });
+});

@@ -1,90 +1,138 @@
 <template>
   <head>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
   </head>
-  <nav 
-    v-if="(!MENU_SHOW_ROUTES.includes(`{$router.currentRoute.value.name}`))" 
+  <nav
+    v-if="!MENU_SHOW_ROUTES.includes(`{$router.currentRoute.value.name}`)"
     class="navbar navbar-expand-lg bd-navbar fixed-top bg-dark navbar-dark"
   >
     <div class="container-fluid">
-      <ul class="navbar-nav me-2" style="color: white;">
+      <ul class="navbar-nav me-2" style="color: white">
         <li v-if="$router.currentRoute.value.name != 'Home'" class="nav-item">
           <router-link class="nav-link bi-house" to="/home">HOME</router-link>
         </li>
       </ul>
-      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="offcanvas"
+        data-bs-target="#offcanvasNavbar"
+        aria-controls="offcanvasNavbar"
+        aria-label="Toggle navigation"
+      >
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">  
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item">
-            <router-link class="nav-link" to="/register/salary">月収登録</router-link>
+            <router-link class="nav-link" to="/register/salary"
+              >月収登録</router-link
+            >
           </li>
           <li class="nav-item">
-            <router-link class="nav-link" to="/register/activity">活動記録</router-link>
+            <router-link class="nav-link" to="/register/activity"
+              >活動記録</router-link
+            >
           </li>
           <li class="nav-item">
-            <router-link class="nav-link" to="/view/activity/">実績確認</router-link>
+            <router-link class="nav-link" to="/view/activity/"
+              >実績確認</router-link
+            >
           </li>
           <li class="nav-item">
-            <router-link class="nav-link" to="/register/todo">Todo登録</router-link>
+            <router-link class="nav-link" to="/register/todo"
+              >Todo登録</router-link
+            >
           </li>
           <li class="nav-item">
             <router-link class="nav-link" to="/view/todo">Todo確認</router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link" to="/user/info">ユーザー情報</router-link>
+            <router-link class="nav-link" to="/user/info"
+              >ユーザー情報</router-link
+            >
           </li>
           <li v-if="!isAdmin" class="nav-item">
-            <router-link class="nav-link" to="/register/inquiry">問い合わせ</router-link>
+            <router-link class="nav-link" to="/register/inquiry"
+              >問い合わせ</router-link
+            >
           </li>
           <li v-if="isAdmin" class="nav-item">
-            <router-link class="nav-link" to="/show/inquiry">問い合わせ確認</router-link>
+            <router-link class="nav-link" to="/show/inquiry"
+              >問い合わせ確認</router-link
+            >
           </li>
-        <li v-if="isAdmin" class="nav-item">
-          <router-link class="nav-link" to="/manage/user">ユーザー管理</router-link>
-        </li>
+          <li v-if="isAdmin" class="nav-item">
+            <router-link class="nav-link" to="/manage/user"
+              >ユーザー管理</router-link
+            >
+          </li>
           <li class="nav-item">
-            <a class="nav-link" type="button" @click="userLogout()">ログアウト</a>
+            <a class="nav-link" type="button" @click="userLogout()"
+              >ログアウト</a
+            >
           </li>
         </ul>
       </div>
     </div>
     <!-- 小さい画面用メニュー -->
     <div id="offcanvasNavbar" class="offcanvas offcanvas-start bg-dark">
-      <div class="offcanvas-header" style="color: white;">
-          <h5 class="offcanvas-title">MENU</h5>
+      <div class="offcanvas-header" style="color: white">
+        <h5 class="offcanvas-title">MENU</h5>
       </div>
-      <ul class="offcanvas-body" style="color: white;">
-        <li v-if="$router.currentRoute.value.name != 'Home'" class="nav-item" data-bs-dismiss="offcanvas">
+      <ul class="offcanvas-body" style="color: white">
+        <li
+          v-if="$router.currentRoute.value.name != 'Home'"
+          class="nav-item"
+          data-bs-dismiss="offcanvas"
+        >
           <router-link class="nav-link" to="/home">ホーム</router-link>
         </li>
         <li class="nav-item" data-bs-dismiss="offcanvas">
-          <router-link class="nav-link" to="/register/salary">月収登録</router-link>
+          <router-link class="nav-link" to="/register/salary"
+            >月収登録</router-link
+          >
         </li>
         <li class="nav-item" data-bs-dismiss="offcanvas">
-          <router-link class="nav-link" to="/register/activity/">活動記録</router-link>
+          <router-link class="nav-link" to="/register/activity/"
+            >活動記録</router-link
+          >
         </li>
         <li class="nav-item" data-bs-dismiss="offcanvas">
-          <router-link class="nav-link" to="/view/activity/">実績確認</router-link>
+          <router-link class="nav-link" to="/view/activity/"
+            >実績確認</router-link
+          >
         </li>
         <li class="nav-item" data-bs-dismiss="offcanvas">
-          <router-link class="nav-link" to="/register/todo">Todo登録</router-link>
+          <router-link class="nav-link" to="/register/todo"
+            >Todo登録</router-link
+          >
         </li>
         <li class="nav-item" data-bs-dismiss="offcanvas">
           <router-link class="nav-link" to="/view/todo">Todo確認</router-link>
         </li>
         <li class="nav-item" data-bs-dismiss="offcanvas">
-          <router-link class="nav-link" to="/user/info">ユーザー情報</router-link>
+          <router-link class="nav-link" to="/user/info"
+            >ユーザー情報</router-link
+          >
         </li>
         <li v-if="!isAdmin" class="nav-item" data-bs-dismiss="offcanvas">
-          <router-link class="nav-link" to="/register/inquiry">問い合わせ</router-link>
+          <router-link class="nav-link" to="/register/inquiry"
+            >問い合わせ</router-link
+          >
         </li>
         <li v-if="isAdmin" class="nav-item" data-bs-dismiss="offcanvas">
-          <router-link class="nav-link" to="/show/inquiry">問い合わせ確認</router-link>
+          <router-link class="nav-link" to="/show/inquiry"
+            >問い合わせ確認</router-link
+          >
         </li>
         <li v-if="isAdmin" class="nav-item" data-bs-dismiss="offcanvas">
-          <router-link class="nav-link" to="/manage/user">ユーザー管理</router-link>
+          <router-link class="nav-link" to="/manage/user"
+            >ユーザー管理</router-link
+          >
         </li>
         <li class="nav-item">
           <a class="nav-link" type="button" @click="userLogout()">ログアウト</a>
@@ -93,16 +141,16 @@
     </div>
   </nav>
   <p v-if="message" class="message">{{ message }}</p>
-  <br>
+  <br />
   <BContainer>
     <router-view></router-view>
   </BContainer>
 </template>
 
 <script lang="ts">
-import { computed, type ComputedRef } from 'vue';
-import { BContainer } from 'bootstrap-vue-next';
-import { useLogout } from './views/composables/useAuth';
+import { computed, type ComputedRef } from "vue";
+import { BContainer } from "bootstrap-vue-next";
+import { useLogout } from "./views/composables/useAuth";
 
 export default {
   components: {
@@ -113,17 +161,17 @@ export default {
     const { message, userLogout, roleStore } = useLogout();
     const MENU_SHOW_ROUTES: string[] = ["Login", "RegisterUser"];
     const isAdmin: ComputedRef<boolean> = computed(() => {
-      return roleStore.getRole === "admin"
-    });;
+      return roleStore.getRole === "admin";
+    });
 
     return {
       message,
       userLogout,
       MENU_SHOW_ROUTES,
-      isAdmin
-    }
-  }
-}
+      isAdmin,
+    };
+  },
+};
 </script>
 
 <style>
@@ -145,10 +193,10 @@ div {
   margin-top: 60px;
 }
 
-@media (min-width: 992px) { /* lgサイズ以上 (PC表示) */
-    #offcanvasNavbar {
-        display: none !important;
-    }
+@media (min-width: 992px) {
+  /* lgサイズ以上 (PC表示) */
+  #offcanvasNavbar {
+    display: none !important;
+  }
 }
-
 </style>

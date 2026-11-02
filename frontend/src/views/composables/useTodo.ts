@@ -1,27 +1,42 @@
 import { ref, type Ref } from "vue";
-import { postTodos, getTodos, editTodo, finishTodos, deleteTodos } from "../api/todo";
+import {
+  postTodos,
+  getTodos,
+  editTodo,
+  finishTodos,
+  deleteTodos,
+} from "../api/todo";
 import { parseError } from "../utils/error";
 import {
   TodoUpsertResult,
   TodoDeleteFinishResult,
   UpsertTodoParam,
-  TodoInfo
+  TodoInfo,
 } from "../types/todo";
 
 const errorMessageMap = {
-  TODO_NOT_FOUND: (title: string, action: string) => `【Todo${action}失敗】${title}: 登録されていません`,
-  TODO_ALREADY_FINISHED: (title: string, action: string) => `【Todo${action}失敗】${title}: 終了したアクションは更新できません`,
-  UNEXPECTED_ERROR: (title: string, action: string) => `【Todo${action}失敗】${title}: ${action}に失敗しました`,
-  INVALID_TODO_TITLE: (title: string, action: string) => `【Todo${action}失敗】${title}: タイトルは32文字以下としてください`,
-  INVALID_TODO_DUE: (title: string, action: string) => `【Todo${action}失敗】${title}: 不正な日付です`,
-  INVALID_TODO_DETAIL: (title: string, action: string) => `【Todo${action}失敗】${title}: 詳細は200文字以下としてください`,
+  TODO_NOT_FOUND: (title: string, action: string) =>
+    `【Todo${action}失敗】${title}: 登録されていません`,
+  TODO_ALREADY_FINISHED: (title: string, action: string) =>
+    `【Todo${action}失敗】${title}: 終了したアクションは更新できません`,
+  UNEXPECTED_ERROR: (title: string, action: string) =>
+    `【Todo${action}失敗】${title}: ${action}に失敗しました`,
+  INVALID_TODO_TITLE: (title: string, action: string) =>
+    `【Todo${action}失敗】${title}: タイトルは32文字以下としてください`,
+  INVALID_TODO_DUE: (title: string, action: string) =>
+    `【Todo${action}失敗】${title}: 不正な日付です`,
+  INVALID_TODO_DETAIL: (title: string, action: string) =>
+    `【Todo${action}失敗】${title}: 詳細は200文字以下としてください`,
 };
 
-const makeMessage = (results: TodoUpsertResult[] | TodoDeleteFinishResult[], action: string) => {
+const makeMessage = (
+  results: TodoUpsertResult[] | TodoDeleteFinishResult[],
+  action: string,
+) => {
   const messages = [];
   for (const r of results) {
     if (r.result === "success") {
-      messages.push(`【Todo${action}成功】: ${r.title}`)
+      messages.push(`【Todo${action}成功】: ${r.title}`);
       continue;
     }
     // titleがない=DBに対象が見つからなかった場合(TODO_NOT_FOUND)
@@ -30,7 +45,8 @@ const makeMessage = (results: TodoUpsertResult[] | TodoDeleteFinishResult[], act
       continue;
     }
     // その他のエラー
-    const messageFn = errorMessageMap[r.reason] || errorMessageMap.UNEXPECTED_ERROR;
+    const messageFn =
+      errorMessageMap[r.reason] || errorMessageMap.UNEXPECTED_ERROR;
     messages.push(messageFn(r.title, action));
   }
   return messages.join("\n");
@@ -39,10 +55,11 @@ const makeMessage = (results: TodoUpsertResult[] | TodoDeleteFinishResult[], act
 const makeSummaryMessage = (
   action: string,
   success_count: number,
-  error_count: number) => {
+  error_count: number,
+) => {
   // bulk登録時のリクエスト成功数と失敗数をまとめる
-  return `Todo${action}成功: ${success_count}件、失敗:${error_count}件\n`
-}
+  return `Todo${action}成功: ${success_count}件、失敗:${error_count}件\n`;
+};
 
 export const useRegisterTodos = () => {
   const todos = ref<UpsertTodoParam[]>([]);
@@ -53,21 +70,25 @@ export const useRegisterTodos = () => {
     try {
       const res = await postTodos(todos.value);
       statusCode.value = res.data.error_count === 0 ? 200 : 400;
-      message.value = makeSummaryMessage("作成", res.data.success_count, res.data.error_count);
+      message.value = makeSummaryMessage(
+        "作成",
+        res.data.success_count,
+        res.data.error_count,
+      );
       message.value += makeMessage(res.data.results, "作成");
       todos.value = [];
     } catch (error) {
       statusCode.value = null;
       message.value = parseError(error, "Todoの登録に失敗しました");
     }
-  }
+  };
 
   return {
     todos,
     message,
     statusCode,
-    registerTodos
-  }
+    registerTodos,
+  };
 };
 
 export const useGetTodos = (todoMsg: Ref<string>) => {
@@ -94,15 +115,15 @@ export const useGetTodos = (todoMsg: Ref<string>) => {
       todoMsg.value = parseError(error, "Todoの取得に失敗しました");
       todos.value = [];
     }
-  }
+  };
   return {
     todos,
     statusFilter,
     startDue,
     endDue,
     title,
-    fetchTodos
-  }
+    fetchTodos,
+  };
 };
 
 type OnSuccess = () => void | Promise<void>;
@@ -118,7 +139,7 @@ export const useTodoOperations = (todoMsg: Ref<string>) => {
       const params = {
         title: newTodoTitle.value,
         detail: newTodoDetail.value,
-        due: newTodoDue.value
+        due: newTodoDue.value,
       };
       const res = await editTodo(id, params);
       if (res.status === 200) {
@@ -134,9 +155,13 @@ export const useTodoOperations = (todoMsg: Ref<string>) => {
 
   const completeTodos = async (onSuccess?: OnSuccess) => {
     try {
-      const params = { "ids": selectedTodoIDs.value }
+      const params = { ids: selectedTodoIDs.value };
       const res = await finishTodos(params);
-      todoMsg.value = makeSummaryMessage("終了", res.data.success_count, res.data.error_count);
+      todoMsg.value = makeSummaryMessage(
+        "終了",
+        res.data.success_count,
+        res.data.error_count,
+      );
       todoMsg.value += makeMessage(res.data.results, "終了");
       if (onSuccess) {
         await onSuccess();
@@ -148,11 +173,14 @@ export const useTodoOperations = (todoMsg: Ref<string>) => {
 
   const removeTodos = async (onSuccess?: OnSuccess) => {
     try {
-      const params = { "ids": selectedTodoIDs.value };
+      const params = { ids: selectedTodoIDs.value };
       const res = await deleteTodos(params);
       if (res.status === 200) {
-
-        todoMsg.value = makeSummaryMessage("削除", res.data.success_count, res.data.error_count);
+        todoMsg.value = makeSummaryMessage(
+          "削除",
+          res.data.success_count,
+          res.data.error_count,
+        );
         todoMsg.value += makeMessage(res.data.results, "削除");
         if (onSuccess) {
           await onSuccess();
@@ -170,11 +198,11 @@ export const useTodoOperations = (todoMsg: Ref<string>) => {
     newTodoDue,
     updateTodo,
     completeTodos,
-    removeTodos
+    removeTodos,
   };
 };
 
-export type SortTodoType = "id" | "due"
+export type SortTodoType = "id" | "due";
 
 export const useSortTodos = (todos: Ref<TodoInfo[]>) => {
   const sortType = ref("id"); // todoの一覧で表示されるソート順で初期値は登録順(id)
@@ -182,18 +210,14 @@ export const useSortTodos = (todos: Ref<TodoInfo[]>) => {
     sortType.value = type;
 
     if (type === "id") {
-      todos.value = [...todos.value].sort(
-        (a, b) => a.todo_id - b.todo_id
-      );
+      todos.value = [...todos.value].sort((a, b) => a.todo_id - b.todo_id);
     } else {
-      todos.value = [...todos.value].sort(
-        (a, b) => a.due.localeCompare(b.due)
-      );
+      todos.value = [...todos.value].sort((a, b) => a.due.localeCompare(b.due));
     }
   };
 
   return {
     sortType,
-    sortTodos
+    sortTodos,
   };
 };

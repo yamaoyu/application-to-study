@@ -1,24 +1,29 @@
 import { ref, computed, type Ref } from "vue";
 import { updatePassword, forcePasswordChange } from "../api/user";
 import { parseError } from "../utils/error";
-import { validateUsername, validatePassword, checkPassword, validateEmail } from '../utils/userValidation';
+import {
+  validateUsername,
+  validatePassword,
+  checkPassword,
+  validateEmail,
+} from "../utils/userValidation";
 import axios from "axios";
 
 export const useChangePassword = () => {
-  const oldPassword = ref<string>('');
-  const newPassword = ref<string>('');
-  const newPasswordCheck = ref<string>('');
-  const message = ref<string>('');
+  const oldPassword = ref<string>("");
+  const newPassword = ref<string>("");
+  const newPasswordCheck = ref<string>("");
+  const message = ref<string>("");
   const statusCode = ref<number | null>(null);
 
   const changePassword = async () => {
     try {
       const res = await updatePassword(oldPassword.value, newPassword.value);
-      statusCode.value = res.status
-      message.value = "パスワードの変更に成功しました"
-      oldPassword.value = ''
-      newPassword.value = ''
-      newPasswordCheck.value = ''
+      statusCode.value = res.status;
+      message.value = "パスワードの変更に成功しました";
+      oldPassword.value = "";
+      newPassword.value = "";
+      newPasswordCheck.value = "";
     } catch (error: unknown) {
       message.value = parseError(error, "パスワードの変更に失敗しました");
       if (axios.isAxiosError(error)) {
@@ -27,7 +32,7 @@ export const useChangePassword = () => {
         statusCode.value = null;
       }
     }
-  }
+  };
 
   return {
     oldPassword,
@@ -35,24 +40,23 @@ export const useChangePassword = () => {
     newPasswordCheck,
     message,
     statusCode,
-    changePassword
-  }
+    changePassword,
+  };
 };
 
-
 export const useForceChangePassword = () => {
-  const newPassword = ref<string>('');
-  const newPasswordCheck = ref<string>('');
-  const message = ref<string>('パスワード変更が必須です');
+  const newPassword = ref<string>("");
+  const newPasswordCheck = ref<string>("");
+  const message = ref<string>("パスワード変更が必須です");
   const statusCode = ref<number | null>(null);
 
   const changePassword = async () => {
     try {
       const res = await forcePasswordChange(newPassword.value);
-      statusCode.value = res.status
-      message.value = "パスワードの変更に成功しました\n再ログインしてください"
-      newPassword.value = ''
-      newPasswordCheck.value = ''
+      statusCode.value = res.status;
+      message.value = "パスワードの変更に成功しました\n再ログインしてください";
+      newPassword.value = "";
+      newPasswordCheck.value = "";
     } catch (error: unknown) {
       message.value = parseError(error, "パスワードの変更に失敗しました");
       if (axios.isAxiosError(error)) {
@@ -61,37 +65,46 @@ export const useForceChangePassword = () => {
         statusCode.value = null;
       }
     }
-  }
+  };
 
   return {
     newPassword,
     newPasswordCheck,
     message,
     statusCode,
-    changePassword
-  }
-};
-
-export const useUsernameValidation = (username: Ref<string>) => {
-  const usernameValidateResult = computed(() => validateUsername(username.value));
-  return {
-    usernameValidateResult
+    changePassword,
   };
 };
 
-export const usePasswordValidation = (password: Ref<string>, passwordCheck: Ref<string>) => {
-  const passwordValidateResult = computed(() => validatePassword(password.value));
+export const useUsernameValidation = (username: Ref<string>) => {
+  const usernameValidateResult = computed(() =>
+    validateUsername(username.value),
+  );
+  return {
+    usernameValidateResult,
+  };
+};
 
-  const passwordEqualResult = computed(() => checkPassword(password.value, passwordCheck.value));
+export const usePasswordValidation = (
+  password: Ref<string>,
+  passwordCheck: Ref<string>,
+) => {
+  const passwordValidateResult = computed(() =>
+    validatePassword(password.value),
+  );
+
+  const passwordEqualResult = computed(() =>
+    checkPassword(password.value, passwordCheck.value),
+  );
   return {
     passwordValidateResult,
-    passwordEqualResult
-  }
-}
+    passwordEqualResult,
+  };
+};
 
 export const useEmailValidation = (email: Ref<string>) => {
   const emailValidateResult = computed(() => validateEmail(email.value));
   return {
-    emailValidateResult
+    emailValidateResult,
   };
-}
+};

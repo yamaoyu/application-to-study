@@ -1,141 +1,161 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import UserInfo from '@/views/UserInfo.vue'
-import { mountComponent } from './vitest.setup';
-import { apiClient } from '@/views/api/client';
-import { VueWrapper, DOMWrapper } from '@vue/test-utils';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import UserInfo from "@/views/UserInfo.vue";
+import { mountComponent } from "./vitest.setup";
+import { apiClient } from "@/views/api/client";
+import { VueWrapper, DOMWrapper } from "@vue/test-utils";
 
-const mockedPatch = vi.mocked(apiClient.patch)
+const mockedPatch = vi.mocked(apiClient.patch);
 
-describe('パスワード変更フォームの動作確認', () => {
-    let wrapper: VueWrapper;
+describe("パスワード変更フォームの動作確認", () => {
+  let wrapper: VueWrapper;
 
-    beforeEach(() => {
-        vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-        wrapper = mountComponent(UserInfo);
-    }
-    );
+  beforeEach(() => {
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+    wrapper = mountComponent(UserInfo);
+  });
 
-    it('パスワード変更のチェックボックスの操作', async () => {
-        const checkBox = wrapper.find('[data-testid="isPasswordChangeEnabled"]') as DOMWrapper<HTMLInputElement>;
-        // デフォルトではパスワード変更フォームに入力できない
-        expect(checkBox.element.checked).toBe(false);
-        // チェックを入れて入力できるようにする
-        await checkBox.setValue(true);
-        expect(checkBox.element.checked).toBe(true);
-    });
+  it("パスワード変更のチェックボックスの操作", async () => {
+    const checkBox = wrapper.find(
+      '[data-testid="isPasswordChangeEnabled"]',
+    ) as DOMWrapper<HTMLInputElement>;
+    // デフォルトではパスワード変更フォームに入力できない
+    expect(checkBox.element.checked).toBe(false);
+    // チェックを入れて入力できるようにする
+    await checkBox.setValue(true);
+    expect(checkBox.element.checked).toBe(true);
+  });
 
-    it('チェックを有効にすると全入力欄と送信ボタンが有効になる', async () => {
-        // 初期状態では入力フォームに入力できない
-        const oldPassForm = wrapper.find('[data-testid="oldPassword"]') as DOMWrapper<HTMLInputElement>;
-        expect(oldPassForm.element.disabled).toBe(true);
-        const newPassForm = wrapper.find('[data-testid="newPassword"]') as DOMWrapper<HTMLInputElement>;
-        expect(newPassForm.element.disabled).toBe(true);
-        const passCheckForm = wrapper.find('[data-testid="newPasswordCheck"]') as DOMWrapper<HTMLInputElement>;
-        expect(passCheckForm.element.disabled).toBe(true);
+  it("チェックを有効にすると全入力欄と送信ボタンが有効になる", async () => {
+    // 初期状態では入力フォームに入力できない
+    const oldPassForm = wrapper.find(
+      '[data-testid="oldPassword"]',
+    ) as DOMWrapper<HTMLInputElement>;
+    expect(oldPassForm.element.disabled).toBe(true);
+    const newPassForm = wrapper.find(
+      '[data-testid="newPassword"]',
+    ) as DOMWrapper<HTMLInputElement>;
+    expect(newPassForm.element.disabled).toBe(true);
+    const passCheckForm = wrapper.find(
+      '[data-testid="newPasswordCheck"]',
+    ) as DOMWrapper<HTMLInputElement>;
+    expect(passCheckForm.element.disabled).toBe(true);
 
-        // パスワードを変更するにチェックを入れ、入力できるようにする
-        const checkBox = wrapper.find('[data-testid="isPasswordChangeEnabled"]') as DOMWrapper<HTMLInputElement>;
-        await checkBox.setValue(true);
-        expect(oldPassForm.element.disabled).toBe(false);
+    // パスワードを変更するにチェックを入れ、入力できるようにする
+    const checkBox = wrapper.find(
+      '[data-testid="isPasswordChangeEnabled"]',
+    ) as DOMWrapper<HTMLInputElement>;
+    await checkBox.setValue(true);
+    expect(oldPassForm.element.disabled).toBe(false);
 
-        // 値を入力して、値が更新されることを確認する
-        const oldPassword = "oldPassword";
-        await oldPassForm.setValue(oldPassword);
-        expect(oldPassForm.element.value).toEqual(oldPassword);
-        const newPassword = "newP@ssword1";
-        await newPassForm.setValue(newPassword);
-        expect(newPassForm.element.value).toEqual(newPassword);
-        // 値を入力して、値が更新されることを確認する
-        const newPasswordCheck = "newP@ssword1";
-        await passCheckForm.setValue(newPasswordCheck);
-        expect(passCheckForm.element.value).toEqual(newPasswordCheck);
-    });
+    // 値を入力して、値が更新されることを確認する
+    const oldPassword = "oldPassword";
+    await oldPassForm.setValue(oldPassword);
+    expect(oldPassForm.element.value).toEqual(oldPassword);
+    const newPassword = "newP@ssword1";
+    await newPassForm.setValue(newPassword);
+    expect(newPassForm.element.value).toEqual(newPassword);
+    // 値を入力して、値が更新されることを確認する
+    const newPasswordCheck = "newP@ssword1";
+    await passCheckForm.setValue(newPasswordCheck);
+    expect(passCheckForm.element.value).toEqual(newPasswordCheck);
+  });
 
-    it('現在のパスワード入力フォームに値がないとリクエストを送信できない', async () => {
-        const oldPassForm = wrapper.find('[data-testid="oldPassword"]') as DOMWrapper<HTMLInputElement>;
-        expect(oldPassForm.element.disabled).toBe(true);
-        expect(oldPassForm.element.value).toBe("");
+  it("現在のパスワード入力フォームに値がないとリクエストを送信できない", async () => {
+    const oldPassForm = wrapper.find(
+      '[data-testid="oldPassword"]',
+    ) as DOMWrapper<HTMLInputElement>;
+    expect(oldPassForm.element.disabled).toBe(true);
+    expect(oldPassForm.element.value).toBe("");
 
-        // 値がないとリクエストを送信できないことを確認する
-        await wrapper.find('[data-testid="password-change-button"]').trigger('submit');
-        expect(mockedPatch).toBeCalledTimes(0);
-    });
+    // 値がないとリクエストを送信できないことを確認する
+    await wrapper
+      .find('[data-testid="password-change-button"]')
+      .trigger("submit");
+    expect(mockedPatch).toBeCalledTimes(0);
+  });
 });
 
-describe('パスワード変更リクエストを送信', async () => {
-    let wrapper: VueWrapper;
+describe("パスワード変更リクエストを送信", async () => {
+  let wrapper: VueWrapper;
 
-    beforeEach(() => {
-        vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-        wrapper = mountComponent(UserInfo);
-    }
+  beforeEach(() => {
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+    wrapper = mountComponent(UserInfo);
+  });
+
+  it("パスワードを変更に成功", async () => {
+    // パスワードを変更するにチェックを入れ、入力できるようにする
+    const checkBox = wrapper.find('[data-testid="isPasswordChangeEnabled"]');
+    await checkBox.setValue(true);
+
+    // 現在のパスワード
+    const oldPassForm = wrapper.find('[data-testid="oldPassword"]');
+    const oldPassword = "oldPassword";
+    await oldPassForm.setValue(oldPassword);
+
+    // 新しいパスワード
+    const newPassForm = wrapper.find('[data-testid="newPassword"]');
+    const newPassword = "newP@ssword1";
+    await newPassForm.setValue(newPassword);
+
+    // パスワード確認
+    const passCheckForm = wrapper.find('[data-testid="newPasswordCheck"]');
+    const newPasswordCheck = "newP@ssword1";
+    await passCheckForm.setValue(newPasswordCheck);
+
+    const expectedMessage = "パスワードの変更に成功しました";
+    mockedPatch.mockResolvedValue({
+      status: 200,
+      data: {},
+    });
+    await wrapper
+      .find('[data-testid="password-change-button"]')
+      .trigger("submit");
+
+    // 更新リクエストが正しく行われたことを確認
+    expect(mockedPatch).toBeCalledWith(
+      "password", // 正しいURL
+      {
+        old_password: oldPassword, // 正しいパラメータ
+        new_password: newPassword,
+      },
     );
+    expect(wrapper.find("[data-testid='message']").text()).toEqual(
+      expectedMessage,
+    );
+  });
 
-    it('パスワードを変更に成功', async () => {
-        // パスワードを変更するにチェックを入れ、入力できるようにする
-        const checkBox = wrapper.find('[data-testid="isPasswordChangeEnabled"]');
-        await checkBox.setValue(true);
+  it("パスワードを変更に失敗", async () => {
+    // パスワードを変更するにチェックを入れ、入力できるようにする
+    const checkBox = wrapper.find('[data-testid="isPasswordChangeEnabled"]');
+    await checkBox.setValue(true);
 
-        // 現在のパスワード
-        const oldPassForm = wrapper.find('[data-testid="oldPassword"]');
-        const oldPassword = "oldPassword";
-        await oldPassForm.setValue(oldPassword);
+    // 現在のパスワード
+    const oldPassForm = wrapper.find('[data-testid="oldPassword"]');
+    await oldPassForm.setValue("invalidPassword");
 
-        // 新しいパスワード
-        const newPassForm = wrapper.find('[data-testid="newPassword"]');
-        const newPassword = "newP@ssword1";
-        await newPassForm.setValue(newPassword);
+    // 新しいパスワード
+    const newPassForm = wrapper.find('[data-testid="newPassword"]');
+    await newPassForm.setValue("newP@ssword1");
 
-        // パスワード確認
-        const passCheckForm = wrapper.find('[data-testid="newPasswordCheck"]');
-        const newPasswordCheck = "newP@ssword1";
-        await passCheckForm.setValue(newPasswordCheck);
+    // パスワード確認
+    const passCheckForm = wrapper.find('[data-testid="newPasswordCheck"]');
+    await passCheckForm.setValue("newP@ssword1");
 
-        const expectedMessage = "パスワードの変更に成功しました"
-        mockedPatch.mockResolvedValue({
-            status: 200,
-            data: {}
-        });
-        await wrapper.find('[data-testid="password-change-button"]').trigger('submit');
-
-        // 更新リクエストが正しく行われたことを確認
-        expect(mockedPatch).toBeCalledWith(
-            "password",  // 正しいURL
-            {
-                old_password: oldPassword,    // 正しいパラメータ
-                new_password: newPassword
-            }
-        );
-        expect(wrapper.find("[data-testid='message']").text()).toEqual(expectedMessage);
+    const expectedMessage = "現在のパスワードに誤りがあります";
+    mockedPatch.mockRejectedValue({
+      response: {
+        status: 401,
+        data: {
+          code: "INVALID_CURRENT_PASSWORD",
+        },
+      },
     });
-
-    it('パスワードを変更に失敗', async () => {
-        // パスワードを変更するにチェックを入れ、入力できるようにする
-        const checkBox = wrapper.find('[data-testid="isPasswordChangeEnabled"]');
-        await checkBox.setValue(true);
-
-        // 現在のパスワード
-        const oldPassForm = wrapper.find('[data-testid="oldPassword"]');
-        await oldPassForm.setValue("invalidPassword");
-
-        // 新しいパスワード
-        const newPassForm = wrapper.find('[data-testid="newPassword"]');
-        await newPassForm.setValue("newP@ssword1");
-
-        // パスワード確認
-        const passCheckForm = wrapper.find('[data-testid="newPasswordCheck"]');
-        await passCheckForm.setValue("newP@ssword1");
-
-        const expectedMessage = "現在のパスワードに誤りがあります"
-        mockedPatch.mockRejectedValue({
-            response: {
-                status: 401,
-                data: {
-                    code: "INVALID_CURRENT_PASSWORD"
-                }
-            }
-        });
-        await wrapper.find('[data-testid="password-change-button"]').trigger('submit');
-        expect(wrapper.find("[data-testid='message']").text()).toEqual(expectedMessage);
-    });
+    await wrapper
+      .find('[data-testid="password-change-button"]')
+      .trigger("submit");
+    expect(wrapper.find("[data-testid='message']").text()).toEqual(
+      expectedMessage,
+    );
+  });
 });

@@ -4,30 +4,46 @@
     <table class="table table-striped table-responsive">
       <thead class="table-dark">
         <tr>
-            <th style="width: 5%;">No.</th>
-            <th>内容</th>
-            <th>期限</th>
-            <th style="width: 8%;"></th>
-            <th style="width: 8%;"></th>
+          <th style="width: 5%">No.</th>
+          <th>内容</th>
+          <th>期限</th>
+          <th style="width: 8%"></th>
+          <th style="width: 8%"></th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="(row, index) in todos" :key="index" data-testid="todo-row">
-            <td class="text-center align-middle">{{ index + 1 }}</td>
-            <td class="text-center align-middle todo-title" @click="openModal(row, 'show')">{{ row.title }}</td>
-            <td class="text-center align-middle">{{ row.due }}</td>
-            <td>
-              <input class="btn btn-outline-primary btn-sm" type="button" value="編集" @click="openModal(row, 'edit')">
-            </td>
-            <td>
-              <input class="btn btn-outline-danger btn-sm" type="button" value="削除" :data-testid="`del-todo-${index}`" @click="openModal(row, 'delete')">
-            </td>
+          <td class="text-center align-middle">{{ index + 1 }}</td>
+          <td
+            class="text-center align-middle todo-title"
+            @click="openModal(row, 'show')"
+          >
+            {{ row.title }}
+          </td>
+          <td class="text-center align-middle">{{ row.due }}</td>
+          <td>
+            <input
+              class="btn btn-outline-primary btn-sm"
+              type="button"
+              value="編集"
+              @click="openModal(row, 'edit')"
+            />
+          </td>
+          <td>
+            <input
+              class="btn btn-outline-danger btn-sm"
+              type="button"
+              value="削除"
+              :data-testid="`del-todo-${index}`"
+              @click="openModal(row, 'delete')"
+            />
+          </td>
         </tr>
         <tr class="table-secondary">
           <td colspan="5" class="text-center">
-            <button 
-              type="button" 
-              :disabled="todos.length>=10"
+            <button
+              type="button"
+              :disabled="todos.length >= 10"
               data-testid="add-todo"
               class="btn btn-outline-primary"
               @click="openModal(todo, 'create')"
@@ -38,58 +54,72 @@
         </tr>
       </tbody>
     </table>
-    <button 
-      type="submit" 
+    <button
+      type="submit"
       class="btn btn-outline-secondary mt-3"
-      :disabled="todos.length === 0||todos.length>=10"
-      data-testid="submit-todo">登録
+      :disabled="todos.length === 0 || todos.length >= 10"
+      data-testid="submit-todo"
+    >
+      登録
     </button>
   </form>
   <div class="container d-flex justify-content-center">
-    <p v-if="message" class="mt-3 col-8" :class="getResponseAlert(statusCode)" data-testid="message">{{ message }}</p>
+    <p
+      v-if="message"
+      class="mt-3 col-8"
+      :class="getResponseAlert(statusCode)"
+      data-testid="message"
+    >
+      {{ message }}
+    </p>
   </div>
 
-  <BModal 
-    v-model="showModal" 
+  <BModal
+    v-model="showModal"
     :ok-disabled="!validateTodo(todoAction, todo)"
     data-testid="modal-show"
-    :title="modalTitle" 
-    ok-title="OK" 
-    cancel-title="閉じる" 
+    :title="modalTitle"
+    ok-title="OK"
+    cancel-title="閉じる"
     @ok="closeModal(todos)"
   >
-    <div v-if="todoAction==='show'||todoAction==='delete'">
+    <div v-if="todoAction === 'show' || todoAction === 'delete'">
       <div class="todo-detail">
-          <p><strong>期限:</strong> {{ todo.due }}</p>
-          <p><strong>タイトル:</strong>{{ todo.title }}</p>
-          <p v-if="todo.detail"><strong>詳細:</strong> {{ todo.detail }}</p>
-          <p v-else class="text-muted">Todoの詳細はありません</p>
+        <p><strong>期限:</strong> {{ todo.due }}</p>
+        <p><strong>タイトル:</strong>{{ todo.title }}</p>
+        <p v-if="todo.detail"><strong>詳細:</strong> {{ todo.detail }}</p>
+        <p v-else class="text-muted">Todoの詳細はありません</p>
       </div>
-      <div v-if="todoAction==='delete'" style="color: red;">
+      <div v-if="todoAction === 'delete'" style="color: red">
         このTodoをリストから削除します
       </div>
     </div>
-    <div v-else-if="todoAction==='edit'||todoAction==='create'">
+    <div v-else-if="todoAction === 'edit' || todoAction === 'create'">
       <div class="input-group">
-          <label class="mt-3">
-            タイトル
-            <span :style="{ color: todo.title ? 'black' : 'red' }">*</span>
-          </label>
-          <div class="container d-flex justify-content-center">
-            <div class="input-group">
-                <input
-                v-model="todo.title"
-                class="form-control"
-                :placeholder=todo.title
-                maxlength="32"
-                data-testid="title"
-                @input="titleError = !todo.title"
-                />
-                <small class="form-text text-muted position-absolute" style="right: 8px; bottom: -20px;">
-                {{ (todo.title || '').length }}/32
-                </small>
-            </div>
-          <div v-if="titleError" style="color: red;">タイトルを入力してください</div>
+        <label class="mt-3">
+          タイトル
+          <span :style="{ color: todo.title ? 'black' : 'red' }">*</span>
+        </label>
+        <div class="container d-flex justify-content-center">
+          <div class="input-group">
+            <input
+              v-model="todo.title"
+              class="form-control"
+              :placeholder="todo.title"
+              maxlength="32"
+              data-testid="title"
+              @input="titleError = !todo.title"
+            />
+            <small
+              class="form-text text-muted position-absolute"
+              style="right: 8px; bottom: -20px"
+            >
+              {{ (todo.title || "").length }}/32
+            </small>
+          </div>
+          <div v-if="titleError" style="color: red">
+            タイトルを入力してください
+          </div>
         </div>
       </div>
       <div class="input-group mt-3">
@@ -99,14 +129,17 @@
             <textarea
               v-model="todo.detail"
               class="form-control"
-              :placeholder=todo.detail
+              :placeholder="todo.detail"
               maxlength="200"
               rows="3"
               data-testid="detail"
-              >
+            >
             </textarea>
-            <small class="form-text text-muted position-absolute" style="right: 8px; bottom: -20px;">
-              {{ (todo.detail || '').length }}/200
+            <small
+              class="form-text text-muted position-absolute"
+              style="right: 8px; bottom: -20px"
+            >
+              {{ (todo.detail || "").length }}/200
             </small>
           </div>
         </div>
@@ -118,50 +151,54 @@
         </label>
         <div class="container d-flex justify-content-center">
           <div class="input-group">
-              <input
+            <input
               v-model="todo.due"
               type="date"
               class="form-control col-2"
               :min="today"
               data-testid="due"
               @input="dueError = !todo.due"
-              />
+            />
           </div>
         </div>
-        <div v-if="dueError" style="color: red;">期限を入力してください</div>
+        <div v-if="dueError" style="color: red">期限を入力してください</div>
       </div>
     </div>
   </BModal>
 </template>
 
 <script lang="ts">
-import { ref, watch } from 'vue';
-import { getToday } from './utils/date';
-import { getResponseAlert } from './utils/ui';
-import { useRegisterTodos } from './composables/useTodo';
-import { validateTodo } from './utils/todoUtils';
-import { BModal } from 'bootstrap-vue-next';
-import { useTodoModal } from './composables/useTodoModal';
+import { ref, watch } from "vue";
+import { getToday } from "./utils/date";
+import { getResponseAlert } from "./utils/ui";
+import { useRegisterTodos } from "./composables/useTodo";
+import { validateTodo } from "./utils/todoUtils";
+import { BModal } from "bootstrap-vue-next";
+import { useTodoModal } from "./composables/useTodoModal";
 
 export default {
-  components:{
-    BModal
+  components: {
+    BModal,
   },
 
   setup() {
     const titleError = ref<boolean>(false); // todo編集時、タイトルに入力がない場合のメッセージを表示
     const dueError = ref<boolean>(false); // todo編集時、期限に入力がない場合のメッセージを表示
     const today = getToday();
-    const { showModal, modalTitle, todoAction, todo, openModal, closeModal } = useTodoModal();
+    const { showModal, modalTitle, todoAction, todo, openModal, closeModal } =
+      useTodoModal();
     const { todos, message, statusCode, registerTodos } = useRegisterTodos();
 
-    watch(() => todos.value.length, () => {
-      if (todos.value.length>=10){
-        message.value = "一度に登録できるのは10件までです";
-      } else if (message.value==="一度に登録できるのは10件までです") {
-        message.value = "";
-      }
-    });
+    watch(
+      () => todos.value.length,
+      () => {
+        if (todos.value.length >= 10) {
+          message.value = "一度に登録できるのは10件までです";
+        } else if (message.value === "一度に登録できるのは10件までです") {
+          message.value = "";
+        }
+      },
+    );
 
     return {
       message,
@@ -178,8 +215,8 @@ export default {
       getResponseAlert,
       openModal,
       validateTodo,
-      closeModal
-    }
-  }
-}
+      closeModal,
+    };
+  },
+};
 </script>

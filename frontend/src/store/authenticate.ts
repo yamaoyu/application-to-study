@@ -1,33 +1,38 @@
-import { defineStore } from 'pinia'
-import { UserRole } from '@/views/types/auth'
+import { defineStore } from "pinia";
+import { UserRole } from "@/views/types/auth";
 
-export const useAuthStore = defineStore('authStore', {
+export const useAuthStore = defineStore("authStore", {
   state: () => ({
     accessToken: "",
     tokenType: "",
     expire: 0,
     redirectPath: "",
     role: "",
-    mustChangePassword: false
+    mustChangePassword: false,
   }),
   getters: {
     isToken(): boolean {
-      return Boolean(this.accessToken)
+      return Boolean(this.accessToken);
     },
     getAuthHeader(): string | null {
       if (!this.accessToken && !this.tokenType) {
-        return null
+        return null;
       }
-      return `${this.tokenType} ${this.accessToken}`
+      return `${this.tokenType} ${this.accessToken}`;
     },
     getRedirectPath(): string {
-      return this.redirectPath
-    }
+      return this.redirectPath;
+    },
   },
   actions: {
-    setAuthData(accessToken: string, tokenType: string, expire: number, mustChangePassword: boolean) {
+    setAuthData(
+      accessToken: string,
+      tokenType: string,
+      expire: number,
+      mustChangePassword: boolean,
+    ) {
       if (!accessToken || !tokenType || !expire) {
-        throw new Error('データに不備があります')
+        throw new Error("データに不備があります");
       }
       this.accessToken = accessToken;
       this.tokenType = tokenType;
@@ -42,33 +47,32 @@ export const useAuthStore = defineStore('authStore', {
       this.redirectPath = "";
     },
     isExpired() {
-      const currentTime = Date.now()
+      const currentTime = Date.now();
       if (currentTime / 1000 <= this.expire) {
         // 期限切れのトークンではない
-        return false
+        return false;
       } else {
-        return true
+        return true;
       }
     },
     setRedirectPath(path: string) {
       this.redirectPath = path;
-    }
+    },
   },
-})
+});
 
 type RoleState = {
   role: UserRole | "";
 };
 
-
-export const useRoleStore = defineStore('roleStore', {
+export const useRoleStore = defineStore("roleStore", {
   state: (): RoleState => ({
-    role: ""
+    role: "",
   }),
   getters: {
     getRole(): string {
-      return this.role
-    }
+      return this.role;
+    },
   },
   actions: {
     setRole(role: UserRole) {
@@ -76,7 +80,7 @@ export const useRoleStore = defineStore('roleStore', {
     },
     clearRole() {
       this.role = "";
-    }
+    },
   },
-  persist: true
-})
+  persist: true,
+});

@@ -1,9 +1,13 @@
-import { vi } from 'vitest';
-import { createPinia } from 'pinia';
-import { afterEach } from 'vitest';
-import { mount, type MountingOptions, enableAutoUnmount } from '@vue/test-utils'
-import type { Component } from 'vue';
-import { createBootstrap } from 'bootstrap-vue-next';
+import { vi } from "vitest";
+import { createPinia } from "pinia";
+import { afterEach } from "vitest";
+import {
+  mount,
+  type MountingOptions,
+  enableAutoUnmount,
+} from "@vue/test-utils";
+import type { Component } from "vue";
+import { createBootstrap } from "bootstrap-vue-next";
 
 export const mockRouterPush = vi.fn();
 export const mockRouterReplace = vi.fn();
@@ -11,37 +15,38 @@ export const mockRouterReplace = vi.fn();
 enableAutoUnmount(afterEach);
 
 // モックのルーターを作成
-vi.mock('vue-router', async () => {
-    const actual = await vi.importActual('vue-router')
-    return {
-        ...actual,
-        useRoute: () => ({
-            query: {}
-        }),
-        useRouter: () => ({
-            push: mockRouterPush,
-            replace: mockRouterReplace
-        })
-    }
-})
+vi.mock("vue-router", async () => {
+  const actual = await vi.importActual("vue-router");
+  return {
+    ...actual,
+    useRoute: () => ({
+      query: {},
+    }),
+    useRouter: () => ({
+      push: mockRouterPush,
+      replace: mockRouterReplace,
+    }),
+  };
+});
 
 // モックのaxiosを作成
-vi.mock('@/views/api/client', () => ({
-    apiClient: {
-        post: vi.fn(),
-        get: vi.fn(),
-        patch: vi.fn(),
-        delete: vi.fn()
-    }
-}))
+vi.mock("@/views/api/client", () => ({
+  apiClient: {
+    post: vi.fn(),
+    get: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
+  },
+}));
 
 export const mountComponent = <Props extends object = Record<string, unknown>>(
-    component: Component,
-    options: MountingOptions<Props> = {}) => {
-    return mount(component, {
-        global: {
-            plugins: [createPinia(), createBootstrap()]
-        },
-        ...options
-    })
-}
+  component: Component,
+  options: MountingOptions<Props> = {},
+) => {
+  return mount(component, {
+    global: {
+      plugins: [createPinia(), createBootstrap()],
+    },
+    ...options,
+  });
+};

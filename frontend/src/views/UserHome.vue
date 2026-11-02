@@ -6,7 +6,9 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">目標時間</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center">{{ activityByDay.target_time }}</span>
+            <span class="h3 fw-bold text-center">{{
+              activityByDay.target_time
+            }}</span>
             時間
           </div>
         </div>
@@ -15,7 +17,9 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">活動時間</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center">{{ activityByDay.actual_time }}</span>
+            <span class="h3 fw-bold text-center">{{
+              activityByDay.actual_time
+            }}</span>
             時間
           </div>
         </div>
@@ -24,14 +28,25 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">ステータス</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span :class="getStatusColors[activityByDay.status]" class="h3 fw-bold text-center">{{ STATUS_DICT[activityByDay.status] }}</span>
+            <span
+              :class="getStatusColors[activityByDay.status]"
+              class="h3 fw-bold text-center"
+              >{{ STATUS_DICT[activityByDay.status] }}</span
+            >
           </div>
         </div>
       </div>
     </div>
-    <div v-if="activityMsg" class="row d-flex align-items-center justify-content-center my-3">
-      <p class="col-8" :class="getActivityAlert(activityByDay?.status || null)"  data-testid="activity-msg">
-          {{ activityMsg }}
+    <div
+      v-if="activityMsg"
+      class="row d-flex align-items-center justify-content-center my-3"
+    >
+      <p
+        class="col-8"
+        :class="getActivityAlert(activityByDay?.status || null)"
+        data-testid="activity-msg"
+      >
+        {{ activityMsg }}
       </p>
     </div>
   </div>
@@ -42,7 +57,16 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">合計</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span :class="getSalaryColors(fetchSalarySummary.total_income-fetchSalarySummary.base_income)" class="h3 fw-bold text-center" data-testid="total-income">
+            <span
+              :class="
+                getSalaryColors(
+                  fetchSalarySummary.total_income -
+                    fetchSalarySummary.base_income,
+                )
+              "
+              class="h3 fw-bold text-center"
+              data-testid="total-income"
+            >
               {{ fetchSalarySummary.total_income }}
             </span>
             万円
@@ -53,7 +77,9 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">月収</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center">{{ fetchSalarySummary.base_income }}</span>
+            <span class="h3 fw-bold text-center">{{
+              fetchSalarySummary.base_income
+            }}</span>
             万円
           </div>
         </div>
@@ -62,7 +88,11 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">ボーナス-ペナルティ</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span :class="getSalaryColors(fetchSalarySummary.pay_adjustment)" class="h3 fw-bold text-center">{{ fetchSalarySummary.pay_adjustment }}</span>
+            <span
+              :class="getSalaryColors(fetchSalarySummary.pay_adjustment)"
+              class="h3 fw-bold text-center"
+              >{{ fetchSalarySummary.pay_adjustment }}</span
+            >
             万円
           </div>
         </div>
@@ -71,7 +101,9 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">ボーナス</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center text-success">{{ fetchSalarySummary.total_bonus }}</span>
+            <span class="h3 fw-bold text-center text-success">{{
+              fetchSalarySummary.total_bonus
+            }}</span>
             万円
           </div>
         </div>
@@ -80,15 +112,24 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">ペナルティ</h3>
           <div class="d-flex align-items-baseline justify-content-center">
-            <span class="h3 fw-bold text-center text-danger">{{ fetchSalarySummary.total_penalty }}</span>
+            <span class="h3 fw-bold text-center text-danger">{{
+              fetchSalarySummary.total_penalty
+            }}</span>
             万円
           </div>
         </div>
       </div>
     </div>
-    <div v-else class="row d-flex align-items-center justify-content-center my-3">
-      <p v-if="incomeMsg" class="col-8 alert alert-warning p-3" data-testid="income-msg">
-          {{ incomeMsg }}
+    <div
+      v-else
+      class="row d-flex align-items-center justify-content-center my-3"
+    >
+      <p
+        v-if="incomeMsg"
+        class="col-8 alert alert-warning p-3"
+        data-testid="income-msg"
+      >
+        {{ incomeMsg }}
       </p>
     </div>
   </div>
@@ -97,22 +138,25 @@
       <!-- 中央に配置するためのコンテナ -->
       <h2 class="text-center">未完了のTodo</h2>
       <!-- 右側に絶対配置でボタンを配置 -->
-      <div v-if="todos.length" class="btn-group position-absolute top-50 end-0 translate-middle-y">
-        <BButton 
-          class="btn btn-outline-secondary bi-sort-down btn-sm" 
+      <div
+        v-if="todos.length"
+        class="btn-group position-absolute top-50 end-0 translate-middle-y"
+      >
+        <BButton
+          class="btn btn-outline-secondary bi-sort-down btn-sm"
           :class="{ 'text-white': sortType === 'id' }"
           data-testid="sort-todos-id"
-          :variant="sortType === 'id' ? 'secondary' : 'outline-secondary'" 
-          @click="sortTodos('id')" 
+          :variant="sortType === 'id' ? 'secondary' : 'outline-secondary'"
+          @click="sortTodos('id')"
         >
           登録順
         </BButton>
-        <BButton 
-          class="btn btn-outline-secondary bi-sort-down btn-sm" 
+        <BButton
+          class="btn btn-outline-secondary bi-sort-down btn-sm"
           data-testid="sort-todos-due"
           :class="{ 'text-white': sortType === 'due' }"
-          :variant="sortType === 'due' ? 'secondary' : 'outline-secondary'" 
-          @click="sortTodos('due')" 
+          :variant="sortType === 'due' ? 'secondary' : 'outline-secondary'"
+          @click="sortTodos('due')"
         >
           期限順
         </BButton>
@@ -121,74 +165,133 @@
     <table v-if="todos.length" class="table table-striped table-responsive">
       <thead class="table-dark">
         <tr>
-          <th style="width: 5%;">No.</th>
+          <th style="width: 5%">No.</th>
           <th>内容</th>
           <th>期限</th>
-          <th style="width: 8%;"></th>
-          <th style="width: 8%;"></th>
-          <th style="width: 8%;"></th>
+          <th style="width: 8%"></th>
+          <th style="width: 8%"></th>
+          <th style="width: 8%"></th>
         </tr>
       </thead>
       <tbody v-for="(row, index) in paginatedTodos" :key="index">
         <tr data-testid="todo-row">
           <td class="text-center align-middle">{{ index + 1 }}</td>
-          <td class="text-center align-middle todo-title" @click="confirmSingleTodoRequest(row, 'show')">{{ row.title }}</td>
+          <td
+            class="text-center align-middle todo-title"
+            @click="confirmSingleTodoRequest(row, 'show')"
+          >
+            {{ row.title }}
+          </td>
           <td class="text-center align-middle">{{ row.due }}</td>
-          <td><input class="btn btn-outline-primary btn-sm" :data-testid="`edit-${index}`" type="button" value="編集" @click="confirmSingleTodoRequest(row, 'edit')"></td>
-          <td><input class="btn btn-outline-success btn-sm" :data-testid="`finish-${index}`" type="button" value="終了" @click="confirmSingleTodoRequest(row, 'finish')"></td>
-          <td><input class="btn btn-outline-danger btn-sm" :data-testid="`delete-${index}`" type="button" value="削除" @click="confirmSingleTodoRequest(row, 'delete')"></td>
+          <td>
+            <input
+              class="btn btn-outline-primary btn-sm"
+              :data-testid="`edit-${index}`"
+              type="button"
+              value="編集"
+              @click="confirmSingleTodoRequest(row, 'edit')"
+            />
+          </td>
+          <td>
+            <input
+              class="btn btn-outline-success btn-sm"
+              :data-testid="`finish-${index}`"
+              type="button"
+              value="終了"
+              @click="confirmSingleTodoRequest(row, 'finish')"
+            />
+          </td>
+          <td>
+            <input
+              class="btn btn-outline-danger btn-sm"
+              :data-testid="`delete-${index}`"
+              type="button"
+              value="削除"
+              @click="confirmSingleTodoRequest(row, 'delete')"
+            />
+          </td>
         </tr>
       </tbody>
     </table>
     <nav v-if="paginatedTodos.length > 0">
       <ul class="pagination justify-content-center">
-          <li class="page-item" :class="{ disabled: currentPage === 1 }">
-              <button :disabled="currentPage === 1" class="page-link" @click="goToPage(1)">
-                  最初
-              </button>
-          </li>
-          <li class="page-item" :class="{ disabled: currentPage === 1 }">
-              <button :disabled="currentPage === 1" class="page-link" @click="goToPage(currentPage - 1)">
-                  前へ
-              </button>
-          </li>
-          
-          <li v-for="page in visiblePages" :key="page" class="page-item" :class="{ active: page === currentPage }">
-              <button class="page-link" @click="goToPage(page)">
-                  {{ page }}
-              </button>
-          </li>
-          
-          <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-              <button :disabled="currentPage === totalPages" class="page-link" @click="goToPage(currentPage + 1)">
-                  次へ
-              </button>
-          </li>
-          <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-              <button :disabled="currentPage === totalPages" class="page-link" @click="goToPage(totalPages)">
-                  最後
-              </button>
-          </li>
-        </ul>
-      </nav>
-    </div>
-    <div class="row d-flex align-items-center justify-content-center my-3">
-      <p v-if="todoMsg" class="col-8 alert alert-success p-3" data-testid="todo-msg">
-        {{ todoMsg }}
-      </p>
-    </div>
+        <li class="page-item" :class="{ disabled: currentPage === 1 }">
+          <button
+            :disabled="currentPage === 1"
+            class="page-link"
+            @click="goToPage(1)"
+          >
+            最初
+          </button>
+        </li>
+        <li class="page-item" :class="{ disabled: currentPage === 1 }">
+          <button
+            :disabled="currentPage === 1"
+            class="page-link"
+            @click="goToPage(currentPage - 1)"
+          >
+            前へ
+          </button>
+        </li>
 
-  <BModal 
-    v-model="showModal" 
-    :title="modalTitle" 
-    :ok-title="todoAction==='show' ? 'OK' : '送信'" 
-    :cancel-title="todoAction==='show' ? '閉じる' : 'いいえ'" 
+        <li
+          v-for="page in visiblePages"
+          :key="page"
+          class="page-item"
+          :class="{ active: page === currentPage }"
+        >
+          <button class="page-link" @click="goToPage(page)">
+            {{ page }}
+          </button>
+        </li>
+
+        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+          <button
+            :disabled="currentPage === totalPages"
+            class="page-link"
+            @click="goToPage(currentPage + 1)"
+          >
+            次へ
+          </button>
+        </li>
+        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+          <button
+            :disabled="currentPage === totalPages"
+            class="page-link"
+            @click="goToPage(totalPages)"
+          >
+            最後
+          </button>
+        </li>
+      </ul>
+    </nav>
+  </div>
+  <div class="row d-flex align-items-center justify-content-center my-3">
+    <p
+      v-if="todoMsg"
+      class="col-8 alert alert-success p-3"
+      data-testid="todo-msg"
+    >
+      {{ todoMsg }}
+    </p>
+  </div>
+
+  <BModal
+    v-model="showModal"
+    :title="modalTitle"
+    :ok-title="todoAction === 'show' ? 'OK' : '送信'"
+    :cancel-title="todoAction === 'show' ? '閉じる' : 'いいえ'"
     :ok-disabled="!validateParams()"
     data-testid="modal-show"
     @ok="sendTodoRequest"
   >
-    <div v-if="todoAction==='finish' || todoAction==='delete'" class="text-danger">確定後は取り消せません</div>
-    <div v-else-if="todoAction==='show' && todo">
+    <div
+      v-if="todoAction === 'finish' || todoAction === 'delete'"
+      class="text-danger"
+    >
+      確定後は取り消せません
+    </div>
+    <div v-else-if="todoAction === 'show' && todo">
       <div class="todo-detail">
         <p><strong>期限:</strong> {{ todo.due }}</p>
         <p><strong>タイトル:</strong>{{ todo.title }}</p>
@@ -196,7 +299,7 @@
         <p v-else class="text-muted">Todoの詳細はありません</p>
       </div>
     </div>
-    <div v-else-if="todoAction==='edit' && todo">
+    <div v-else-if="todoAction === 'edit' && todo">
       <div class="input-group">
         <label class="mt-3">
           タイトル
@@ -207,16 +310,21 @@
             <input
               v-model="newTodoTitle"
               class="form-control"
-              :placeholder=todo.title
+              :placeholder="todo.title"
               maxlength="32"
               data-testid="new-title"
               @input="titleError = !newTodoTitle"
-              />
-            <small class="form-text text-muted position-absolute" style="right: 8px; bottom: -20px;">
-              {{ (newTodoTitle || '').length }}/32
+            />
+            <small
+              class="form-text text-muted position-absolute"
+              style="right: 8px; bottom: -20px"
+            >
+              {{ (newTodoTitle || "").length }}/32
             </small>
           </div>
-          <div v-if="titleError" style="color: red;">タイトルを入力してください</div>
+          <div v-if="titleError" style="color: red">
+            タイトルを入力してください
+          </div>
         </div>
       </div>
       <div class="input-group mt-3">
@@ -226,14 +334,17 @@
             <textarea
               v-model="newTodoDetail"
               class="form-control"
-              :placeholder=todo.detail
+              :placeholder="todo.detail"
               maxlength="200"
               rows="3"
               data-testid="new-detail"
-              >
+            >
             </textarea>
-            <small class="form-text text-muted position-absolute" style="right: 8px; bottom: -20px;">
-              {{ (newTodoDetail || '').length }}/200
+            <small
+              class="form-text text-muted position-absolute"
+              style="right: 8px; bottom: -20px"
+            >
+              {{ (newTodoDetail || "").length }}/200
             </small>
           </div>
         </div>
@@ -255,73 +366,105 @@
             />
           </div>
         </div>
-        <div v-if="dueError" style="color: red;">期限を入力してください</div>
+        <div v-if="dueError" style="color: red">期限を入力してください</div>
       </div>
     </div>
   </BModal>
-
 </template>
 
-
 <script lang="ts">
-import { onMounted, ref } from 'vue';
-import { BButton, BModal } from 'bootstrap-vue-next';
-import { usePage } from './composables/usePage';
-import { useFetchActivityByDay } from './composables/useActivitiesFetch';
-import { useGetTodos, useTodoOperations, useSortTodos } from './composables/useTodo';
-import { useFetchMonthlySalary } from './composables/useSalary';
-import { 
-  STATUS_DICT, 
-  getAdjustmentColors, 
-  getStatusColors, 
+import { onMounted, ref } from "vue";
+import { BButton, BModal } from "bootstrap-vue-next";
+import { usePage } from "./composables/usePage";
+import { useFetchActivityByDay } from "./composables/useActivitiesFetch";
+import {
+  useGetTodos,
+  useTodoOperations,
+  useSortTodos,
+} from "./composables/useTodo";
+import { useFetchMonthlySalary } from "./composables/useSalary";
+import {
+  STATUS_DICT,
+  getAdjustmentColors,
+  getStatusColors,
   getSalaryColors,
-  getActivityAlert
-} from './utils/ui';
-import { getThisMonth } from './utils/date';
-import { ConfirmTodoRequest } from './utils/todoUtils';
-import { TodoInfo } from './types/todo';
+  getActivityAlert,
+} from "./utils/ui";
+import { getThisMonth } from "./utils/date";
+import { ConfirmTodoRequest } from "./utils/todoUtils";
+import { TodoInfo } from "./types/todo";
 
 export default {
-  components:{
+  components: {
     BModal,
-    BButton
+    BButton,
   },
 
   setup() {
     const todoMsg = ref<string>("");
     const todo = ref<TodoInfo>();
-    const { fetchMsg: incomeMsg, fetchSalarySummary, fetchMonthlySalary } = useFetchMonthlySalary();
+    const {
+      fetchMsg: incomeMsg,
+      fetchSalarySummary,
+      fetchMonthlySalary,
+    } = useFetchMonthlySalary();
     const { todos, statusFilter, fetchTodos } = useGetTodos(todoMsg);
-    const { selectedTodoIDs, newTodoTitle, newTodoDetail, newTodoDue, updateTodo, completeTodos, removeTodos } = useTodoOperations(todoMsg);
-    const { totalItems, totalPages, currentPage, visiblePages, paginatedTodos, goToPage } = usePage(todos, 5);
+    const {
+      selectedTodoIDs,
+      newTodoTitle,
+      newTodoDetail,
+      newTodoDue,
+      updateTodo,
+      completeTodos,
+      removeTodos,
+    } = useTodoOperations(todoMsg);
+    const {
+      totalItems,
+      totalPages,
+      currentPage,
+      visiblePages,
+      paginatedTodos,
+      goToPage,
+    } = usePage(todos, 5);
     const { sortType, sortTodos } = useSortTodos(todos);
-    const { date, checkMsg: activityMsg, activityByDay, fetchActivityByDay } = useFetchActivityByDay();
-    const { 
+    const {
+      date,
+      checkMsg: activityMsg,
+      activityByDay,
+      fetchActivityByDay,
+    } = useFetchActivityByDay();
+    const {
       showModal,
       titleError,
       dueError,
       todoAction,
       modalTitle,
-      confirmSingleTodoRequest
-    } = ConfirmTodoRequest(todo, selectedTodoIDs, newTodoTitle, newTodoDetail, newTodoDue);
+      confirmSingleTodoRequest,
+    } = ConfirmTodoRequest(
+      todo,
+      selectedTodoIDs,
+      newTodoTitle,
+      newTodoDetail,
+      newTodoDue,
+    );
 
     const validateParams = () => {
       if (["show", "finish", "delete"].includes(todoAction.value)) {
-          return true;
-        }
+        return true;
+      }
 
       return !!(newTodoTitle.value && newTodoDue.value);
     };
 
-    const sendTodoRequest = async() =>{
-      if (todoAction.value==='finish'){
+    const sendTodoRequest = async () => {
+      if (todoAction.value === "finish") {
         await completeTodos();
-      } else if (todoAction.value==='delete') {
+      } else if (todoAction.value === "delete") {
         await removeTodos();
         if (currentPage.value > totalPages.value) {
-            currentPage.value = totalPages.value;
-        };
-      } else if (todoAction.value==='edit'){
+          currentPage.value = totalPages.value;
+        }
+      } else if (todoAction.value === "edit") {
         await updateTodo(selectedTodoIDs.value[0]);
       }
       // データを初期化
@@ -331,7 +474,7 @@ export default {
       await fetchTodos();
     };
 
-    onMounted( async() =>{
+    onMounted(async () => {
       // その日の活動実績を取得
       await fetchActivityByDay();
 
@@ -342,8 +485,7 @@ export default {
       // そのユーザーの未完了のtodoを取得、このページでは未完了のTodoのみを表示
       statusFilter.value = "false";
       await fetchTodos();
-      }
-    )
+    });
 
     return {
       activityMsg,
@@ -377,14 +519,14 @@ export default {
       currentPage,
       visiblePages,
       paginatedTodos,
-      goToPage
-    }
-  }
-}
+      goToPage,
+    };
+  },
+};
 </script>
 
 <style>
-li{
+li {
   list-style: none;
 }
 .todo-item {

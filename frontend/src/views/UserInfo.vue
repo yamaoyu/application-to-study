@@ -1,90 +1,169 @@
 <template>
   <h2 class="mb-5">ユーザー管理メニュー</h2>
   <div class="container col-8 card">
-    <h5 class="card-title mt-3 clickable" @click="isFormVisible = !isFormVisible">
+    <h5
+      class="card-title mt-3 clickable"
+      @click="isFormVisible = !isFormVisible"
+    >
       パスワード変更
       <span v-if="isFormVisible" class="ms-2">▲</span>
       <span v-else class="ms-2">▼</span>
     </h5>
-    <hr class="divider">
+    <hr class="divider" />
 
-    <div class="collapse" :class="{ 'show': isFormVisible }">
+    <div class="collapse" :class="{ show: isFormVisible }">
       <div class="text-start mt-3">
         <div class="form-check form-check-inline">
-          <input v-model="isPasswordChangeEnabled" class="form-check-input" type="checkbox" data-testid="isPasswordChangeEnabled">
-          <label class="form-check-label" for="changePassword">パスワードを変更する</label>
+          <input
+            v-model="isPasswordChangeEnabled"
+            class="form-check-input"
+            type="checkbox"
+            data-testid="isPasswordChangeEnabled"
+          />
+          <label class="form-check-label" for="changePassword"
+            >パスワードを変更する</label
+          >
         </div>
       </div>
-      
+
       <BForm @submit.prevent="submitPasswordChange">
         <div class="form-group mt-3">
           <div class="input-group">
-            <BFormInput v-model="oldPassword" :type="!showOldPassword ? 'password':'text'" placeholder="現在のパスワード(必須)" :disabled="!isPasswordChangeEnabled" required data-testid="oldPassword"/>
-            <button 
-                class="btn btn-outline-secondary" type="button" 
-                :disabled="!isPasswordChangeEnabled"
-                @click="showOldPassword = !showOldPassword"
-              >
-              <i :class="['bi', showOldPassword ? 'bi-eye-slash' : 'bi-eye']"></i>
+            <BFormInput
+              v-model="oldPassword"
+              :type="!showOldPassword ? 'password' : 'text'"
+              placeholder="現在のパスワード(必須)"
+              :disabled="!isPasswordChangeEnabled"
+              required
+              data-testid="oldPassword"
+            />
+            <button
+              class="btn btn-outline-secondary"
+              type="button"
+              :disabled="!isPasswordChangeEnabled"
+              @click="showOldPassword = !showOldPassword"
+            >
+              <i
+                :class="['bi', showOldPassword ? 'bi-eye-slash' : 'bi-eye']"
+              ></i>
             </button>
           </div>
         </div>
         <div class="form-group mt-3">
           <div class="input-group">
-            <BFormInput v-model="newPassword" :type="!showNewPassword ? 'password':'text'" placeholder="新しいパスワード(必須)" :disabled="!isPasswordChangeEnabled" :state="passwordValidateResult.valid" required data-testid="newPassword"/>
-            <button 
-                class="btn btn-outline-secondary" type="button"
-                :disabled="!isPasswordChangeEnabled"
-                @click="showNewPassword = !showNewPassword"
-              >
-              <i :class="['bi', showNewPassword ? 'bi-eye-slash' : 'bi-eye']"></i>
+            <BFormInput
+              v-model="newPassword"
+              :type="!showNewPassword ? 'password' : 'text'"
+              placeholder="新しいパスワード(必須)"
+              :disabled="!isPasswordChangeEnabled"
+              :state="passwordValidateResult.valid"
+              required
+              data-testid="newPassword"
+            />
+            <button
+              class="btn btn-outline-secondary"
+              type="button"
+              :disabled="!isPasswordChangeEnabled"
+              @click="showNewPassword = !showNewPassword"
+            >
+              <i
+                :class="['bi', showNewPassword ? 'bi-eye-slash' : 'bi-eye']"
+              ></i>
             </button>
           </div>
           <div class="feedback-container">
-            <BFormInvalidFeedback :state="passwordValidateResult.valid" data-testid="pass-validate-message">
+            <BFormInvalidFeedback
+              :state="passwordValidateResult.valid"
+              data-testid="pass-validate-message"
+            >
               {{ passwordValidateResult.message }}
             </BFormInvalidFeedback>
-            <BFormValidFeedback :state="passwordValidateResult.valid" data-testid="valid-password">
+            <BFormValidFeedback
+              :state="passwordValidateResult.valid"
+              data-testid="valid-password"
+            >
               OK
             </BFormValidFeedback>
           </div>
         </div>
         <div class="form-group mt-3">
           <div class="input-group">
-            <BFormInput v-model="newPasswordCheck" :type="!showNewPasswordCheck ? 'password':'text'" placeholder="新しいパスワード確認(必須)" :disabled="!isPasswordChangeEnabled" :state="passwordEqualResult.valid" required data-testid="newPasswordCheck"/>
-            <button 
-                class="btn btn-outline-secondary" type="button"
-                :disabled="!isPasswordChangeEnabled"
-                @click="showNewPasswordCheck = !showNewPasswordCheck"
-              >
-              <i :class="['bi', showNewPasswordCheck ? 'bi-eye-slash' : 'bi-eye']"></i>
+            <BFormInput
+              v-model="newPasswordCheck"
+              :type="!showNewPasswordCheck ? 'password' : 'text'"
+              placeholder="新しいパスワード確認(必須)"
+              :disabled="!isPasswordChangeEnabled"
+              :state="passwordEqualResult.valid"
+              required
+              data-testid="newPasswordCheck"
+            />
+            <button
+              class="btn btn-outline-secondary"
+              type="button"
+              :disabled="!isPasswordChangeEnabled"
+              @click="showNewPasswordCheck = !showNewPasswordCheck"
+            >
+              <i
+                :class="[
+                  'bi',
+                  showNewPasswordCheck ? 'bi-eye-slash' : 'bi-eye',
+                ]"
+              ></i>
             </button>
           </div>
           <div class="feedback-container">
-            <BFormInvalidFeedback :state="passwordEqualResult.valid" data-testid="pass-equal-invalid">
+            <BFormInvalidFeedback
+              :state="passwordEqualResult.valid"
+              data-testid="pass-equal-invalid"
+            >
               パスワードが一致しません
             </BFormInvalidFeedback>
-            <BFormValidFeedback :state="passwordEqualResult.valid" data-testid="pass-equal-valid">
+            <BFormValidFeedback
+              :state="passwordEqualResult.valid"
+              data-testid="pass-equal-valid"
+            >
               OK
             </BFormValidFeedback>
           </div>
         </div>
-        <button type="submit" class="btn btn-outline-secondary my-3" :disabled="!isPasswordChangeEnabled" data-testid="password-change-button">変更</button>
+        <button
+          type="submit"
+          class="btn btn-outline-secondary my-3"
+          :disabled="!isPasswordChangeEnabled"
+          data-testid="password-change-button"
+        >
+          変更
+        </button>
       </BForm>
     </div>
   </div>
   <div class="container d-flex flex-column align-items-center">
-    <p v-if="message" class="col-8 mt-3" :class="getResponseAlert(statusCode)" data-testid="message">{{ message }}</p>
+    <p
+      v-if="message"
+      class="col-8 mt-3"
+      :class="getResponseAlert(statusCode)"
+      data-testid="message"
+    >
+      {{ message }}
+    </p>
   </div>
 </template>
-  
+
 <script lang="ts">
-import { ref, watch } from 'vue'
-import { BForm, BFormInput, BFormInvalidFeedback, BFormValidFeedback } from 'bootstrap-vue-next';
-import { getResponseAlert } from './utils/ui';
-import { useChangePassword, usePasswordValidation } from './composables/useUserInfo';
-import { useAuthStore, useRoleStore } from '@/store/authenticate';
-import { useRouter } from 'vue-router';
+import { ref, watch } from "vue";
+import {
+  BForm,
+  BFormInput,
+  BFormInvalidFeedback,
+  BFormValidFeedback,
+} from "bootstrap-vue-next";
+import { getResponseAlert } from "./utils/ui";
+import {
+  useChangePassword,
+  usePasswordValidation,
+} from "./composables/useUserInfo";
+import { useAuthStore, useRoleStore } from "@/store/authenticate";
+import { useRouter } from "vue-router";
 
 export default {
   components: {
@@ -95,46 +174,55 @@ export default {
   },
 
   setup() {
-    const { oldPassword, newPassword, newPasswordCheck, message, statusCode, changePassword } = useChangePassword();
+    const {
+      oldPassword,
+      newPassword,
+      newPasswordCheck,
+      message,
+      statusCode,
+      changePassword,
+    } = useChangePassword();
     const isPasswordChangeEnabled = ref<boolean>(false);
     const isFormVisible = ref<boolean>(false);
     const showOldPassword = ref<boolean>(false);
     const showNewPassword = ref<boolean>(false);
     const showNewPasswordCheck = ref<boolean>(false);
-    const { passwordValidateResult, passwordEqualResult } = usePasswordValidation(newPassword, newPasswordCheck);
+    const { passwordValidateResult, passwordEqualResult } =
+      usePasswordValidation(newPassword, newPasswordCheck);
 
     watch(isPasswordChangeEnabled, () => {
-      oldPassword.value = ''
-      newPassword.value = ''
-      newPasswordCheck.value = ''
+      oldPassword.value = "";
+      newPassword.value = "";
+      newPasswordCheck.value = "";
     });
 
     const authStore = useAuthStore();
     const roleStore = useRoleStore();
     const router = useRouter();
 
-    const submitPasswordChange = async() => {
+    const submitPasswordChange = async () => {
       if (
         !passwordValidateResult.value.valid ||
         !passwordEqualResult.value.valid
       ) {
-        return
+        return;
       }
       await changePassword();
 
       if (statusCode.value !== 200) {
-        return
-      } 
+        return;
+      }
       authStore.clearAuthData();
       roleStore.clearRole();
 
       await router.replace({
         name: "Login",
         query: {
-          message: "パスワードを変更しました。新しいパスワードでログインしてください",
-        }
-      })
-    }
+          message:
+            "パスワードを変更しました。新しいパスワードでログインしてください",
+        },
+      });
+    };
 
     return {
       oldPassword,
@@ -150,8 +238,8 @@ export default {
       showOldPassword,
       showNewPassword,
       showNewPasswordCheck,
-      submitPasswordChange
-    }
-  }
-}
+      submitPasswordChange,
+    };
+  },
+};
 </script>

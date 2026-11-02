@@ -66,12 +66,12 @@ export const parseError = (error: unknown, message: string) => {
       return message;
     }
 
-    return getErrorMessageByCode(code)
-  };
+    return getErrorMessageByCode(code);
+  }
 
   if (error.request) {
     return "リクエストがサーバーに到達できませんでした";
-  };
+  }
 
   return message;
 };

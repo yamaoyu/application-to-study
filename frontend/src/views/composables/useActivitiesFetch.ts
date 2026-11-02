@@ -1,5 +1,11 @@
 import { ref } from "vue";
-import { getActivitiesByStatus, getActivityByDay, getActivitiesByMonth, getActivitiesByYear, getAllActivities } from "../api/activity";
+import {
+  getActivitiesByStatus,
+  getActivityByDay,
+  getActivitiesByMonth,
+  getActivitiesByYear,
+  getAllActivities,
+} from "../api/activity";
 import { parseError } from "../utils/error";
 import { getToday, getThisMonth, getThisYear } from "../utils/date";
 import {
@@ -9,9 +15,8 @@ import {
   MonthKey,
   GetOneActivityResponse,
   YearlyMonthlyInfo,
-  ActivityStatus
+  ActivityStatus,
 } from "../types/activity";
-
 
 export const useFetchActivitiesByStatus = () => {
   const pendingMsg = ref<string>("");
@@ -29,14 +34,14 @@ export const useFetchActivitiesByStatus = () => {
       pendingActivities.value = [];
       pendingStatus.value = null;
     }
-  }
+  };
 
   return {
     pendingMsg,
     pendingActivities,
     pendingStatus,
-    fetchActivitiesByStatus
-  }
+    fetchActivitiesByStatus,
+  };
 };
 
 export const useFetchActivityByDay = () => {
@@ -46,7 +51,7 @@ export const useFetchActivityByDay = () => {
 
   const fetchActivityByDay = async () => {
     try {
-      const dateParts = date.value.split('-').map(Number);
+      const dateParts = date.value.split("-").map(Number);
       const year = dateParts[0];
       const month = dateParts[1];
       const day = dateParts[2];
@@ -71,14 +76,14 @@ export const useFetchActivityByDay = () => {
       checkMsg.value = parseError(error, "活動記録の取得に失敗しました");
       activityByDay.value = undefined;
     }
-  }
+  };
 
   return {
     date,
     checkMsg,
     activityByDay,
-    fetchActivityByDay
-  }
+    fetchActivityByDay,
+  };
 };
 
 export const useFetchActivitiesByMonth = () => {
@@ -89,13 +94,16 @@ export const useFetchActivitiesByMonth = () => {
 
   const fetchActivitiesByMonth = async () => {
     try {
-      const [year, month] = selectedMonth.value.split('-').map(Number)
+      const [year, month] = selectedMonth.value.split("-").map(Number);
       const res = await getActivitiesByMonth(year, month);
       monthlyActivities.value = res.data.activity_list;
-      monthlySummary.value = res.data
-      monthlyActivitiesMessage.value = ""
+      monthlySummary.value = res.data;
+      monthlyActivitiesMessage.value = "";
     } catch (error) {
-      monthlyActivitiesMessage.value = parseError(error, `${selectedMonth.value}の活動取得に失敗しました`);
+      monthlyActivitiesMessage.value = parseError(
+        error,
+        `${selectedMonth.value}の活動取得に失敗しました`,
+      );
       monthlyActivities.value = [];
       monthlySummary.value = undefined;
     }
@@ -106,8 +114,8 @@ export const useFetchActivitiesByMonth = () => {
     monthlyActivities,
     monthlyActivitiesMessage,
     monthlySummary,
-    fetchActivitiesByMonth
-  }
+    fetchActivitiesByMonth,
+  };
 };
 
 export const useFetchActivitiesByYear = () => {
@@ -121,9 +129,12 @@ export const useFetchActivitiesByYear = () => {
       const res = await getActivitiesByYear(selectedYear.value);
       yearlyActivities.value = res.data.monthly_info;
       yearlyActivitiesMessage.value = "";
-      yearlySummary.value = res.data
+      yearlySummary.value = res.data;
     } catch (error) {
-      yearlyActivitiesMessage.value = parseError(error, `${selectedYear.value}の活動取得に失敗しました`);
+      yearlyActivitiesMessage.value = parseError(
+        error,
+        `${selectedYear.value}の活動取得に失敗しました`,
+      );
       yearlyActivities.value = undefined;
       yearlySummary.value = undefined;
     }
@@ -134,8 +145,8 @@ export const useFetchActivitiesByYear = () => {
     yearlyActivities,
     yearlyActivitiesMessage,
     yearlySummary,
-    fetchActivitiesByYear
-  }
+    fetchActivitiesByYear,
+  };
 };
 
 export const useFetchAllActivities = () => {
@@ -148,14 +159,17 @@ export const useFetchAllActivities = () => {
       allActivitiesMessage.value = "";
       allActivitiesSummary.value = res.data;
     } catch (error) {
-      allActivitiesMessage.value = parseError(error, "全期間の活動記録取得に失敗しました");
+      allActivitiesMessage.value = parseError(
+        error,
+        "全期間の活動記録取得に失敗しました",
+      );
       allActivitiesSummary.value = undefined;
     }
-  }
+  };
 
   return {
     allActivitiesMessage,
     allActivitiesSummary,
-    fetchAllActivities
-  }
+    fetchAllActivities,
+  };
 };
