@@ -17,7 +17,9 @@ from db.database import get_db
 router = APIRouter(prefix="/incomes", tags=["incomes"])
 
 
-def get_register_salary_service(db: Annotated[Session, Depends(get_db)]) -> RegisterSalaryUsecase:
+def get_register_salary_service(
+    db: Annotated[Session, Depends(get_db)],
+) -> RegisterSalaryUsecase:
     return RegisterSalaryUsecase(db)
 
 
@@ -47,7 +49,9 @@ def register_salary(
 def get_monthly_income(
     current_user: Annotated[dict, Depends(get_current_active_user)],
     param: Annotated[CheckYearMonth, Depends()],
-    service: Annotated[GetMonthlyIncomeUsecase, Depends(get_fetch_monthly_income_service)],
+    service: Annotated[
+        GetMonthlyIncomeUsecase, Depends(get_fetch_monthly_income_service)
+    ],
 ):
     """月毎の収入を確認する"""
     username = current_user["username"]

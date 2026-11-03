@@ -37,9 +37,7 @@ class TokenRepository:
             )
             self.db.add(new_token)
 
-    def delete_refresh_token(
-        self, username: str, device_id: str | None = None
-    ) -> None:
+    def delete_refresh_token(self, username: str, device_id: str | None = None) -> None:
         sqlstatemt = self.db.query(db_model.Token).filter(
             db_model.Token.username == username
         )

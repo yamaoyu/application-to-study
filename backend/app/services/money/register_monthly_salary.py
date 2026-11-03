@@ -40,7 +40,9 @@ class RegisterSalaryUsecase:
             if "Duplicate entry" in str(
                 getattr(sqlalchemy_error, "orig", sqlalchemy_error)
             ):
-                raise Conflict(code=ConflictCode.SALARY_ALREADY_EXISTS) from sqlalchemy_error
+                raise Conflict(
+                    code=ConflictCode.SALARY_ALREADY_EXISTS
+                ) from sqlalchemy_error
             raise BadRequest(code=BadRequestCode.UNEXPECTED_ERROR) from sqlalchemy_error
 
 

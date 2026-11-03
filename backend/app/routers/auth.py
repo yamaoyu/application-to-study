@@ -107,7 +107,9 @@ def logout(
 
 @router.post("/token", status_code=200, response_model=regenerateAccessTokenResponse)
 def regenerate_access_token(
-    service: Annotated[RegenerateAccessTokenUseCase, Depends(get_regenerate_access_token_service)],
+    service: Annotated[
+        RegenerateAccessTokenUseCase, Depends(get_regenerate_access_token_service)
+    ],
     refresh_token: str = Cookie(default=None),
     device_id: str = Cookie(default=None),
 ):

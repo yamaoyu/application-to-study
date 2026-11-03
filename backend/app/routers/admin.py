@@ -23,7 +23,9 @@ from db.database import get_db
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 
-def get_change_status_service(db: Annotated[Session, Depends(get_db)]) -> ChangeUserStatus:
+def get_change_status_service(
+    db: Annotated[Session, Depends(get_db)],
+) -> ChangeUserStatus:
     return ChangeUserStatus(db)
 
 
@@ -35,7 +37,9 @@ def get_change_role_service(db: Annotated[Session, Depends(get_db)]) -> ChangeUs
     return ChangeUserRole(db)
 
 
-def get_reset_password_service(db: Annotated[Session, Depends(get_db)]) -> ResetPassword:
+def get_reset_password_service(
+    db: Annotated[Session, Depends(get_db)],
+) -> ResetPassword:
     return ResetPassword(db)
 
 

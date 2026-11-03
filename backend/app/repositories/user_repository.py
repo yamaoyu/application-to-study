@@ -19,7 +19,7 @@ class UserRepository:
         hash_password: str,
         role: str,
         created_at: datetime,
-        email: str | None = None
+        email: str | None = None,
     ) -> None:
         form_data = db_model.User(
             username=username,

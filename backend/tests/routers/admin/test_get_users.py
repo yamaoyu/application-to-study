@@ -133,7 +133,8 @@ def test_get_users_with_last_active_at(
     assert response.status_code == 200
     assert len(response.json()["users"]) > 0
     assert all(
-        datetime.fromisoformat(user["last_active_at"]) >= datetime.fromisoformat(last_active_at)
+        datetime.fromisoformat(user["last_active_at"])
+        >= datetime.fromisoformat(last_active_at)
         for user in response.json()["users"]
     )
 

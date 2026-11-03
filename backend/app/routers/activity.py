@@ -73,7 +73,9 @@ def get_day_activity(
 )
 def register_multi_target_time(
     activities: MultiTargetTimeIn,
-    service: Annotated[RegisterTargetTimeUseCase, Depends(get_register_target_time_usecase)],
+    service: Annotated[
+        RegisterTargetTimeUseCase, Depends(get_register_target_time_usecase)
+    ],
     current_user: Annotated[dict, Depends(get_current_active_user)],
 ):
     data = [
@@ -88,7 +90,9 @@ def register_multi_target_time(
 )
 def update_multi_actual_time(
     activities: MultiActualTimeIn,
-    service: Annotated[RegisterActualTimeUseCase, Depends(get_register_actual_time_usecase)],
+    service: Annotated[
+        RegisterActualTimeUseCase, Depends(get_register_actual_time_usecase)
+    ],
     current_user: Annotated[dict, Depends(get_current_active_user)],
 ):
     """複数日の活動時間を登録する"""

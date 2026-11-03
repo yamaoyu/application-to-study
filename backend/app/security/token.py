@@ -22,9 +22,7 @@ def create_access_token(payload: dict, expires_delta: timedelta | None = None):
         if expires_delta:
             expire = datetime.now(UTC) + expires_delta
         else:
-            expire = datetime.now(UTC) + timedelta(
-                minutes=ACCESS_TOKEN_EXPIRE_MINUTES
-            )
+            expire = datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         to_encode.update({"exp": expire})
         access_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         return access_token
@@ -42,9 +40,7 @@ def create_refresh_token_value(
     if expires_delta:
         expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.now(UTC) + timedelta(
-            weeks=REFRESH_TOKEN_EXPIRE_WEEKS
-        )
+        expire = datetime.now(UTC) + timedelta(weeks=REFRESH_TOKEN_EXPIRE_WEEKS)
     to_encode.update({"exp": expire})
     refresh_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return refresh_token, expire

@@ -25,7 +25,9 @@ from db.database import get_db
 router = APIRouter(prefix="/todos", tags=["todos"])
 
 
-def get_todo_register_service(db: Annotated[Session, Depends(get_db)]) -> TodoRegisterService:
+def get_todo_register_service(
+    db: Annotated[Session, Depends(get_db)],
+) -> TodoRegisterService:
     return TodoRegisterService(db)
 
 
@@ -33,11 +35,15 @@ def get_todo_edit_service(db: Annotated[Session, Depends(get_db)]) -> TodoEditSe
     return TodoEditService(db)
 
 
-def get_todo_finish_service(db: Annotated[Session, Depends(get_db)]) -> TodoFinishService:
+def get_todo_finish_service(
+    db: Annotated[Session, Depends(get_db)],
+) -> TodoFinishService:
     return TodoFinishService(db)
 
 
-def get_todo_delete_service(db: Annotated[Session, Depends(get_db)]) -> TodoDeleteService:
+def get_todo_delete_service(
+    db: Annotated[Session, Depends(get_db)],
+) -> TodoDeleteService:
     return TodoDeleteService(db)
 
 

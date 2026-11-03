@@ -23,11 +23,15 @@ from db.database import get_db
 router = APIRouter()
 
 
-def get_create_user_service(db: Annotated[Session, Depends(get_db)]) -> CreateUserUseCase:
+def get_create_user_service(
+    db: Annotated[Session, Depends(get_db)],
+) -> CreateUserUseCase:
     return CreateUserUseCase(db)
 
 
-def get_change_password_service(db: Annotated[Session, Depends(get_db)]) -> ChangePasswordUseCase:
+def get_change_password_service(
+    db: Annotated[Session, Depends(get_db)],
+) -> ChangePasswordUseCase:
     return ChangePasswordUseCase(db)
 
 
@@ -71,6 +75,8 @@ def change_password(
 def force_change_password(
     params: ForceChangePasswordInfo,
     current_user: Annotated[dict, Depends(get_current_user_for_password_change)],
-    service: Annotated[ForceChangePasswordUseCase, Depends(get_force_change_password_service)],
+    service: Annotated[
+        ForceChangePasswordUseCase, Depends(get_force_change_password_service)
+    ],
 ):
     return service.execute(params.new_password, current_user["username"])
