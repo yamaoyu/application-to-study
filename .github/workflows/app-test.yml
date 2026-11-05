@@ -1,0 +1,198 @@
+name: Application test
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  check_changes:
+    runs-on: ubuntu-24.04
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      application: ${{ steps.filter.outputs.application }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - 'docker-compose*.yml'
+              - '.env.test'
+              - '.github/workflows/app-test.yml'
+
+            frontend:
+              - 'frontend/**'
+              - '.github/workflows/app-test.yml'
+
+            application:
+              - 'backend/**'
+              - 'frontend/**'
+              - 'docker-compose*.yml'
+              - '.env.test'
+              - '.github/workflows/app-test.yml'
+
+  test:
+    needs: check_changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        if: needs.check_changes.outputs.application == 'true'
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Create environment file
+        if: needs.check_changes.outputs.application == 'true'
+        run: cp .env.test .env
+
+      - name: Install frontend dependencies
+        if: needs.check_changes.outputs.application == 'true'
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright browser
+        if: needs.check_changes.outputs.application == 'true'
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Start Docker
+        if: needs.check_changes.outputs.application == 'true'
+        run: bash docker_exec.sh -d
+
+      - name: Check backend
+        if: needs.check_changes.outputs.application == 'true'
+        run: |
+          for i in {1..30}; do
+            if curl --fail --silent http://localhost:8000/health; then
+              echo "Backend is up"
+              exit 0
+            fi
+            sleep 10
+          done
+
+          echo "Backend failed to start"
+          exit 1
+
+      - name: Check frontend
+        if: needs.check_changes.outputs.application == 'true'
+        run: |
+          for i in {1..15}; do
+            if curl --fail --silent http://localhost:8080 >/dev/null; then
+              echo "Frontend is up"
+              exit 0
+            fi
+            sleep 5
+          done
+
+          echo "Frontend failed to start"
+          exit 1
+
+      - name: Backend tests
+        id: backend_tests
+        if: needs.check_changes.outputs.backend == 'true'
+        continue-on-error: true
+        run: |
+          docker compose exec -T backend \
+            python -m pytest -vv \
+            --junitxml=results/test-results.xml
+
+      - name: Frontend tests
+        id: frontend_tests
+        if: needs.check_changes.outputs.frontend == 'true'
+        continue-on-error: true
+        run: |
+          docker compose exec -T frontend \
+            npx vitest run \
+            --reporter=junit \
+            --outputFile=results/test-results.xml
+
+      - name: E2E tests
+        id: e2e_tests
+        if: needs.check_changes.outputs.application == 'true'
+        continue-on-error: true
+        working-directory: frontend
+        env:
+          PLAYWRIGHT_JUNIT_OUTPUT_FILE: results/e2e/test-results.xml
+        run: |
+          mkdir -p results/e2e
+          npx playwright test --reporter=line,junit
+
+      - name: Collect test results
+        if: always() && needs.check_changes.outputs.application == 'true'
+        run: |
+          mkdir -p results/backend results/frontend results/e2e
+
+          docker compose cp \
+            backend:/backend/results/test-results.xml \
+            results/backend/test-results.xml || true
+
+          docker compose cp \
+            frontend:/frontend/results/test-results.xml \
+            results/frontend/test-results.xml || true
+                  
+          if [[ -f frontend/results/e2e/test-results.xml ]]; then
+            cp frontend/results/e2e/test-results.xml \
+              results/e2e/test-results.xml
+          fi
+
+      - name: Upload test results
+        if: always() && needs.check_changes.outputs.application == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: results/
+          if-no-files-found: warn
+
+      - name: Verify test results
+        if: always() && needs.check_changes.outputs.application == 'true'
+        env:
+          BACKEND_RESULT: ${{ steps.backend_tests.outcome }}
+          FRONTEND_RESULT: ${{ steps.frontend_tests.outcome }}
+          E2E_RESULT: ${{ steps.e2e_tests.outcome }}
+        run: |
+          echo "Backend result: $BACKEND_RESULT"
+          echo "Frontend result: $FRONTEND_RESULT"
+          echo "E2E result: $E2E_RESULT"
+
+          failed=false
+
+          for result in \
+            "$BACKEND_RESULT" \
+            "$FRONTEND_RESULT" \
+            "$E2E_RESULT"
+          do
+            case "$result" in
+              success|skipped)
+                ;;
+              *)
+                failed=true
+                ;;
+            esac
+          done
+
+          if [[ "$failed" == true ]]; then
+            echo "One or more test suites failed."
+            exit 1
+          fi
+
+      - name: Docker logs
+        if: failure()
+        run: docker compose logs
+
+      - name: Stop Docker
+        if: always() && needs.check_changes.outputs.application == 'true'
+        run: docker compose down -v
