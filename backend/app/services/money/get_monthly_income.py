@@ -1,15 +1,17 @@
-from lib.log_conf import logger
-from sqlalchemy.orm import Session
-from app.repositories.money_repository import MoneyRepository
-from app.repositories.activity_repository import ActivityRepository
-from app.exceptions import NotFound
 from datetime import date
-from lib.common import get_month_end
-from app.models.money_model import GetIncomeResponse
+
+from sqlalchemy.orm import Session
+
 from app.error_codes import NotFoundCode
+from app.exceptions import NotFound
+from app.models.money_model import GetIncomeResponse
+from app.repositories.activity_repository import ActivityRepository
+from app.repositories.money_repository import MoneyRepository
+from lib.common import get_month_end
+from lib.log_conf import logger
 
 
-class GetMonthlyIncomeUsecase():
+class GetMonthlyIncomeUsecase:
     def __init__(self, db: Session) -> None:
         self.income_repo = MoneyRepository(db)
         self.time_repo = ActivityRepository(db)
@@ -21,11 +23,12 @@ class GetMonthlyIncomeUsecase():
             raise NotFound(code=NotFoundCode.SALARY_NOT_FOUND)
         end_date = get_month_end(income_month)
         activity_summary = self.time_repo.get_activity_summary(
-            username, income_month, end_date)
+            username, income_month, end_date
+        )
         logger.info(f"{username}:{year}-{month}の月収を取得")
         return GetIncomeResponse(
             base_income=income.salary,
             pay_adjustment=activity_summary.pay_adjustment,
             total_bonus=activity_summary.total_bonus,
-            total_penalty=activity_summary.total_penalty
+            total_penalty=activity_summary.total_penalty,
         )

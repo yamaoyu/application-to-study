@@ -22,10 +22,10 @@
         <tr v-for="(activity, index) in targetActivities" :key="index">
           <td data-testid="target-row">
             <div class="input-group">
-              <input 
-                v-model="activity.date" 
-                type="date" 
-                class="form-control" 
+              <input
+                v-model="activity.date"
+                type="date"
+                class="form-control"
                 min="2024-01-01"
                 :max="getMaxDate()"
                 :data-testid="`target-date-row-${index}`"
@@ -49,8 +49,8 @@
             </div>
           </td>
           <td>
-            <button 
-              type="button" 
+            <button
+              type="button"
               class="btn btn-outline-danger btn-sm"
               :data-testid="`decrease-target-row-${index}`"
               @click="removeTargetActivity(targetActivities, index)"
@@ -61,8 +61,8 @@
         </tr>
         <tr class="table-secondary">
           <td colspan="3" class="text-center">
-            <button 
-              type="button" 
+            <button
+              type="button"
               class="btn btn-outline-primary"
               data-testid="increase-target-row"
               @click="addTargetActivity(targetActivities)"
@@ -73,8 +73,8 @@
         </tr>
       </tbody>
     </table>
-    <button 
-      type="button" 
+    <button
+      type="button"
       :disabled="!isValid"
       data-testid="submit-multi-target"
       class="btn btn-outline-secondary mt-3"
@@ -84,52 +84,79 @@
     </button>
   </div>
 
-  <div v-if="reqMsg" class="container d-flex justify-content-center" data-testid="reqMsg">
-    <p class="mt-3 col-12" :class="getResponseAlert(statusCode)">{{ reqMsg }}</p>
+  <div
+    v-if="reqMsg"
+    class="container d-flex justify-content-center"
+    data-testid="reqMsg"
+  >
+    <p class="mt-3 col-12" :class="getResponseAlert(statusCode)">
+      {{ reqMsg }}
+    </p>
   </div>
 
   <!-- モーダルコンポーネントで登録前の確認 -->
-  <BModal v-model="showModal" title="目標時間の登録" ok-title="はい" cancel-title="いいえ" data-testid="modal-show" @ok="onSubmit">
+  <BModal
+    v-model="showModal"
+    title="目標時間の登録"
+    ok-title="はい"
+    cancel-title="いいえ"
+    data-testid="modal-show"
+    @ok="onSubmit"
+  >
     <p>入力した日の目標時間を登録しますか？</p>
   </BModal>
 </template>
 
 <script lang="ts">
-import { ref, computed } from 'vue';
-import { validateTargetTime, hasDuplicateDate, isValidActivities } from './utils/activity';
-import { getMaxDate, getToday } from './utils/date';
-import { useRegisterTargets, addTargetActivity, removeTargetActivity } from './composables/useTargetActivities';
-import { BModal, BCard, BCardText } from 'bootstrap-vue-next';
-import { getResponseAlert } from './utils/ui';
+import { ref, computed } from "vue";
+import {
+  validateTargetTime,
+  hasDuplicateDate,
+  isValidActivities,
+} from "./utils/activity";
+import { getMaxDate, getToday } from "./utils/date";
+import {
+  useRegisterTargets,
+  addTargetActivity,
+  removeTargetActivity,
+} from "./composables/useTargetActivities";
+import { BModal, BCard, BCardText } from "bootstrap-vue-next";
+import { getResponseAlert } from "./utils/ui";
 
 export default {
   components: {
     BModal,
     BCard,
-    BCardText
+    BCardText,
   },
 
-  emits: ['registered'],
-  
+  emits: ["registered"],
+
   setup(_props, { emit }) {
-    const { targetActivities, reqMsg, statusCode, sendRequest } = useRegisterTargets();
+    const { targetActivities, reqMsg, statusCode, sendRequest } =
+      useRegisterTargets();
     const date = ref<string>(getToday());
     const showModal = ref<boolean>(false);
 
     const onValidate = (event: Event, time: number) => {
       const input = event.target as HTMLInputElement;
-      const error = validateTargetTime(time)
+      const error = validateTargetTime(time);
 
       if (error) {
-        input.setCustomValidity(error)
-        input.reportValidity()
+        input.setCustomValidity(error);
+        input.reportValidity();
       } else {
-        input.setCustomValidity("")
+        input.setCustomValidity("");
       }
     };
 
     const checkDuplicateDate = (date: string, index: number) => {
-      if (hasDuplicateDate(targetActivities.value.map(a => a.date), date)) {
+      if (
+        hasDuplicateDate(
+          targetActivities.value.map((a) => a.date),
+          date,
+        )
+      ) {
         targetActivities.value[index].date = "";
         reqMsg.value = `${date}は既に選択されています`;
       }
@@ -139,9 +166,9 @@ export default {
 
     const onSubmit = async () => {
       await sendRequest();
-      emit('registered');
+      emit("registered");
     };
-    
+
     return {
       onValidate,
       checkDuplicateDate,
@@ -155,9 +182,8 @@ export default {
       removeTargetActivity,
       isValid,
       onSubmit,
-      getResponseAlert
-    }
-  }
-}
+      getResponseAlert,
+    };
+  },
+};
 </script>
-

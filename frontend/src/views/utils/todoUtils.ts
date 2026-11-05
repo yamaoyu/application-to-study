@@ -1,7 +1,15 @@
-import { ref, type Ref } from 'vue';
-import { SingleTodoAction, TodoInfo, MultiTodoAction, UpsertTodoParam } from '../types/todo';
+import { ref, type Ref } from "vue";
+import {
+  SingleTodoAction,
+  TodoInfo,
+  MultiTodoAction,
+  UpsertTodoParam,
+} from "../types/todo";
 
-export const validateTodo = (todoAction: SingleTodoAction, todo: UpsertTodoParam) => {
+export const validateTodo = (
+  todoAction: SingleTodoAction,
+  todo: UpsertTodoParam,
+) => {
   if (["show", "finish", "delete"].includes(todoAction)) {
     // 作成しない場合はチェックをスキップ
     return true;
@@ -14,14 +22,17 @@ export const ConfirmTodoRequest = (
   selectedTodoIDs: Ref<number[]>,
   newTodoTitle: Ref<string>,
   newTodoDetail: Ref<string>,
-  newTodoDue: Ref<string>
+  newTodoDue: Ref<string>,
 ) => {
   const showModal = ref(false);
   const modalTitle = ref();
   const titleError = ref<boolean>(false); // todo編集時、タイトルに入力がない場合のメッセージを表示
   const dueError = ref<boolean>(false); // todo編集時、期限に入力がない場合のメッセージを表示
   const todoAction = ref<SingleTodoAction | MultiTodoAction>("show"); // todoに対して行う操作名(閲覧、編集、終了、削除)
-  const confirmSingleTodoRequest = (content: TodoInfo, action: SingleTodoAction) => {
+  const confirmSingleTodoRequest = (
+    content: TodoInfo,
+    action: SingleTodoAction,
+  ) => {
     showModal.value = true;
     titleError.value = false;
     dueError.value = false;
@@ -60,8 +71,11 @@ export const ConfirmTodoRequest = (
   const canSubmit = (): boolean => {
     if (["show", "finish", "delete"].includes(todoAction.value)) {
       return true;
-    } else if (todoAction.value === "delete-multi" || todoAction.value === "finish-multi") {
-      return !!(selectedTodoIDs.value.length);
+    } else if (
+      todoAction.value === "delete-multi" ||
+      todoAction.value === "finish-multi"
+    ) {
+      return !!selectedTodoIDs.value.length;
     }
     return !!(newTodoTitle.value && newTodoDue.value);
   };
@@ -74,6 +88,6 @@ export const ConfirmTodoRequest = (
     modalTitle,
     canSubmit,
     confirmSingleTodoRequest,
-    confirmMultiTodoRequest
-  }
-}
+    confirmMultiTodoRequest,
+  };
+};

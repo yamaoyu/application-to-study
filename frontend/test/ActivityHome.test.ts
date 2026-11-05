@@ -1,11 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import ActivityHome from '@/views/ActivityHome.vue';
-import TargetTab from '@/views/TargetTab.vue';
-import ActualTab from '@/views/ActualTab.vue';
-import FinishTab from '@/views/FinishTab.vue';
-import { mountComponent, mockRouterPush } from './vitest.setup';
-import { apiClient } from '@/views/api/client';
-import { flushPromises } from '@vue/test-utils';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import ActivityHome from "@/views/ActivityHome.vue";
+import TargetTab from "@/views/TargetTab.vue";
+import ActualTab from "@/views/ActualTab.vue";
+import FinishTab from "@/views/FinishTab.vue";
+import { mountComponent, mockRouterPush } from "./vitest.setup";
+import { apiClient } from "@/views/api/client";
+import { flushPromises } from "@vue/test-utils";
 
 const mockedGet = vi.mocked(apiClient.get);
 
@@ -20,25 +20,28 @@ const defaultActivityData = {
   actual_time: 0,
   status: "pending",
   bonus: 0,
-  penalty: 0.38
+  penalty: 0.38,
 };
 
 const defaultIncomeData = {
   base_income: 25.0,
   total_income: 25.38,
-  pay_adjustment: 0.38
+  pay_adjustment: 0.38,
 };
 
 type Mock<T = unknown> =
-  | { type: 'resolve'; value: { status: number; data: T } }
-  | { type: 'reject'; value: { response: { status: number; data: { code: string } } } };
+  | { type: "resolve"; value: { status: number; data: T } }
+  | {
+      type: "reject";
+      value: { response: { status: number; data: { code: string } } };
+    };
 
 const createResolvedMock = <T>(data: T, status = 200): Mock<T> => ({
   type: "resolve",
   value: {
     status: status,
-    data: data
-  }
+    data: data,
+  },
 });
 
 const createRejectedMock = (code: string, status = 404): mock => ({
@@ -47,22 +50,24 @@ const createRejectedMock = (code: string, status = 404): mock => ({
     response: {
       status,
       data: {
-        code: code
-      }
-    }
-  }
+        code: code,
+      },
+    },
+  },
 });
 
 type mock =
-  | { type: 'resolve'; value: { status: number; data: Record<string, string> } }
-  | { type: 'reject'; value: { response: { status: number; data: { code: string } } } };
-
+  | { type: "resolve"; value: { status: number; data: Record<string, string> } }
+  | {
+      type: "reject";
+      value: { response: { status: number; data: { code: string } } };
+    };
 
 const mountActivityHome = async ({
   activityMock = createResolvedMock(defaultActivityData),
   pendingMock = createResolvedMock(defaultActivityData),
   incomeMock = createResolvedMock(defaultIncomeData),
-}: { activityMock?: Mock, pendingMock?: Mock, incomeMock?: Mock } = {}) => {
+}: { activityMock?: Mock; pendingMock?: Mock; incomeMock?: Mock } = {}) => {
   [activityMock, pendingMock, incomeMock].forEach((mock) => {
     if (mock.type === "reject") {
       mockedGet.mockRejectedValueOnce(mock.value);
@@ -74,87 +79,93 @@ const mountActivityHome = async ({
   const wrapper = mountComponent(ActivityHome);
   await flushPromises();
   return wrapper;
-}
+};
 
-describe('選択した日の活動登録状況確認', () => {
-
+describe("選択した日の活動登録状況確認", () => {
   beforeEach(() => {
-    vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-  }
-  );
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+  });
 
-  it('データがある', async () => {
+  it("データがある", async () => {
     const wrapper = await mountActivityHome();
     // activityResに定義される
     expect(mockedGet).toBeCalledWith(
-      `activities/${expectedYear}/${expectedMonth}/${expectedDate}`
+      `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
     );
-    expect(wrapper.find("[data-testid='show-target-time']").text()).toEqual(String(defaultActivityData.target_time));
-    expect(wrapper.find("[data-testid='show-actual-time']").text()).toEqual(String(defaultActivityData.actual_time));
-    expect(wrapper.find("[data-testid='show-status']").text()).toEqual("未確定");
+    expect(wrapper.find("[data-testid='show-target-time']").text()).toEqual(
+      String(defaultActivityData.target_time),
+    );
+    expect(wrapper.find("[data-testid='show-actual-time']").text()).toEqual(
+      String(defaultActivityData.actual_time),
+    );
+    expect(wrapper.find("[data-testid='show-status']").text()).toEqual(
+      "未確定",
+    );
   });
 
-  it('データがない', async () => {
+  it("データがない", async () => {
     const wrapper = await mountActivityHome({
       activityMock: createRejectedMock("ACTIVITY_NOT_FOUND"),
-      pendingMock: createRejectedMock("ACTIVITY_NOT_FOUND")
+      pendingMock: createRejectedMock("ACTIVITY_NOT_FOUND"),
     });
-    expect(wrapper.find("[data-testid='checkMsg']").text()).toEqual("活動が登録されていません");
+    expect(wrapper.find("[data-testid='checkMsg']").text()).toEqual(
+      "活動が登録されていません",
+    );
   });
 });
 
-
-describe('タブの切り替え', () => {
+describe("タブの切り替え", () => {
   beforeEach(() => {
-    vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-  }
-  );
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+  });
 
-  it('操作タイプ(目標、実績、終了)の切り替え', async () => {
+  it("操作タイプ(目標、実績、終了)の切り替え", async () => {
     const wrapper = await mountActivityHome();
     expect(wrapper.findComponent(TargetTab).exists()).toBe(true);
     expect(wrapper.findComponent(ActualTab).exists()).toBe(false);
     expect(wrapper.findComponent(FinishTab).exists()).toBe(false);
     // 目標→実績
-    await wrapper.find("[data-testid='actual']").trigger('click');
+    await wrapper.find("[data-testid='actual']").trigger("click");
     expect(wrapper.findComponent(TargetTab).exists()).toBe(false);
     expect(wrapper.findComponent(ActualTab).exists()).toBe(true);
     expect(wrapper.findComponent(FinishTab).exists()).toBe(false);
     // 実績→終了
-    await wrapper.find("[data-testid='finish']").trigger('click');
+    await wrapper.find("[data-testid='finish']").trigger("click");
     expect(wrapper.findComponent(TargetTab).exists()).toBe(false);
     expect(wrapper.findComponent(ActualTab).exists()).toBe(false);
     expect(wrapper.findComponent(FinishTab).exists()).toBe(true);
     // 終了→目標
-    await wrapper.find("[data-testid='target']").trigger('click');
+    await wrapper.find("[data-testid='target']").trigger("click");
     expect(wrapper.findComponent(TargetTab).exists()).toBe(true);
     expect(wrapper.findComponent(ActualTab).exists()).toBe(false);
     expect(wrapper.findComponent(FinishTab).exists()).toBe(false);
   });
 });
 
-describe('月収の登録状況に応じたリダイレクト', async () => {
+describe("月収の登録状況に応じたリダイレクト", async () => {
   beforeEach(() => {
-    vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
   });
 
-  it('月収の登録がある→月収登録ページにリダイレクトしない', async () => {
+  it("月収の登録がある→月収登録ページにリダイレクトしない", async () => {
     const wrapper = await mountActivityHome();
     // 月収登録ページにリダイレクトせず、活動登録ページの内容が表示される
     expect(wrapper.find("[data-testid='target']").exists()).toBe(true);
-    expect(wrapper.find("[data-testid='show-target-time']").text()).toEqual(String(defaultActivityData.target_time));
+    expect(wrapper.find("[data-testid='show-target-time']").text()).toEqual(
+      String(defaultActivityData.target_time),
+    );
   });
 
-  it('月収の登録がない→月収登録ページにリダイレクト', async () => {
+  it("月収の登録がない→月収登録ページにリダイレクト", async () => {
     await mountActivityHome({
-      incomeMock: createRejectedMock("SALARY_NOT_FOUND")
+      incomeMock: createRejectedMock("SALARY_NOT_FOUND"),
     });
 
     expect(mockRouterPush).toHaveBeenCalledWith({
-      path: '/register/salary',
+      path: "/register/salary",
       query: {
-        incomeMsg: "月収が登録されていません。先に月収を登録してください"
-      }
+        incomeMsg: "月収が登録されていません。先に月収を登録してください",
+      },
     });
   });
-})
+});

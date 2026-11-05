@@ -10,14 +10,18 @@
             活動を終了する日を選択してください
           </BCardText>
         </div>
-        <button 
-          type="button" 
+        <button
+          type="button"
           class="btn btn-primary btn-sm position-absolute"
-          style="top: 1rem; right: 1rem;"
+          style="top: 1rem; right: 1rem"
           data-testid="select-all-activities"
           @click="toggleAll(finishableActivities)"
         >
-          {{ finishableActivities.length===selectedActivities.length ? '全て解除' : '全て選択' }}
+          {{
+            finishableActivities.length === selectedActivities.length
+              ? "全て解除"
+              : "全て選択"
+          }}
         </button>
       </BCard>
       <table class="table table-striped table-responsive">
@@ -30,91 +34,109 @@
           </tr>
         </thead>
         <tbody>
-          <tr 
-            v-for="(activity, index) in finishableActivities" 
-            :key="index" 
+          <tr
+            v-for="(activity, index) in finishableActivities"
+            :key="index"
             :class="{ 'table-active': isSelected(activity) }"
             @click="toggle(activity)"
           >
-          <td :data-testid="`is-selected-finish-${index}`">
-            <input 
-              v-model="selectedActivities"
-              class="form-check-input" 
-              type="checkbox"
-              :value="activity"
-            >
-          </td>
-          <td>{{ activity.date }}</td>
-          <td>{{ activity.target_time }}時間</td>
-          <td>{{ activity.actual_time }}時間</td>
+            <td :data-testid="`is-selected-finish-${index}`">
+              <input
+                v-model="selectedActivities"
+                class="form-check-input"
+                type="checkbox"
+                :value="activity"
+              />
+            </td>
+            <td>{{ activity.date }}</td>
+            <td>{{ activity.target_time }}時間</td>
+            <td>{{ activity.actual_time }}時間</td>
           </tr>
         </tbody>
       </table>
-      <button 
-          type="button" 
-          class="btn btn-outline-secondary mt-3"
-          :disabled="selectedActivities.length === 0"
-          data-testid="finish-multi"
-          @click="showModal = true"
+      <button
+        type="button"
+        class="btn btn-outline-secondary mt-3"
+        :disabled="selectedActivities.length === 0"
+        data-testid="finish-multi"
+        @click="showModal = true"
       >
-          まとめて終了
+        まとめて終了
       </button>
     </div>
-    <div v-else class="mt-3 alert alert-warning">確定可能な活動がありません</div>
+    <div v-else class="mt-3 alert alert-warning">
+      確定可能な活動がありません
+    </div>
   </div>
-  <div v-if="reqMsg" class="container d-flex justify-content-center" data-testid="reqMsg">
-      <p class="mt-3 col-12" :class="getAdjustmentColors(payAdjustment)">{{ reqMsg }}</p>
+  <div
+    v-if="reqMsg"
+    class="container d-flex justify-content-center"
+    data-testid="reqMsg"
+  >
+    <p class="mt-3 col-12" :class="getAdjustmentColors(payAdjustment)">
+      {{ reqMsg }}
+    </p>
   </div>
 
   <!-- モーダルコンポーネントで登録前の確認 -->
-  <BModal v-model="showModal" title="活動時間の確定" ok-title="はい" cancel-title="いいえ" data-testid="modal-show" @ok="onSubmit">
+  <BModal
+    v-model="showModal"
+    title="活動時間の確定"
+    ok-title="はい"
+    cancel-title="いいえ"
+    data-testid="modal-show"
+    @ok="onSubmit"
+  >
     <p>選択した日の活動を終了しますか？</p>
   </BModal>
 </template>
 
 <script lang="ts">
-import { ref, watch, type PropType } from 'vue';
-import { BModal, BCard, BCardText } from 'bootstrap-vue-next';
-import { useFinishActivities } from './composables/useFinishActivities';
-import { getAdjustmentColors } from './utils/ui';
-import { useSelection } from './composables/useSelection';
-import { OneActivity } from './types/activity';
+import { ref, watch, type PropType } from "vue";
+import { BModal, BCard, BCardText } from "bootstrap-vue-next";
+import { useFinishActivities } from "./composables/useFinishActivities";
+import { getAdjustmentColors } from "./utils/ui";
+import { useSelection } from "./composables/useSelection";
+import { OneActivity } from "./types/activity";
 
 export default {
   components: {
     BModal,
     BCard,
-    BCardText
+    BCardText,
   },
 
   props: {
     pendingActivities: {
       type: Array as PropType<OneActivity[]>,
-      default: () => []
-    }
+      default: () => [],
+    },
   },
 
-  emits: ['registered'],
+  emits: ["registered"],
 
   setup(props, { emit }) {
     const finishableActivities = ref<OneActivity[]>([]);
     const showModal = ref<boolean>(false);
-    const { selectedActivities, reqMsg, payAdjustment, sendRequest } = useFinishActivities();
-    const { isSelected, toggle, clear, toggleAll } = useSelection(selectedActivities);
+    const { selectedActivities, reqMsg, payAdjustment, sendRequest } =
+      useFinishActivities();
+    const { isSelected, toggle, clear, toggleAll } =
+      useSelection(selectedActivities);
 
     watch(
       () => props.pendingActivities,
       (activities) => {
-        finishableActivities.value = activities.map(activity => ({ ...activity }));
+        finishableActivities.value = activities.map((activity) => ({
+          ...activity,
+        }));
       },
-      { immediate: true }
+      { immediate: true },
     );
 
     const onSubmit = async () => {
       await sendRequest();
-      emit('registered');
+      emit("registered");
     };
-
 
     return {
       selectedActivities,
@@ -128,9 +150,8 @@ export default {
       isSelected,
       toggle,
       clear,
-      toggleAll
-    }
-  }
-}
-
+      toggleAll,
+    };
+  },
+};
 </script>

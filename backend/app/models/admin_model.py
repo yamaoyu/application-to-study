@@ -1,15 +1,15 @@
-from enum import Enum
-from pydantic import BaseModel, ConfigDict
-from typing import Optional
 from datetime import datetime
+from enum import StrEnum
+
+from pydantic import BaseModel, ConfigDict
 
 
-class UserStatus(str, Enum):
+class UserStatus(StrEnum):
     ACTIVE = "active"
     SUSPEND = "suspended"
 
 
-class UserRole(str, Enum):
+class UserRole(StrEnum):
     ADMIN = "admin"
     GENERAL = "general"
 
@@ -24,20 +24,20 @@ class StatusChangeResponse(BaseModel):
 
 
 class GetUsersIn(BaseModel):
-    status: Optional[UserStatus] = None
-    last_active_at: Optional[datetime] = None
-    created_at: Optional[datetime] = None
-    role: Optional[UserRole] = None
-    username: Optional[str] = None
+    status: UserStatus | None = None
+    last_active_at: datetime | None = None
+    created_at: datetime | None = None
+    role: UserRole | None = None
+    username: str | None = None
 
 
 class UserItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     username: str
     status: UserStatus
-    last_active_at: Optional[datetime] = None
-    created_at: Optional[datetime] = None
-    role: Optional[UserRole] = None
+    last_active_at: datetime | None = None
+    created_at: datetime | None = None
+    role: UserRole | None = None
 
 
 class GetUsersResponse(BaseModel):

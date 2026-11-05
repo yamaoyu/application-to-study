@@ -1,12 +1,12 @@
-import axios from 'axios';
-import { backendUrl } from '../config/env';
-import { useAuthStore } from '@/store/authenticate';
-import { useRoleStore } from '@/store/authenticate';
-import { verifyRefreshToken } from './auth';
-import { setAuthDataFromToken } from '../composables/useAuth';
+import axios from "axios";
+import { backendUrl } from "../config/env";
+import { useAuthStore } from "@/store/authenticate";
+import { useRoleStore } from "@/store/authenticate";
+import { verifyRefreshToken } from "./auth";
+import { setAuthDataFromToken } from "../composables/useAuth";
 
 export const apiClient = axios.create({
-  baseURL: backendUrl
+  baseURL: backendUrl,
 });
 
 apiClient.interceptors.request.use((config) => {
@@ -14,46 +14,42 @@ apiClient.interceptors.request.use((config) => {
   const url = config.url;
 
   if (!url) {
-    return config
+    return config;
   }
 
-  if (
-    ['token', 'users', 'login'].includes(url)
-  ) {
+  if (["token", "users", "login"].includes(url)) {
     return config;
-  };
+  }
 
   if (authStore.accessToken) {
-    config.headers.Authorization = `Bearer ${authStore.accessToken}`
-  };
+    config.headers.Authorization = `Bearer ${authStore.accessToken}`;
+  }
 
   return config;
 });
 
 apiClient.interceptors.response.use(
-  res => res,
+  (res) => res,
   async (error) => {
     const authStore = useAuthStore();
     const roleStore = useRoleStore();
     const originalRequest = error.config;
-    const url = originalRequest?.url ?? '';
+    const url = originalRequest?.url ?? "";
 
-    if (
-      ['token', 'users', 'login'].includes(url)
-    ) {
+    if (["token", "users", "login"].includes(url)) {
       return Promise.reject(error);
-    };
+    }
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
         const tokenResponse = await verifyRefreshToken();
-        await setAuthDataFromToken(authStore, roleStore, tokenResponse.data)
+        await setAuthDataFromToken(authStore, roleStore, tokenResponse.data);
         originalRequest.headers.Authorization = authStore.getAuthHeader;
         return apiClient(originalRequest);
       } catch (error) {
         return Promise.reject(error);
       }
     }
-    return Promise.reject(error)
-  }
+    return Promise.reject(error);
+  },
 );

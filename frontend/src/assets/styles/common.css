@@ -1,7 +1,7 @@
 * {
-    white-space: pre-wrap;
+  white-space: pre-wrap;
 }
 
 body {
-    background-color: var(--bs-light) !important;
+  background-color: var(--bs-light) !important;
 }

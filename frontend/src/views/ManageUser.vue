@@ -10,42 +10,73 @@
         <span v-else>▼</span>
       </h5>
     </div>
-    <div class="card-body collapse" :class="{ 'show': isFormVisible }">
+    <div class="card-body collapse" :class="{ show: isFormVisible }">
       <div class="row g-2">
-          <div class="col-md-6">
-            <label class="form-label">作成日</label>
-            <input v-model="createdAt" type="date" class="form-control" data-testid="created-at-filter">
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">最終ログイン</label>
-            <input v-model="lastActiveAt" type="date" class="form-control" data-testid="last-active-at-filter">
-          </div>
+        <div class="col-md-6">
+          <label class="form-label">作成日</label>
+          <input
+            v-model="createdAt"
+            type="date"
+            class="form-control"
+            data-testid="created-at-filter"
+          />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">最終ログイン</label>
+          <input
+            v-model="lastActiveAt"
+            type="date"
+            class="form-control"
+            data-testid="last-active-at-filter"
+          />
+        </div>
       </div>
       <div class="row g-2">
-          <div class="col-md-6">
-            <label class="form-label">ステータス</label>
-            <select v-model="userStatus" class="form-select" data-testid="status-filter">
-              <option value="">すべて</option>
-              <option value="active">有効</option>
-              <option value="suspended">停止済み</option>
-            </select>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">ロール</label>
-            <select v-model="userRole" class="form-select" data-testid="role-filter">
-              <option value="">すべて</option>
-              <option value="admin">管理者</option>
-              <option value="general">一般</option>
-            </select>
-          </div>
+        <div class="col-md-6">
+          <label class="form-label">ステータス</label>
+          <select
+            v-model="userStatus"
+            class="form-select"
+            data-testid="status-filter"
+          >
+            <option value="">すべて</option>
+            <option value="active">有効</option>
+            <option value="suspended">停止済み</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">ロール</label>
+          <select
+            v-model="userRole"
+            class="form-select"
+            data-testid="role-filter"
+          >
+            <option value="">すべて</option>
+            <option value="admin">管理者</option>
+            <option value="general">一般</option>
+          </select>
+        </div>
       </div>
       <div class="mt-3">
         <label>ユーザー名</label>
-        <input v-model="username" type="text" class="form-control" data-testid="username-filter">
+        <input
+          v-model="username"
+          type="text"
+          class="form-control"
+          data-testid="username-filter"
+        />
       </div>
       <div class="d-flex justify-content-end mt-3">
-        <BButton variant="secondary" class="me-2" data-testid="reset" @click="resetFilter">条件リセット</BButton>
-        <BButton variant="primary" data-testid="apply" @click="getUsers">フィルター適用</BButton>
+        <BButton
+          variant="secondary"
+          class="me-2"
+          data-testid="reset"
+          @click="resetFilter"
+          >条件リセット</BButton
+        >
+        <BButton variant="primary" data-testid="apply" @click="getUsers"
+          >フィルター適用</BButton
+        >
       </div>
     </div>
   </div>
@@ -84,17 +115,36 @@
 
                 <ul class="dropdown-menu dropdown-menu-end">
                   <li>
-                    <button class="dropdown-item" type="button" :data-testid="`change-role-${index}`"  @click="handleRoleChange(user)">
-                      {{ user.role === "general" ? "管理者権限へ変更" : "一般権限へ変更" }}
+                    <button
+                      class="dropdown-item"
+                      type="button"
+                      :data-testid="`change-role-${index}`"
+                      @click="handleRoleChange(user)"
+                    >
+                      {{
+                        user.role === "general"
+                          ? "管理者権限へ変更"
+                          : "一般権限へ変更"
+                      }}
                     </button>
                   </li>
                   <li>
-                    <button class="dropdown-item" type="button" :data-testid="`change-status-${index}`" @click="handleStatusChange(user)">
+                    <button
+                      class="dropdown-item"
+                      type="button"
+                      :data-testid="`change-status-${index}`"
+                      @click="handleStatusChange(user)"
+                    >
                       {{ user.status === "active" ? "停止する" : "有効化する" }}
                     </button>
                   </li>
                   <li>
-                    <button class="dropdown-item" type="button" :data-testid="`reset-password-${index}`" @click="confirmPasswordReset(user)">
+                    <button
+                      class="dropdown-item"
+                      type="button"
+                      :data-testid="`reset-password-${index}`"
+                      @click="confirmPasswordReset(user)"
+                    >
                       パスワードリセット
                     </button>
                   </li>
@@ -107,7 +157,13 @@
     </div>
   </template>
   <div v-if="message" class="container d-flex flex-column align-items-center">
-    <p class="mt-3 col-8 alert" :class="isSuccess ? 'alert-success' : 'alert-warning'" data-testid="message">{{ message }}</p>
+    <p
+      class="mt-3 col-8 alert"
+      :class="isSuccess ? 'alert-success' : 'alert-warning'"
+      data-testid="message"
+    >
+      {{ message }}
+    </p>
   </div>
 
   <BModal
@@ -122,18 +178,22 @@
     </p>
   </BModal>
 </template>
-  
-<script lang="ts">
 
-import { onMounted, ref } from 'vue';
-import { useGetUsersList, useChangeRole, useChangeStatus, useResetPassword } from './composables/useManageUser';
-import { BButton, BModal } from 'bootstrap-vue-next';
-import { UserItem } from './types/admin';
+<script lang="ts">
+import { onMounted, ref } from "vue";
+import {
+  useGetUsersList,
+  useChangeRole,
+  useChangeStatus,
+  useResetPassword,
+} from "./composables/useManageUser";
+import { BButton, BModal } from "bootstrap-vue-next";
+import { UserItem } from "./types/admin";
 
 export default {
   components: {
     BButton,
-    BModal
+    BModal,
   },
 
   setup() {
@@ -142,13 +202,13 @@ export default {
     const selectedUser = ref<UserItem | null>();
     const isSuccess = ref<boolean>(false);
     const {
-        getUsers,
-        users,
-        userStatus,
-        userRole,
-        lastActiveAt,
-        createdAt,
-        username
+      getUsers,
+      users,
+      userStatus,
+      userRole,
+      lastActiveAt,
+      createdAt,
+      username,
     } = useGetUsersList(message, isSuccess);
     const { changeRole } = useChangeRole(message, isSuccess);
     const { changeStatus } = useChangeStatus(message, isSuccess);
@@ -175,12 +235,12 @@ export default {
       if (isSuccess.value) {
         await getUsers();
       }
-    }
+    };
 
     const handleRoleChange = async (user: UserItem) => {
       await changeRole(user.role, user.username);
       await getUsersAfterRequest();
-    }
+    };
 
     const handleStatusChange = async (user: UserItem) => {
       await changeStatus(user.status, user.username);
@@ -192,12 +252,12 @@ export default {
       await resetPassword(selectedUser.value.username);
       selectedUser.value = null;
       showPasswordResetModal.value = false;
-    }
+    };
 
     const confirmPasswordReset = async (user: UserItem) => {
       showPasswordResetModal.value = true;
       selectedUser.value = user;
-    }
+    };
 
     const resetFilter = () => {
       userStatus.value = "";
@@ -207,7 +267,7 @@ export default {
       username.value = "";
     };
 
-    onMounted( async()=>{
+    onMounted(async () => {
       await getUsers();
     });
 
@@ -230,8 +290,8 @@ export default {
       isFormVisible,
       formatJstDate,
       toggleFormVisibility,
-      resetFilter
-    }
-  }
-}
+      resetFilter,
+    };
+  },
+};
 </script>

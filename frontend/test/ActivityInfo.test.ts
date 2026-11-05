@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import ActivityInfo from '@/views/ActivityInfo.vue';
-import { mountComponent } from './vitest.setup';
-import { apiClient } from '@/views/api/client';
-import { flushPromises, VueWrapper } from '@vue/test-utils';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import ActivityInfo from "@/views/ActivityInfo.vue";
+import { mountComponent } from "./vitest.setup";
+import { apiClient } from "@/views/api/client";
+import { flushPromises, VueWrapper } from "@vue/test-utils";
 
 const mockedGet = vi.mocked(apiClient.get);
 
@@ -14,9 +14,9 @@ const expectedPenalty = "5";
 const expectedSuccessDays = "2";
 const expectedFailDays = "1";
 const expectedActivities = [
-  { date: '2025-1-1', target_time: 5, actual_time: 5, status: 'success' },
-  { date: '2025-1-2', target_time: 5, actual_time: 0, status: 'failure' },
-  { date: '2025-1-3', target_time: 5, actual_time: 5, status: 'success' }
+  { date: "2025-1-1", target_time: 5, actual_time: 5, status: "success" },
+  { date: "2025-1-2", target_time: 5, actual_time: 0, status: "failure" },
+  { date: "2025-1-3", target_time: 5, actual_time: 5, status: "success" },
 ];
 
 const defaultMonthlyActivities = {
@@ -27,19 +27,22 @@ const defaultMonthlyActivities = {
   penalty: expectedPenalty,
   success_days: expectedSuccessDays,
   fail_days: expectedFailDays,
-  activity_list: expectedActivities
+  activity_list: expectedActivities,
 };
 
 type Mock<T = unknown> =
-  | { type: 'resolve'; value: { status: number; data: T } }
-  | { type: 'reject'; value: { response: { status: number; data: { code: string } } } };
+  | { type: "resolve"; value: { status: number; data: T } }
+  | {
+      type: "reject";
+      value: { response: { status: number; data: { code: string } } };
+    };
 
 const createResolvedMock = <T>(data: T, status = 200): Mock<T> => ({
   type: "resolve",
   value: {
     status: status,
-    data: data
-  }
+    data: data,
+  },
 });
 
 const createRejectedMock = (code: string, status = 404): mock => ({
@@ -48,18 +51,21 @@ const createRejectedMock = (code: string, status = 404): mock => ({
     response: {
       status,
       data: {
-        code: code
-      }
-    }
-  }
+        code: code,
+      },
+    },
+  },
 });
 
 type mock =
-  | { type: 'resolve'; value: { status: number; data: Record<string, string> } }
-  | { type: 'reject'; value: { response: { status: number; data: { code: string } } } };
+  | { type: "resolve"; value: { status: number; data: Record<string, string> } }
+  | {
+      type: "reject";
+      value: { response: { status: number; data: { code: string } } };
+    };
 
 const mountActivityInfo = async ({
-  activitiesMock = createResolvedMock(defaultMonthlyActivities)
+  activitiesMock = createResolvedMock(defaultMonthlyActivities),
 }: { activitiesMock?: Mock } = {}) => {
   if (activitiesMock.type === "reject") {
     mockedGet.mockRejectedValueOnce(activitiesMock.value);
@@ -70,51 +76,72 @@ const mountActivityInfo = async ({
   const wrapper = mountComponent(ActivityInfo);
   await flushPromises();
   return wrapper;
-}
+};
 
-describe('月ごとのアクティビティ情報の表示', () => {
+describe("月ごとのアクティビティ情報の表示", () => {
   let wrapper: VueWrapper;
 
   beforeEach(() => {
-    vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
     wrapper = mountComponent(ActivityInfo);
-  }
-  );
+  });
 
-  it('データがある', async () => {
+  it("データがある", async () => {
     wrapper = await mountActivityInfo();
     // アクティビティ情報の件数と1件目の内容を確認
     const rows = wrapper.findAll('[data-testid="monthly-activity-row"]');
     expect(rows).toHaveLength(expectedActivities.length);
-    expect(rows[0].find('[data-testid="activity-date-0"]').text()).toBe(expectedActivities[0].date);
-    expect(rows[0].find('[data-testid="activity-target-time-0"]').text()).toBe(`${expectedActivities[0].target_time}時間`);
-    expect(rows[0].find('[data-testid="activity-actual-time-0"]').text()).toBe(`${expectedActivities[0].actual_time}時間`);
-    expect(rows[0].find('[data-testid="activity-status-0"]').text()).toBe("達成");
+    expect(rows[0].find('[data-testid="activity-date-0"]').text()).toBe(
+      expectedActivities[0].date,
+    );
+    expect(rows[0].find('[data-testid="activity-target-time-0"]').text()).toBe(
+      `${expectedActivities[0].target_time}時間`,
+    );
+    expect(rows[0].find('[data-testid="activity-actual-time-0"]').text()).toBe(
+      `${expectedActivities[0].actual_time}時間`,
+    );
+    expect(rows[0].find('[data-testid="activity-status-0"]').text()).toBe(
+      "達成",
+    );
     // 給料情報の表示も確認
-    expect(wrapper.find('[data-testid="total-income"]').text()).toEqual(expectedTotalIncome);
-    expect(wrapper.find('[data-testid="salary"]').text()).toEqual(expectedSalary);
-    expect(wrapper.find('[data-testid="pay-adjustment"]').text()).toEqual(expectedPayAdjustment);
+    expect(wrapper.find('[data-testid="total-income"]').text()).toEqual(
+      expectedTotalIncome,
+    );
+    expect(wrapper.find('[data-testid="salary"]').text()).toEqual(
+      expectedSalary,
+    );
+    expect(wrapper.find('[data-testid="pay-adjustment"]').text()).toEqual(
+      expectedPayAdjustment,
+    );
     expect(wrapper.find('[data-testid="bonus"]').text()).toEqual(expectedBonus);
-    expect(wrapper.find('[data-testid="penalty"]').text()).toEqual(expectedPenalty);
-    expect(wrapper.find('[data-testid="success-days"]').text()).toEqual(expectedSuccessDays);
-    expect(wrapper.find('[data-testid="fail-days"]').text()).toEqual(expectedFailDays);
+    expect(wrapper.find('[data-testid="penalty"]').text()).toEqual(
+      expectedPenalty,
+    );
+    expect(wrapper.find('[data-testid="success-days"]').text()).toEqual(
+      expectedSuccessDays,
+    );
+    expect(wrapper.find('[data-testid="fail-days"]').text()).toEqual(
+      expectedFailDays,
+    );
   });
 
-  it('データがない', async () => {
+  it("データがない", async () => {
     mockedGet.mockRejectedValue({
       response: {
         status: 404,
-        data: { code: "ACTIVITY_NOT_FOUND" }
-      }
+        data: { code: "ACTIVITY_NOT_FOUND" },
+      },
     });
     wrapper = await mountActivityInfo({
-      activitiesMock: createRejectedMock("ACTIVITY_NOT_FOUND")
+      activitiesMock: createRejectedMock("ACTIVITY_NOT_FOUND"),
     });
-    expect(wrapper.find('[data-testid="currentMessage"]').text()).toBe("活動が登録されていません");
-  })
+    expect(wrapper.find('[data-testid="currentMessage"]').text()).toBe(
+      "活動が登録されていません",
+    );
+  });
 });
 
-describe('年ごとのアクティビティ情報の表示', () => {
+describe("年ごとのアクティビティ情報の表示", () => {
   let wrapper: VueWrapper;
 
   const expectedTotalIncome = "30";
@@ -125,22 +152,20 @@ describe('年ごとのアクティビティ情報の表示', () => {
   const expectedSuccessDays = "2";
   const expectedFailDays = "1";
   const expectedMonthlyinfo = {
-    jan:
-    {
+    jan: {
       salary: 25,
       bonus: 10,
       penalty: 5,
       success_days: 2,
-      fail_days: 1
-    }
+      fail_days: 1,
+    },
   }; // 1月のみのデータがある
 
   beforeEach(() => {
-    vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-  }
-  );
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+  });
 
-  it('データがある', async () => {
+  it("データがある", async () => {
     wrapper = await mountActivityInfo();
     // タブ変更後用のモック
     mockedGet.mockResolvedValue({
@@ -153,49 +178,73 @@ describe('年ごとのアクティビティ情報の表示', () => {
         penalty: expectedPenalty,
         success_days: expectedSuccessDays,
         fail_days: expectedFailDays,
-        monthly_info: expectedMonthlyinfo
-      }
+        monthly_info: expectedMonthlyinfo,
+      },
     });
     // タブを変更
-    await wrapper.find("[data-testid='tab-yearly']").trigger('click');
+    await wrapper.find("[data-testid='tab-yearly']").trigger("click");
     await flushPromises();
 
     // アクティビティ情報の件数を確認
     const rows = wrapper.findAll('[data-testid="year-activity-row"]');
 
     // 1月のデータが正しく表示されているか確認
-    expect(rows[0].find('[data-testid="activity-salary-jan"]').text()).toBe(`${expectedMonthlyinfo.jan.salary}万円`);
-    expect(rows[0].find('[data-testid="activity-bonus-jan"]').text()).toBe(`${expectedMonthlyinfo.jan.bonus}万円`);
-    expect(rows[0].find('[data-testid="activity-penalty-jan"]').text()).toBe(`${expectedMonthlyinfo.jan.penalty}万円`);
-    expect(rows[0].find('[data-testid="activity-success-days-jan"]').text()).toBe(`${expectedMonthlyinfo.jan.success_days}日`);
-    expect(rows[0].find('[data-testid="activity-fail-days-jan"]').text()).toBe(`${expectedMonthlyinfo.jan.fail_days}日`);
+    expect(rows[0].find('[data-testid="activity-salary-jan"]').text()).toBe(
+      `${expectedMonthlyinfo.jan.salary}万円`,
+    );
+    expect(rows[0].find('[data-testid="activity-bonus-jan"]').text()).toBe(
+      `${expectedMonthlyinfo.jan.bonus}万円`,
+    );
+    expect(rows[0].find('[data-testid="activity-penalty-jan"]').text()).toBe(
+      `${expectedMonthlyinfo.jan.penalty}万円`,
+    );
+    expect(
+      rows[0].find('[data-testid="activity-success-days-jan"]').text(),
+    ).toBe(`${expectedMonthlyinfo.jan.success_days}日`);
+    expect(rows[0].find('[data-testid="activity-fail-days-jan"]').text()).toBe(
+      `${expectedMonthlyinfo.jan.fail_days}日`,
+    );
 
-    expect(wrapper.find('[data-testid="total-income"]').text()).toEqual(expectedTotalIncome);
-    expect(wrapper.find('[data-testid="salary"]').text()).toEqual(expectedSalary);
-    expect(wrapper.find('[data-testid="pay-adjustment"]').text()).toEqual(expectedPayAdjustment);
+    expect(wrapper.find('[data-testid="total-income"]').text()).toEqual(
+      expectedTotalIncome,
+    );
+    expect(wrapper.find('[data-testid="salary"]').text()).toEqual(
+      expectedSalary,
+    );
+    expect(wrapper.find('[data-testid="pay-adjustment"]').text()).toEqual(
+      expectedPayAdjustment,
+    );
     expect(wrapper.find('[data-testid="bonus"]').text()).toEqual(expectedBonus);
-    expect(wrapper.find('[data-testid="penalty"]').text()).toEqual(expectedPenalty);
-    expect(wrapper.find('[data-testid="success-days"]').text()).toEqual(expectedSuccessDays);
-    expect(wrapper.find('[data-testid="fail-days"]').text()).toEqual(expectedFailDays);
+    expect(wrapper.find('[data-testid="penalty"]').text()).toEqual(
+      expectedPenalty,
+    );
+    expect(wrapper.find('[data-testid="success-days"]').text()).toEqual(
+      expectedSuccessDays,
+    );
+    expect(wrapper.find('[data-testid="fail-days"]').text()).toEqual(
+      expectedFailDays,
+    );
   });
 
-  it('データがない', async () => {
+  it("データがない", async () => {
     wrapper = await mountActivityInfo();
     mockedGet.mockRejectedValue({
       response: {
         status: 404,
-        data: { code: "ACTIVITY_NOT_FOUND" }
-      }
+        data: { code: "ACTIVITY_NOT_FOUND" },
+      },
     });
     // タブを変更
     await wrapper.find("[data-testid='tab-yearly']").trigger("click");
     await flushPromises();
 
-    expect(wrapper.find('[data-testid="currentMessage"]').text()).toBe("活動が登録されていません");
-  })
-})
+    expect(wrapper.find('[data-testid="currentMessage"]').text()).toBe(
+      "活動が登録されていません",
+    );
+  });
+});
 
-describe('全期間のアクティビティ情報の表示', async () => {
+describe("全期間のアクティビティ情報の表示", async () => {
   let wrapper: VueWrapper;
 
   const expectedTotalIncome = "30";
@@ -207,11 +256,10 @@ describe('全期間のアクティビティ情報の表示', async () => {
   const expectedFailDays = "1";
 
   beforeEach(() => {
-    vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-  }
-  );
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+  });
 
-  it('データがある', async () => {
+  it("データがある", async () => {
     wrapper = await mountActivityInfo();
 
     mockedGet.mockResolvedValue({
@@ -223,34 +271,48 @@ describe('全期間のアクティビティ情報の表示', async () => {
         bonus: expectedBonus,
         penalty: expectedPenalty,
         success_days: expectedSuccessDays,
-        fail_days: expectedFailDays
-      }
+        fail_days: expectedFailDays,
+      },
     });
     // タブを変更
-    await wrapper.find("[data-testid='tab-all']").trigger('click');
+    await wrapper.find("[data-testid='tab-all']").trigger("click");
     await flushPromises();
 
-    expect(wrapper.find('[data-testid="total-income"]').text()).toEqual(expectedTotalIncome);
-    expect(wrapper.find('[data-testid="salary"]').text()).toEqual(expectedSalary);
-    expect(wrapper.find('[data-testid="pay-adjustment"]').text()).toEqual(expectedPayAdjustment);
+    expect(wrapper.find('[data-testid="total-income"]').text()).toEqual(
+      expectedTotalIncome,
+    );
+    expect(wrapper.find('[data-testid="salary"]').text()).toEqual(
+      expectedSalary,
+    );
+    expect(wrapper.find('[data-testid="pay-adjustment"]').text()).toEqual(
+      expectedPayAdjustment,
+    );
     expect(wrapper.find('[data-testid="bonus"]').text()).toEqual(expectedBonus);
-    expect(wrapper.find('[data-testid="penalty"]').text()).toEqual(expectedPenalty);
-    expect(wrapper.find('[data-testid="success-days"]').text()).toEqual(expectedSuccessDays);
-    expect(wrapper.find('[data-testid="fail-days"]').text()).toEqual(expectedFailDays);
-  })
+    expect(wrapper.find('[data-testid="penalty"]').text()).toEqual(
+      expectedPenalty,
+    );
+    expect(wrapper.find('[data-testid="success-days"]').text()).toEqual(
+      expectedSuccessDays,
+    );
+    expect(wrapper.find('[data-testid="fail-days"]').text()).toEqual(
+      expectedFailDays,
+    );
+  });
 
-  it('データがない', async () => {
+  it("データがない", async () => {
     wrapper = await mountActivityInfo();
     mockedGet.mockRejectedValue({
       response: {
         status: 404,
-        data: { code: "ACTIVITY_NOT_FOUND" }
-      }
+        data: { code: "ACTIVITY_NOT_FOUND" },
+      },
     });
     // タブを変更
-    await wrapper.find("[data-testid='tab-yearly']").trigger('click');
+    await wrapper.find("[data-testid='tab-yearly']").trigger("click");
     await flushPromises();
 
-    expect(wrapper.find('[data-testid="currentMessage"]').text()).toBe("活動が登録されていません");
-  })
+    expect(wrapper.find('[data-testid="currentMessage"]').text()).toBe(
+      "活動が登録されていません",
+    );
+  });
 });

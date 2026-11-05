@@ -1,13 +1,9 @@
-import { ref } from 'vue';
-import { registerActuals } from '../api/activity';
-import { parseError } from '../utils/error';
-import { formatFailureMessage } from '../utils/activity';
-import axios from 'axios';
-import {
-  OneActivity,
-  RegisterActualResult,
-} from '../types/activity';
-
+import { ref } from "vue";
+import { registerActuals } from "../api/activity";
+import { parseError } from "../utils/error";
+import { formatFailureMessage } from "../utils/activity";
+import axios from "axios";
+import { OneActivity, RegisterActualResult } from "../types/activity";
 
 export const useRegisterActuals = () => {
   const selectedActivities = ref<OneActivity[]>([]);
@@ -28,14 +24,17 @@ export const useRegisterActuals = () => {
 
   const sendRequest = async () => {
     try {
-      const activities = selectedActivities.value.map(({ date, actual_time }) => ({
-        date,
-        actual_time,
-      }));
+      const activities = selectedActivities.value.map(
+        ({ date, actual_time }) => ({
+          date,
+          actual_time,
+        }),
+      );
       const res = await registerActuals(activities);
       statusCode.value = res.data.error_count === 0 ? 200 : 400;
-      reqMsg.value = `【活動時間登録】更新${res.data.success_count}件、エラー${res.data.error_count}件\n`
-        + makeMessageByDay(res.data.results);
+      reqMsg.value =
+        `【活動時間登録】更新${res.data.success_count}件、エラー${res.data.error_count}件\n` +
+        makeMessageByDay(res.data.results);
       selectedActivities.value = [];
     } catch (error: unknown) {
       reqMsg.value = parseError(error, "活動時間の登録に失敗しました");
@@ -51,6 +50,6 @@ export const useRegisterActuals = () => {
     selectedActivities,
     reqMsg,
     statusCode,
-    sendRequest
-  }
+    sendRequest,
+  };
 };

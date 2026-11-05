@@ -1,12 +1,15 @@
 import os
 import traceback
-from app.exceptions import NotFound, NotAuthorized, Forbidden
-from lib.log_conf import logger
-from jose import jwt, JWTError, ExpiredSignatureError
 from datetime import date
-from app.repositories.user_repository import UserRepository
-from app.repositories.auth_repository import TokenRepository
+
+from jose import ExpiredSignatureError, JWTError, jwt
+
 from app.error_codes import NotAuthorizedCode, NotFoundCode
+from app.exceptions import Forbidden, NotAuthorized, NotFound
+from app.repositories.auth_repository import TokenRepository
+from app.repositories.user_repository import UserRepository
+from lib.log_conf import logger
+
 # openssl rand -hex 32
 SECRET_KEY = os.environ["SECRET_KEY"]
 ALGORITHM = os.environ["ALGORITHM"]
@@ -18,7 +21,7 @@ class TokenVerifier:
         self.token_repo = TokenRepository(db)
 
     def verify_refresh_token(self, refresh_token: str, device_id: str) -> bool:
-        """ リフレッシュトークンを検証する """
+        """リフレッシュトークンを検証する"""
         try:
             payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=ALGORITHM)
             username = payload.get("sub")
@@ -27,7 +30,9 @@ class TokenVerifier:
             user = self.user_repo.get_user(username)
             if not user:
                 return False
-            if user.must_change_password or user.token_version != payload.get("token_version"):
+            if user.must_change_password or user.token_version != payload.get(
+                "token_version"
+            ):
                 raise Forbidden(code=NotAuthorizedCode.PASSWORD_CHANGE_REQUIRED)
             fetch_token = self.token_repo.get_refresh_token(username, device_id)
             if not fetch_token:
@@ -37,21 +42,23 @@ class TokenVerifier:
             if refresh_token != fetch_token.token:
                 return False
             return True
-        except Exception:
-            logger.error(f"リフレッシュトークンの検証中にエラーが発生しました\n{traceback.format_exc()}")
-            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+        except Exception as e:
+            logger.error(
+                f"リフレッシュトークンの検証中にエラーが発生しました\n{traceback.format_exc()}"
+            )
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from e
 
     def get_current_user_from_token(self, token: str) -> dict:
         try:
             user = self.authenticate_user(token)
             payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
-        except ExpiredSignatureError:
-            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
-        except JWTError:
-            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
-        except Exception:
+        except ExpiredSignatureError as expire_e:
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from expire_e
+        except JWTError as jwt_e:
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from jwt_e
+        except Exception as e:
             logger.error(f"ユーザーの認証に失敗しました\n{traceback.format_exc()}")
-            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from e
         if user.must_change_password:
             raise Forbidden(code=NotAuthorizedCode.PASSWORD_CHANGE_REQUIRED)
         if user.token_version != payload.get("token_version"):
@@ -60,24 +67,24 @@ class TokenVerifier:
             "username": user.username,
             "role": user.role,
             "status": user.status,
-            "token_version": user.token_version
+            "token_version": user.token_version,
         }
 
     def get_current_user_from_token_for_logout(self, token: str) -> dict:
         try:
             user = self.authenticate_user(token)
-        except ExpiredSignatureError:
-            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
-        except JWTError:
-            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
-        except Exception:
+        except ExpiredSignatureError as expire_e:
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from expire_e
+        except JWTError as jwt_e:
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from jwt_e
+        except Exception as e:
             logger.error(f"ユーザーの認証に失敗しました\n{traceback.format_exc()}")
-            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from e
         return {
             "username": user.username,
             "role": user.role,
             "status": user.status,
-            "token_version": user.token_version
+            "token_version": user.token_version,
         }
 
     def get_current_user_for_password_change(self, token: str) -> dict:
@@ -88,13 +95,13 @@ class TokenVerifier:
         try:
             user = self.authenticate_user(token)
             payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
-        except ExpiredSignatureError:
-            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
-        except JWTError:
-            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
-        except Exception:
+        except ExpiredSignatureError as expire_e:
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from expire_e
+        except JWTError as jwt_e:
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from jwt_e
+        except Exception as e:
             logger.error(f"ユーザーの認証に失敗しました\n{traceback.format_exc()}")
-            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from e
         if user.token_version != payload.get("token_version"):
             raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
         if user.status != "active":
@@ -105,7 +112,7 @@ class TokenVerifier:
             "username": user.username,
             "role": user.role,
             "status": user.status,
-            "token_version": user.token_version
+            "token_version": user.token_version,
         }
 
     def authenticate_user(self, token: str):

@@ -1,4 +1,3 @@
-
 def get_validation_error_code(error_type: str, field) -> str:
     # 独自のバリデーションエラーコードを返す
     # yearでバリデーションエラーが発生した場合、monthが指定されているがyearが指定されてない場合と

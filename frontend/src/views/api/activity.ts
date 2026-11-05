@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient } from "./client";
 import {
   SendTargetActivityParam,
   SendActualActivityParam,
@@ -11,72 +11,55 @@ import {
   GetActivitiesByMonthResponse,
   GetActivitiesByYearResponse,
   ActivityStatus,
-  ActivitySummary
-} from '../types/activity';
+  ActivitySummary,
+} from "../types/activity";
 import type { AxiosResponse } from "axios";
 
-
 export const getActivitiesByStatus = (
-  status: ActivityStatus
+  status: ActivityStatus,
 ): Promise<AxiosResponse<GetActivitiesByStatus>> => {
-  return apiClient.get(
-    `activities?status=${status}`
-  )
+  return apiClient.get(`activities?status=${status}`);
 };
 
 export const getActivityByDay = (
-  year: number, month: number, day: number
+  year: number,
+  month: number,
+  day: number,
 ): Promise<AxiosResponse<GetOneActivityResponse>> => {
-  return apiClient.get(
-    `activities/${year}/${month}/${day}`
-  )
+  return apiClient.get(`activities/${year}/${month}/${day}`);
 };
 
 export const getActivitiesByMonth = (
-  year: number, month: number
+  year: number,
+  month: number,
 ): Promise<AxiosResponse<GetActivitiesByMonthResponse>> => {
-  return apiClient.get(
-    `activities/${year}/${month}`
-  )
+  return apiClient.get(`activities/${year}/${month}`);
 };
 
 export const getActivitiesByYear = (
-  year: number
+  year: number,
 ): Promise<AxiosResponse<GetActivitiesByYearResponse>> => {
-  return apiClient.get(
-    `activities/${year}`
-  )
+  return apiClient.get(`activities/${year}`);
 };
 
 export const getAllActivities = (): Promise<AxiosResponse<ActivitySummary>> => {
-  return apiClient.get(
-    "activities/total"
-  )
+  return apiClient.get("activities/total");
 };
 
 export const registerTargets = (
-  activities: SendTargetActivityParam[]
+  activities: SendTargetActivityParam[],
 ): Promise<AxiosResponse<RegisterTargetResponse>> => {
-  return apiClient.post(
-    "activities/bulk-create-targets",
-    { activities }
-  )
+  return apiClient.post("activities/bulk-create-targets", { activities });
 };
 
 export const registerActuals = (
-  activities: SendActualActivityParam[]
+  activities: SendActualActivityParam[],
 ): Promise<AxiosResponse<RegisterActualResponse>> => {
-  return apiClient.patch(
-    "activities/bulk-update-actuals",
-    { activities }
-  )
+  return apiClient.patch("activities/bulk-update-actuals", { activities });
 };
 
 export const finishActivities = (
-  dates: SendFinishActivityParam
+  dates: SendFinishActivityParam,
 ): Promise<AxiosResponse<FinishActivityResponse>> => {
-  return apiClient.patch(
-    "activities/bulk-finish",
-    { dates }
-  )
+  return apiClient.patch("activities/bulk-finish", { dates });
 };

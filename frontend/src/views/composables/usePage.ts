@@ -6,9 +6,15 @@ export const usePage = (todos: Ref<TodoInfo[]>, itemNum: number) => {
   const currentPage = ref<number>(1);
   const itemsPerPage = ref<number>(itemNum);
   const totalItems = computed(() => todos.value.length);
-  const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value));
-  const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value);
-  const endIndex = computed(() => Math.min(startIndex.value + itemsPerPage.value, totalItems.value));
+  const totalPages = computed(() =>
+    Math.ceil(totalItems.value / itemsPerPage.value),
+  );
+  const startIndex = computed(
+    () => (currentPage.value - 1) * itemsPerPage.value,
+  );
+  const endIndex = computed(() =>
+    Math.min(startIndex.value + itemsPerPage.value, totalItems.value),
+  );
 
   const paginatedTodos = computed(() => {
     return todos.value.slice(startIndex.value, endIndex.value);
@@ -24,8 +30,11 @@ export const usePage = (todos: Ref<TodoInfo[]>, itemNum: number) => {
   const visiblePages = computed(() => {
     const pages = [];
     const maxVisiblePages = 5;
-    let start = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2))
-    const end = Math.min(totalPages.value, start + maxVisiblePages - 1)
+    let start = Math.max(
+      1,
+      currentPage.value - Math.floor(maxVisiblePages / 2),
+    );
+    const end = Math.min(totalPages.value, start + maxVisiblePages - 1);
 
     // 最後のページが表示範囲に入るように調整
     if (end - start + 1 < maxVisiblePages) {
@@ -35,7 +44,7 @@ export const usePage = (todos: Ref<TodoInfo[]>, itemNum: number) => {
     for (let i = start; i <= end; i++) {
       pages.push(i);
     }
-    return pages
+    return pages;
   });
 
   return {
@@ -45,6 +54,6 @@ export const usePage = (todos: Ref<TodoInfo[]>, itemNum: number) => {
     totalPages,
     paginatedTodos,
     visiblePages,
-    goToPage
-  }
+    goToPage,
+  };
 };

@@ -1,8 +1,12 @@
-import { ref } from 'vue';
-import { registerInquiry, getInquiries } from '../api/inquiry';
-import { parseError } from '../utils/error';
-import { InquiryCategoryType, InquiryItem, DEFAULT_INQUIRY_CATEGORY } from '../types/inquiry';
-import axios from 'axios';
+import { ref } from "vue";
+import { registerInquiry, getInquiries } from "../api/inquiry";
+import { parseError } from "../utils/error";
+import {
+  InquiryCategoryType,
+  InquiryItem,
+  DEFAULT_INQUIRY_CATEGORY,
+} from "../types/inquiry";
+import axios from "axios";
 
 export const useSendInquiry = () => {
   const category = ref<InquiryCategoryType>(DEFAULT_INQUIRY_CATEGORY); // 初期値は要望
@@ -13,10 +17,12 @@ export const useSendInquiry = () => {
   const sendRequest = async () => {
     try {
       const res = await registerInquiry(category.value, detail.value);
-      statusCode.value = res.status
-      message.value = ["以下の内容で受け付けました\n",
+      statusCode.value = res.status;
+      message.value = [
+        "以下の内容で受け付けました\n",
         `カテゴリ:${res.data.category}\n`,
-        `内容:${res.data.detail}`].join('');
+        `内容:${res.data.detail}`,
+      ].join("");
       // 内容をリセット
       category.value = DEFAULT_INQUIRY_CATEGORY;
       detail.value = "";
@@ -28,15 +34,15 @@ export const useSendInquiry = () => {
         statusCode.value = null;
       }
     }
-  }
+  };
 
   return {
     category,
     detail,
     statusCode,
     message,
-    sendRequest
-  }
+    sendRequest,
+  };
 };
 
 export const useGetInquiries = () => {
@@ -51,11 +57,11 @@ export const useGetInquiries = () => {
     } catch (error) {
       message.value = parseError(error, "問い合わせの取得に失敗しました");
     }
-  }
+  };
 
   return {
     inquiries,
     message,
-    fetchInquiries
-  }
+    fetchInquiries,
+  };
 };

@@ -1,6 +1,6 @@
 import os
-from logging import config, Filter, INFO, WARNING, DEBUG, getLogger, Formatter
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+from logging import DEBUG, INFO, WARNING, Filter, Formatter, config, getLogger
 from pathlib import Path
 
 ENV = os.getenv("ENV")
@@ -32,7 +32,7 @@ class FileFilter(Filter):
 
 class JSTFormatter(Formatter):
     def formatTime(self, record, datefmt=None):
-        # 日本時間（JST）を設定
+        # 日本時間(JST)を設定
         jst = timezone(timedelta(hours=9))
         record_time = datetime.fromtimestamp(record.created, tz=jst)
         if not datefmt:
@@ -45,36 +45,25 @@ log_conf = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "console_format": {
-            "()": JSTFormatter,
-            "format": "%(asctime)s \n%(message)s"
-        }
+        "console_format": {"()": JSTFormatter, "format": "%(asctime)s \n%(message)s"}
     },
     "handlers": {
         "console_handler": {
             "class": "logging.StreamHandler",
             "level": "INFO",
             "formatter": "console_format",
-            "filters": ["console_filter"]
+            "filters": ["console_filter"],
         }
     },
-    "filters": {
-        "console_filter": {
-            "()": ConsoleFilter,
-            'level': INFO
-        }
-    },
-    "root": {
-        "level": DEBUG,
-        "handlers": ["console_handler"]
-    }
+    "filters": {"console_filter": {"()": ConsoleFilter, "level": INFO}},
+    "root": {"level": DEBUG, "handlers": ["console_handler"]},
 }
 
 # test環境ではログファイルを出力しない
 if ENV != "test":
     log_conf["formatters"]["file_format"] = {
         "()": JSTFormatter,
-        "format": "%(asctime)s %(levelname)s %(name)s %(message)s"
+        "format": "%(asctime)s %(levelname)s %(name)s %(message)s",
     }
 
     log_conf["handlers"]["file_handler"] = {
@@ -84,13 +73,10 @@ if ENV != "test":
         "filename": logfile,
         "when": "W6",
         "level": "WARNING",
-        "filters": ["file_filter"]
+        "filters": ["file_filter"],
     }
 
-    log_conf["filters"]["file_filter"] = {
-        "()": FileFilter,
-        'level': WARNING
-    }
+    log_conf["filters"]["file_filter"] = {"()": FileFilter, "level": WARNING}
 
     log_conf["root"]["handlers"].append("file_handler")
 

@@ -1,16 +1,16 @@
-import { ref } from 'vue';
-import { login, logout } from '../api/auth';
-import { parseError } from '../utils/error';
-import { jwtDecode } from 'jwt-decode';
-import { useRouter } from 'vue-router';
-import { useAuthStore, useRoleStore } from '@/store/authenticate';
-import axios from 'axios';
-import { AuthTokenResponse } from '../types/auth';
+import { ref } from "vue";
+import { login, logout } from "../api/auth";
+import { parseError } from "../utils/error";
+import { jwtDecode } from "jwt-decode";
+import { useRouter } from "vue-router";
+import { useAuthStore, useRoleStore } from "@/store/authenticate";
+import axios from "axios";
+import { AuthTokenResponse } from "../types/auth";
 
 export const setAuthDataFromToken = (
   authStore: ReturnType<typeof useAuthStore>,
   roleStore: ReturnType<typeof useRoleStore>,
-  response: AuthTokenResponse
+  response: AuthTokenResponse,
 ) => {
   const decoded = jwtDecode(response.access_token);
 
@@ -22,12 +22,11 @@ export const setAuthDataFromToken = (
     response.access_token,
     response.token_type,
     decoded.exp,
-    response.must_change_password
+    response.must_change_password,
   );
 
   roleStore.setRole(response.role);
 };
-
 
 export const useLogin = () => {
   const username = ref<string>("");
@@ -39,31 +38,31 @@ export const useLogin = () => {
   const roleStore = useRoleStore();
 
   const validateForm = () => {
-    if (!username.value) return 'ユーザー名を入力してください'
-    if (!password.value) return 'パスワードを入力してください'
-    return null
+    if (!username.value) return "ユーザー名を入力してください";
+    if (!password.value) return "パスワードを入力してください";
+    return null;
   };
 
   const userLogin = async () => {
-    const error = validateForm()
+    const error = validateForm();
     if (error) {
-      message.value = error
-      return
+      message.value = error;
+      return;
     }
 
     try {
       const response = await login(username.value, password.value);
-      await setAuthDataFromToken(authStore, roleStore, response.data)
+      await setAuthDataFromToken(authStore, roleStore, response.data);
 
-      roleStore.setRole(response.data.role)
+      roleStore.setRole(response.data.role);
 
       if (authStore.getRedirectPath) {
-        router.push({ path: authStore.getRedirectPath })
+        router.push({ path: authStore.getRedirectPath });
       } else {
-        router.push({ path: "/home" })
+        router.push({ path: "/home" });
       }
     } catch (error) {
-      message.value = parseError(error, "ログインに失敗しました")
+      message.value = parseError(error, "ログインに失敗しました");
       if (axios.isAxiosError(error)) {
         statusCode.value = error.response?.status || null;
       } else {
@@ -78,8 +77,8 @@ export const useLogin = () => {
     message,
     statusCode,
     router,
-    userLogin
-  }
+    userLogin,
+  };
 };
 
 export const useLogout = () => {
@@ -96,14 +95,14 @@ export const useLogout = () => {
       roleStore.clearRole();
       await router.replace({
         name: "Login",
-        query: { message: "ログアウトしました" }
+        query: { message: "ログアウトしました" },
       });
     }
-  }
+  };
 
   return {
     message,
     roleStore,
-    userLogout
-  }
+    userLogout,
+  };
 };

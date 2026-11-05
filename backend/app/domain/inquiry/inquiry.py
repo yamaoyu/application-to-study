@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from app.domain.inquiry.exceptions import InValidInquiry, InquiryValidationReason
+
+from app.domain.inquiry.exceptions import InquiryValidationReason, InValidInquiry
 
 
 @dataclass(frozen=True)
@@ -13,13 +14,15 @@ class InquiryDetail:
             raise InValidInquiry(
                 reason=InquiryValidationReason.INQUIRY_DETAIL_REQUIRED,
                 field="detail",
-                detail="詳細は必須です")
+                detail="詳細は必須です",
+            )
 
         if len(normalized) > 256:
             raise InValidInquiry(
                 reason=InquiryValidationReason.INQUIRY_DETAIL_TOO_LONG,
                 field="detail",
-                detail="詳細は256文字以内で入力してください")
+                detail="詳細は256文字以内で入力してください",
+            )
 
         # "  hello  "が"hello"として扱われるように、正規化された値を設定する
         object.__setattr__(self, "value", normalized)

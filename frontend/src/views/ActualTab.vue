@@ -11,7 +11,9 @@
           </BCardText>
         </div>
         <div class="mt-3 pt-3 border-top">
-          <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+          <div
+            class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3"
+          >
             <div class="d-flex flex-wrap gap-2">
               <button
                 type="button"
@@ -68,21 +70,24 @@
           </tr>
         </thead>
         <tbody>
-          <tr 
-            v-for="(activity, index) in editableActivities" 
+          <tr
+            v-for="(activity, index) in editableActivities"
             :key="index"
-            :class="{ 'table-active': isSelected(activity), 'table-warning': isEditedActual(activity) }"
+            :class="{
+              'table-active': isSelected(activity),
+              'table-warning': isEditedActual(activity),
+            }"
           >
-            <td 
+            <td
               :data-testid="`is-selected-actual-${index}`"
-              @click="toggle(activity)" 
+              @click="toggle(activity)"
             >
-                <input 
-                    v-model="selectedActivities"
-                    class="form-check-input" 
-                    type="checkbox"
-                    :value="activity"
-                >
+              <input
+                v-model="selectedActivities"
+                class="form-check-input"
+                type="checkbox"
+                :value="activity"
+              />
             </td>
             <td @click="toggle(activity)">{{ activity.date }}</td>
             <td @click="toggle(activity)">{{ activity.target_time }}時間</td>
@@ -97,7 +102,6 @@
                   max="12"
                   step="0.5"
                   @input="onValidate($event, activity.actual_time)"
-                  
                 />
                 <span class="input-group-text small">時間</span>
               </div>
@@ -105,99 +109,109 @@
           </tr>
         </tbody>
       </table>
-        <button 
-          type="button" 
-          :disabled="selectedActivities.length === 0"
-          data-testid="submit-multi-actual"
-          class="btn btn-outline-secondary mt-3"
-          @click="showModal = true"
-        >
-          まとめて登録
-        </button>
-      </div>
-    <div v-else class="mt-3 alert alert-warning">登録対象の活動がありません</div>
+      <button
+        type="button"
+        :disabled="selectedActivities.length === 0"
+        data-testid="submit-multi-actual"
+        class="btn btn-outline-secondary mt-3"
+        @click="showModal = true"
+      >
+        まとめて登録
+      </button>
+    </div>
+    <div v-else class="mt-3 alert alert-warning">
+      登録対象の活動がありません
+    </div>
   </div>
 
-  <div v-if="reqMsg" class="container d-flex justify-content-center" data-testid="reqMsg">
-    <p class="mt-3 col-12" :class="getResponseAlert(statusCode)">{{ reqMsg }}</p>
+  <div
+    v-if="reqMsg"
+    class="container d-flex justify-content-center"
+    data-testid="reqMsg"
+  >
+    <p class="mt-3 col-12" :class="getResponseAlert(statusCode)">
+      {{ reqMsg }}
+    </p>
   </div>
 
   <!-- モーダルコンポーネントで登録前の確認 -->
-  <BModal 
+  <BModal
     v-model="showModal"
-    title="活動時間の登録" 
-    ok-title="はい" 
-    cancel-title="いいえ" 
+    title="活動時間の登録"
+    ok-title="はい"
+    cancel-title="いいえ"
     data-testid="modal-show"
-    @ok="onSubmit" 
+    @ok="onSubmit"
   >
     <p>選択した日の活動時間を登録しますか？</p>
   </BModal>
 </template>
 
 <script lang="ts">
-import { ref, computed, watch, type PropType } from 'vue';
-import { validateActualTime } from './utils/activity';
-import { useRegisterActuals } from './composables/useActualActivities';
-import { getMaxDate, getToday } from './utils/date';
-import { BModal, BCard, BCardText } from 'bootstrap-vue-next';
-import { getResponseAlert } from './utils/ui';
-import { useSelection } from './composables/useSelection';
-import { OneActivity } from './types/activity';
+import { ref, computed, watch, type PropType } from "vue";
+import { validateActualTime } from "./utils/activity";
+import { useRegisterActuals } from "./composables/useActualActivities";
+import { getMaxDate, getToday } from "./utils/date";
+import { BModal, BCard, BCardText } from "bootstrap-vue-next";
+import { getResponseAlert } from "./utils/ui";
+import { useSelection } from "./composables/useSelection";
+import { OneActivity } from "./types/activity";
 
-type Mode = "all"| "edited"
+type Mode = "all" | "edited";
 
 export default {
   components: {
     BModal,
     BCard,
-    BCardText
+    BCardText,
   },
 
   props: {
     pendingActivities: {
       type: Array as PropType<OneActivity[]>,
-      default: () => []
-    }
+      default: () => [],
+    },
   },
 
-  emits: ['registered'],
+  emits: ["registered"],
 
   setup(props, { emit }) {
     const date = ref<string>(getToday());
     const showModal = ref<boolean>(false);
     const editableActivities = ref<OneActivity[]>([]);
-    const { selectedActivities, reqMsg, statusCode, sendRequest } = useRegisterActuals();
+    const { selectedActivities, reqMsg, statusCode, sendRequest } =
+      useRegisterActuals();
     const { isSelected, toggle, clear } = useSelection(selectedActivities);
 
-    const onValidate = (event: Event, time:number) => {
+    const onValidate = (event: Event, time: number) => {
       const input = event.target as HTMLInputElement;
-      const error = validateActualTime(time)
+      const error = validateActualTime(time);
 
       if (error) {
-        input.setCustomValidity(error)
-        input.reportValidity()
+        input.setCustomValidity(error);
+        input.reportValidity();
       } else {
-        input.setCustomValidity("")
+        input.setCustomValidity("");
       }
     };
 
     const editedActivities = computed(() => {
-      return editableActivities.value.filter(activity => isEditedActual(activity));
+      return editableActivities.value.filter((activity) =>
+        isEditedActual(activity),
+      );
     });
 
     const pendingById = computed(() => {
-      return new Map(props.pendingActivities.map(a => [a.activity_id, a]));
+      return new Map(props.pendingActivities.map((a) => [a.activity_id, a]));
     });
 
     const isEditedActual = (activity: OneActivity) => {
       const originalActivity = pendingById.value.get(activity.activity_id);
       if (originalActivity) {
         return activity.actual_time !== originalActivity.actual_time;
-      };
+      }
       return false;
     };
-
 
     const applySelection = (mode: Mode) => {
       if (mode === "all") {
@@ -208,22 +222,25 @@ export default {
     };
 
     const resetEditedActivities = () => {
-        editableActivities.value = props.pendingActivities.map(activity => ({ ...activity }));
-        selectedActivities.value = [];
-      };
-
+      editableActivities.value = props.pendingActivities.map((activity) => ({
+        ...activity,
+      }));
+      selectedActivities.value = [];
+    };
 
     const onSubmit = async () => {
       await sendRequest();
-      emit('registered');
+      emit("registered");
     };
 
     watch(
       () => props.pendingActivities,
       (activities) => {
-        editableActivities.value = activities.map(activity => ({ ...activity }));
+        editableActivities.value = activities.map((activity) => ({
+          ...activity,
+        }));
       },
-      { immediate: true }
+      { immediate: true },
     );
 
     return {
@@ -243,9 +260,8 @@ export default {
       isEditedActual,
       isSelected,
       applySelection,
-      resetEditedActivities
-    }
-  }
-}
-
+      resetEditedActivities,
+    };
+  },
+};
 </script>

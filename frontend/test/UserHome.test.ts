@@ -1,612 +1,622 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import UserHome from '@/views/UserHome.vue';
-import { mountComponent } from './vitest.setup';
-import { apiClient } from '@/views/api/client';
-import { flushPromises, VueWrapper } from '@vue/test-utils';
-import { getToday } from '@/views/utils/date';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import UserHome from "@/views/UserHome.vue";
+import { mountComponent } from "./vitest.setup";
+import { apiClient } from "@/views/api/client";
+import { flushPromises, VueWrapper } from "@vue/test-utils";
+import { getToday } from "@/views/utils/date";
 
 const mockedGet = vi.mocked(apiClient.get);
 const mockedPatch = vi.mocked(apiClient.patch);
-const mockedPost = vi.mocked(apiClient.post)
+const mockedPost = vi.mocked(apiClient.post);
 
 const today = getToday().split("-");
 const expectedYear = Number(today[0]);
 const expectedMonth = Number(today[1]);
 const expectedDate = Number(today[2]);
 
-
 const defaultActivityData = {
-    date: `${expectedYear}-${expectedMonth}-${expectedDate}`,
-    target_time: 3,
-    actual_time: 0,
-    status: "pending",
-    bonus: 0,
-    penalty: 0.38
+  date: `${expectedYear}-${expectedMonth}-${expectedDate}`,
+  target_time: 3,
+  actual_time: 0,
+  status: "pending",
+  bonus: 0,
+  penalty: 0.38,
 };
 
 const defaultIncomeData = {
-    base_income: 25.0,
-    total_income: 25.38,
-    pay_adjustment: 0.38
+  base_income: 25.0,
+  total_income: 25.38,
+  pay_adjustment: 0.38,
 };
 
-
 const defaultTodosData = {
-    todos: [
-        {
-            todo_id: 1,
-            title: "title1",
-            detail: "detail1",
-            due: "2025-1-2"
-        },
-        {
-            todo_id: 2,
-            title: "title2",
-            detail: "detail2",
-            due: "2025-1-1"
-        }
-    ]
+  todos: [
+    {
+      todo_id: 1,
+      title: "title1",
+      detail: "detail1",
+      due: "2025-1-2",
+    },
+    {
+      todo_id: 2,
+      title: "title2",
+      detail: "detail2",
+      due: "2025-1-1",
+    },
+  ],
 };
 
 type ApiMock<ResponseData> =
-    | { type: 'resolve'; value: { status: number; data: ResponseData } }
-    | { type: 'reject'; value: { response: { status: number; data: { code: string } } } };
+  | { type: "resolve"; value: { status: number; data: ResponseData } }
+  | {
+      type: "reject";
+      value: { response: { status: number; data: { code: string } } };
+    };
 
 type ActivityData = typeof defaultActivityData;
 type IncomeData = typeof defaultIncomeData;
 type TodosData = typeof defaultTodosData;
 
 const createResolvedMock = <ResponseData>(
-    data: ResponseData,
-    status = 200,
+  data: ResponseData,
+  status = 200,
 ): ApiMock<ResponseData> => ({
-    type: "resolve",
-    value: {
-        status,
-        data,
-    },
+  type: "resolve",
+  value: {
+    status,
+    data,
+  },
 });
 
 const createRejectedMock = <ResponseData = unknown>(
-    code: string,
-    status = 404,
+  code: string,
+  status = 404,
 ): ApiMock<ResponseData> => ({
-    type: "reject",
-    value: {
-        response: {
-            status,
-            data: {
-                code,
-            },
-        },
+  type: "reject",
+  value: {
+    response: {
+      status,
+      data: {
+        code,
+      },
     },
+  },
 });
 
 const mountUserHome = async ({
-    activityMock = createResolvedMock(defaultActivityData),
-    incomeMock = createResolvedMock(defaultIncomeData),
-    todosMock = createResolvedMock(defaultTodosData),
-}: { activityMock?: ApiMock<ActivityData>, incomeMock?: ApiMock<IncomeData>, todosMock?: ApiMock<TodosData> } = {}) => {
-    [activityMock, incomeMock, todosMock].forEach((mock) => {
-        if (mock.type === "reject") {
-            mockedGet.mockRejectedValueOnce(mock.value);
-        } else {
-            mockedGet.mockResolvedValueOnce(mock.value);
-        }
-    });
+  activityMock = createResolvedMock(defaultActivityData),
+  incomeMock = createResolvedMock(defaultIncomeData),
+  todosMock = createResolvedMock(defaultTodosData),
+}: {
+  activityMock?: ApiMock<ActivityData>;
+  incomeMock?: ApiMock<IncomeData>;
+  todosMock?: ApiMock<TodosData>;
+} = {}) => {
+  [activityMock, incomeMock, todosMock].forEach((mock) => {
+    if (mock.type === "reject") {
+      mockedGet.mockRejectedValueOnce(mock.value);
+    } else {
+      mockedGet.mockResolvedValueOnce(mock.value);
+    }
+  });
 
-    const wrapper = mountComponent(UserHome);
-    await flushPromises();
-    return wrapper;
+  const wrapper = mountComponent(UserHome);
+  await flushPromises();
+  return wrapper;
 };
 
+describe("ユーザーホームの表示(データあり)", () => {
+  let wrapper: VueWrapper;
 
-describe('ユーザーホームの表示(データあり)', () => {
-    let wrapper: VueWrapper;
+  beforeEach(async () => {
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+  });
 
-    beforeEach(async () => {
-        vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-    }
+  it("活動実績のデータがある(ステータスが未確定)", async () => {
+    const wrapper = await mountUserHome();
+    const expectedMessage = "このままだと、0.38万円(3800円)のペナルティが発生";
+    expect(mockedGet).toBeCalledWith(
+      `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
     );
 
-    it('活動実績のデータがある(ステータスが未確定)', async () => {
-        const wrapper = await mountUserHome();
-        const expectedMessage = "このままだと、0.38万円(3800円)のペナルティが発生";
-        expect(mockedGet).toBeCalledWith(
-            `activities/${expectedYear}/${expectedMonth}/${expectedDate}`
-        );
+    // メッセージの確認
+    expect(wrapper.find("[data-testid='activity-msg']").text()).toEqual(
+      expectedMessage,
+    );
+  });
 
-        // メッセージの確認
-        expect(wrapper.find("[data-testid='activity-msg']").text()).toEqual(expectedMessage);
+  it("活動実績のデータがある(ステータスが成功)", async () => {
+    const expectedData = {
+      date: `${expectedYear}-${expectedMonth}-${expectedDate}`,
+      target_time: 3,
+      actual_time: 3,
+      status: "success",
+      bonus: 0.38,
+      penalty: 0,
+    };
+    const expectedMessage = "目標達成!\nボーナス:0.38万円(3800円)";
+    wrapper = await mountUserHome({
+      activityMock: createResolvedMock(expectedData),
     });
+    expect(mockedGet).toBeCalledWith(
+      `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
+    );
 
-    it('活動実績のデータがある(ステータスが成功)', async () => {
-        const expectedData = {
-            date: `${expectedYear}-${expectedMonth}-${expectedDate}`,
-            target_time: 3,
-            actual_time: 3,
-            status: "success",
-            bonus: 0.38,
-            penalty: 0
-        };
-        const expectedMessage = "目標達成!\nボーナス:0.38万円(3800円)";
-        wrapper = await mountUserHome({ activityMock: createResolvedMock(expectedData) });
-        expect(mockedGet).toBeCalledWith(
-            `activities/${expectedYear}/${expectedMonth}/${expectedDate}`
-        );
+    // メッセージの確認
+    expect(wrapper.find("[data-testid='activity-msg']").text()).toEqual(
+      expectedMessage,
+    );
+  });
 
-        // メッセージの確認
-        expect(wrapper.find("[data-testid='activity-msg']").text()).toEqual(expectedMessage);
+  it("活動実績のデータがある(ステータスが失敗)", async () => {
+    const expectedData = {
+      date: `${expectedYear}-${expectedMonth}-${expectedDate}`,
+      target_time: 3,
+      actual_time: 3,
+      status: "failure",
+      bonus: 0,
+      penalty: 0.38,
+    };
+
+    wrapper = await mountUserHome({
+      activityMock: createResolvedMock(expectedData),
     });
+    expect(mockedGet).toBeCalledWith(
+      `activities/${expectedYear}/${expectedMonth}/${expectedDate}`,
+    );
+    expect(wrapper.find("[data-testid='activity-msg']").text()).toEqual(
+      "目標失敗...\nペナルティ:0.38万円(3800円)",
+    );
+  });
 
-    it('活動実績のデータがある(ステータスが失敗)', async () => {
-        const expectedData = {
-            date: `${expectedYear}-${expectedMonth}-${expectedDate}`,
-            target_time: 3,
-            actual_time: 3,
-            status: "failure",
-            bonus: 0,
-            penalty: 0.38
-        };
+  it("給料のデータがある", async () => {
+    wrapper = await mountUserHome();
+    expect(mockedGet).toBeCalledWith(
+      `incomes/${expectedYear}/${expectedMonth}`,
+    );
+    expect(wrapper.find("[data-testid='total-income']").text()).toEqual(
+      defaultIncomeData.total_income.toString(),
+    );
+  });
 
-        wrapper = await mountUserHome({ activityMock: createResolvedMock(expectedData) });
-        expect(mockedGet).toBeCalledWith(
-            `activities/${expectedYear}/${expectedMonth}/${expectedDate}`
-        );
-        expect(wrapper.find("[data-testid='activity-msg']").text()).toEqual("目標失敗...\nペナルティ:0.38万円(3800円)");
+  it("未完了Todoのデータがある", async () => {
+    wrapper = await mountUserHome();
+    expect(mockedGet).toBeCalledWith("todos", {
+      params: {
+        end_due: undefined,
+        start_due: undefined,
+        status: "false",
+        title: undefined,
+      },
     });
-
-    it('給料のデータがある', async () => {
-        wrapper = await mountUserHome();
-        expect(mockedGet).toBeCalledWith(
-            `incomes/${expectedYear}/${expectedMonth}`
-        );
-        expect(wrapper.find("[data-testid='total-income']").text()).toEqual(defaultIncomeData.total_income.toString());
-    });
-
-    it('未完了Todoのデータがある', async () => {
-        wrapper = await mountUserHome();
-        expect(mockedGet).toBeCalledWith(
-            "todos",
-            {
-                "params": {
-                    "end_due": undefined,
-                    "start_due": undefined,
-                    "status": "false",
-                    "title": undefined,
-                },
-            }
-        );
-        const rows = wrapper.findAll('[data-testid="todo-row"]');
-        expect(rows).toHaveLength(defaultTodosData.todos.length);
-    });
+    const rows = wrapper.findAll('[data-testid="todo-row"]');
+    expect(rows).toHaveLength(defaultTodosData.todos.length);
+  });
 });
 
-describe('ユーザーホームの表示(データなし)', () => {
-    let wrapper: VueWrapper;
+describe("ユーザーホームの表示(データなし)", () => {
+  let wrapper: VueWrapper;
 
-    beforeEach(() => {
-        vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-    }
+  beforeEach(() => {
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+  });
+
+  it("活動実績のデータがない", async () => {
+    wrapper = await mountUserHome({
+      activityMock: createRejectedMock("ACTIVITY_NOT_FOUND"),
+    });
+    expect(wrapper.find("[data-testid='activity-msg']").text()).toEqual(
+      "活動が登録されていません",
     );
+  });
 
-    it('活動実績のデータがない', async () => {
-        wrapper = await mountUserHome({
-            activityMock: createRejectedMock("ACTIVITY_NOT_FOUND")
-        });
-        expect(wrapper.find("[data-testid='activity-msg']").text()).toEqual("活動が登録されていません");
+  it("給料のデータがない", async () => {
+    wrapper = await mountUserHome({
+      incomeMock: createRejectedMock("SALARY_NOT_FOUND"),
     });
 
-    it('給料のデータがない', async () => {
-        wrapper = await mountUserHome({
-            incomeMock: createRejectedMock("SALARY_NOT_FOUND")
-        });
+    expect(wrapper.find("[data-testid='income-msg']").text()).toEqual(
+      "月収が登録されていません",
+    );
+  });
 
-        expect(wrapper.find("[data-testid='income-msg']").text()).toEqual("月収が登録されていません");
+  it("未完了Todoのデータがない", async () => {
+    wrapper = await mountUserHome({
+      todosMock: createRejectedMock("TODO_NOT_FOUND"),
     });
 
-    it('未完了Todoのデータがない', async () => {
-        wrapper = await mountUserHome({
-            todosMock: createRejectedMock("TODO_NOT_FOUND")
-        });
-
-        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual("登録されたTODOはありません");
-    });
+    expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual(
+      "登録されたTODOはありません",
+    );
+  });
 });
 
-describe('Todoの操作', () => {
-    let wrapper: VueWrapper;
+describe("Todoの操作", () => {
+  let wrapper: VueWrapper;
 
-    beforeEach(() => {
-        vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-    }
-    );
+  beforeEach(() => {
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+  });
 
-    it('Todo編集', async () => {
-        const title = "new title";
-        const detail = "new detail";
-        const due = "new due";
+  it("Todo編集", async () => {
+    const title = "new title";
+    const detail = "new detail";
+    const due = "new due";
 
-        // editTodo()のモック
-        mockedPatch.mockResolvedValue({
-            status: 200,
-            data: {
-                results: [
-                    {
-                        title: title,
-                        detail: detail,
-                        due: due,
-                        result: "success",
-                        reason: null
-                    }
-                ]
-            }
-        })
-        wrapper = await mountUserHome();
-        // editTodo()後のtodo再取得処理のモック
-        mockedGet.mockResolvedValueOnce({
-            status: 200,
-            data: {
-                todos: [
-                    {
-                        detail: detail,
-                        due: due,
-                        status: true,
-                        title: title,
-                        todo_id: 1,
-                        username: "test"
-                    }
-                ],
-            }
-        });
-
-        await wrapper.find("[data-testid='edit-0']").trigger("click");
-        // モーダルが開かれていることを確認
-        const modal = document.body.querySelector("[data-testid='modal-show']");
-        expect(modal).not.toBeNull();
-        // 編集モードであることを確認してからOkボタンをクリック
-        const bModal = wrapper.findComponent({ name: 'BModal' });
-        expect(bModal.props("title")).toBe("Todo編集");
-        await bModal.vm.$emit('ok');
-        await flushPromises();
-        expect(mockedPatch).toHaveBeenCalledWith(
-            "todos/update/1",
-            {
-                title: defaultTodosData.todos[0].title,
-                detail: defaultTodosData.todos[0].detail,
-                due: defaultTodosData.todos[0].due
-            }
-        );
-        expect(mockedPatch).toBeCalledTimes(1);
-        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual("【Todo更新成功】: new title");
+    // editTodo()のモック
+    mockedPatch.mockResolvedValue({
+      status: 200,
+      data: {
+        results: [
+          {
+            title: title,
+            detail: detail,
+            due: due,
+            result: "success",
+            reason: null,
+          },
+        ],
+      },
+    });
+    wrapper = await mountUserHome();
+    // editTodo()後のtodo再取得処理のモック
+    mockedGet.mockResolvedValueOnce({
+      status: 200,
+      data: {
+        todos: [
+          {
+            detail: detail,
+            due: due,
+            status: true,
+            title: title,
+            todo_id: 1,
+            username: "test",
+          },
+        ],
+      },
     });
 
-    it('Todo終了に成功', async () => {
-        const title = "Test Todo";
-
-        // finishTodo()のモック
-        mockedPatch.mockResolvedValue({
-            status: 200,
-            data: {
-                success_count: 1,
-                error_count: 0,
-                results: [
-                    {
-                        todo_id: 1,
-                        title: title,
-                        result: "success",
-                        reason: null
-                    }
-                ]
-            }
-        })
-        wrapper = await mountUserHome();
-        // finishTodo()後のtodo再取得処理のモック
-        mockedGet.mockResolvedValueOnce({
-            status: 200,
-            data: {
-                todos: [
-                    {
-                        detail: "test detail",
-                        due: "2025-1-1",
-                        status: true,
-                        title: "test title",
-                        todo_id: 1,
-                        username: "test"
-                    }
-                ]
-            }
-        });
-        // 終了ボタンをクリックし、モーダルを開く
-        await wrapper.find("[data-testid='finish-0']").trigger("click");
-        // モーダルが開かれていることを確認
-        const modal = document.body.querySelector("[data-testid='modal-show']");
-        expect(modal).not.toBeNull();
-        // 終了モードであることを確認してからOkボタンをクリック
-        const bModal = wrapper.findComponent({ name: 'BModal' });
-        expect(bModal.props("title")).toBe("Todo終了確認");
-        await bModal.vm.$emit('ok');
-        await flushPromises();
-
-        expect(mockedPatch).toHaveBeenCalledWith(
-            "todos/bulk-finish",
-            {
-                ids: [1]
-            }
-        );
-        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual(`Todo終了成功: 1件、失敗:0件\n【Todo終了成功】: ${title}`);
+    await wrapper.find("[data-testid='edit-0']").trigger("click");
+    // モーダルが開かれていることを確認
+    const modal = document.body.querySelector("[data-testid='modal-show']");
+    expect(modal).not.toBeNull();
+    // 編集モードであることを確認してからOkボタンをクリック
+    const bModal = wrapper.findComponent({ name: "BModal" });
+    expect(bModal.props("title")).toBe("Todo編集");
+    await bModal.vm.$emit("ok");
+    await flushPromises();
+    expect(mockedPatch).toHaveBeenCalledWith("todos/update/1", {
+      title: defaultTodosData.todos[0].title,
+      detail: defaultTodosData.todos[0].detail,
+      due: defaultTodosData.todos[0].due,
     });
-
-    it('Todo終了に失敗', async () => {
-        wrapper = await mountUserHome();
-
-        // finishTodo()のモック
-        mockedPatch.mockResolvedValue({
-            status: 200,
-            data: {
-                success_count: 0,
-                error_count: 1,
-                results: [
-                    {
-                        todo_id: 1,
-                        title: null,
-                        status: "error",
-                        reason: "TODO_NOT_FOUND"
-                    }
-                ]
-            }
-        })
-        // finishTodo()後のtodo再取得処理のモック
-        mockedGet.mockResolvedValueOnce({
-            response: {
-                status: 200,
-                data: {
-                    todos: [
-                        {
-                            detail: "test detail",
-                            due: "2025-1-1",
-                            status: true,
-                            title: "test title",
-                            todo_id: 1,
-                            username: "test"
-                        }
-                    ]
-                }
-            }
-        });
-        // 終了ボタンをクリックし、モーダルを開く
-        await wrapper.find("[data-testid='finish-0']").trigger("click");
-        // モーダルが開かれていることを確認
-        const modal = document.body.querySelector("[data-testid='modal-show']");
-        expect(modal).not.toBeNull();
-        // 終了モードであることを確認してからOkボタンをクリック
-        const bModal = wrapper.findComponent({ name: 'BModal' });
-        expect(bModal.props("title")).toBe("Todo終了確認");
-        await bModal.vm.$emit('ok');
-        await flushPromises();
-
-        expect(mockedPatch).toHaveBeenCalledWith(
-            "todos/bulk-finish",
-            {
-                ids: [1]
-            }
-        );
-        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual("Todo終了成功: 0件、失敗:1件\n【Todo終了失敗】終了対象が見つかりません");
-    })
-
-
-    it('Todo削除', async () => {
-        // deleteTodo()のモック
-        mockedPost.mockResolvedValue({
-            status: 200,
-            data: {
-                success_count: 1,
-                error_count: 0,
-                results: [
-                    {
-                        detail: "test detail",
-                        due: "2025-1-1",
-                        title: "test title",
-                        result: "success",
-                        reason: null
-                    }
-                ]
-            }
-        })
-        wrapper = await mountUserHome();
-        // deleteTodo()後のtodo再取得処理のモック
-        mockedGet.mockResolvedValueOnce({
-            status: 200,
-            data: {
-                todos: [
-                    {
-                        detail: "test detail",
-                        due: "2025-1-1",
-                        status: true,
-                        title: "test title",
-                        todo_id: 1,
-                        username: "test"
-                    },
-                ]
-            }
-        });
-        // 削除ボタンをクリックし、モーダルを開く
-        await wrapper.find("[data-testid='delete-0']").trigger("click");
-        // モーダルが開かれていることを確認
-        const modal = document.body.querySelector("[data-testid='modal-show']");
-        expect(modal).not.toBeNull();
-        // 削除モードであることを確認してからOkボタンをクリック
-        const bModal = wrapper.findComponent({ name: 'BModal' });
-        expect(bModal.props("title")).toBe("Todo削除確認");
-        await bModal.vm.$emit('ok');
-        await flushPromises();
-
-        expect(mockedPost).toHaveBeenCalledWith(
-            "todos/bulk-delete",
-            {
-                ids: [1]
-            }
-        );
-        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual("Todo削除成功: 1件、失敗:0件\n【Todo削除成功】: test title");
-    })
-
-    it('Todo削除に失敗', async () => {
-        wrapper = await mountUserHome();
-
-        // deleteTodo()のモック
-        mockedPost.mockResolvedValue({
-            status: 200,
-            data: {
-                success_count: 0,
-                error_count: 1,
-                results: [
-                    {
-                        todo_id: 1,
-                        title: null,
-                        status: "error",
-                        reason: "TODO_NOT_FOUND"
-                    }
-                ]
-            }
-        })
-        // deleteTodo()後のtodo再取得処理のモック
-        mockedGet.mockResolvedValueOnce({
-            response: {
-                status: 200,
-                data: [
-                    {
-                        detail: "test detail",
-                        due: "2025-1-1",
-                        status: true,
-                        title: "test title",
-                        todo_id: 1,
-                        username: "test"
-                    }
-                ]
-            }
-        });
-        // 終了ボタンをクリックし、モーダルを開く
-        await wrapper.find("[data-testid='delete-0']").trigger("click");
-        // モーダルが開かれていることを確認
-        const modal = document.body.querySelector("[data-testid='modal-show']");
-        expect(modal).not.toBeNull();
-        // 終了モードであることを確認してからOkボタンをクリック
-        const bModal = wrapper.findComponent({ name: 'BModal' });
-        expect(bModal.props("title")).toBe("Todo削除確認");
-        await bModal.vm.$emit('ok');
-        await flushPromises();
-
-        expect(mockedPost).toHaveBeenCalledWith(
-            "todos/bulk-delete",
-            {
-                ids: [1]
-            }
-        );
-        expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual("Todo削除成功: 0件、失敗:1件\n【Todo削除失敗】削除対象が見つかりません");
-    })
-})
-
-describe('Todoのソート', () => {
-    let wrapper: VueWrapper;
-
-    beforeEach(() => {
-        vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-    }
+    expect(mockedPatch).toBeCalledTimes(1);
+    expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual(
+      "【Todo更新成功】: new title",
     );
+  });
 
-    it('登録順', async () => {
-        wrapper = await mountUserHome();
-        await wrapper.find("[data-testid='sort-todos-id']").trigger("click");
-        await flushPromises();
-        const rows = wrapper.findAll('[data-testid="todo-row"]');
-        console.log(rows.map(row => row.text()));
-        expect(rows).toHaveLength(defaultTodosData.todos.length);
-        expect(rows[0].text()).toContain("title1");
-    })
+  it("Todo終了に成功", async () => {
+    const title = "Test Todo";
 
-    it('期限順', async () => {
-        wrapper = await mountUserHome();
-        await wrapper.find("[data-testid='sort-todos-due']").trigger("click");
-        await flushPromises();
-        const rows = wrapper.findAll('[data-testid="todo-row"]');
-        console.log(rows.map(row => row.text()));
-        expect(rows).toHaveLength(defaultTodosData.todos.length);
-        expect(rows[0].text()).toContain("title2");
-    })
+    // finishTodo()のモック
+    mockedPatch.mockResolvedValue({
+      status: 200,
+      data: {
+        success_count: 1,
+        error_count: 0,
+        results: [
+          {
+            todo_id: 1,
+            title: title,
+            result: "success",
+            reason: null,
+          },
+        ],
+      },
+    });
+    wrapper = await mountUserHome();
+    // finishTodo()後のtodo再取得処理のモック
+    mockedGet.mockResolvedValueOnce({
+      status: 200,
+      data: {
+        todos: [
+          {
+            detail: "test detail",
+            due: "2025-1-1",
+            status: true,
+            title: "test title",
+            todo_id: 1,
+            username: "test",
+          },
+        ],
+      },
+    });
+    // 終了ボタンをクリックし、モーダルを開く
+    await wrapper.find("[data-testid='finish-0']").trigger("click");
+    // モーダルが開かれていることを確認
+    const modal = document.body.querySelector("[data-testid='modal-show']");
+    expect(modal).not.toBeNull();
+    // 終了モードであることを確認してからOkボタンをクリック
+    const bModal = wrapper.findComponent({ name: "BModal" });
+    expect(bModal.props("title")).toBe("Todo終了確認");
+    await bModal.vm.$emit("ok");
+    await flushPromises();
+
+    expect(mockedPatch).toHaveBeenCalledWith("todos/bulk-finish", {
+      ids: [1],
+    });
+    expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual(
+      `Todo終了成功: 1件、失敗:0件\n【Todo終了成功】: ${title}`,
+    );
+  });
+
+  it("Todo終了に失敗", async () => {
+    wrapper = await mountUserHome();
+
+    // finishTodo()のモック
+    mockedPatch.mockResolvedValue({
+      status: 200,
+      data: {
+        success_count: 0,
+        error_count: 1,
+        results: [
+          {
+            todo_id: 1,
+            title: null,
+            status: "error",
+            reason: "TODO_NOT_FOUND",
+          },
+        ],
+      },
+    });
+    // finishTodo()後のtodo再取得処理のモック
+    mockedGet.mockResolvedValueOnce({
+      response: {
+        status: 200,
+        data: {
+          todos: [
+            {
+              detail: "test detail",
+              due: "2025-1-1",
+              status: true,
+              title: "test title",
+              todo_id: 1,
+              username: "test",
+            },
+          ],
+        },
+      },
+    });
+    // 終了ボタンをクリックし、モーダルを開く
+    await wrapper.find("[data-testid='finish-0']").trigger("click");
+    // モーダルが開かれていることを確認
+    const modal = document.body.querySelector("[data-testid='modal-show']");
+    expect(modal).not.toBeNull();
+    // 終了モードであることを確認してからOkボタンをクリック
+    const bModal = wrapper.findComponent({ name: "BModal" });
+    expect(bModal.props("title")).toBe("Todo終了確認");
+    await bModal.vm.$emit("ok");
+    await flushPromises();
+
+    expect(mockedPatch).toHaveBeenCalledWith("todos/bulk-finish", {
+      ids: [1],
+    });
+    expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual(
+      "Todo終了成功: 0件、失敗:1件\n【Todo終了失敗】終了対象が見つかりません",
+    );
+  });
+
+  it("Todo削除", async () => {
+    // deleteTodo()のモック
+    mockedPost.mockResolvedValue({
+      status: 200,
+      data: {
+        success_count: 1,
+        error_count: 0,
+        results: [
+          {
+            detail: "test detail",
+            due: "2025-1-1",
+            title: "test title",
+            result: "success",
+            reason: null,
+          },
+        ],
+      },
+    });
+    wrapper = await mountUserHome();
+    // deleteTodo()後のtodo再取得処理のモック
+    mockedGet.mockResolvedValueOnce({
+      status: 200,
+      data: {
+        todos: [
+          {
+            detail: "test detail",
+            due: "2025-1-1",
+            status: true,
+            title: "test title",
+            todo_id: 1,
+            username: "test",
+          },
+        ],
+      },
+    });
+    // 削除ボタンをクリックし、モーダルを開く
+    await wrapper.find("[data-testid='delete-0']").trigger("click");
+    // モーダルが開かれていることを確認
+    const modal = document.body.querySelector("[data-testid='modal-show']");
+    expect(modal).not.toBeNull();
+    // 削除モードであることを確認してからOkボタンをクリック
+    const bModal = wrapper.findComponent({ name: "BModal" });
+    expect(bModal.props("title")).toBe("Todo削除確認");
+    await bModal.vm.$emit("ok");
+    await flushPromises();
+
+    expect(mockedPost).toHaveBeenCalledWith("todos/bulk-delete", {
+      ids: [1],
+    });
+    expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual(
+      "Todo削除成功: 1件、失敗:0件\n【Todo削除成功】: test title",
+    );
+  });
+
+  it("Todo削除に失敗", async () => {
+    wrapper = await mountUserHome();
+
+    // deleteTodo()のモック
+    mockedPost.mockResolvedValue({
+      status: 200,
+      data: {
+        success_count: 0,
+        error_count: 1,
+        results: [
+          {
+            todo_id: 1,
+            title: null,
+            status: "error",
+            reason: "TODO_NOT_FOUND",
+          },
+        ],
+      },
+    });
+    // deleteTodo()後のtodo再取得処理のモック
+    mockedGet.mockResolvedValueOnce({
+      response: {
+        status: 200,
+        data: [
+          {
+            detail: "test detail",
+            due: "2025-1-1",
+            status: true,
+            title: "test title",
+            todo_id: 1,
+            username: "test",
+          },
+        ],
+      },
+    });
+    // 終了ボタンをクリックし、モーダルを開く
+    await wrapper.find("[data-testid='delete-0']").trigger("click");
+    // モーダルが開かれていることを確認
+    const modal = document.body.querySelector("[data-testid='modal-show']");
+    expect(modal).not.toBeNull();
+    // 終了モードであることを確認してからOkボタンをクリック
+    const bModal = wrapper.findComponent({ name: "BModal" });
+    expect(bModal.props("title")).toBe("Todo削除確認");
+    await bModal.vm.$emit("ok");
+    await flushPromises();
+
+    expect(mockedPost).toHaveBeenCalledWith("todos/bulk-delete", {
+      ids: [1],
+    });
+    expect(wrapper.find("[data-testid='todo-msg']").text()).toEqual(
+      "Todo削除成功: 0件、失敗:1件\n【Todo削除失敗】削除対象が見つかりません",
+    );
+  });
 });
 
-describe('Todoリストページ', () => {
-    beforeEach(() => {
-        vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-    }
-    );
+describe("Todoのソート", () => {
+  let wrapper: VueWrapper;
 
-    it('ページの移動', async () => {
-        let currentPage = 1;
-        const mockDate = {
-            todos: [
-                {
-                    detail: "test detail1",
-                    due: "2025-1-2",
-                    status: true,
-                    title: "test title1",
-                    todo_id: 1,
-                    username: "test"
-                },
-                {
-                    detail: "test detail2",
-                    due: "2025-1-1",
-                    status: true,
-                    title: "test title2",
-                    todo_id: 1,
-                    username: "test"
-                },
-                {
-                    detail: "test detail3",
-                    due: "2025-1-2",
-                    status: true,
-                    title: "test title3",
-                    todo_id: 1,
-                    username: "test"
-                },
-                {
-                    detail: "test detail4",
-                    due: "2025-1-1",
-                    status: true,
-                    title: "test title4",
-                    todo_id: 1,
-                    username: "test"
-                },
-                {
-                    detail: "test detail5",
-                    due: "2025-1-2",
-                    status: true,
-                    title: "test title5",
-                    todo_id: 1,
-                    username: "test"
-                },
-                {
-                    detail: "test detail6",
-                    due: "2025-1-1",
-                    status: true,
-                    title: "test title6",
-                    todo_id: 1,
-                    username: "test"
-                },
-            ]
-        }
-        const wrapper = await mountUserHome({ todosMock: createResolvedMock(mockDate) });
+  beforeEach(() => {
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+  });
 
-        // 1ページ目のTodoの内容確認
-        expect(wrapper.vm.paginatedTodos).toEqual(mockDate.todos.slice(0, 5));
-        expect(wrapper.vm.currentPage).toBe(currentPage);
+  it("登録順", async () => {
+    wrapper = await mountUserHome();
+    await wrapper.find("[data-testid='sort-todos-id']").trigger("click");
+    await flushPromises();
+    const rows = wrapper.findAll('[data-testid="todo-row"]');
+    console.log(rows.map((row) => row.text()));
+    expect(rows).toHaveLength(defaultTodosData.todos.length);
+    expect(rows[0].text()).toContain("title1");
+  });
 
-        // 2ページ目へ移動
-        currentPage += 1;
-        wrapper.vm.goToPage(currentPage);
-        expect(wrapper.vm.currentPage).toBe(currentPage);
+  it("期限順", async () => {
+    wrapper = await mountUserHome();
+    await wrapper.find("[data-testid='sort-todos-due']").trigger("click");
+    await flushPromises();
+    const rows = wrapper.findAll('[data-testid="todo-row"]');
+    console.log(rows.map((row) => row.text()));
+    expect(rows).toHaveLength(defaultTodosData.todos.length);
+    expect(rows[0].text()).toContain("title2");
+  });
+});
 
-        // 2ページ目のTodoの内容確認
-        expect(wrapper.vm.paginatedTodos).toEqual(mockDate.todos.slice(-1))
-    })
+describe("Todoリストページ", () => {
+  beforeEach(() => {
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+  });
+
+  it("ページの移動", async () => {
+    let currentPage = 1;
+    const mockDate = {
+      todos: [
+        {
+          detail: "test detail1",
+          due: "2025-1-2",
+          status: true,
+          title: "test title1",
+          todo_id: 1,
+          username: "test",
+        },
+        {
+          detail: "test detail2",
+          due: "2025-1-1",
+          status: true,
+          title: "test title2",
+          todo_id: 1,
+          username: "test",
+        },
+        {
+          detail: "test detail3",
+          due: "2025-1-2",
+          status: true,
+          title: "test title3",
+          todo_id: 1,
+          username: "test",
+        },
+        {
+          detail: "test detail4",
+          due: "2025-1-1",
+          status: true,
+          title: "test title4",
+          todo_id: 1,
+          username: "test",
+        },
+        {
+          detail: "test detail5",
+          due: "2025-1-2",
+          status: true,
+          title: "test title5",
+          todo_id: 1,
+          username: "test",
+        },
+        {
+          detail: "test detail6",
+          due: "2025-1-1",
+          status: true,
+          title: "test title6",
+          todo_id: 1,
+          username: "test",
+        },
+      ],
+    };
+    const wrapper = await mountUserHome({
+      todosMock: createResolvedMock(mockDate),
+    });
+
+    // 1ページ目のTodoの内容確認
+    expect(wrapper.vm.paginatedTodos).toEqual(mockDate.todos.slice(0, 5));
+    expect(wrapper.vm.currentPage).toBe(currentPage);
+
+    // 2ページ目へ移動
+    currentPage += 1;
+    wrapper.vm.goToPage(currentPage);
+    expect(wrapper.vm.currentPage).toBe(currentPage);
+
+    // 2ページ目のTodoの内容確認
+    expect(wrapper.vm.paginatedTodos).toEqual(mockDate.todos.slice(-1));
+  });
 });

@@ -1,9 +1,8 @@
 from sqlalchemy.orm import Session
-from app.repositories.todo_repository import TodoRepository
-from app.models.todo_model import (TodoIdsRequest,
-                                   TodosDeleteResponse)
+
 from app.error_codes import NotFoundCode
-from typing import Optional
+from app.models.todo_model import TodoIdsRequest, TodosDeleteResponse
+from app.repositories.todo_repository import TodoRepository
 
 
 class TodoDeleteService:
@@ -25,32 +24,22 @@ class TodoDeleteService:
             current_todo = todos_by_id.get(id, None)
             if not current_todo:
                 error_count += 1
-                results.append(self._build_error_result(
-                    id=id, title=None, reason=NotFoundCode.TODO_NOT_FOUND
-                ))
+                results.append(
+                    self._build_error_result(
+                        id=id, title=None, reason=NotFoundCode.TODO_NOT_FOUND
+                    )
+                )
                 continue
             existing_ids.add(id)
             success_count += 1
             results.append(self._build_success_result(id=id, title=current_todo.title))
         self.repo.delete_todos(existing_ids, username)
         return TodosDeleteResponse(
-            success_count=success_count,
-            error_count=error_count,
-            results=results
+            success_count=success_count, error_count=error_count, results=results
         )
 
-    def _build_error_result(self, id: int, title: Optional[str], reason: str) -> dict:
-        return {
-            "todo_id": id,
-            "title": title,
-            "result": "error",
-            "reason": reason
-        }
+    def _build_error_result(self, id: int, title: str | None, reason: str) -> dict:
+        return {"todo_id": id, "title": title, "result": "error", "reason": reason}
 
     def _build_success_result(self, id: int, title: str) -> dict:
-        return {
-            "todo_id": id,
-            "title": title,
-            "result": "success",
-            "reason": None
-        }
+        return {"todo_id": id, "title": title, "result": "success", "reason": None}

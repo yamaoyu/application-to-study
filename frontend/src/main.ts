@@ -1,63 +1,58 @@
-import { createApp } from 'vue'
-import App from './App.vue'
-import router from './router/index'
-import { createPinia } from 'pinia';
-import { createPersistedState } from 'pinia-plugin-persistedstate';
-import { useAuthStore } from '@/store/authenticate';
-import { useRoleStore } from '@/store/authenticate';
-import { createBootstrap } from 'bootstrap-vue-next';
+import { createApp } from "vue";
+import App from "./App.vue";
+import router from "./router/index";
+import { createPinia } from "pinia";
+import { createPersistedState } from "pinia-plugin-persistedstate";
+import { useAuthStore } from "@/store/authenticate";
+import { useRoleStore } from "@/store/authenticate";
+import { createBootstrap } from "bootstrap-vue-next";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue-next/dist/bootstrap-vue-next.css";
-import 'bootstrap/dist/js/bootstrap.bundle.min.js'
-import { verifyRefreshToken } from './views/api/auth';
-import { setAuthDataFromToken } from './views/composables/useAuth';
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import { verifyRefreshToken } from "./views/api/auth";
+import { setAuthDataFromToken } from "./views/composables/useAuth";
 
 const pinia = createPinia();
 pinia.use(createPersistedState());
-createApp(App).use(router).use(pinia).use(createBootstrap()).mount('#app')
+createApp(App).use(router).use(pinia).use(createBootstrap()).mount("#app");
 
 // トークンが無効、もしくはない場合はログインページとユーザー登録ページ以外は開けないようにする
-const authStore = useAuthStore(pinia)
-const roleStore = useRoleStore(pinia)
-const ALLOWED_ROUTES = ['Login', 'RegisterUser']
-
+const authStore = useAuthStore(pinia);
+const roleStore = useRoleStore(pinia);
+const ALLOWED_ROUTES = ["Login", "RegisterUser"];
 
 router.beforeEach(async (to) => {
   // ルートに飛ぶとユーザーホームへ遷移するようにする
   const destination = to.name;
   if (typeof destination !== "string") {
-    return { name: 'Home' }
+    return { name: "Home" };
   }
   // 遷移先がログインページとユーザー登録ページ以外の場合
   if (ALLOWED_ROUTES.includes(destination)) {
     // トークンがある場合はログインページやユーザー登録ページには遷移させず、ホームページへ(パスワード変更が必要なら変更フォーム)
     try {
-      const response = await verifyRefreshToken()
-      await setAuthDataFromToken(authStore, roleStore, response.data)
+      const response = await verifyRefreshToken();
+      await setAuthDataFromToken(authStore, roleStore, response.data);
 
       return authStore.mustChangePassword
         ? { name: "ForcePasswordChange" }
-        : { name: "Home" }
+        : { name: "Home" };
     } catch {
-      return
+      return;
     }
   }
   // トークンがない、もしくは期限切れの場合
   if (!authStore.isToken || authStore.isExpired()) {
     // リフレッシュトークンの検証
     try {
-      const response = await verifyRefreshToken()
-      await setAuthDataFromToken(authStore, roleStore, response.data)
+      const response = await verifyRefreshToken();
+      await setAuthDataFromToken(authStore, roleStore, response.data);
     } catch {
-      authStore.setRedirectPath(to.path)
-      return { name: 'Login' }
+      authStore.setRedirectPath(to.path);
+      return { name: "Login" };
     }
   }
-  if (
-    authStore.mustChangePassword &&
-    to.name !== "ForcePasswordChange"
-  ) {
-    return { name: "ForcePasswordChange" }
+  if (authStore.mustChangePassword && to.name !== "ForcePasswordChange") {
+    return { name: "ForcePasswordChange" };
   }
-}
-)
+});

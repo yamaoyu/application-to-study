@@ -22,3 +22,11 @@ ENV=test LOGFILE_PATH=/tmp/test.log python -m pytest
 ENVが「test」の場合はsecureがFalseになるようにしているため指定する必要がある
 
 そうでないとtest_regenerate_token()が成功しない
+
+# フォーマッターについて
+ruffを採用している  
+コマンドは以下の通り
+```
+# docker環境でアプリを起動している前提
+docker compose exec backend ruff check (ディレクトリ/ファイル名)
+```

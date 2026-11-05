@@ -1,7 +1,7 @@
-from app.repositories.user_repository import UserRepository
-from app.error_codes import NotFoundCode, ConflictCode
-from app.exceptions import NotFound, Conflict
+from app.error_codes import ConflictCode, NotFoundCode
+from app.exceptions import Conflict, NotFound
 from app.models.admin_model import StatusChangeResponse, UserStatus
+from app.repositories.user_repository import UserRepository
 
 
 class ChangeUserStatus:
@@ -18,14 +18,11 @@ class ChangeUserStatus:
             raise Conflict(code=ConflictCode.LAST_ADMIN_USER)
         self.user_repo.change_status(user, new_status)
         self.user_repo.flush()
-        return StatusChangeResponse(
-            username=user.username,
-            status=new_status
-        )
+        return StatusChangeResponse(username=user.username, status=new_status)
 
     @staticmethod
     def is_last_admin(user_info, new_status, admin_count: int) -> bool:
-        """ adminロールでactiveなユーザーが0人にならないか確認する """
+        """adminロールでactiveなユーザーが0人にならないか確認する"""
         if user_info.role == "general":
             return False
         if user_info.role == "general":

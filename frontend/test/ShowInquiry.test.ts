@@ -1,104 +1,103 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import ShowInquiry from '@/views/ShowInquiry.vue';
-import { mountComponent } from './vitest.setup';
-import { apiClient } from '@/views/api/client';
-import { flushPromises, VueWrapper } from '@vue/test-utils';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import ShowInquiry from "@/views/ShowInquiry.vue";
+import { mountComponent } from "./vitest.setup";
+import { apiClient } from "@/views/api/client";
+import { flushPromises, VueWrapper } from "@vue/test-utils";
 
 const mockedGet = vi.mocked(apiClient.get);
 
-describe('データあり', () => {
-    let wrapper: VueWrapper;
+describe("データあり", () => {
+  let wrapper: VueWrapper;
 
-    beforeEach(() => {
-        vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-    }
-    );
+  beforeEach(() => {
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+  });
 
-    it('ページを開いて問い合わせ一覧が表示される', async () => {
-        const mockInquiries = {
-            inquiries: [
-                {
-                    "category": "要望",
-                    "detail": "新しい機能を追加",
-                    "is_checked": false,
-                    "date": "2025-01-01"
-                }
-            ]
-        }
+  it("ページを開いて問い合わせ一覧が表示される", async () => {
+    const mockInquiries = {
+      inquiries: [
+        {
+          category: "要望",
+          detail: "新しい機能を追加",
+          is_checked: false,
+          date: "2025-01-01",
+        },
+      ],
+    };
 
-        mockedGet.mockResolvedValue({
-            status: 200,
-            data: mockInquiries
-        });
-        wrapper = mountComponent(ShowInquiry);
-
-        await flushPromises();
-        expect(mockedGet).toBeCalledWith(
-            "inquiries"
-        );
-
-        expect(wrapper.find("[data-testid='index-0']").text()).toBe("1");
-        expect(wrapper.find("[data-testid='category-0']").text()).toEqual("要望");
-        expect(wrapper.find("[data-testid='detail-0']").text()).toEqual("新しい機能を追加");
-        expect(wrapper.find("[data-testid='date-0']").text()).toEqual("2025-01-01");
-        expect(wrapper.find("[data-testid='is_checked-0']").text()).toEqual("未確認");
+    mockedGet.mockResolvedValue({
+      status: 200,
+      data: mockInquiries,
     });
+    wrapper = mountComponent(ShowInquiry);
+
+    await flushPromises();
+    expect(mockedGet).toBeCalledWith("inquiries");
+
+    expect(wrapper.find("[data-testid='index-0']").text()).toBe("1");
+    expect(wrapper.find("[data-testid='category-0']").text()).toEqual("要望");
+    expect(wrapper.find("[data-testid='detail-0']").text()).toEqual(
+      "新しい機能を追加",
+    );
+    expect(wrapper.find("[data-testid='date-0']").text()).toEqual("2025-01-01");
+    expect(wrapper.find("[data-testid='is_checked-0']").text()).toEqual(
+      "未確認",
+    );
+  });
 });
 
-describe('データなし', () => {
-    let wrapper: VueWrapper;
+describe("データなし", () => {
+  let wrapper: VueWrapper;
 
-    beforeEach(() => {
-        vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-    }
-    );
+  beforeEach(() => {
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+  });
 
-    it('データがないためメッセージが表示される', async () => {
-        mockedGet.mockRejectedValue({
-            response: {
-                status: 404,
-                data: {
-                    code: "INQUIRY_NOT_FOUND"
-                }
-            }
-        });
-        wrapper = mountComponent(ShowInquiry);
-        await flushPromises();
-
-        expect(mockedGet).toBeCalledWith(
-            "inquiries"
-        );
-
-        expect(wrapper.find("[data-testid='message']").text()).toEqual("問い合わせはありません");
+  it("データがないためメッセージが表示される", async () => {
+    mockedGet.mockRejectedValue({
+      response: {
+        status: 404,
+        data: {
+          code: "INQUIRY_NOT_FOUND",
+        },
+      },
     });
+    wrapper = mountComponent(ShowInquiry);
+    await flushPromises();
+
+    expect(mockedGet).toBeCalledWith("inquiries");
+
+    expect(wrapper.find("[data-testid='message']").text()).toEqual(
+      "問い合わせはありません",
+    );
+  });
 });
 
-describe('権限なし', () => {
-    let wrapper: VueWrapper;
+describe("権限なし", () => {
+  let wrapper: VueWrapper;
 
-    beforeEach(() => {
-        vi.resetAllMocks() //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
-        wrapper = mountComponent(ShowInquiry);
-    }
-    );
+  beforeEach(() => {
+    vi.resetAllMocks(); //呼び出し履歴と実装両方をリセットし、モックを初期状態に戻す
+    wrapper = mountComponent(ShowInquiry);
+  });
 
-    it('権限がないためメッセージが表示される', async () => {
-        mockedGet.mockRejectedValue({
-            response: {
-                status: 403,
-                data: {
-                    code: "NOT_HAVE_PERMISSION"
-                }
-            }
-        });
-
-        wrapper = mountComponent(ShowInquiry);
-        await flushPromises();
-
-        expect(mockedGet).toBeCalledWith(
-            "inquiries"
-        );
-
-        expect(wrapper.find("[data-testid='message']").text()).toEqual("権限がありません");
+  it("権限がないためメッセージが表示される", async () => {
+    mockedGet.mockRejectedValue({
+      response: {
+        status: 403,
+        data: {
+          code: "NOT_HAVE_PERMISSION",
+        },
+      },
     });
+
+    wrapper = mountComponent(ShowInquiry);
+    await flushPromises();
+
+    expect(mockedGet).toBeCalledWith("inquiries");
+
+    expect(wrapper.find("[data-testid='message']").text()).toEqual(
+      "権限がありません",
+    );
+  });
 });

@@ -1,29 +1,39 @@
+import os
+
+import httpx
 import pytest
 import pytest_asyncio
-import httpx
-import os
 from fastapi.testclient import TestClient
-from sqlalchemy.pool import NullPool
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from db.database import Base, get_db
-from db import db_model
-from app.security.password import get_password_hash
-from app.main import app
-from testdata import (RESOURCE_OWNER_USERNAME, RESOURCE_OWNER_PLAIN_PASSWORD,
-                      RESOURCE_OWNER_EMAIL, NON_RESOURCE_OWNER_USERNAME, NON_RESOURCE_OWNER_PLAIN_PASSWORD,
-                      ADMIN_USERNAME, ADMIN_PASSWORD,
-                      SUSPENDED_USERNAME, SUSPENDED_PASSWORD)
+from sqlalchemy.pool import NullPool
+from testdata import (
+    ADMIN_PASSWORD,
+    ADMIN_USERNAME,
+    NON_RESOURCE_OWNER_PLAIN_PASSWORD,
+    NON_RESOURCE_OWNER_USERNAME,
+    RESOURCE_OWNER_EMAIL,
+    RESOURCE_OWNER_PLAIN_PASSWORD,
+    RESOURCE_OWNER_USERNAME,
+    SUSPENDED_PASSWORD,
+    SUSPENDED_USERNAME,
+)
 
+from app.main import app
+from app.security.password import get_password_hash
+from db import db_model
+from db.database import Base, get_db
 
 MYSQL_USER = os.getenv("MYSQL_USER")
 MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
 MYSQL_HOST = os.getenv("MYSQL_HOST")
 TEST_MYSQL_DATABASE = os.getenv("TEST_MYSQL_DATABASE")
-TEST_DATABASE_URL = f"mysql+pymysql://{MYSQL_USER}:{
-    MYSQL_PASSWORD}@{MYSQL_HOST}/{TEST_MYSQL_DATABASE}"
+TEST_DATABASE_URL = (
+    f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}/{TEST_MYSQL_DATABASE}"
+)
 SECRET_KEY = os.getenv(
-    "SECRET_KEY", "testc5925849aksd0d30a95c3cb10726a5831521c5a93f4c4252466de771dhsk")
+    "SECRET_KEY", "testc5925849aksd0d30a95c3cb10726a5831521c5a93f4c4252466de771dhsk"
+)
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
 engine = create_engine(TEST_DATABASE_URL, poolclass=NullPool)
@@ -98,47 +108,57 @@ async def async_client():
 
 @pytest.fixture()
 def create_resource_owner(client):
-    """ 基本的にはここで作成するユーザーを使用 """
-    data = {"username": RESOURCE_OWNER_USERNAME,
-            "password": RESOURCE_OWNER_PLAIN_PASSWORD,
-            "email": RESOURCE_OWNER_EMAIL}
+    """基本的にはここで作成するユーザーを使用"""
+    data = {
+        "username": RESOURCE_OWNER_USERNAME,
+        "password": RESOURCE_OWNER_PLAIN_PASSWORD,
+        "email": RESOURCE_OWNER_EMAIL,
+    }
     user = client.post("/users", json=data)
     return user
 
 
 @pytest.fixture()
 def login_resource_owner(client, create_resource_owner):
-    data = {"username": RESOURCE_OWNER_USERNAME, "password": RESOURCE_OWNER_PLAIN_PASSWORD}
+    data = {
+        "username": RESOURCE_OWNER_USERNAME,
+        "password": RESOURCE_OWNER_PLAIN_PASSWORD,
+    }
     token = client.post("/login", json=data)
     return token
 
 
 @pytest.fixture()
 def get_resource_owner_headers(login_resource_owner):
-    access_token = login_resource_owner.json()['access_token']
+    access_token = login_resource_owner.json()["access_token"]
     headers = {"Authorization": f"Bearer {access_token}"}
     return headers
 
 
 @pytest.fixture()
 def create_non_resource_owner(client):
-    """ 他のユーザーが作成したデータにアクセスできないか確認するために使用 """
-    data = {"username": NON_RESOURCE_OWNER_USERNAME,
-            "password": NON_RESOURCE_OWNER_PLAIN_PASSWORD}
+    """他のユーザーが作成したデータにアクセスできないか確認するために使用"""
+    data = {
+        "username": NON_RESOURCE_OWNER_USERNAME,
+        "password": NON_RESOURCE_OWNER_PLAIN_PASSWORD,
+    }
     user = client.post("/users", json=data)
     return user
 
 
 @pytest.fixture()
 def login_non_resource_owner(client, create_non_resource_owner):
-    data = {"username": NON_RESOURCE_OWNER_USERNAME, "password": NON_RESOURCE_OWNER_PLAIN_PASSWORD}
+    data = {
+        "username": NON_RESOURCE_OWNER_USERNAME,
+        "password": NON_RESOURCE_OWNER_PLAIN_PASSWORD,
+    }
     token = client.post("/login", json=data)
     return token
 
 
 @pytest.fixture()
 def get_non_resource_owner_headers(login_non_resource_owner):
-    access_token = login_non_resource_owner.json()['access_token']
+    access_token = login_non_resource_owner.json()["access_token"]
     headers = {"Authorization": f"Bearer {access_token}"}
     return headers
 
@@ -154,7 +174,7 @@ def get_suspended_user_token(db_session, client):
         username=SUSPENDED_USERNAME,
         password=get_password_hash(SUSPENDED_PASSWORD),
         role="admin",
-        status="active"
+        status="active",
     )
     db_session.add(user)
     db_session.commit()
@@ -168,7 +188,7 @@ def get_suspended_user_token(db_session, client):
 
 @pytest.fixture()
 def get_suspended_user_headers(get_suspended_user_token):
-    access_token = get_suspended_user_token.json()['access_token']
+    access_token = get_suspended_user_token.json()["access_token"]
     headers = {"Authorization": f"Bearer {access_token}"}
     return headers
 
@@ -178,7 +198,7 @@ def create_admin(db_session):
     user = db_model.User(
         username=ADMIN_USERNAME,
         password=get_password_hash(ADMIN_PASSWORD),
-        role="admin"
+        role="admin",
     )
     db_session.add(user)
     db_session.commit()
@@ -193,6 +213,6 @@ def login_admin(client, create_admin):
 
 @pytest.fixture()
 def get_admin_headers(login_admin):
-    access_token = login_admin.json()['access_token']
+    access_token = login_admin.json()["access_token"]
     headers = {"Authorization": f"Bearer {access_token}"}
     return headers

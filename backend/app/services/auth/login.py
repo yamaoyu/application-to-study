@@ -1,15 +1,16 @@
 import traceback
 import uuid
-from typing import Union
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
+
 from sqlalchemy.orm import Session
-from app.exceptions import NotAuthorized, Forbidden
-from lib.log_conf import logger
-from app.repositories.user_repository import UserRepository
-from app.repositories.auth_repository import TokenRepository
+
 from app.error_codes import NotAuthorizedCode
-from app.security.token import create_access_token, create_refresh_token_value
+from app.exceptions import Forbidden, NotAuthorized
+from app.repositories.auth_repository import TokenRepository
+from app.repositories.user_repository import UserRepository
 from app.security.password import verify_password
+from app.security.token import create_access_token, create_refresh_token_value
+from lib.log_conf import logger
 
 
 class LoginUseCase:
@@ -18,7 +19,7 @@ class LoginUseCase:
         self.token_repo = TokenRepository(db)
 
     def execute(self, username: str, plain_password: str, device_id: str) -> dict:
-        """ ユーザーが存在するか、パスワードが正しいかを確認し、アクセストークンとリフレッシュトークンを発行する
+        """ユーザーが存在するか、パスワードが正しいかを確認し、アクセストークンとリフレッシュトークンを発行する
 
         Note:
             この内、routerからレスポンスで返すのはアクセストークン、トークンタイプ、ユーザーロールのみとし、
@@ -34,24 +35,37 @@ class LoginUseCase:
         if not is_password:
             raise NotAuthorized(code=NotAuthorizedCode.LOGIN_FAILED)
         access_token = create_access_token(
-            {"sub": user.username, "role": user.role, "token_version": user.token_version})
+            {
+                "sub": user.username,
+                "role": user.role,
+                "token_version": user.token_version,
+            }
+        )
         token_info = self.create_or_update_refresh_token(
-            {"sub": user.username, "role": user.role, "token_version": user.token_version}, device_id=device_id)
+            {
+                "sub": user.username,
+                "role": user.role,
+                "token_version": user.token_version,
+            },
+            device_id=device_id,
+        )
         logger.info(f"{username}がログイン")
         # リフレッシュトークンがあり、ログインフォームからログインする頻度は少ないのでdb書き込みによるパフォーマンスの影響は問題ない
         now = datetime.now()
         self.user_repo.update_last_active_at(user, now)
-        return {"access_token": access_token,
-                "token_type": "Bearer",
-                "refresh_token": token_info["refresh_token"],
-                "device_id": token_info["device_id"],
-                "expires_at": token_info["expires_at"],
-                "role": user.role,
-                "must_change_password": user.must_change_password}
+        return {
+            "access_token": access_token,
+            "token_type": "Bearer",
+            "refresh_token": token_info["refresh_token"],
+            "device_id": token_info["device_id"],
+            "expires_at": token_info["expires_at"],
+            "role": user.role,
+            "must_change_password": user.must_change_password,
+        }
 
-    def create_or_update_refresh_token(self, data: dict,
-                                       device_id: str,
-                                       expires_delta: Union[timedelta, None] = None):
+    def create_or_update_refresh_token(
+        self, data: dict, device_id: str, expires_delta: timedelta | None = None
+    ):
         try:
             refresh_token, expire = create_refresh_token_value(data, expires_delta)
             if not device_id:
@@ -61,7 +75,7 @@ class LoginUseCase:
                 username=data["sub"],
                 device_id=device_id,
                 refresh_token=refresh_token,
-                expires_at=expire
+                expires_at=expire,
             )
             self.token_repo.db.flush()
             return {
@@ -69,6 +83,8 @@ class LoginUseCase:
                 "device_id": device_id,
                 "expires_at": expire,
             }
-        except Exception:
-            logger.error(f"リフレッシュトークンの作成中にエラーが発生しました\n{traceback.format_exc()}")
-            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
+        except Exception as e:
+            logger.error(
+                f"リフレッシュトークンの作成中にエラーが発生しました\n{traceback.format_exc()}"
+            )
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from e

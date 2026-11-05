@@ -1,11 +1,10 @@
-from lib.log_conf import logger
 from sqlalchemy.orm import Session
-from app.repositories.todo_repository import TodoRepository
-from typing import Optional
-from app.exceptions import NotFound
+
 from app.error_codes import NotFoundCode
-from app.models.todo_model import (Todo,
-                                   TodoGetResponse)
+from app.exceptions import NotFound
+from app.models.todo_model import Todo, TodoGetResponse
+from app.repositories.todo_repository import TodoRepository
+from lib.log_conf import logger
 
 
 class TodoQueryService:
@@ -19,14 +18,21 @@ class TodoQueryService:
         logger.info(f"Todoを取得:{username}:ID{todo.todo_id}")
         return Todo.model_validate(todo)
 
-    def get_todos(self,
-                  status: Optional[bool],
-                  start_due: Optional[str],
-                  end_due: Optional[str],
-                  title: Optional[str],
-                  username: str) -> TodoGetResponse:
-        todos = self.repo.get_todos(username=username, status=status,
-                                    start_due=start_due, end_due=end_due, title=title)
+    def get_todos(
+        self,
+        username: str,
+        status: bool | None = None,
+        start_due: str | None = None,
+        end_due: str | None = None,
+        title: str | None = None,
+    ) -> TodoGetResponse:
+        todos = self.repo.get_todos(
+            username=username,
+            status=status,
+            start_due=start_due,
+            end_due=end_due,
+            title=title,
+        )
         logger.info(f"ユーザー名:{username}  Todoを全て取得")
         if not todos:
             return TodoGetResponse(todos=[])

@@ -1,26 +1,41 @@
-from datetime import date
 from collections import defaultdict
-from typing import Optional
-from app.models.activity_model import (getDayActivityResponse,
-                                       getMonthActivityResponse,
-                                       getYearActivityResponse,
-                                       getAllActivitiesResponse,
-                                       getActivitiesByStatusResponse,
-                                       Status,
-                                       MonthlyInfo)
+from datetime import date
+
 from app.domain.activity.activity import Activity
 from app.domain.activity.adjustment import Adjustment
-from app.services.activity.utils import format_date
-from app.domain.money.amount import round_money_amount
 from app.domain.activity.summary import ActivityResultSummary
+from app.domain.money.amount import round_money_amount
+from app.models.activity_model import (
+    MonthlyInfo,
+    Status,
+    getActivitiesByStatusResponse,
+    getAllActivitiesResponse,
+    getDayActivityResponse,
+    getMonthActivityResponse,
+    getYearActivityResponse,
+)
+from app.services.activity.utils import format_date
 
 
-def _build_month_info(activities: list,
-                      incomes: list,
-                      summary_each_month: dict[int, ActivityResultSummary]
-                      ) -> dict[str, Optional[MonthlyInfo]]:
-    month_dict = {1: "jan", 2: "feb", 3: "mar", 4: "apr", 5: "may", 6: "jun",
-                  7: "jul", 8: "aug", 9: "sep", 10: "oct", 11: "nov", 12: "dec"}
+def _build_month_info(
+    activities: list,
+    incomes: list,
+    summary_each_month: dict[int, ActivityResultSummary],
+) -> dict[str, MonthlyInfo | None]:
+    month_dict = {
+        1: "jan",
+        2: "feb",
+        3: "mar",
+        4: "apr",
+        5: "may",
+        6: "jun",
+        7: "jul",
+        8: "aug",
+        9: "sep",
+        10: "oct",
+        11: "nov",
+        12: "dec",
+    }
     monthly_info = {}
 
     income_by_month = {income.income_month.month: income for income in incomes}
@@ -44,16 +59,23 @@ def _build_month_info(activities: list,
             "bonus": summary_by_month.total_bonus,
             "penalty": summary_by_month.total_penalty,
             "pay_adjustment": summary_by_month.pay_adjustment,
-            "total_income": round_money_amount(income.salary + summary_by_month.pay_adjustment),
+            "total_income": round_money_amount(
+                income.salary + summary_by_month.pay_adjustment
+            ),
             "success_days": summary_by_month.success_days,
-            "fail_days": summary_by_month.unsuccessful_days
+            "fail_days": summary_by_month.unsuccessful_days,
         }
     return monthly_info
 
 
-class ActivityResponseBuilder():
+class ActivityResponseBuilder:
     @staticmethod
-    def build_day_activity_response(activity_id: int, activity: Activity, adjustment: Adjustment, activity_date: date) -> getDayActivityResponse:
+    def build_day_activity_response(
+        activity_id: int,
+        activity: Activity,
+        adjustment: Adjustment,
+        activity_date: date,
+    ) -> getDayActivityResponse:
         return getDayActivityResponse(
             activity_id=activity_id,
             date=format_date(activity_date),
@@ -61,24 +83,29 @@ class ActivityResponseBuilder():
             actual_time=activity.actual_time,
             status=Status(activity.status),
             bonus=adjustment.bonus,
-            penalty=adjustment.penalty
+            penalty=adjustment.penalty,
         )
 
     @staticmethod
-    def build_month_activities_response(summary: ActivityResultSummary, activities: list, salary: float) -> getMonthActivityResponse:
+    def build_month_activities_response(
+        summary: ActivityResultSummary, activities: list, salary: float
+    ) -> getMonthActivityResponse:
         total_monthly_income = round_money_amount(
-            salary + summary.total_bonus - summary.total_penalty)
+            salary + summary.total_bonus - summary.total_penalty
+        )
         activity_list = []
         # 日付を0埋めしない形式で作成
         for act in activities:
-            activity_list.append({
-                "date": format_date(act.date),
-                "target_time": act.target_time,
-                "actual_time": act.actual_time,
-                "status": act.status,
-                "bonus": act.bonus,
-                "penalty": act.penalty
-            })
+            activity_list.append(
+                {
+                    "date": format_date(act.date),
+                    "target_time": act.target_time,
+                    "actual_time": act.actual_time,
+                    "status": act.status,
+                    "bonus": act.bonus,
+                    "penalty": act.penalty,
+                }
+            )
         return getMonthActivityResponse(
             total_income=total_monthly_income,
             salary=salary,
@@ -87,7 +114,7 @@ class ActivityResponseBuilder():
             penalty=summary.total_penalty,
             success_days=summary.success_days,
             fail_days=summary.unsuccessful_days,
-            activity_list=activity_list
+            activity_list=activity_list,
         )
 
     @staticmethod
@@ -95,11 +122,12 @@ class ActivityResponseBuilder():
         summary_year: ActivityResultSummary,
         incomes: list,
         summary_each_month: dict[int, ActivityResultSummary],
-        activities: list
+        activities: list,
     ) -> getYearActivityResponse:
         salary = round_money_amount(sum(income.salary for income in incomes))
         total_income = round_money_amount(
-            salary + summary_year.total_bonus - summary_year.total_penalty)
+            salary + summary_year.total_bonus - summary_year.total_penalty
+        )
         monthly_info = _build_month_info(activities, incomes, summary_each_month)
 
         return getYearActivityResponse(
@@ -110,12 +138,16 @@ class ActivityResponseBuilder():
             penalty=summary_year.total_penalty,
             success_days=summary_year.success_days,
             fail_days=summary_year.unsuccessful_days,
-            monthly_info=monthly_info
+            monthly_info=monthly_info,
         )
 
     @staticmethod
-    def build_all_activities_response(summary: ActivityResultSummary, salary: float) -> getAllActivitiesResponse:
-        total_income = round_money_amount(salary + summary.total_bonus - summary.total_penalty)
+    def build_all_activities_response(
+        summary: ActivityResultSummary, salary: float
+    ) -> getAllActivitiesResponse:
+        total_income = round_money_amount(
+            salary + summary.total_bonus - summary.total_penalty
+        )
 
         return getAllActivitiesResponse(
             total_income=total_income,
@@ -124,19 +156,24 @@ class ActivityResponseBuilder():
             bonus=summary.total_bonus,
             penalty=summary.total_penalty,
             success_days=summary.success_days,
-            fail_days=summary.unsuccessful_days
+            fail_days=summary.unsuccessful_days,
         )
 
     @staticmethod
-    def build_activities_by_status_response(activities: list) -> getActivitiesByStatusResponse:
-        return getActivitiesByStatusResponse(activities=[
-            getDayActivityResponse(
-                activity_id=act.activity_id,
-                date=format_date(act.date),
-                target_time=act.target_time,
-                actual_time=act.actual_time,
-                status=Status(act.status),
-                bonus=act.bonus,
-                penalty=act.penalty
-            ) for act in activities
-        ])
+    def build_activities_by_status_response(
+        activities: list,
+    ) -> getActivitiesByStatusResponse:
+        return getActivitiesByStatusResponse(
+            activities=[
+                getDayActivityResponse(
+                    activity_id=act.activity_id,
+                    date=format_date(act.date),
+                    target_time=act.target_time,
+                    actual_time=act.actual_time,
+                    status=Status(act.status),
+                    bonus=act.bonus,
+                    penalty=act.penalty,
+                )
+                for act in activities
+            ]
+        )

@@ -1,14 +1,16 @@
 from datetime import date
+
+from sqlalchemy.exc import IntegrityError
+
+from app.domain.activity.activity import Activity, ActivityStatus, Adjustment
+from app.domain.activity.exceptions import ActivityValidationReason, InvalidActivity
+from app.error_codes import BadRequestCode, ConflictCode, NotFoundCode
 from app.models.activity_model import RegisterTargetTimeResponse
-from app.error_codes import NotFoundCode, ConflictCode, BadRequestCode
 from app.repositories.activity_repository import ActivityRepository
 from app.repositories.money_repository import MoneyRepository
-from lib.log_conf import logger
-from sqlalchemy.exc import IntegrityError
-from app.services.activity.utils import format_date, parse_activity_date
-from app.domain.activity.exceptions import InvalidActivity, ActivityValidationReason
 from app.services.activity.error_mapping import to_todo_bad_request_code
-from app.domain.activity.activity import Activity, Adjustment, ActivityStatus
+from app.services.activity.utils import format_date, parse_activity_date
+from lib.log_conf import logger
 
 
 class RegisterTargetTimeUseCase:
@@ -16,7 +18,9 @@ class RegisterTargetTimeUseCase:
         self.time_repo = ActivityRepository(db)
         self.money_repo = MoneyRepository(db)
 
-    def execute(self, activities: list[dict], username: str) -> RegisterTargetTimeResponse:
+    def execute(
+        self, activities: list[dict], username: str
+    ) -> RegisterTargetTimeResponse:
         results = []
         success_count = 0
         error_count = 0
@@ -32,12 +36,12 @@ class RegisterTargetTimeUseCase:
                 error_count += 1
 
         return RegisterTargetTimeResponse(
-            success_count=success_count,
-            error_count=error_count,
-            results=results
+            success_count=success_count, error_count=error_count, results=results
         )
 
-    def _register_one_target_time(self, parsed_date: date, username: str, target_time: float) -> dict:
+    def _register_one_target_time(
+        self, parsed_date: date, username: str, target_time: float
+    ) -> dict:
         try:
             # 目標時間を登録する前に、対象月の月収が存在するか確認
             income_row = self._fetch_monthly_salary(parsed_date, username)
@@ -45,18 +49,20 @@ class RegisterTargetTimeUseCase:
                 return self._build_error_result(
                     parsed_date, NotFoundCode.SALARY_NOT_FOUND
                 )
-            activity = Activity(target_time, 0.0, ActivityStatus.PENDING, Adjustment(0, 0))
+            activity = Activity(
+                target_time, 0.0, ActivityStatus.PENDING, Adjustment(0, 0)
+            )
             with self.time_repo.begin_nested():
                 self.time_repo.create_activity_with_target_time(
-                    parsed_date, activity.target_time, username)
+                    parsed_date, activity.target_time, username
+                )
                 self.time_repo.flush()
             logger.info(f"{username}が複数日の目標時間を登録")
-            return self._build_success_result(
-                parsed_date, target_time
-            )
+            return self._build_success_result(parsed_date, target_time)
         except InvalidActivity:
             return self._build_error_result(
-                parsed_date, to_todo_bad_request_code(ActivityValidationReason.INVALID_TARGET_TIME)
+                parsed_date,
+                to_todo_bad_request_code(ActivityValidationReason.INVALID_TARGET_TIME),
             )
         except IntegrityError:
             return self._build_error_result(
@@ -64,7 +70,9 @@ class RegisterTargetTimeUseCase:
             )
         except Exception as e:
             logger.error(
-                f"Error registering target time for {parsed_date}: {str(e)}", exc_info=True)
+                f"Error registering target time for {parsed_date}: {e!s}",
+                exc_info=True,
+            )
             return self._build_error_result(
                 parsed_date, BadRequestCode.UNEXPECTED_ERROR
             )
@@ -74,7 +82,7 @@ class RegisterTargetTimeUseCase:
             "date": format_date(parsed_date),
             "reason": reason,
             "result": "error",
-            "target_time": None
+            "target_time": None,
         }
 
     def _build_success_result(self, parsed_date: date, target_time: float) -> dict:
@@ -82,7 +90,7 @@ class RegisterTargetTimeUseCase:
             "date": format_date(parsed_date),
             "result": "success",
             "reason": None,
-            "target_time": target_time
+            "target_time": target_time,
         }
 
     def _fetch_monthly_salary(self, parsed_date: date, username: str):

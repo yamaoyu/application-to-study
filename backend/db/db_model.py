@@ -1,47 +1,57 @@
-from sqlalchemy import (Integer,
-                        Float,
-                        Date,
-                        Boolean,
-                        Enum,
-                        CHAR,
-                        VARCHAR,
-                        DateTime,
-                        func,
-                        false,
-                        ForeignKey,
-                        UniqueConstraint,
-                        PrimaryKeyConstraint)
-from sqlalchemy.orm import relationship, Mapped, mapped_column
-from db.database import Base
 import datetime
-from typing import Optional
+
+from sqlalchemy import (
+    CHAR,
+    VARCHAR,
+    Boolean,
+    Date,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Integer,
+    PrimaryKeyConstraint,
+    UniqueConstraint,
+    false,
+    func,
+)
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from db.database import Base
 
 
 class Activity(Base):
     __tablename__ = "activities"
-    activity_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    activity_id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
     date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     target_time: Mapped[float] = mapped_column(Float, nullable=False)
     actual_time: Mapped[float] = mapped_column(Float, default=0, nullable=False)
     status: Mapped[str] = mapped_column(
-        Enum("pending", "success", "failure"), server_default="pending", nullable=False)
+        Enum("pending", "success", "failure"), server_default="pending", nullable=False
+    )
     bonus: Mapped[float] = mapped_column(Float, server_default="0", nullable=False)
     penalty: Mapped[float] = mapped_column(Float, server_default="0", nullable=False)
-    username: Mapped[str] = mapped_column(VARCHAR(16), ForeignKey("users.username"), nullable=False)
+    username: Mapped[str] = mapped_column(
+        VARCHAR(16), ForeignKey("users.username"), nullable=False
+    )
     __table_args__ = (UniqueConstraint(date, username),)
 
-    user = relationship('User', back_populates='activities')
+    user = relationship("User", back_populates="activities")
 
 
 class Income(Base):
     __tablename__ = "incomes"
-    income_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    income_id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
     income_month: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     salary: Mapped[float] = mapped_column(Float, nullable=False)
     username: Mapped[str] = mapped_column(VARCHAR(16), ForeignKey("users.username"))
     __table_args__ = (UniqueConstraint(income_month, username),)
 
-    user = relationship('User', back_populates='incomes')
+    user = relationship("User", back_populates="incomes")
 
 
 class Todo(Base):
@@ -50,18 +60,22 @@ class Todo(Base):
     title: Mapped[str] = mapped_column(VARCHAR(32), nullable=False)
     status: Mapped[bool] = mapped_column(Boolean, default=False)
     due: Mapped[datetime.date] = mapped_column(Date, nullable=False)
-    username: Mapped[str] = mapped_column(VARCHAR(16), ForeignKey("users.username"), nullable=False)
-    detail: Mapped[Optional[str]] = mapped_column(VARCHAR(200), nullable=True)
+    username: Mapped[str] = mapped_column(
+        VARCHAR(16), ForeignKey("users.username"), nullable=False
+    )
+    detail: Mapped[str | None] = mapped_column(VARCHAR(200), nullable=True)
 
-    user = relationship('User', back_populates='todos')
+    user = relationship("User", back_populates="todos")
 
 
 class User(Base):
     __tablename__ = "users"
     username: Mapped[str] = mapped_column(VARCHAR(16), primary_key=True)
     password: Mapped[str] = mapped_column(CHAR(60), nullable=False)
-    email: Mapped[Optional[str]] = mapped_column(VARCHAR(32), nullable=True)
-    role: Mapped[str] = mapped_column(Enum("admin", "general"), default="general", nullable=False)
+    email: Mapped[str | None] = mapped_column(VARCHAR(32), nullable=True)
+    role: Mapped[str] = mapped_column(
+        Enum("admin", "general"), default="general", nullable=False
+    )
     status: Mapped[str] = mapped_column(
         Enum("active", "suspended"),
         server_default="active",
@@ -91,28 +105,32 @@ class User(Base):
         nullable=False,
     )
 
-    incomes = relationship('Income', back_populates='user')
-    todos = relationship('Todo', back_populates='user')
-    activities = relationship('Activity', back_populates='user')
-    tokens = relationship('Token', back_populates='user')
+    incomes = relationship("Income", back_populates="user")
+    todos = relationship("Todo", back_populates="user")
+    activities = relationship("Activity", back_populates="user")
+    tokens = relationship("Token", back_populates="user")
 
 
 class Token(Base):
     __tablename__ = "tokens"
-    username: Mapped[str] = mapped_column(VARCHAR(16), ForeignKey("users.username"), nullable=False)
+    username: Mapped[str] = mapped_column(
+        VARCHAR(16), ForeignKey("users.username"), nullable=False
+    )
     device_id: Mapped[str] = mapped_column(CHAR(36), nullable=False)
     token: Mapped[str] = mapped_column(VARCHAR(256), nullable=False)
     expires_at: Mapped[datetime.date] = mapped_column(Date, nullable=False)
 
     __table_args__ = (PrimaryKeyConstraint(username, device_id),)
 
-    user = relationship('User', back_populates='tokens')
+    user = relationship("User", back_populates="tokens")
 
 
 class Inquiry(Base):
     __tablename__ = "inquiries"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    category: Mapped[str] = mapped_column(Enum("要望", "エラー報告", "その他"), nullable=False)
+    category: Mapped[str] = mapped_column(
+        Enum("要望", "エラー報告", "その他"), nullable=False
+    )
     detail: Mapped[str] = mapped_column(VARCHAR(256), nullable=False)
     date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     priority: Mapped[str | None] = mapped_column(
