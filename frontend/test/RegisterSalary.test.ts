@@ -52,20 +52,26 @@ describe("月の入力", () => {
     const selectedMonth = wrapper.find('[data-testid="selected-month"]')
       .element as HTMLInputElement;
     const [year, month] = selectedMonth.value.split("-").map(Number);
-    const newDate = new Date(year + 1, month);
-    const newSelectedMonth = newDate.toISOString().slice(0, 7);
+
+    const expected = `${year + 1}-${String(month).padStart(2, "0")}`;
+
     await wrapper.find('[data-testid="nextYear"]').trigger("click");
-    expect(selectedMonth.value).toEqual(`${newSelectedMonth}`);
+
+    expect(selectedMonth.value).toEqual(expected);
   });
 
   it("翌月にする", async () => {
     const selectedMonth = wrapper.find('[data-testid="selected-month"]')
       .element as HTMLInputElement;
     const [year, month] = selectedMonth.value.split("-").map(Number);
-    const newDate = new Date(year, month + 1);
-    const newSelectedMonth = newDate.toISOString().slice(0, 7);
+    const nextDate = new Date(year, month, 1);
+
+    const expectedYear = nextDate.getFullYear();
+    const expectedMonth = String(nextDate.getMonth() + 1).padStart(2, "0");
+
     await wrapper.find('[data-testid="nextMonth"]').trigger("click");
-    expect(selectedMonth.value).toEqual(`${newSelectedMonth}`);
+
+    expect(selectedMonth.value).toEqual(`${expectedYear}-${expectedMonth}`);
   });
 });
 
