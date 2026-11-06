@@ -120,7 +120,7 @@ jobs:
           docker compose exec -T frontend \
             npx vitest run \
             --reporter=junit \
-            --outputFile=results/test-results.xml
+            --outputFile=results/frontend-test-results.xml
 
       - name: E2E tests
         id: e2e_tests
@@ -128,9 +128,9 @@ jobs:
         continue-on-error: true
         working-directory: frontend
         env:
-          PLAYWRIGHT_JUNIT_OUTPUT_FILE: results/e2e/test-results.xml
+          PLAYWRIGHT_JUNIT_OUTPUT_FILE: ${{ github.workspace }}/results/e2e/test-results.xml
         run: |
-          mkdir -p results/e2e
+          mkdir -p "${{ github.workspace }}/results/e2e"
           npx playwright test --reporter=line,junit
 
       - name: Collect test results
@@ -143,13 +143,8 @@ jobs:
             results/backend/test-results.xml || true
 
           docker compose cp \
-            frontend:/frontend/results/test-results.xml \
-            results/frontend/test-results.xml || true
-                  
-          if [[ -f frontend/results/e2e/test-results.xml ]]; then
-            cp frontend/results/e2e/test-results.xml \
-              results/e2e/test-results.xml
-          fi
+            frontend:/frontend/results/frontend-test-results.xml \
+            results/frontend/frontend-test-results.xml || true
 
       - name: Upload test results
         if: always() && needs.check_changes.outputs.application == 'true'
