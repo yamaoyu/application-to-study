@@ -37,6 +37,8 @@ jobs:
               - 'backend/**'
               - 'frontend/**'
               - 'docker-compose*.yml'
+              - 'docker_exec.sh'
+              - '.env.template'
               - '.env.test'
               - '.github/workflows/app-test.yml'
 

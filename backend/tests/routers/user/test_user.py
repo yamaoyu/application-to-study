@@ -320,20 +320,28 @@ def test_regenerate_token_fail_without_cookie(client, get_resource_owner_headers
     assert response.status_code == 401
     assert response.json() == {"code": NotAuthorizedCode.NOT_AUTHORIZED}
 
-# TODO #229で修正する
-
 
 def test_regenerate_token_with_invalid_refresh_token(
     client, get_resource_owner_headers
 ):
-    client.cookies.set("refresh_token", "invalid_refresh_token")
+    client.cookies.set(
+        "refresh_token",
+        "invalid_refresh_token",
+        domain="testserver.local",
+        path="/",
+    )
     response = client.post("/token", headers=get_resource_owner_headers)
     assert response.status_code == 401
     assert response.json() == {"code": NotAuthorizedCode.NOT_AUTHORIZED}
 
 
 def test_regenerate_token_with_invalid_device_id(client, get_resource_owner_headers):
-    client.cookies.set("device_id", "invalid_device_id")
+    client.cookies.set(
+        "device_id",
+        "invalid_device_id",
+        domain="testserver.local",
+        path="/",
+    )
     response = client.post("/token", headers=get_resource_owner_headers)
     assert response.status_code == 401
     assert response.json() == {"code": NotAuthorizedCode.NOT_AUTHORIZED}
