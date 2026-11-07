@@ -2,7 +2,7 @@ from datetime import date
 
 from app.domain.activity.activity import Activity, ActivityStatus, Adjustment
 from app.domain.activity.exceptions import ActivityValidationReason, InvalidActivity
-from app.error_codes import BadRequestCode, ConflictCode, NotFoundCode
+from app.error_codes import ConflictCode, NotFoundCode
 from app.models.activity_model import RegisterActualTimeResponse
 from app.repositories.activity_repository import ActivityRepository
 from app.repositories.money_repository import MoneyRepository
@@ -80,15 +80,6 @@ class RegisterActualTimeUseCase:
             return self._build_error_result(
                 parsed_date,
                 to_todo_bad_request_code(ActivityValidationReason.INVALID_ACTUAL_TIME),
-            )
-        except Exception as e:
-            logger.error(
-                f"Error registering actual time for {parsed_date}: {e!s}",
-                exc_info=True,
-            )
-
-            return self._build_error_result(
-                parsed_date, BadRequestCode.UNEXPECTED_ERROR
             )
 
     def _build_success_result(self, parsed_date: date, actual_time: float) -> dict:

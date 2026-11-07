@@ -15,7 +15,7 @@ class Email:
         try:
             validate_email(value, check_deliverability=ENV == "PROD")
             self.value = value
-        except Exception as e:
+        except ValueError as e:
             raise DomainValidationError(
                 code="INVALID_EMAIL",
                 field="email",

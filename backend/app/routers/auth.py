@@ -5,6 +5,8 @@ from fastapi import APIRouter, Cookie, Depends, Request, Response
 from sqlalchemy.orm import Session
 
 from app.dependencies.auth import get_current_user_for_logout
+from app.error_codes import NotAuthorizedCode
+from app.exceptions import NotAuthorized
 from app.models.auth_model import (
     LoginUserInfo,
     LoginUserResponse,
@@ -110,8 +112,10 @@ def regenerate_access_token(
     service: Annotated[
         RegenerateAccessTokenUseCase, Depends(get_regenerate_access_token_service)
     ],
-    refresh_token: str = Cookie(default=None),
-    device_id: str = Cookie(default=None),
+    refresh_token: Annotated[str | None, Cookie()] = None,
+    device_id: Annotated[str | None, Cookie()] = None,
 ):
     """アクセストークンの期限が切れている場合、リフレッシュトークンを使ってアクセストークンを再発行する"""
+    if not refresh_token or not device_id:
+        raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
     return service.execute(refresh_token, device_id)

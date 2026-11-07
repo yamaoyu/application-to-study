@@ -7,8 +7,6 @@ from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
 from app.exceptions import (
-    BadRequest,
-    BulkOperationFailed,
     Conflict,
     DomainValidationError,
     Forbidden,
@@ -95,11 +93,6 @@ def not_found_exception_handler(request, exc):
     return JSONResponse(status_code=404, content={"code": exc.code})
 
 
-@app.exception_handler(BadRequest)
-def bad_request_exception_handler(request, exc):
-    return JSONResponse(status_code=400, content={"code": exc.code})
-
-
 @app.exception_handler(Conflict)
 def conflict_exception_handler(request, exc):
     return JSONResponse(status_code=409, content={"code": exc.code})
@@ -134,17 +127,6 @@ def http_exception_handler(request, exc):
 @app.exception_handler(Forbidden)
 def forbidden_exception_handler(request, exc):
     return JSONResponse(status_code=403, content={"code": exc.code})
-
-
-@app.exception_handler(BulkOperationFailed)
-def bulk_operation_failed_handler(request, exc):
-    return JSONResponse(
-        status_code=400,
-        content={
-            "code": exc.code,
-            "results": exc.results,
-        },
-    )
 
 
 @app.exception_handler(DomainValidationError)

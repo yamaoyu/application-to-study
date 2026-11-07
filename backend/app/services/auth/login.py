@@ -1,4 +1,3 @@
-import traceback
 import uuid
 from datetime import datetime, timedelta
 
@@ -66,25 +65,19 @@ class LoginUseCase:
     def create_or_update_refresh_token(
         self, data: dict, device_id: str, expires_delta: timedelta | None = None
     ):
-        try:
-            refresh_token, expire = create_refresh_token_value(data, expires_delta)
-            if not device_id:
-                # device_idがない場合は新規発行、ある場合は既存のdevice_idを使用して更新する
-                device_id = str(uuid.uuid4())
-            self.token_repo.create_or_update_refresh_token(
-                username=data["sub"],
-                device_id=device_id,
-                refresh_token=refresh_token,
-                expires_at=expire,
-            )
-            self.token_repo.db.flush()
-            return {
-                "refresh_token": refresh_token,
-                "device_id": device_id,
-                "expires_at": expire,
-            }
-        except Exception as e:
-            logger.error(
-                f"リフレッシュトークンの作成中にエラーが発生しました\n{traceback.format_exc()}"
-            )
-            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from e
+        refresh_token, expire = create_refresh_token_value(data, expires_delta)
+        if not device_id:
+            # device_idがない場合は新規発行、ある場合は既存のdevice_idを使用して更新する
+            device_id = str(uuid.uuid4())
+        self.token_repo.create_or_update_refresh_token(
+            username=data["sub"],
+            device_id=device_id,
+            refresh_token=refresh_token,
+            expires_at=expire,
+        )
+        self.token_repo.db.flush()
+        return {
+            "refresh_token": refresh_token,
+            "device_id": device_id,
+            "expires_at": expire,
+        }

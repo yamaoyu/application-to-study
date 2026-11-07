@@ -1,4 +1,3 @@
-import traceback
 from collections.abc import Mapping
 
 from pydantic import ValidationError
@@ -6,11 +5,10 @@ from sqlalchemy.orm import Session
 
 from app.domain.todo.exceptions import InvalidTodo, TodoValidationReason
 from app.domain.todo.todo import TodoDraft
-from app.error_codes import BadRequestCode, ValidationErrorCode
+from app.error_codes import ValidationErrorCode
 from app.models.todo_model import TodosCreateResponse, UpsertTodoParams
 from app.repositories.todo_repository import TodoRepository
 from app.services.todo.error_mapping import to_todo_bad_request_code
-from lib.log_conf import logger
 
 
 class TodoRegisterService:
@@ -48,12 +46,6 @@ class TodoRegisterService:
                             TodoValidationReason(invalid_e.reason)
                         ),
                     )
-                )
-            except Exception:
-                error_count += 1
-                logger.error(f"todoの作成に失敗しました\n{traceback.format_exc()}")
-                results.append(
-                    build_error_result(raw_todo, BadRequestCode.UNEXPECTED_ERROR)
                 )
 
         return TodosCreateResponse(
