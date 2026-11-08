@@ -71,7 +71,7 @@ class TodoDraft:
         try:
             year, month, day = map(int, due.split("-"))
             return date(year, month, day)
-        except ValueError as e:
+        except (ValueError, OverflowError) as e:
             raise InvalidTodo(
                 TodoValidationReason.INVALID_DUE,
                 field="due",
