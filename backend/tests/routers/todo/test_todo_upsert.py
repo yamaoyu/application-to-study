@@ -58,6 +58,28 @@ def test_create_todo_with_invalid_date(client, get_resource_owner_headers):
     }
 
 
+def test_create_todo_with_overflow_date(client, get_resource_owner_headers):
+    """todoを1つ作成、存在しない日付の場合"""
+    data = {"todos": [{"title": TEST_TITLE, "due": "2026-11-2147483648"}]}
+    response = client.post(
+        "/todos/bulk-create", json=data, headers=get_resource_owner_headers
+    )
+    assert response.status_code == 200
+    assert response.json() == {
+        "success_count": 0,
+        "error_count": 1,
+        "results": [
+            {
+                "title": TEST_TITLE,
+                "due": "2026-11-2147483648",
+                "detail": "",
+                "reason": ValidationErrorCode.INVALID_TODO_DUE,
+                "result": "error",
+            }
+        ],
+    }
+
+
 def test_create_todos(client, get_resource_owner_headers):
     """todoを複数作成"""
     data = {

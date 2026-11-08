@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.domain.income.exceptions import IncomeValidationReason, InValidIncome
 from app.domain.income.monthly_income import MonthlySalary
-from app.error_codes import BadRequestCode, ConflictCode, ValidationErrorCode
-from app.exceptions import BadRequest, Conflict, DomainValidationError
+from app.error_codes import ConflictCode, ValidationErrorCode
+from app.exceptions import Conflict, DomainValidationError
 from app.models.money_model import RegisterSalaryResponse
 from app.repositories.activity_repository import ActivityRepository
 from app.repositories.money_repository import MoneyRepository
@@ -43,7 +43,7 @@ class RegisterSalaryUsecase:
                 raise Conflict(
                     code=ConflictCode.SALARY_ALREADY_EXISTS
                 ) from sqlalchemy_error
-            raise BadRequest(code=BadRequestCode.UNEXPECTED_ERROR) from sqlalchemy_error
+            raise
 
 
 INCOME_VALIDATION_REASON_TO_ERROR_CODE = {

@@ -3,12 +3,11 @@ from datetime import date
 from app.domain.activity.activity import Activity, ActivityStatus, Adjustment
 from app.domain.activity.exceptions import ActivityAlreadyFinished
 from app.domain.income.monthly_income import MonthlySalary
-from app.error_codes import BadRequestCode, ConflictCode, NotFoundCode
+from app.error_codes import ConflictCode, NotFoundCode
 from app.models.activity_model import FinishActivityResponse
 from app.repositories.activity_repository import ActivityRepository
 from app.repositories.money_repository import MoneyRepository
 from app.services.activity.utils import format_date, parse_activity_date
-from lib.log_conf import logger
 
 
 class FinishActivitiesUseCase:
@@ -81,13 +80,6 @@ class FinishActivitiesUseCase:
         except ActivityAlreadyFinished:
             return self._build_error_result(
                 parsed_date, ConflictCode.ACTIVITY_ALREADY_FINISHED
-            )
-        except Exception as e:
-            logger.error(
-                f"Error finishing activity for {parsed_date}: {e!s}", exc_info=True
-            )
-            return self._build_error_result(
-                parsed_date, BadRequestCode.UNEXPECTED_ERROR
             )
 
     def _build_error_result(self, parsed_date: date, reason: str) -> dict:

@@ -31,5 +31,5 @@ class CheckDate(CheckYearMonth):
         try:
             datetime(year=self.year, month=self.month, day=self.day)
             return self
-        except Exception as e:
+        except ValueError as e:
             raise ValueError("日付が不正です") from e

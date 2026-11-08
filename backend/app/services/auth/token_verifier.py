@@ -1,14 +1,12 @@
 import os
-import traceback
 from datetime import date
 
 from jose import ExpiredSignatureError, JWTError, jwt
 
-from app.error_codes import NotAuthorizedCode, NotFoundCode
-from app.exceptions import Forbidden, NotAuthorized, NotFound
+from app.error_codes import NotAuthorizedCode
+from app.exceptions import Forbidden, NotAuthorized
 from app.repositories.auth_repository import TokenRepository
 from app.repositories.user_repository import UserRepository
-from lib.log_conf import logger
 
 # openssl rand -hex 32
 SECRET_KEY = os.environ["SECRET_KEY"]
@@ -24,29 +22,26 @@ class TokenVerifier:
         """リフレッシュトークンを検証する"""
         try:
             payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=ALGORITHM)
-            username = payload.get("sub")
-            if username is None:
-                return False
-            user = self.user_repo.get_user(username)
-            if not user:
-                return False
-            if user.must_change_password or user.token_version != payload.get(
-                "token_version"
-            ):
-                raise Forbidden(code=NotAuthorizedCode.PASSWORD_CHANGE_REQUIRED)
-            fetch_token = self.token_repo.get_refresh_token(username, device_id)
-            if not fetch_token:
-                return False
-            if fetch_token.expires_at < date.today():
-                return False
-            if refresh_token != fetch_token.token:
-                return False
-            return True
-        except Exception as e:
-            logger.error(
-                f"リフレッシュトークンの検証中にエラーが発生しました\n{traceback.format_exc()}"
-            )
-            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from e
+        except JWTError as jwt_e:
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from jwt_e
+        username = payload.get("sub")
+        if username is None:
+            return False
+        user = self.user_repo.get_user(username)
+        if not user:
+            return False
+        if user.must_change_password or user.token_version != payload.get(
+            "token_version"
+        ):
+            raise Forbidden(code=NotAuthorizedCode.PASSWORD_CHANGE_REQUIRED)
+        fetch_token = self.token_repo.get_refresh_token(username, device_id)
+        if not fetch_token:
+            return False
+        if fetch_token.expires_at < date.today():
+            return False
+        if refresh_token != fetch_token.token:
+            return False
+        return True
 
     def get_current_user_from_token(self, token: str) -> dict:
         try:
@@ -56,9 +51,6 @@ class TokenVerifier:
             raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from expire_e
         except JWTError as jwt_e:
             raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from jwt_e
-        except Exception as e:
-            logger.error(f"ユーザーの認証に失敗しました\n{traceback.format_exc()}")
-            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from e
         if user.must_change_password:
             raise Forbidden(code=NotAuthorizedCode.PASSWORD_CHANGE_REQUIRED)
         if user.token_version != payload.get("token_version"):
@@ -77,9 +69,6 @@ class TokenVerifier:
             raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from expire_e
         except JWTError as jwt_e:
             raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from jwt_e
-        except Exception as e:
-            logger.error(f"ユーザーの認証に失敗しました\n{traceback.format_exc()}")
-            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from e
         return {
             "username": user.username,
             "role": user.role,
@@ -99,9 +88,6 @@ class TokenVerifier:
             raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from expire_e
         except JWTError as jwt_e:
             raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from jwt_e
-        except Exception as e:
-            logger.error(f"ユーザーの認証に失敗しました\n{traceback.format_exc()}")
-            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED) from e
         if user.token_version != payload.get("token_version"):
             raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
         if user.status != "active":
@@ -122,5 +108,6 @@ class TokenVerifier:
             raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
         user = self.user_repo.get_user(username)
         if not user:
-            raise NotFound(code=NotFoundCode.USER_NOT_FOUND)
+            # ユーザーが見つからない場合も認証の失敗として扱う
+            raise NotAuthorized(code=NotAuthorizedCode.NOT_AUTHORIZED)
         return user
