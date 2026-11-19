@@ -1,10 +1,13 @@
 from datetime import date
+from decimal import Decimal
 
 from sqlalchemy import case, extract, func
 from sqlalchemy.orm import Session, SessionTransaction
 
 from app.domain.activity.summary import ActivityResultSummary
 from db import db_model
+
+ZERO_MONEY = Decimal("0.00")
 
 
 class ActivityRepository:
@@ -83,7 +86,7 @@ class ActivityRepository:
         activity.actual_time = actual_time
 
     def update_activity_status_and_bonus(
-        self, activity: db_model.Activity, status: str, bonus: float, penalty: float
+        self, activity: db_model.Activity, status: str, bonus: Decimal, penalty: Decimal
     ) -> None:
         activity.status = status
         activity.bonus = bonus
@@ -96,8 +99,8 @@ class ActivityRepository:
         end_date: date | None = None,
     ) -> ActivityResultSummary:
         query = self.db.query(
-            func.coalesce(func.sum(db_model.Activity.bonus), 0.0).label("bonus"),
-            func.coalesce(func.sum(db_model.Activity.penalty), 0.0).label("penalty"),
+            func.coalesce(func.sum(db_model.Activity.bonus), ZERO_MONEY).label("bonus"),
+            func.coalesce(func.sum(db_model.Activity.penalty), ZERO_MONEY).label("penalty"),
             func.sum(case((db_model.Activity.status == "success", 1), else_=0)).label(
                 "success_days"
             ),
@@ -116,12 +119,13 @@ class ActivityRepository:
             query = query.filter(db_model.Activity.date <= end_date)
         result = query.one()
 
+        print(result, start_date, end_date)
         return ActivityResultSummary(
             success_days=result.success_days or 0,
             fail_days=result.fail_days or 0,
             pending_days=result.pending_days or 0,
-            bonus=result.bonus or 0.0,
-            penalty=result.penalty or 0.0,
+            bonus=result.bonus,
+            penalty=result.penalty,
         )
 
     def get_monthly_activity_summary(
@@ -140,8 +144,8 @@ class ActivityRepository:
                 func.sum(
                     case((db_model.Activity.status == "pending", 1), else_=0)
                 ).label("pending_days"),
-                func.coalesce(func.sum(db_model.Activity.bonus), 0).label("bonus"),
-                func.coalesce(func.sum(db_model.Activity.penalty), 0).label("penalty"),
+                func.coalesce(func.sum(db_model.Activity.bonus), ZERO_MONEY).label("bonus"),
+                func.coalesce(func.sum(db_model.Activity.penalty), ZERO_MONEY).label("penalty"),
             )
             .filter(
                 db_model.Activity.username == username,
@@ -157,8 +161,8 @@ class ActivityRepository:
                 success_days=row.success_days or 0,
                 fail_days=row.fail_days or 0,
                 pending_days=row.pending_days or 0,
-                bonus=row.bonus or 0.0,
-                penalty=row.penalty or 0.0,
+                bonus=row.bonus,
+                penalty=row.penalty,
             )
             for row in rows
         }

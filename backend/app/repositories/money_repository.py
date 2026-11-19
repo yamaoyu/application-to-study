@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 
 from sqlalchemy.orm import Session, load_only
 
@@ -13,7 +14,7 @@ class MoneyRepository:
         self.db.flush()
 
     def insert_monthly_salary(
-        self, income_month: date, salary: float, username: str
+        self, income_month: date, salary: Decimal, username: str
     ) -> None:
         data = db_model.Income(
             income_month=income_month, salary=salary, username=username

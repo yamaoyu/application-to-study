@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 
 from sqlalchemy import (
     CHAR,
@@ -14,6 +15,7 @@ from sqlalchemy import (
     UniqueConstraint,
     false,
     func,
+    DECIMAL,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -31,8 +33,12 @@ class Activity(Base):
     status: Mapped[str] = mapped_column(
         Enum("pending", "success", "failure"), server_default="pending", nullable=False
     )
-    bonus: Mapped[float] = mapped_column(Float, server_default="0", nullable=False)
-    penalty: Mapped[float] = mapped_column(Float, server_default="0", nullable=False)
+    bonus: Mapped[Decimal] = mapped_column(
+        DECIMAL(precision=10, scale=2), server_default="0", nullable=False
+    )
+    penalty: Mapped[Decimal] = mapped_column(
+        DECIMAL(precision=10, scale=2), server_default="0", nullable=False
+    )
     username: Mapped[str] = mapped_column(
         VARCHAR(16), ForeignKey("users.username"), nullable=False
     )
@@ -47,7 +53,9 @@ class Income(Base):
         Integer, primary_key=True, autoincrement=True
     )
     income_month: Mapped[datetime.date] = mapped_column(Date, nullable=False)
-    salary: Mapped[float] = mapped_column(Float, nullable=False)
+    salary: Mapped[Decimal] = mapped_column(
+        DECIMAL(precision=10, scale=2), nullable=False
+    )
     username: Mapped[str] = mapped_column(VARCHAR(16), ForeignKey("users.username"))
     __table_args__ = (UniqueConstraint(income_month, username),)
 

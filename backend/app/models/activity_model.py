@@ -3,6 +3,7 @@ from enum import StrEnum
 from pydantic import BaseModel, field_validator
 
 from app.models.common_model import CheckDate
+from app.models.types.money_serializer import Money
 
 
 class Status(StrEnum):
@@ -92,8 +93,8 @@ class RegisterActualTimeResponse(BaseModel):
 class FinishActivity(BaseModel):
     date: str
     status: Status | None = None
-    bonus: float | None = None
-    penalty: float | None = None
+    bonus: Money | None = None
+    penalty: Money | None = None
     result: str
     reason: str | None = None
 
@@ -115,9 +116,9 @@ class FinishActivityRequest(BaseModel):
 class FinishActivityResponse(BaseModel):
     success_count: int
     error_count: int
-    pay_adjustment: float
-    total_bonus: float
-    total_penalty: float
+    pay_adjustment: Money
+    total_bonus: Money
+    total_penalty: Money
     results: list[FinishActivity]
 
 
@@ -131,8 +132,8 @@ class getDayActivityResponse(BaseModel):
     target_time: float
     actual_time: float
     status: Status
-    bonus: float
-    penalty: float
+    bonus: Money
+    penalty: Money
 
 
 class OneActivity(BaseModel):
@@ -140,16 +141,16 @@ class OneActivity(BaseModel):
     target_time: float
     actual_time: float
     status: Status
-    bonus: float
-    penalty: float
+    bonus: Money
+    penalty: Money
 
 
 class ActivitySummary(BaseModel):
-    total_income: float
-    salary: float
-    pay_adjustment: float
-    bonus: float
-    penalty: float
+    total_income: Money
+    salary: Money
+    pay_adjustment: Money
+    bonus: Money
+    penalty: Money
     success_days: int
     fail_days: int
 
@@ -159,10 +160,10 @@ class getMonthActivityResponse(ActivitySummary):
 
 
 class MonthlyInfo(BaseModel):
-    salary: float | None = None
-    pay_adjustment: float | None = None
-    bonus: float | None = None
-    penalty: float | None = None
+    salary: Money | None = None
+    pay_adjustment: Money | None = None
+    bonus: Money | None = None
+    penalty: Money | None = None
     success_days: int | None = None
     fail_days: int | None = None
 

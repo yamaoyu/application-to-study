@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import date
+from decimal import Decimal
 
 from app.domain.activity.activity import Activity
 from app.domain.activity.adjustment import Adjustment
@@ -15,6 +16,8 @@ from app.models.activity_model import (
     getYearActivityResponse,
 )
 from app.services.activity.utils import format_date
+
+ZERO_MONEY = Decimal("0.00")
 
 
 def _build_month_info(
@@ -88,7 +91,7 @@ class ActivityResponseBuilder:
 
     @staticmethod
     def build_month_activities_response(
-        summary: ActivityResultSummary, activities: list, salary: float
+        summary: ActivityResultSummary, activities: list, salary: Decimal
     ) -> getMonthActivityResponse:
         total_monthly_income = round_money_amount(
             salary + summary.total_bonus - summary.total_penalty
@@ -124,7 +127,10 @@ class ActivityResponseBuilder:
         summary_each_month: dict[int, ActivityResultSummary],
         activities: list,
     ) -> getYearActivityResponse:
-        salary = round_money_amount(sum(income.salary for income in incomes))
+        salary = sum(
+            (income.salary for income in incomes),
+            ZERO_MONEY
+        )
         total_income = round_money_amount(
             salary + summary_year.total_bonus - summary_year.total_penalty
         )
@@ -143,12 +149,10 @@ class ActivityResponseBuilder:
 
     @staticmethod
     def build_all_activities_response(
-        summary: ActivityResultSummary, salary: float
+        summary: ActivityResultSummary, salary: Decimal
     ) -> getAllActivitiesResponse:
-        total_income = round_money_amount(
-            salary + summary.total_bonus - summary.total_penalty
-        )
-
+        total_income = salary + summary.total_bonus - summary.total_penalty
+        print(summary)
         return getAllActivitiesResponse(
             total_income=total_income,
             salary=salary,

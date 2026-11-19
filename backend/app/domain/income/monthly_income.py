@@ -1,13 +1,14 @@
 from dataclasses import dataclass
+from decimal import Decimal
 
 from app.domain.income.exceptions import IncomeValidationReason, InValidIncome
 
 
 @dataclass()
 class MonthlySalary:
-    salary: float
+    salary: Decimal
 
-    def __init__(self, salary: float) -> None:
+    def __init__(self, salary: Decimal) -> None:
         if not (5 <= salary <= 2000):
             raise InValidIncome(
                 reason=IncomeValidationReason.INVALID_MONTHLY_INCOME,
@@ -17,5 +18,5 @@ class MonthlySalary:
 
         self.salary = salary
 
-    def amount_for(self, time: float) -> float:
-        return round((self.salary / 200) * time, 2)
+    def amount_for(self, time: float) -> Decimal:
+        return round((self.salary / 200) * Decimal(time), 2)

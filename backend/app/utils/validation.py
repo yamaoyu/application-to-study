@@ -32,7 +32,7 @@ def get_validation_error_code(error_type: str, field) -> str:
                 return "INVALID_VALUE"
 
     match error_type:
-        case "float_parsing" | "int_parsing":
+        case "float_parsing" | "int_parsing" | "decimal_parsing":
             return "INVALID_NUMBER"
         case "string_type":
             return "INVALID_STRING"

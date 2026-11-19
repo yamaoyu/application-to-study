@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
@@ -106,7 +107,7 @@ class ActivityQueryService:
         incomes = self.money_repo.get_all_salaries(username)
         if not incomes:
             raise NotFound(code=NotFoundCode.SALARY_NOT_FOUND)
-        salary = round_money_amount(sum([income.salary for income in incomes]))
+        salary = round_money_amount(Decimal(sum([income.salary for income in incomes])))
 
         summary = self.time_repo.get_activity_summary(username, None, None)
 
