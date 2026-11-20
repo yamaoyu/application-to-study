@@ -1,11 +1,11 @@
 from helpers.activity import (
+    expected_bonus,
+    expected_zero,
     setup_actual_time,
     setup_finish_activity,
     setup_monthly_income,
     setup_target_time,
     test_date,
-    expected_bonus,
-    expected_zero
 )
 
 from app.error_codes import ConflictCode, NotAuthorizedCode, NotFoundCode

@@ -14,12 +14,12 @@ class Adjustment:
         if actual_time >= target_time:
             return cls(
                 bonus=salary.amount_for(actual_time),
-                penalty=Decimal(0.0),
+                penalty=Decimal("0.0"),
             )
 
         shortage = _calc_shortage(target_time, actual_time)
         return cls(
-            bonus=Decimal(0.0),
+            bonus=Decimal("0.0"),
             penalty=salary.amount_for(shortage),
         )
 

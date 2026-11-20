@@ -19,4 +19,5 @@ class MonthlySalary:
         self.salary = salary
 
     def amount_for(self, time: float) -> Decimal:
-        return round((self.salary / 200) * Decimal(time), 2)
+        # 0.5刻みのtimeに誤差が出ないように文字列にしてから変換する
+        return round((self.salary / 200) * Decimal(str(time)), 2)

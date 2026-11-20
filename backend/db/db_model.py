@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from sqlalchemy import (
     CHAR,
+    DECIMAL,
     VARCHAR,
     Boolean,
     Date,
@@ -15,7 +16,6 @@ from sqlalchemy import (
     UniqueConstraint,
     false,
     func,
-    DECIMAL,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 

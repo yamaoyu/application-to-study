@@ -5,9 +5,8 @@ from sqlalchemy import case, extract, func
 from sqlalchemy.orm import Session, SessionTransaction
 
 from app.domain.activity.summary import ActivityResultSummary
+from app.domain.money.constants import ZERO_MONEY
 from db import db_model
-
-ZERO_MONEY = Decimal("0.00")
 
 
 class ActivityRepository:
@@ -100,7 +99,9 @@ class ActivityRepository:
     ) -> ActivityResultSummary:
         query = self.db.query(
             func.coalesce(func.sum(db_model.Activity.bonus), ZERO_MONEY).label("bonus"),
-            func.coalesce(func.sum(db_model.Activity.penalty), ZERO_MONEY).label("penalty"),
+            func.coalesce(func.sum(db_model.Activity.penalty), ZERO_MONEY).label(
+                "penalty"
+            ),
             func.sum(case((db_model.Activity.status == "success", 1), else_=0)).label(
                 "success_days"
             ),
@@ -119,7 +120,6 @@ class ActivityRepository:
             query = query.filter(db_model.Activity.date <= end_date)
         result = query.one()
 
-        print(result, start_date, end_date)
         return ActivityResultSummary(
             success_days=result.success_days or 0,
             fail_days=result.fail_days or 0,
@@ -144,8 +144,12 @@ class ActivityRepository:
                 func.sum(
                     case((db_model.Activity.status == "pending", 1), else_=0)
                 ).label("pending_days"),
-                func.coalesce(func.sum(db_model.Activity.bonus), ZERO_MONEY).label("bonus"),
-                func.coalesce(func.sum(db_model.Activity.penalty), ZERO_MONEY).label("penalty"),
+                func.coalesce(func.sum(db_model.Activity.bonus), ZERO_MONEY).label(
+                    "bonus"
+                ),
+                func.coalesce(func.sum(db_model.Activity.penalty), ZERO_MONEY).label(
+                    "penalty"
+                ),
             )
             .filter(
                 db_model.Activity.username == username,

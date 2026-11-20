@@ -1,9 +1,9 @@
 from helpers.activity import (
+    expected_salary,
+    expected_zero,
     setup_monthly_income,
     setup_target_time,
     test_salary,
-    expected_salary,
-    expected_zero
 )
 
 

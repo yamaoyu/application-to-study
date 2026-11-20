@@ -115,7 +115,11 @@ def test_register_income_accept_max_yen(client, get_resource_owner_headers):
         headers=get_resource_owner_headers,
     )
     assert response.status_code == 201
-    assert response.json() == {"year": test_year, "month": test_month, "salary": "2000.00"}
+    assert response.json() == {
+        "year": test_year,
+        "month": test_month,
+        "salary": "2000.00",
+    }
 
 
 def test_register_income_deny_more_than_max_yen(client, get_resource_owner_headers):

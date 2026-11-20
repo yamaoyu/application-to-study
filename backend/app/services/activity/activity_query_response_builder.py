@@ -6,6 +6,7 @@ from app.domain.activity.activity import Activity
 from app.domain.activity.adjustment import Adjustment
 from app.domain.activity.summary import ActivityResultSummary
 from app.domain.money.amount import round_money_amount
+from app.domain.money.constants import ZERO_MONEY
 from app.models.activity_model import (
     MonthlyInfo,
     Status,
@@ -16,8 +17,6 @@ from app.models.activity_model import (
     getYearActivityResponse,
 )
 from app.services.activity.utils import format_date
-
-ZERO_MONEY = Decimal("0.00")
 
 
 def _build_month_info(
@@ -127,15 +126,11 @@ class ActivityResponseBuilder:
         summary_each_month: dict[int, ActivityResultSummary],
         activities: list,
     ) -> getYearActivityResponse:
-        salary = sum(
-            (income.salary for income in incomes),
-            ZERO_MONEY
-        )
+        salary = sum((income.salary for income in incomes), ZERO_MONEY)
         total_income = round_money_amount(
             salary + summary_year.total_bonus - summary_year.total_penalty
         )
         monthly_info = _build_month_info(activities, incomes, summary_each_month)
-
         return getYearActivityResponse(
             total_income=total_income,
             salary=salary,
@@ -152,7 +147,6 @@ class ActivityResponseBuilder:
         summary: ActivityResultSummary, salary: Decimal
     ) -> getAllActivitiesResponse:
         total_income = salary + summary.total_bonus - summary.total_penalty
-        print(summary)
         return getAllActivitiesResponse(
             total_income=total_income,
             salary=salary,

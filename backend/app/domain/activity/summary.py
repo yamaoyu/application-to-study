@@ -29,8 +29,8 @@ class ActivityResultSummary:
     @classmethod
     def empty(cls) -> "ActivityResultSummary":
         return cls(
-            bonus=Decimal(0.0),
-            penalty=Decimal(0.0),
+            bonus=Decimal("0.0"),
+            penalty=Decimal("0.0"),
             success_days=0,
             pending_days=0,
             fail_days=0,

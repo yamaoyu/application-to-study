@@ -53,7 +53,7 @@ app.include_router(admin_router)
 def unhandled_exception_handler(request: Request, exc: Exception):
     logger.error(
         f"予期せぬエラーが発生しました {request.url.path} \n{exc}\nEXC_CLASS={exc.__class__.__module__}.{exc.__class__.__name__}",
-        exc_info=True,
+        exc_info=(type(exc), exc, exc.__traceback__),
     )
     return JSONResponse(
         status_code=500,

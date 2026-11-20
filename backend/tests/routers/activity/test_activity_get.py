@@ -2,6 +2,10 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from helpers.activity import (
+    expected_bonus,
+    expected_penalty,
+    expected_salary,
+    expected_zero,
     setup_actual_time,
     setup_finish_activity,
     setup_monthly_income,
@@ -10,10 +14,6 @@ from helpers.activity import (
     test_date,
     test_date_path,
     test_salary,
-    expected_salary,
-    expected_bonus,
-    expected_penalty,
-    expected_zero,
 )
 from testdata import RESOURCE_OWNER_PLAIN_PASSWORD, RESOURCE_OWNER_USERNAME
 
