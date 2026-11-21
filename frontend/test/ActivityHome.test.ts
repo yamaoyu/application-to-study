@@ -19,14 +19,14 @@ const defaultActivityData = {
   target_time: 3,
   actual_time: 0,
   status: "pending",
-  bonus: 0,
-  penalty: 0.38,
+  bonus: "0.00",
+  penalty: "0.38",
 };
 
 const defaultIncomeData = {
-  base_income: 25.0,
-  total_income: 25.38,
-  pay_adjustment: 0.38,
+  base_income: "25.00",
+  total_income: "25.38",
+  pay_adjustment: "0.38",
 };
 
 type Mock<T = unknown> =

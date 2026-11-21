@@ -14,12 +14,12 @@ export const useFetchMonthlySalary = () => {
     try {
       const res = await getMonthlySalary(year, month);
       // total_incomeはbase_income+pay_adjustmentで計算できるためフロントエンドで計算している
-      const totalIncome =
-        Math.round((res.data.base_income + res.data.pay_adjustment) * 100) /
-        100;
+      const baseIncome = Number(res.data.base_income);
+      const payAdjustment = Number(res.data.pay_adjustment);
+      const totalIncome = Math.round((baseIncome + payAdjustment) * 100) / 100;
       fetchSalarySummary.value = {
         ...res.data,
-        total_income: totalIncome,
+        total_income: String(totalIncome),
       };
       fetchSalaryStatus.value = res.status;
       fetchMsg.value = "";

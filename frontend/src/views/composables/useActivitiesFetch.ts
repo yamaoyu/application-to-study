@@ -56,9 +56,11 @@ export const useFetchActivityByDay = () => {
       const month = dateParts[1];
       const day = dateParts[2];
       const res = await getActivityByDay(year, month, day);
+      const intBonus = Number(res.data.bonus);
+      const intPenalty = Number(res.data.penalty);
       if (res.status === 200) {
-        const bonusInYen = parseInt(`${res.data.bonus * 10000}`, 10);
-        const penaltyInYen = parseInt(`${res.data.penalty * 10000}`, 10);
+        const bonusInYen = parseInt(`${intBonus * 10000}`, 10);
+        const penaltyInYen = parseInt(`${intPenalty * 10000}`, 10);
         if (res.data.status === "success") {
           checkMsg.value = `目標達成!\nボーナス:${res.data.bonus}万円(${bonusInYen}円)`;
         } else if (res.data.status === "failure") {

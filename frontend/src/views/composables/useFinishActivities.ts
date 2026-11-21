@@ -29,9 +29,9 @@ export const useFinishActivities = () => {
 
   const makeMessageByDay = (data: FinishActivityResponse) => {
     const messages: string[] = [];
-    const bonusAndPenalty: number = data.pay_adjustment;
-    const totalBonus: number = data.total_bonus;
-    const totalPenalty: number = data.total_penalty;
+    const bonusAndPenalty: number = Number(data.pay_adjustment);
+    const totalBonus: number = Number(data.total_bonus);
+    const totalPenalty: number = Number(data.total_penalty);
     messages.push(
       `ボーナス-ペナルティ：${bonusAndPenalty}万円(${convert_ten_thousand_yen_to_yen(bonusAndPenalty)}円)`,
     );
@@ -42,9 +42,11 @@ export const useFinishActivities = () => {
       `ペナルティ：${totalPenalty}万円(${convert_ten_thousand_yen_to_yen(totalPenalty)}円)`,
     );
     for (const result of data.results) {
+      const intBonus = Number(result.bonus);
+      const intPenalty = Number(result.penalty);
       if (result.result === "success") {
         messages.push(
-          `${makeSuccessMessage(result.date, result.status, result.bonus, result.penalty)}`,
+          `${makeSuccessMessage(result.date, result.status, intBonus, intPenalty)}`,
         );
       } else {
         const message = getErrorMessageByCode(result.reason);
@@ -62,7 +64,7 @@ export const useFinishActivities = () => {
         `【活動終了】終了済み${res.data.success_count}件、エラー${res.data.error_count}件\n` +
         makeMessageByDay(res.data);
       selectedActivities.value = [];
-      payAdjustment.value = res.data.pay_adjustment;
+      payAdjustment.value = Number(res.data.pay_adjustment);
     } catch (error) {
       reqMsg.value = parseError(error, "活動時間の登録に失敗しました");
       payAdjustment.value = null;

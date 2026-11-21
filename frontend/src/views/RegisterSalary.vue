@@ -181,7 +181,8 @@ export default {
       }
       await fetchMonthlySalary(year, month);
       if (fetchSalaryStatus.value === 200 && fetchSalarySummary.value) {
-        monthlyIncome.value = fetchSalarySummary.value.base_income;
+        // バックエンドで金額をDecimalで扱うことに伴い、文字列型で返却される
+        monthlyIncome.value = Number(fetchSalarySummary.value.base_income);
       } else {
         monthlyIncome.value = 5;
       }
