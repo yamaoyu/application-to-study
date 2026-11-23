@@ -19,14 +19,14 @@ const defaultActivityData = {
   target_time: 3,
   actual_time: 0,
   status: "pending",
-  bonus: 0,
-  penalty: 0.38,
+  bonus: "0.00",
+  penalty: "0.38",
 };
 
 const defaultIncomeData = {
-  base_income: 25.0,
-  total_income: 25.38,
-  pay_adjustment: 0.38,
+  base_income: "25.00",
+  total_income: "25.38",
+  pay_adjustment: "0.38",
 };
 
 const defaultTodosData = {
@@ -131,8 +131,8 @@ describe("ユーザーホームの表示(データあり)", () => {
       target_time: 3,
       actual_time: 3,
       status: "success",
-      bonus: 0.38,
-      penalty: 0,
+      bonus: "0.38",
+      penalty: "0.00",
     };
     const expectedMessage = "目標達成!\nボーナス:0.38万円(3800円)";
     wrapper = await mountUserHome({
@@ -154,8 +154,8 @@ describe("ユーザーホームの表示(データあり)", () => {
       target_time: 3,
       actual_time: 3,
       status: "failure",
-      bonus: 0,
-      penalty: 0.38,
+      bonus: "0.00",
+      penalty: "0.38",
     };
 
     wrapper = await mountUserHome({

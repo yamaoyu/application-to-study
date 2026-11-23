@@ -1,3 +1,5 @@
+import { Money } from "./money";
+
 export type ActivityStatus = "pending" | "success" | "failure";
 
 export type SendTargetActivityParam = {
@@ -72,8 +74,8 @@ type FinishDetail =
       date: string;
       reason: null;
       result: "success";
-      bonus: number;
-      penalty: number;
+      bonus: Money;
+      penalty: Money;
       status: ActivityStatus;
     }
   | {
@@ -88,9 +90,9 @@ type FinishDetail =
 export type FinishActivityResponse = {
   success_count: number;
   error_count: number;
-  pay_adjustment: number;
-  total_bonus: number;
-  total_penalty: number;
+  pay_adjustment: Money;
+  total_bonus: Money;
+  total_penalty: Money;
   results: FinishDetail[];
 };
 
@@ -100,8 +102,8 @@ export type OneActivity = {
   target_time: number;
   actual_time: number;
   status: ActivityStatus;
-  bonus: number;
-  penalty: number;
+  bonus: Money;
+  penalty: Money;
 };
 
 export type GetOneActivityResponse = OneActivity;
@@ -111,11 +113,11 @@ export type GetActivitiesByStatus = {
 };
 
 export type ActivitySummary = {
-  total_income: number;
-  salary: number;
-  pay_adjustment: number;
-  bonus: number;
-  penalty: number;
+  total_income: Money;
+  salary: Money;
+  pay_adjustment: Money;
+  bonus: Money;
+  penalty: Money;
   success_days: number;
   fail_days: number;
 };
@@ -127,8 +129,8 @@ export type MonthlyActivity = {
   target_time: number;
   actual_time: number;
   status: ActivityStatus;
-  bonus: number;
-  penalty: number;
+  bonus: Money;
+  penalty: Money;
 };
 
 export type GetActivitiesByMonthResponse = ActivitySummary & {
@@ -138,11 +140,11 @@ export type GetActivitiesByMonthResponse = ActivitySummary & {
 // 年ごとの情報取得時の各月の情報
 export type YearlyMonthlyInfo = {
   month: number;
-  total_income: number;
-  salary: number;
-  pay_adjustment: number;
-  bonus: number;
-  penalty: number;
+  total_income: Money;
+  salary: Money;
+  pay_adjustment: Money;
+  bonus: Money;
+  penalty: Money;
   success_days: number;
   fail_days: number;
 };

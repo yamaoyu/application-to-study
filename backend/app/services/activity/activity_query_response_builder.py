@@ -1,10 +1,12 @@
 from collections import defaultdict
 from datetime import date
+from decimal import Decimal
 
 from app.domain.activity.activity import Activity
 from app.domain.activity.adjustment import Adjustment
 from app.domain.activity.summary import ActivityResultSummary
 from app.domain.money.amount import round_money_amount
+from app.domain.money.constants import ZERO_MONEY
 from app.models.activity_model import (
     MonthlyInfo,
     Status,
@@ -56,8 +58,8 @@ def _build_month_info(
 
         monthly_info[month_key] = {
             "salary": income.salary,
-            "bonus": summary_by_month.total_bonus,
-            "penalty": summary_by_month.total_penalty,
+            "bonus": summary_by_month.bonus,
+            "penalty": summary_by_month.penalty,
             "pay_adjustment": summary_by_month.pay_adjustment,
             "total_income": round_money_amount(
                 income.salary + summary_by_month.pay_adjustment
@@ -88,10 +90,10 @@ class ActivityResponseBuilder:
 
     @staticmethod
     def build_month_activities_response(
-        summary: ActivityResultSummary, activities: list, salary: float
+        summary: ActivityResultSummary, activities: list, salary: Decimal
     ) -> getMonthActivityResponse:
         total_monthly_income = round_money_amount(
-            salary + summary.total_bonus - summary.total_penalty
+            salary + summary.bonus - summary.penalty
         )
         activity_list = []
         # 日付を0埋めしない形式で作成
@@ -110,8 +112,8 @@ class ActivityResponseBuilder:
             total_income=total_monthly_income,
             salary=salary,
             pay_adjustment=summary.pay_adjustment,
-            bonus=summary.total_bonus,
-            penalty=summary.total_penalty,
+            bonus=summary.bonus,
+            penalty=summary.penalty,
             success_days=summary.success_days,
             fail_days=summary.unsuccessful_days,
             activity_list=activity_list,
@@ -124,18 +126,17 @@ class ActivityResponseBuilder:
         summary_each_month: dict[int, ActivityResultSummary],
         activities: list,
     ) -> getYearActivityResponse:
-        salary = round_money_amount(sum(income.salary for income in incomes))
+        salary = sum((income.salary for income in incomes), ZERO_MONEY)
         total_income = round_money_amount(
-            salary + summary_year.total_bonus - summary_year.total_penalty
+            salary + summary_year.bonus - summary_year.penalty
         )
         monthly_info = _build_month_info(activities, incomes, summary_each_month)
-
         return getYearActivityResponse(
             total_income=total_income,
             salary=salary,
             pay_adjustment=summary_year.pay_adjustment,
-            bonus=summary_year.total_bonus,
-            penalty=summary_year.total_penalty,
+            bonus=summary_year.bonus,
+            penalty=summary_year.penalty,
             success_days=summary_year.success_days,
             fail_days=summary_year.unsuccessful_days,
             monthly_info=monthly_info,
@@ -143,18 +144,15 @@ class ActivityResponseBuilder:
 
     @staticmethod
     def build_all_activities_response(
-        summary: ActivityResultSummary, salary: float
+        summary: ActivityResultSummary, salary: Decimal
     ) -> getAllActivitiesResponse:
-        total_income = round_money_amount(
-            salary + summary.total_bonus - summary.total_penalty
-        )
-
+        total_income = salary + summary.bonus - summary.penalty
         return getAllActivitiesResponse(
             total_income=total_income,
             salary=salary,
             pay_adjustment=summary.pay_adjustment,
-            bonus=summary.total_bonus,
-            penalty=summary.total_penalty,
+            bonus=summary.bonus,
+            penalty=summary.penalty,
             success_days=summary.success_days,
             fail_days=summary.unsuccessful_days,
         )

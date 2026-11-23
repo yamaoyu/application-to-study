@@ -94,9 +94,9 @@ describe("活動の終了(一括)", () => {
   });
 
   it("成功", async () => {
-    const payAdjustment = "0.3";
-    const totalBonus = "0.5";
-    const totalPenalty = "0.2";
+    const payAdjustment = "0.30";
+    const totalBonus = "0.50";
+    const totalPenalty = "0.20";
     const expectedDates = ["2025/1/1", "2025/1/2", "2025/1/3"];
     mockedPut.mockResolvedValue({
       status: 200,
@@ -111,22 +111,22 @@ describe("活動の終了(一括)", () => {
             date: "2025/1/1",
             result: "success",
             status: "success",
-            bonus: 3,
-            penalty: 3,
+            bonus: "3.00",
+            penalty: "3.00",
           },
           {
             date: "2025/1/2",
             result: "success",
             status: "success",
-            bonus: 3.5,
-            penalty: 3.5,
+            bonus: "3.50",
+            penalty: "3.50",
           },
           {
             date: "2025/1/3",
             result: "success",
             status: "failure",
-            bonus: 0,
-            penalty: 3.0,
+            bonus: "0.00",
+            penalty: "3.00",
           },
         ],
       },
@@ -163,9 +163,9 @@ describe("活動の終了(一括)", () => {
       data: {
         success_count: 0,
         error_count: 4,
-        pay_adjustment: 0,
-        total_bonus: 0,
-        total_penalty: 0,
+        pay_adjustment: "0.00",
+        total_bonus: "0.00",
+        total_penalty: "0.00",
         results: [
           {
             date: "2025/1/1",

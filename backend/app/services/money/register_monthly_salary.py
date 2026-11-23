@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -19,7 +20,7 @@ class RegisterSalaryUsecase:
         self.time_repo = ActivityRepository(db)
 
     def execute(
-        self, year: int, month: int, salary: float, username: str
+        self, year: int, month: int, salary: Decimal, username: str
     ) -> RegisterSalaryResponse:
         try:
             monthly_salary = MonthlySalary(salary)

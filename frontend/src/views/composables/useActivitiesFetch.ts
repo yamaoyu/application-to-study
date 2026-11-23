@@ -17,6 +17,7 @@ import {
   YearlyMonthlyInfo,
   ActivityStatus,
 } from "../types/activity";
+import { convertTenThousandYenToYen } from "../utils/money";
 
 export const useFetchActivitiesByStatus = () => {
   const pendingMsg = ref<string>("");
@@ -57,8 +58,8 @@ export const useFetchActivityByDay = () => {
       const day = dateParts[2];
       const res = await getActivityByDay(year, month, day);
       if (res.status === 200) {
-        const bonusInYen = parseInt(`${res.data.bonus * 10000}`, 10);
-        const penaltyInYen = parseInt(`${res.data.penalty * 10000}`, 10);
+        const bonusInYen = convertTenThousandYenToYen(res.data.bonus);
+        const penaltyInYen = convertTenThousandYenToYen(res.data.penalty);
         if (res.data.status === "success") {
           checkMsg.value = `目標達成!\nボーナス:${res.data.bonus}万円(${bonusInYen}円)`;
         } else if (res.data.status === "failure") {

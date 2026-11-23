@@ -10,7 +10,9 @@ from app.error_codes import (
 # テストで使用する変数
 test_year = 2024
 test_month = 6
-test_salary = 23.0
+test_salary = 23.00
+expected_salary = "23.00"
+expected_zero = "0.00"
 
 
 def setup_salary_for_test(client, get_resource_owner_headers):
@@ -33,7 +35,7 @@ def test_register_income(client, get_resource_owner_headers):
     assert response.json() == {
         "year": test_year,
         "month": test_month,
-        "salary": test_salary,
+        "salary": expected_salary,
     }
 
 
@@ -84,7 +86,7 @@ def test_register_income_accept_min_yen(client, get_resource_owner_headers):
         headers=get_resource_owner_headers,
     )
     assert response.status_code == 201
-    assert response.json() == {"year": test_year, "month": test_month, "salary": 5}
+    assert response.json() == {"year": test_year, "month": test_month, "salary": "5.00"}
 
 
 def test_register_income_deny_less_than_min_yen(client, get_resource_owner_headers):
@@ -113,7 +115,11 @@ def test_register_income_accept_max_yen(client, get_resource_owner_headers):
         headers=get_resource_owner_headers,
     )
     assert response.status_code == 201
-    assert response.json() == {"year": test_year, "month": test_month, "salary": 2000}
+    assert response.json() == {
+        "year": test_year,
+        "month": test_month,
+        "salary": "2000.00",
+    }
 
 
 def test_register_income_deny_more_than_max_yen(client, get_resource_owner_headers):
@@ -172,10 +178,10 @@ def test_get_income(client, get_resource_owner_headers):
     )
     assert response.status_code == 200
     assert response.json() == {
-        "base_income": test_salary,
-        "pay_adjustment": 0.0,
-        "total_penalty": 0.0,
-        "total_bonus": 0.0,
+        "base_income": expected_salary,
+        "pay_adjustment": expected_zero,
+        "total_bonus": expected_zero,
+        "total_penalty": expected_zero,
     }
 
 
@@ -237,10 +243,10 @@ def test_get_income_not_contain_another_user(
     )
     assert response.status_code == 200
     assert response.json() == {
-        "base_income": test_salary,
-        "pay_adjustment": 0.0,
-        "total_penalty": 0.0,
-        "total_bonus": 0.0,
+        "base_income": expected_salary,
+        "pay_adjustment": expected_zero,
+        "total_bonus": expected_zero,
+        "total_penalty": expected_zero,
     }
 
 

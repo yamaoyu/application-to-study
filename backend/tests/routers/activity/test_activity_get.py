@@ -2,6 +2,10 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from helpers.activity import (
+    expected_bonus,
+    expected_penalty,
+    expected_salary,
+    expected_zero,
     setup_actual_time,
     setup_finish_activity,
     setup_monthly_income,
@@ -9,7 +13,6 @@ from helpers.activity import (
     test_bonus,
     test_date,
     test_date_path,
-    test_penalty,
     test_salary,
 )
 from testdata import RESOURCE_OWNER_PLAIN_PASSWORD, RESOURCE_OWNER_USERNAME
@@ -34,8 +37,8 @@ def test_get_day_activities_registered_target(client, get_resource_owner_headers
         "target_time": 5.0,
         "actual_time": 0.0,
         "status": "pending",
-        "bonus": 0.0,
-        "penalty": test_penalty,
+        "bonus": expected_zero,
+        "penalty": expected_penalty,
     }
 
 
@@ -54,8 +57,8 @@ def test_get_day_activities_registered_actual(client, get_resource_owner_headers
         "target_time": 5.0,
         "actual_time": 5.0,
         "status": "pending",
-        "bonus": test_bonus,
-        "penalty": 0.0,
+        "bonus": expected_bonus,
+        "penalty": expected_zero,
     }
 
 
@@ -75,8 +78,8 @@ def test_get_day_activities(client, get_resource_owner_headers):
         "target_time": 5.0,
         "actual_time": 5.0,
         "status": "success",
-        "bonus": test_bonus,
-        "penalty": 0.0,
+        "bonus": expected_bonus,
+        "penalty": expected_zero,
     }
 
 
@@ -117,15 +120,15 @@ def test_get_month_activities(client, get_resource_owner_headers):
     setup_target_time(client, get_resource_owner_headers)
     setup_actual_time(client, get_resource_owner_headers)
     setup_finish_activity(client, get_resource_owner_headers)
-    total_monthly_income = test_salary + test_bonus
+    total_monthly_income = str(test_salary + test_bonus)
     response = client.get("/activities/2024/5", headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
         "total_income": total_monthly_income,
-        "salary": test_salary,
-        "pay_adjustment": test_bonus,
-        "bonus": test_bonus,
-        "penalty": 0.0,
+        "salary": expected_salary,
+        "pay_adjustment": expected_bonus,
+        "bonus": expected_bonus,
+        "penalty": expected_zero,
         "success_days": 1,
         "fail_days": 0,
         "activity_list": [
@@ -134,8 +137,8 @@ def test_get_month_activities(client, get_resource_owner_headers):
                 "target_time": 5.0,
                 "actual_time": 5.0,
                 "status": "success",
-                "bonus": test_bonus,
-                "penalty": 0.0,
+                "bonus": expected_bonus,
+                "penalty": expected_zero,
             }
         ],
     }
@@ -149,11 +152,11 @@ def test_get_month_activities_when_activities_not_found(
     response = client.get("/activities/2024/5", headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
-        "total_income": test_salary,
-        "salary": test_salary,
-        "pay_adjustment": 0.0,
-        "bonus": 0.0,
-        "penalty": 0.0,
+        "total_income": expected_salary,
+        "salary": expected_salary,
+        "pay_adjustment": expected_zero,
+        "bonus": expected_zero,
+        "penalty": expected_zero,
         "success_days": 0,
         "fail_days": 0,
         "activity_list": [],
@@ -178,15 +181,15 @@ def test_get_all_activities(client, get_resource_owner_headers):
     setup_target_time(client, get_resource_owner_headers)
     setup_actual_time(client, get_resource_owner_headers)
     setup_finish_activity(client, get_resource_owner_headers)
-    total_monthly_income = test_salary + test_bonus
+    total_monthly_income = str(test_salary + test_bonus)
     response = client.get("/activities/total", headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
         "total_income": total_monthly_income,
-        "salary": test_salary,
-        "pay_adjustment": test_bonus,
-        "bonus": test_bonus,
-        "penalty": 0.0,
+        "salary": expected_salary,
+        "pay_adjustment": expected_bonus,
+        "bonus": expected_bonus,
+        "penalty": expected_zero,
         "success_days": 1,
         "fail_days": 0,
     }
@@ -200,11 +203,11 @@ def test_get_all_activities_when_activities_not_exists(
     response = client.get("/activities/total", headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
-        "total_income": test_salary,
-        "salary": test_salary,
-        "pay_adjustment": 0,
-        "bonus": 0,
-        "penalty": 0.0,
+        "total_income": expected_salary,
+        "salary": expected_salary,
+        "pay_adjustment": expected_zero,
+        "bonus": expected_zero,
+        "penalty": expected_zero,
         "success_days": 0,
         "fail_days": 0,
     }
@@ -228,111 +231,111 @@ def test_get_year_activities(client, get_resource_owner_headers):
     setup_target_time(client, get_resource_owner_headers)
     setup_actual_time(client, get_resource_owner_headers)
     setup_finish_activity(client, get_resource_owner_headers)
-    total_income = test_salary + test_bonus
+    total_income = str(test_salary + test_bonus)
     response = client.get("/activities/2024", headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
         "total_income": total_income,
-        "salary": test_salary,
-        "pay_adjustment": test_bonus,
-        "bonus": test_bonus,
-        "penalty": 0.0,
+        "salary": expected_salary,
+        "pay_adjustment": expected_bonus,
+        "bonus": expected_bonus,
+        "penalty": expected_zero,
         "success_days": 1,
         "fail_days": 0,
         "monthly_info": {
             "jan": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
             "feb": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
             "mar": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
             "apr": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
             "may": {
-                "salary": test_salary,
-                "bonus": test_bonus,
-                "penalty": 0.0,
-                "pay_adjustment": test_bonus,
+                "salary": expected_salary,
+                "pay_adjustment": expected_bonus,
+                "bonus": expected_bonus,
+                "penalty": expected_zero,
                 "success_days": 1,
                 "fail_days": 0,
             },
             "jun": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
             "jul": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
             "aug": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
             "sep": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
             "oct": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
             "nov": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
             "dec": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
@@ -348,107 +351,107 @@ def test_get_year_activities_when_activities_not_exists(
     response = client.get("/activities/2024", headers=get_resource_owner_headers)
     assert response.status_code == 200
     assert response.json() == {
-        "total_income": test_salary,
-        "salary": test_salary,
-        "pay_adjustment": 0.0,
-        "bonus": 0.0,
-        "penalty": 0.0,
+        "total_income": expected_salary,
+        "salary": expected_salary,
+        "pay_adjustment": expected_zero,
+        "bonus": expected_zero,
+        "penalty": expected_zero,
         "success_days": 0,
         "fail_days": 0,
         "monthly_info": {
             "jan": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
             "feb": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
             "mar": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
             "apr": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
             "may": {
-                "salary": test_salary,
-                "bonus": 0.0,
-                "penalty": 0.0,
-                "pay_adjustment": 0.0,
+                "salary": expected_salary,
+                "pay_adjustment": expected_zero,
+                "bonus": expected_zero,
+                "penalty": expected_zero,
                 "success_days": 0,
                 "fail_days": 0,
             },
             "jun": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
             "jul": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
             "aug": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
             "sep": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
             "oct": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
             "nov": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
             "dec": {
                 "salary": None,
+                "pay_adjustment": None,
                 "bonus": None,
                 "penalty": None,
-                "pay_adjustment": None,
                 "success_days": None,
                 "fail_days": None,
             },
@@ -486,8 +489,8 @@ def test_get_activities_by_status(client, get_resource_owner_headers):
                 "target_time": 5.0,
                 "actual_time": 5.0,
                 "status": "success",
-                "bonus": test_bonus,
-                "penalty": 0.0,
+                "bonus": expected_bonus,
+                "penalty": expected_zero,
             }
         ]
     }

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
+from decimal import Decimal
 
-from app.domain.money.amount import round_money_amount
+from app.domain.money.constants import ZERO_MONEY
 
 
 @dataclass(frozen=True)
@@ -8,20 +9,12 @@ class ActivityResultSummary:
     success_days: int
     fail_days: int
     pending_days: int
-    bonus: float
-    penalty: float
+    bonus: Decimal
+    penalty: Decimal
 
     @property
-    def total_bonus(self) -> float:
-        return round_money_amount(self.bonus)
-
-    @property
-    def total_penalty(self) -> float:
-        return round_money_amount(self.penalty)
-
-    @property
-    def pay_adjustment(self) -> float:
-        return round_money_amount(self.total_bonus - self.total_penalty)
+    def pay_adjustment(self) -> Decimal:
+        return self.bonus - self.penalty
 
     @property
     def unsuccessful_days(self) -> int:
@@ -30,8 +23,8 @@ class ActivityResultSummary:
     @classmethod
     def empty(cls) -> "ActivityResultSummary":
         return cls(
-            bonus=0.0,
-            penalty=0.0,
+            bonus=ZERO_MONEY,
+            penalty=ZERO_MONEY,
             success_days=0,
             pending_days=0,
             fail_days=0,

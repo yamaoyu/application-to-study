@@ -29,6 +29,6 @@ class GetMonthlyIncomeUsecase:
         return GetIncomeResponse(
             base_income=income.salary,
             pay_adjustment=activity_summary.pay_adjustment,
-            total_bonus=activity_summary.total_bonus,
-            total_penalty=activity_summary.total_penalty,
+            total_bonus=activity_summary.bonus,
+            total_penalty=activity_summary.penalty,
         )

@@ -168,9 +168,9 @@ describe("デフォルト値の確認", () => {
 
   it("前年度の年収あり", async () => {
     const expectedData = {
-      base_income: 25.0,
-      total_income: 25.38,
-      pay_adjustment: 0.38,
+      base_income: "25.00",
+      total_income: "25.38",
+      pay_adjustment: "0.38",
     };
 
     mockedGet.mockResolvedValue({

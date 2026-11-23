@@ -1,16 +1,18 @@
+type Money = string;
+
 export type GetMonthlySalaryResponse = {
-  base_income: number;
-  pay_adjustment: number;
-  total_bonus: number;
-  total_penalty: number;
+  base_income: Money;
+  pay_adjustment: Money;
+  total_bonus: Money;
+  total_penalty: Money;
 };
 
 export type MonthlySalarySummary = GetMonthlySalaryResponse & {
-  total_income: number;
+  total_income: Money;
 };
 
 export type registerSalaryResponse = {
   year: number;
   month: number;
-  salary: number;
+  salary: Money;
 };

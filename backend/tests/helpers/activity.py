@@ -4,7 +4,10 @@ test/routers/test_activity_xx.pyで使用する共通セットアップ
 
 # セットアップ用変数
 test_salary = 23.0
+expected_salary = "23.00"
 test_bonus = test_penalty = 0.58
+expected_bonus = expected_penalty = str(test_bonus)
+expected_zero = "0.00"
 test_date_path = "/2024/5/5"
 test_date = "2024-5-5"
 test_year = "2024"

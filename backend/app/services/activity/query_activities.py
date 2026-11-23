@@ -1,11 +1,11 @@
 from datetime import date
+from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
 from app.domain.activity.activity import Activity, ActivityStatus
 from app.domain.activity.adjustment import Adjustment
 from app.domain.income.monthly_income import MonthlySalary
-from app.domain.money.amount import round_money_amount
 from app.error_codes import NotFoundCode
 from app.exceptions import NotFound
 from app.models.activity_model import (
@@ -106,7 +106,7 @@ class ActivityQueryService:
         incomes = self.money_repo.get_all_salaries(username)
         if not incomes:
             raise NotFound(code=NotFoundCode.SALARY_NOT_FOUND)
-        salary = round_money_amount(sum([income.salary for income in incomes]))
+        salary = sum((income.salary for income in incomes), Decimal("0.00"))
 
         summary = self.time_repo.get_activity_summary(username, None, None)
 

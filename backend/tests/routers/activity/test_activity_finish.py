@@ -1,13 +1,13 @@
 from helpers.activity import (
+    expected_bonus,
+    expected_zero,
     setup_actual_time,
     setup_finish_activity,
     setup_monthly_income,
     setup_target_time,
-    test_bonus,
     test_date,
 )
 
-from app.domain.money.amount import round_money_amount
 from app.error_codes import ConflictCode, NotAuthorizedCode, NotFoundCode
 
 
@@ -28,16 +28,16 @@ def test_finish_activity(client, get_resource_owner_headers):
     assert response.json() == {
         "success_count": 1,
         "error_count": 0,
-        "pay_adjustment": test_bonus,
-        "total_bonus": test_bonus,
-        "total_penalty": 0,
+        "pay_adjustment": expected_bonus,
+        "total_bonus": expected_bonus,
+        "total_penalty": expected_zero,
         "results": [
             {
                 "date": test_date,
-                "result": "success",
                 "status": "success",
-                "bonus": 0.58,
-                "penalty": 0.0,
+                "bonus": "0.58",
+                "penalty": expected_zero,
+                "result": "success",
                 "reason": None,
             }
         ],
@@ -61,16 +61,16 @@ def test_finish_activity_status_failed(client, get_resource_owner_headers):
     assert response.json() == {
         "success_count": 1,
         "error_count": 0,
-        "pay_adjustment": -0.58,
-        "total_bonus": 0.0,
-        "total_penalty": 0.58,
+        "pay_adjustment": "-0.58",
+        "total_bonus": expected_zero,
+        "total_penalty": "0.58",
         "results": [
             {
                 "date": test_date,
-                "result": "success",
                 "status": "failure",
-                "bonus": 0.0,
-                "penalty": 0.58,
+                "bonus": expected_zero,
+                "penalty": "0.58",
+                "result": "success",
                 "reason": None,
             }
         ],
@@ -91,9 +91,9 @@ def test_finish_activity_fail_when_already_finished(client, get_resource_owner_h
     assert response.json() == {
         "success_count": 0,
         "error_count": 1,
-        "pay_adjustment": 0,
-        "total_bonus": 0,
-        "total_penalty": 0,
+        "pay_adjustment": expected_zero,
+        "total_bonus": expected_zero,
+        "total_penalty": expected_zero,
         "results": [
             {
                 "date": test_date,
@@ -110,10 +110,6 @@ def test_finish_activity_fail_when_already_finished(client, get_resource_owner_h
 def test_finish_multi_activities(client, get_resource_owner_headers):
     """複数の活動を終了させた場合"""
     setup_monthly_income(client, get_resource_owner_headers)
-    # 今回のテストでのボーナス等を定義
-    total_bonus = 1.39
-    total_penalty = 0.35
-    pay_adjustment = round_money_amount(total_bonus - total_penalty)
     # 複数の目標時間を登録
     data = {
         "activities": [
@@ -141,6 +137,10 @@ def test_finish_multi_activities(client, get_resource_owner_headers):
     response = client.patch(
         "/activities/bulk-finish", json=data, headers=get_resource_owner_headers
     )
+    # 今回のテストでのボーナス等を定義
+    total_bonus = "1.38"
+    total_penalty = "0.34"
+    pay_adjustment = "1.04"
     assert response.status_code == 200
     assert response.json() == {
         "success_count": 3,
@@ -151,26 +151,26 @@ def test_finish_multi_activities(client, get_resource_owner_headers):
         "results": [
             {
                 "date": "2024-5-5",
-                "result": "success",
                 "status": "success",
-                "bonus": 0.58,
-                "penalty": 0.0,
+                "bonus": "0.58",
+                "penalty": expected_zero,
+                "result": "success",
                 "reason": None,
             },
             {
                 "date": "2024-5-6",
-                "result": "success",
                 "status": "failure",
-                "bonus": 0.0,
-                "penalty": 0.35,
+                "bonus": expected_zero,
+                "penalty": "0.34",
+                "result": "success",
                 "reason": None,
             },
             {
                 "date": "2024-5-7",
-                "result": "success",
                 "status": "success",
-                "bonus": 0.81,
-                "penalty": 0.0,
+                "bonus": "0.80",
+                "penalty": expected_zero,
+                "result": "success",
                 "reason": None,
             },
         ],
@@ -183,10 +183,6 @@ def test_finish_multi_activity_with_partial_errors(client, get_resource_owner_he
     setup_target_time(client, get_resource_owner_headers)
     setup_actual_time(client, get_resource_owner_headers)
     setup_finish_activity(client, get_resource_owner_headers)
-    # 今回のテストでのボーナス等を定義
-    total_bonus = 0.81
-    total_penalty = 0.35
-    pay_adjustment = round_money_amount(total_bonus - total_penalty)
     # 複数の目標時間を登録
     data = {
         "activities": [
@@ -212,6 +208,10 @@ def test_finish_multi_activity_with_partial_errors(client, get_resource_owner_he
     response = client.patch(
         "/activities/bulk-finish", json=data, headers=get_resource_owner_headers
     )
+    # 今回のテストでのボーナス等を定義
+    total_bonus = "0.80"
+    total_penalty = "0.34"
+    pay_adjustment = "0.46"
     assert response.status_code == 200
     assert response.json() == {
         "success_count": 2,
@@ -222,26 +222,26 @@ def test_finish_multi_activity_with_partial_errors(client, get_resource_owner_he
         "results": [
             {
                 "date": test_date,
-                "result": "error",
-                "reason": ConflictCode.ACTIVITY_ALREADY_FINISHED,
+                "status": None,
                 "bonus": None,
                 "penalty": None,
-                "status": None,
+                "result": "error",
+                "reason": ConflictCode.ACTIVITY_ALREADY_FINISHED,
             },
             {
                 "date": "2024-5-6",
-                "result": "success",
                 "status": "failure",
-                "bonus": 0.0,
-                "penalty": 0.35,
+                "bonus": expected_zero,
+                "penalty": "0.34",
+                "result": "success",
                 "reason": None,
             },
             {
                 "date": "2024-5-7",
-                "result": "success",
                 "status": "success",
-                "bonus": 0.81,
-                "penalty": 0.0,
+                "bonus": "0.80",
+                "penalty": expected_zero,
+                "result": "success",
                 "reason": None,
             },
         ],
@@ -259,9 +259,9 @@ def test_finish_multi_activity_with_all_errors(client, get_resource_owner_header
     assert response.json() == {
         "success_count": 0,
         "error_count": 3,
-        "pay_adjustment": 0,
-        "total_bonus": 0,
-        "total_penalty": 0,
+        "pay_adjustment": expected_zero,
+        "total_bonus": expected_zero,
+        "total_penalty": expected_zero,
         "results": [
             {
                 "date": test_date,

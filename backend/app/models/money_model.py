@@ -1,19 +1,21 @@
 from pydantic import BaseModel, ConfigDict
 
+from app.models.types.money_serializer import Money
+
 
 class RegisterIncomeRequest(BaseModel):
-    salary: float
+    salary: Money
 
 
 class RegisterSalaryResponse(BaseModel):
     year: int
     month: int
-    salary: float
+    salary: Money
 
 
 class GetIncomeResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    base_income: float
-    pay_adjustment: float
-    total_bonus: float
-    total_penalty: float
+    base_income: Money
+    pay_adjustment: Money
+    total_bonus: Money
+    total_penalty: Money

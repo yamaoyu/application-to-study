@@ -57,11 +57,12 @@
         <div class="bg-white p-4 rounded shadow">
           <h3 class="small">合計</h3>
           <div class="d-flex align-items-baseline justify-content-center">
+            <!-- 数値への変換が必要な箇所が増える場合はvue側に変換変数を用意する -->
             <span
               :class="
                 getSalaryColors(
-                  fetchSalarySummary.total_income -
-                    fetchSalarySummary.base_income,
+                  Number(fetchSalarySummary.total_income) -
+                    Number(fetchSalarySummary.base_income),
                 )
               "
               class="h3 fw-bold text-center"
@@ -89,7 +90,9 @@
           <h3 class="small">ボーナス-ペナルティ</h3>
           <div class="d-flex align-items-baseline justify-content-center">
             <span
-              :class="getSalaryColors(fetchSalarySummary.pay_adjustment)"
+              :class="
+                getSalaryColors(Number(fetchSalarySummary.pay_adjustment))
+              "
               class="h3 fw-bold text-center"
               >{{ fetchSalarySummary.pay_adjustment }}</span
             >
