@@ -25,11 +25,10 @@ class GetMonthlyIncomeUsecase:
         activity_summary = self.time_repo.get_activity_summary(
             username, income_month, end_date
         )
-        print(activity_summary)
         logger.info(f"{username}:{year}-{month}の月収を取得")
         return GetIncomeResponse(
             base_income=income.salary,
             pay_adjustment=activity_summary.pay_adjustment,
-            total_bonus=activity_summary.total_bonus,
-            total_penalty=activity_summary.total_penalty,
+            total_bonus=activity_summary.bonus,
+            total_penalty=activity_summary.penalty,
         )

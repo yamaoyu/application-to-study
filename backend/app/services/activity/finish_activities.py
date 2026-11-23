@@ -3,6 +3,7 @@ from datetime import date
 from app.domain.activity.activity import Activity, ActivityStatus, Adjustment
 from app.domain.activity.exceptions import ActivityAlreadyFinished
 from app.domain.income.monthly_income import MonthlySalary
+from app.domain.money.constants import ZERO_MONEY
 from app.error_codes import ConflictCode, NotFoundCode
 from app.models.activity_model import FinishActivityResponse
 from app.repositories.activity_repository import ActivityRepository
@@ -16,8 +17,8 @@ class FinishActivitiesUseCase:
         self.money_repo = MoneyRepository(db)
 
     def execute(self, dates: list[str], username: str) -> FinishActivityResponse:
-        bonus_sum = 0
-        penalty_sum = 0
+        bonus_sum = ZERO_MONEY
+        penalty_sum = ZERO_MONEY
         results = []
         success_count = 0
         error_count = 0
@@ -34,15 +35,13 @@ class FinishActivitiesUseCase:
             else:
                 error_count += 1
 
-        round_bonus = round(bonus_sum, 2)
-        round_penalty = round(penalty_sum, 2)
-        pay_adjustment = round(round_bonus - round_penalty, 2)
+        pay_adjustment = bonus_sum - penalty_sum
         return FinishActivityResponse(
             success_count=success_count,
             error_count=error_count,
             pay_adjustment=pay_adjustment,
-            total_bonus=round_bonus,
-            total_penalty=round_penalty,
+            total_bonus=bonus_sum,
+            total_penalty=penalty_sum,
             results=results,
         )
 
@@ -65,7 +64,7 @@ class FinishActivitiesUseCase:
                 target_time=activity_row.target_time,
                 actual_time=activity_row.actual_time,
                 status=ActivityStatus(activity_row.status),
-                adjustment=Adjustment(0, 0),
+                adjustment=Adjustment(ZERO_MONEY, ZERO_MONEY),
             )
             activity.finish(monthly_income)
             with self.time_repo.begin_nested():

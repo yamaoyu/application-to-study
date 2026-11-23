@@ -1,3 +1,5 @@
+import { Money } from "./money";
+
 export type ActivityStatus = "pending" | "success" | "failure";
 
 export type SendTargetActivityParam = {
@@ -66,8 +68,6 @@ export type FinishActivityErrorReason =
   | "ACTIVITY_ALREADY_FINISHED"
   | "SALARY_NOT_FOUND"
   | "UNEXPECTED_ERROR";
-
-type Money = string;
 
 type FinishDetail =
   | {
