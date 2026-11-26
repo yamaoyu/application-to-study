@@ -1,17 +1,8 @@
 from datetime import datetime
-from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict
 
-
-class UserStatus(StrEnum):
-    ACTIVE = "active"
-    SUSPEND = "suspended"
-
-
-class UserRole(StrEnum):
-    ADMIN = "admin"
-    GENERAL = "general"
+from app.domain.user.active_admin_policy import UserRole, UserStatus
 
 
 class StatusChangeIn(BaseModel):

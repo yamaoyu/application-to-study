@@ -2,7 +2,7 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
-from app.models.admin_model import UserRole, UserStatus
+from app.domain.user.active_admin_policy import UserRole, UserStatus
 from db import db_model
 
 

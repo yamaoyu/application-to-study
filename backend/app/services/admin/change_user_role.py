@@ -1,6 +1,7 @@
+from app.domain.user.active_admin_policy import ActiveAdminPolicy, UserRole
 from app.error_codes import ConflictCode, NotFoundCode
 from app.exceptions import Conflict, NotFound
-from app.models.admin_model import RoleChangeResponse, UserRole
+from app.models.admin_model import RoleChangeResponse
 from app.repositories.user_repository import UserRepository
 
 
@@ -14,21 +15,15 @@ class ChangeUserRole:
             raise NotFound(code=NotFoundCode.USER_NOT_FOUND)
         # この辺りの条件が複雑になったらドメイン層へ移行する
         admin_count = self.user_repo.count_active_admin_number()
-        if self.is_last_admin(new_role, user, admin_count):
+        active_admin_policy = ActiveAdminPolicy(
+            current_role=user.role,
+            current_status=user.status,
+            new_role=new_role,
+            new_status=user.status,
+            active_admin_count=admin_count,
+        )
+        if not active_admin_policy.can_change():
             raise Conflict(code=ConflictCode.LAST_ADMIN_USER)
         self.user_repo.change_role(user, new_role)
         self.user_repo.flush()
         return RoleChangeResponse(username=username, role=new_role)
-
-    @staticmethod
-    def is_last_admin(new_role: UserRole, user_info, admin_count: int) -> bool:
-        """adminロールでactiveなユーザーが0人にならないか確認する"""
-        if user_info.role == "general":
-            return False
-        if new_role == "admin":
-            return False
-        if user_info.status == "suspended":
-            return False
-        if admin_count > 1:
-            return False
-        return True
