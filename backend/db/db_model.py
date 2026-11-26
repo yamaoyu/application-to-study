@@ -19,6 +19,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.domain.user.active_admin_policy import UserRole, UserStatus
 from db.database import Base
 
 
@@ -81,10 +82,10 @@ class User(Base):
     username: Mapped[str] = mapped_column(VARCHAR(16), primary_key=True)
     password: Mapped[str] = mapped_column(CHAR(60), nullable=False)
     email: Mapped[str | None] = mapped_column(VARCHAR(32), nullable=True)
-    role: Mapped[str] = mapped_column(
+    role: Mapped[UserRole] = mapped_column(
         Enum("admin", "general"), default="general", nullable=False
     )
-    status: Mapped[str] = mapped_column(
+    status: Mapped[UserStatus] = mapped_column(
         Enum("active", "suspended"),
         server_default="active",
         nullable=False,
